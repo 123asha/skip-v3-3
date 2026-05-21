@@ -1,10 +1,3 @@
-.footer a {
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  text-underline-offset: 3px;
-  color: inherit;
-}
-
 .footer {
   position: fixed;
   bottom: var(--pad);
@@ -17,6 +10,19 @@
   line-height: var(--text-lh);
   letter-spacing: var(--text-ls);
   white-space: nowrap;
-  mix-blend-mode: difference;
-  color: #fff;
 }
+
+.icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--c-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+.icon:hover { opacity: 0.85; }
+.icon svg { display: block; }

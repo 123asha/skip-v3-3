@@ -20,13 +20,24 @@ export function FormSnakeGame({ active, onFinish }: { active?: boolean; onFinish
     if (!active) return;
 
     const canvas = canvasRef.current!;
-    const dpr      = window.devicePixelRatio || 1;
-    const displayW = canvas.offsetWidth || W;
-    const displayH = displayW * H / W;
-    canvas.width  = Math.round(displayW * dpr);
-    canvas.height = Math.round(displayH * dpr);
     const ctx = canvas.getContext('2d')!;
-    ctx.scale(canvas.width / W, canvas.height / H);
+
+    // Set up high-DPI canvas — measure container after layout so we never end up
+    // with an upscaled, blurry result.
+    const setupCanvas = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const displayW = rect.width || W;
+      const displayH = displayW * H / W;
+      canvas.width  = Math.round(displayW * dpr);
+      canvas.height = Math.round(displayH * dpr);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(canvas.width / W, canvas.height / H);
+      ctx.imageSmoothingEnabled = false;
+    };
+    setupCanvas();
+    const ro = new ResizeObserver(setupCanvas);
+    ro.observe(canvas);
 
     type Pt  = { x: number; y: number };
     type Dir = 'U' | 'D' | 'L' | 'R';
@@ -107,12 +118,17 @@ export function FormSnakeGame({ active, onFinish }: { active?: boolean; onFinish
     const draw = () => {
       ctx.clearRect(0, 0, W, H);
 
-      // Grid dots — smaller radius
+      // Grid dots — denser (2× per axis) and thinner for an aesthetic, crisp look
       ctx.fillStyle = FG_DIM;
-      for (let x = 0; x < SCOLS; x++) {
-        for (let y = 0; y < SROWS; y++) {
+      const DOT_DENSITY = 2;
+      const DOT_COLS = SCOLS * DOT_DENSITY;
+      const DOT_ROWS = SROWS * DOT_DENSITY;
+      const DOT_DX = W / DOT_COLS;
+      const DOT_DY = H / DOT_ROWS;
+      for (let x = 0; x < DOT_COLS; x++) {
+        for (let y = 0; y < DOT_ROWS; y++) {
           ctx.beginPath();
-          ctx.arc(x * SCELL + SCELL / 2, y * SCELL + SCELL / 2, 0.5, 0, Math.PI * 2);
+          ctx.arc(x * DOT_DX + DOT_DX / 2, y * DOT_DY + DOT_DY / 2, 0.25, 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -183,6 +199,7 @@ export function FormSnakeGame({ active, onFinish }: { active?: boolean; onFinish
       window.removeEventListener('keydown', onKey);
       canvas.removeEventListener('mouseenter', onMouseEnter);
       canvas.removeEventListener('mouseleave', onMouseLeave);
+      ro.disconnect();
     };
   }, [active]);
 
@@ -362,13 +379,22 @@ export function FormBreakoutGame({ active, onFinish }: { active?: boolean; onFin
     if (!active) return;
 
     const canvas = canvasRef.current!;
-    const dpr      = window.devicePixelRatio || 1;
-    const displayW = canvas.offsetWidth || BW;
-    const displayH = displayW * BH / BW;
-    canvas.width  = Math.round(displayW * dpr);
-    canvas.height = Math.round(displayH * dpr);
     const ctx = canvas.getContext('2d')!;
-    ctx.scale(canvas.width / BW, canvas.height / BH);
+
+    const setupCanvas = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const displayW = rect.width || BW;
+      const displayH = displayW * BH / BW;
+      canvas.width  = Math.round(displayW * dpr);
+      canvas.height = Math.round(displayH * dpr);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(canvas.width / BW, canvas.height / BH);
+      ctx.imageSmoothingEnabled = false;
+    };
+    setupCanvas();
+    const ro = new ResizeObserver(setupCanvas);
+    ro.observe(canvas);
 
     const WORD = 'skip design';
     let FS = 42;
@@ -490,6 +516,7 @@ export function FormBreakoutGame({ active, onFinish }: { active?: boolean; onFin
       canvas.removeEventListener('mouseenter', onMouseEnter);
       canvas.removeEventListener('mouseleave', onMouseLeave);
       window.removeEventListener('keydown', onKey);
+      ro.disconnect();
     };
   }, [active]);
 

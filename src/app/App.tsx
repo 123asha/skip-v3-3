@@ -651,7 +651,8 @@ function AppInner() {
         <a href="/en" style={{ color: 'inherit', textDecoration: 'none' }}>/en</a>
       </div>
 
-      {/* Two decorative circles at start of last column, same height as time block */}
+      {/* Social icons — dark circles with white glyph inside.
+          LinkedIn icon is just the letterform "in" — no surrounding box. */}
       <div style={{
         position: 'fixed',
         left: 'calc(var(--pad) + 4 * ((100% - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap)))',
@@ -660,11 +661,42 @@ function AppInner() {
         display: 'flex',
         gap: '10px',
         alignItems: 'center',
-        pointerEvents: 'none',
-        mixBlendMode: 'difference',
       }}>
-        <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#fff' }} />
-        <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#fff' }} />
+        <a
+          href="https://t.me/skipbot"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Telegram"
+          style={{
+            width: 24, height: 24, borderRadius: '50%',
+            background: 'var(--c-text)',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', textDecoration: 'none',
+            transition: 'opacity 0.2s ease',
+          }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M22 4 2.5 11.5l5.6 1.9 2.2 7 3.7-3.6 5.2 3.8L22 4Zm-5.3 4.6-8 7.2-2.5-.9 10.5-6.3Zm-6 9.2 1.2-3.6 6.4 4.7-3.4-1.5-4.2.4Z" fill="#fff" />
+          </svg>
+        </a>
+        <a
+          href="https://www.linkedin.com/company/skip-design"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="LinkedIn"
+          style={{
+            display: 'inline-flex', alignItems: 'center',
+            background: 'none',
+            color: 'var(--c-text)',
+            textDecoration: 'none',
+            fontFamily: 'var(--font)',
+            fontSize: 'var(--text-size)',
+            fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+            lineHeight: 'var(--text-lh)',
+            letterSpacing: 'var(--text-ls)',
+            transition: 'opacity 0.2s ease',
+          }}
+        >in</a>
       </div>
 
       {page === 'cases' && <CasesPage

@@ -193,8 +193,18 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
             </div>
           </div>
 
-          {/* Checkbox */}
-          <div className={s.contactCheckbox} style={{ marginTop: 40, justifyContent: 'center' }} onClick={() => setChecked(!checked)}>
+          {/* Checkbox — block is centered on the page, ~1 column wide, text left-aligned */}
+          <div
+            className={s.contactCheckbox}
+            style={{
+              marginTop: 40,
+              gap: 6,
+              width: 'calc((100vw - 2 * var(--pad) - 4 * var(--gap)) / 5)',
+              maxWidth: '100%',
+              alignSelf: 'center',
+            }}
+            onClick={() => setChecked(!checked)}
+          >
             <div className={`${s.checkbox} ${checked ? s.checked : ''}`}>
               {checked && (
                 <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
@@ -202,7 +212,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
                 </svg>
               )}
             </div>
-            <span className={s.checkboxLabel} style={{ textAlign: 'center' }}>
+            <span className={s.checkboxLabel} style={{ textAlign: 'left' }}>
               Даю согласие на обработку персональных данных в соответствии с&nbsp;
               <button
                 style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'inherit', letterSpacing: 'inherit', lineHeight: 'inherit', color: 'inherit', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}

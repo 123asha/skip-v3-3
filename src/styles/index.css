@@ -1,3 +1,169 @@
-@import './fonts.css';
-@import './tailwind.css';
-@import './theme.css';
+/* No Tailwind — plain CSS only */
+
+@font-face {
+  font-family: 'CoFo Sans VF';
+  src: url('/fonts/cofosansvf-Trial.ttf') format('truetype');
+  font-weight: 1 999;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'CoFo Sans Semi-Mono VF';
+  src: url('/fonts/CoFoSansSemi-Mono-VF-Trial.ttf') format('truetype');
+  font-weight: 1 999;
+  font-style: normal;
+  font-display: swap;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --font: 'CoFo Sans Semi-Mono VF', 'CoFo Sans VF', -apple-system, sans-serif;
+  --font-display: 'CoFo Sans VF', -apple-system, sans-serif;
+  --font-mono: 'CoFo Sans Semi-Mono VF', 'CoFo Sans VF', -apple-system, monospace;
+  --c-text: #231f20;
+  --c-bg: #ffffff;
+  --c-surface: #f6f6f6;
+  --c-accent: #8382fc;
+  --c-border: rgba(35, 31, 32, 0.12);
+
+  --text-size: clamp(12px, 1.143vw, 20px);
+  --text-weight: 465;
+  --text-lh: 1;
+  --text-ls: -0.02em;
+
+  --heading-size: clamp(40px, 2.857vw, 54px);
+  --heading-weight: 454;
+  --heading-lh: 0.81;
+  --heading-ls: -0.02em;
+
+  --h2-size: clamp(16px, 1.714vw, 28px);
+  --h2-weight: 454;
+  --h2-lh: 0.81;
+  --h2-ls: -0.02em;
+
+  --pad: 20px;
+  --gap: 20px;
+  --col: 296px;
+
+  /* Secondary / muted text — used for all gray text and L2 links */
+  --opacity-muted: 0.4;
+}
+
+/* Muted text helper — matches L2 link opacity */
+.text-muted { opacity: var(--opacity-muted); }
+
+/* ── Mobile (≤ 768px) ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  :root {
+    --pad: 16px;
+    --gap: 12px;
+    --text-size: 14px;
+    --heading-size: 30px;
+    --h2-size: 22px;
+  }
+
+  /* Make 5-col grids stack into a single column */
+  .grid5,
+  [style*="repeat(5, 1fr)"],
+  [style*="repeat(3, 1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* gridColumn spans don't make sense on a single column — neutralise them */
+  [style*="gridColumn"], [style*="grid-column"] {
+    grid-column: 1 / -1 !important;
+  }
+
+  /* Stack the contact form game + center column */
+  .contactCard, [class*="contactCard"] {
+    min-height: 0 !important;
+  }
+  [class*="contactGameBg"] { display: none !important; }
+  [class*="contactGameControls"] { display: none !important; }
+  [class*="contactCenter"] {
+    max-width: 100% !important;
+    padding: 24px 16px !important;
+  }
+}
+
+html {
+  font-family: var(--font);
+  font-size: var(--text-size);
+  font-weight: var(--text-weight);
+  color: var(--c-text);
+  background: var(--c-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  font-family: var(--font-mono);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+
+/* ── Link levels ── */
+
+/* L1 — dark, primary */
+.link-l1 {
+  color: var(--c-text);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.link-l1:hover { transform: translateY(-2px); }
+
+/* L2 — gray, secondary */
+.link-l2 {
+  color: var(--c-text);
+  opacity: var(--opacity-muted);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.link-l2:hover { opacity: 1; }
+
+/* Dimmed — non-selected items when a panel is open.
+   Uses a CSS class (not inline style) so :hover still works. */
+.link-l2-dim { opacity: 0.2; }
+.link-l2.link-l2-dim:hover { opacity: 1; }
+
+button {
+  font: inherit;
+  font-weight: var(--text-weight);
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+input, select, textarea {
+  font: inherit;
+  font-weight: var(--text-weight);
+  color: inherit;
+  background: none;
+  border: none;
+  outline: none;
+  width: 100%;
+}
+
+input::placeholder {
+  opacity: 0.3;
+}

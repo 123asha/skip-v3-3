@@ -1,0 +1,463 @@
+import { useEffect, useRef, useState } from 'react';
+import { gsap } from 'gsap';
+import s from './CasesPage.module.css';
+import { TEXT_STYLE as ts, H2_STYLE } from '../utils/typography';
+import ContactForm from './ContactForm';
+import CaseCard from './CaseCard';
+import { MediaSection } from './MediaSection';
+
+// ── Service data ──────────────────────────────────────────────────────────────
+
+type ServiceItem = {
+  id: string;
+  label: string;
+  heading: string;
+  paragraphs: string[];
+  examples?: { label: string; href: string }[];
+};
+
+type Service = {
+  number: string;
+  title: string;
+  items: ServiceItem[];
+  ctaLabel: string;
+};
+
+const SERVICES: Service[] = [
+  {
+    number: '①',
+    title: 'Бренд-стратегия',
+    ctaLabel: 'получить кп от стратега',
+    items: [
+      {
+        id: 'brand-platform',
+        label: 'платформа бренда',
+        heading: 'Платформа бренда',
+        paragraphs: [
+          'Разрабатываем ядро бренда: миссию, ценности, архетип, позиционирование. Результат — документ, который объясняет, почему вы, для кого и чем отличаетесь.',
+          'Используем собственную методологию — конструктор миссии, проверенный на 40+ проектах.',
+        ],
+        examples: [
+          { label: 'конструктор миссии', href: 'https://vc.ru/marketing/2205037-konstruktor-missii-dlya-brenda' },
+          { label: 'критерии метафор', href: 'https://workspace.ru/blog/kak-ii-generiruet-metafory/' },
+        ],
+      },
+      {
+        id: 'research',
+        label: 'исследование категории',
+        heading: 'Исследование категории',
+        paragraphs: [
+          'Анализируем конкурентов, категорию, целевую аудиторию. Выявляем белые пятна и незанятые позиции.',
+          'На основе исследования формируем дифференциаторы и точки роста для бренда.',
+        ],
+      },
+      {
+        id: 'naming',
+        label: 'нейминг и регистрация',
+        heading: 'Нейминг и регистрация',
+        paragraphs: [
+          'Создаём имя бренда, которое работает на позиционирование и выдерживает юридическую проверку.',
+          'Проверяем по базам Роспатента и помогаем с регистрацией товарного знака.',
+        ],
+      },
+    ],
+  },
+  {
+    number: '②',
+    title: 'Визуальные\nсистемы',
+    ctaLabel: 'получить кп от арт-директора',
+    items: [
+      {
+        id: 'identity',
+        label: 'фирменный стиль',
+        heading: 'Фирменный стиль',
+        paragraphs: [
+          'Проектируем визуальную систему: логотип, цвет, типографику, паттерны, фотостиль. Всё, что формирует узнаваемость бренда.',
+          'Разрабатываем не отдельные элементы, а систему — с логикой, правилами и примерами применения.',
+        ],
+      },
+      {
+        id: 'guides',
+        label: 'библиотеки и гайды',
+        heading: 'Библиотеки и гайды',
+        paragraphs: [
+          'Создаём компонентные библиотеки в Figma и брендбуки, которыми команда пользуется каждый день.',
+          'Гайды пишем под реальные задачи: как сделать пост, презентацию, баннер — не теория, а рабочий инструмент.',
+        ],
+      },
+      {
+        id: 'templates',
+        label: 'инструменты',
+        heading: 'Инструменты',
+        paragraphs: [
+          'Разрабатываем шаблоны презентаций, постов, коммерческих предложений и других документов в фирменном стиле.',
+          'Конструкторы позволяют маркетологам самостоятельно собирать материалы, не нарушая бренд.',
+        ],
+      },
+    ],
+  },
+  {
+    number: '③',
+    title: 'Цифровой\nдизайн',
+    ctaLabel: 'получить кп от продакта',
+    items: [
+      {
+        id: 'sites',
+        label: 'лендинги и сайты',
+        heading: 'Лендинги и сайты',
+        paragraphs: [
+          'Проектируем и разрабатываем сайты: от лендингов до сложных продуктовых страниц.',
+          'Дизайн и разработка внутри одной команды — без потерь при передаче.',
+        ],
+      },
+      {
+        id: 'special',
+        label: 'спецпроекты',
+        heading: 'Спецпроекты',
+        paragraphs: [
+          'Делаем нестандартные digital-форматы: промо-сайты, интерактивные истории, конфигураторы и игровые механики.',
+          'Каждый спецпроект — отдельная задача с собственной механикой и визуальным языком.',
+        ],
+      },
+    ],
+  },
+];
+
+// ── Cases data ────────────────────────────────────────────────────────────────
+
+type CaseEntry = {
+  id: string;
+  title: string;
+  tag: string;
+  serviceIds: string[];
+  ar: '16/9' | '3/4';
+};
+
+const CASES: CaseEntry[] = [
+  { id: 'c1', ar: '16/9', title: 'Бренд банка данных',         tag: 'Брендинг',    serviceIds: ['brand-platform', 'identity'] },
+  { id: 'c2', ar: '3/4',  title: 'Визуальная система стартапа', tag: 'Брендинг',    serviceIds: ['identity', 'guides'] },
+  { id: 'c3', ar: '3/4',  title: 'Нейминг IT-сервиса',          tag: 'Стратегия',   serviceIds: ['naming', 'research'] },
+  { id: 'c4', ar: '16/9', title: 'Корпоративный сайт',          tag: 'Сайты',       serviceIds: ['sites'] },
+  { id: 'c5', ar: '3/4',  title: 'Маркетинг-кит агентства',     tag: 'Инструменты', serviceIds: ['templates'] },
+  { id: 'c6', ar: '16/9', title: 'Дизайн-система продукта',     tag: 'Брендинг',    serviceIds: ['guides', 'identity'] },
+  { id: 'c7', ar: '16/9', title: 'Спецпроект к запуску',        tag: 'Сайты',       serviceIds: ['sites', 'brand-platform'] },
+  { id: 'c8', ar: '3/4',  title: 'Платформа бренда группы',     tag: 'Стратегия',   serviceIds: ['brand-platform', 'research'] },
+];
+
+// ── Shared styles ─────────────────────────────────────────────────────────────
+
+// ts = TEXT_STYLE from shared typography (imported above)
+const h2Style: React.CSSProperties = { ...H2_STYLE, whiteSpace: 'pre-line' };
+
+// ── ExCaseCard — uses the shared CaseCard component ────────────────────────────
+
+function ExCaseCard({ title, tag, ar }: Pick<CaseEntry, 'title' | 'tag' | 'ar'>) {
+  return <CaseCard ar={ar} title={title} desc={tag} />;
+}
+
+// ── Anchor IDs — must match SERVICE_ANCHORS in ScrollHero ────────────────────
+const SERVICE_IDS = ['brand', 'visual', 'tools'] as const;
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+export default function ExpertizaPage({ onNavigateCases, onNavigatePolicy, onGridMode }: { onNavigateCases?: () => void; onNavigatePolicy?: () => void; onGridMode?: (on: boolean) => void }) {
+  const pageRef    = useRef<HTMLDivElement>(null);
+  const rowRefs    = useRef<(HTMLDivElement | null)[]>([]);
+  const panelRef   = useRef<HTMLDivElement>(null);   // single outer sticky panel
+  const contentRef = useRef<HTMLDivElement>(null);   // content wrapper inside the outer panel
+  const prevIdRef  = useRef<string | null>(null);
+  // Keep last non-null item so the content stays in DOM during the close animation
+  const lastItemRef = useRef<ServiceItem | null>(null);
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const anySelected   = !!selectedId;
+  const selectedSvcIdx = selectedId
+    ? SERVICES.findIndex(svc => svc.items.some(i => i.id === selectedId))
+    : -1;
+  const selectedItem = selectedId
+    ? SERVICES.flatMap(svc => svc.items).find(i => i.id === selectedId) ?? null
+    : null;
+
+  if (selectedItem) lastItemRef.current = selectedItem;
+  const renderedItem = selectedItem ?? lastItemRef.current;
+  const renderedSvcIdx = selectedSvcIdx >= 0
+    ? selectedSvcIdx
+    : (renderedItem
+        ? SERVICES.findIndex(svc => svc.items.some(i => i.id === renderedItem!.id))
+        : -1);
+
+  const filteredCases = (selectedId
+    ? CASES.filter(c => c.serviceIds.includes(selectedId))
+    : CASES
+  ).slice(0, 3);
+
+  // ── Animate content swap inside the outer panel on selection change ─────────
+  useEffect(() => {
+    const prev = prevIdRef.current;
+    const curr = selectedId;
+    prevIdRef.current = curr;
+
+    const content = contentRef.current;
+    if (!content) return;
+    const els = Array.from(content.querySelectorAll<HTMLElement>('[data-anim]'));
+
+    if (!curr) {
+      // Closing — fade out content
+      gsap.killTweensOf(els);
+      gsap.to(els, { opacity: 0, y: -5, duration: 0.2, stagger: 0.025, ease: 'power2.in' });
+      return;
+    }
+
+    // Opening fresh or switching between items — fade new content in
+    gsap.killTweensOf(els);
+    gsap.set(els, { opacity: 0, y: 8 });
+    gsap.to(els, {
+      opacity: 1, y: 0,
+      duration: 0.35,
+      stagger: 0.07,
+      ease: 'power3.out',
+      delay: prev ? 0.12 : 0.30,
+    });
+  }, [selectedId]);
+
+  // ── Scroll to hash anchor on mount (e.g. /services#brand) ─────────────────
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (!hash) return;
+    const idx = (SERVICE_IDS as readonly string[]).indexOf(hash);
+    if (idx < 0) return;
+    // Delay so the page entrance animation finishes first
+    const timer = setTimeout(() => {
+      const row  = rowRefs.current[idx];
+      const page = pageRef.current;
+      if (!row || !page) return;
+      const navEl     = document.querySelector('nav');
+      const navBottom = navEl ? navEl.getBoundingClientRect().bottom : 20;
+      const rowTop    = page.scrollTop + row.getBoundingClientRect().top - page.getBoundingClientRect().top;
+      page.scrollTo({ top: rowTop - navBottom - 20, behavior: 'smooth' });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // ── Lenis + wheel isolation ─────────────────────────────────────────────────
+  useEffect(() => {
+    const mainLenis = (window as any).__lenis;
+    if (mainLenis) mainLenis.stop();
+
+    const el = pageRef.current!;
+    const stopBubble = (e: WheelEvent) => e.stopPropagation();
+    el.addEventListener('wheel', stopBubble, { passive: true });
+
+    return () => {
+      el.removeEventListener('wheel', stopBubble);
+      if (mainLenis) mainLenis.start();
+    };
+  }, []);
+
+  // ── Scroll to the very top of the services page when a service is opened ──
+  // (so the user always sees all 3 services + the gray panel from the start).
+  const handleItemClick = (id: string, _svcIdx: number) => {
+    const wasSelected = selectedId === id;
+    setSelectedId(prev => prev === id ? null : id);
+    if (wasSelected) return;
+    const page = pageRef.current;
+    if (!page) return;
+    page.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  return (
+    <div className={s.page} ref={pageRef}>
+      <h1 className={s.title}>Услуги</h1>
+      <div className={s.body} style={{ paddingLeft: 20, paddingRight: 20, paddingBottom: 200 }}>
+
+        {/* ── Service rows (left) + sticky outer panel (right) ── */}
+        <div style={{ display: 'flex', gap: 20, alignItems: 'stretch' }}>
+
+          {/* Left: services list — shrinks to ~60% width when a service is open and becomes
+              sticky so all 3 services stay in view without scrolling.
+              Dividers (border-top per row) live inside this column so they shrink with it. */}
+          <div style={{
+            flex: anySelected ? '0 1 calc(60% - 10px)' : '1 1 100%',
+            minWidth: 0,
+            transition: 'flex-basis 0.45s cubic-bezier(0.4, 0, 0.2, 1), flex-grow 0.45s cubic-bezier(0.4, 0, 0.2, 1)',
+            position: anySelected ? 'sticky' : 'static',
+            top: anySelected ? 0 : 'auto',
+            alignSelf: 'flex-start',
+            maxHeight: anySelected ? '100vh' : 'none',
+            overflow: anySelected ? 'hidden' : 'visible',
+          }}>
+            {SERVICES.map((svc, svcIdx) => {
+              const itemButtons = svc.items.map(item => {
+                const isSelected = selectedId === item.id;
+                const isDimmed   = anySelected && !isSelected;
+                return (
+                  <button
+                    key={item.id}
+                    className={[
+                      isSelected ? 'link-l1' : 'link-l2',
+                      isDimmed   ? 'link-l2-dim' : '',
+                    ].filter(Boolean).join(' ')}
+                    style={{
+                      background: 'none', border: 'none', padding: 0,
+                      textAlign: 'left', display: 'block',
+                      fontFamily: 'var(--font)',
+                      fontSize: 'var(--text-size)',
+                      fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+                      lineHeight: 'var(--text-lh)',
+                      letterSpacing: 'var(--text-ls)',
+                    }}
+                    onClick={() => handleItemClick(item.id, svcIdx)}
+                  >
+                    {item.label}
+                  </button>
+                );
+              });
+
+              return (
+                <div
+                  key={svc.number}
+                  id={SERVICE_IDS[svcIdx]}
+                  ref={el => { rowRefs.current[svcIdx] = el; }}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    columnGap: 20,
+                    borderTop: '1px solid var(--c-border)',
+                    paddingTop: 16,
+                    paddingBottom: 32,
+                    alignItems: 'start',
+                  }}
+                >
+                  <p style={{ ...ts, gridColumn: '1' }}>{svc.number}</p>
+                  <p style={{ ...h2Style, gridColumn: '2' }}>{svc.title}</p>
+                  <div style={{ gridColumn: '3', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {itemButtons}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Right: outer sticky panel — stretches to match the list height (align-items: stretch on parent) */}
+          <div
+            ref={panelRef}
+            style={{
+              flex: anySelected ? '0 0 calc(40% - 10px)' : '0 0 0px',
+              position: 'sticky',
+              top: 0,
+              alignSelf: 'stretch',
+              background: 'var(--c-surface)',
+              overflow: 'hidden',
+              transition: 'flex-basis 0.45s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          >
+            <div
+              ref={contentRef}
+              style={{
+                padding: '20px 20px 40px 20px',
+                width: 'calc((100vw - 40px) * 0.4 - 10px)',
+                maxWidth: 'calc((100vw - 40px) * 0.4 - 10px)',
+                height: '100%',
+                overflowY: 'auto',
+                boxSizing: 'border-box',
+              }}
+            >
+              {renderedItem && renderedSvcIdx >= 0 && (
+                <>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '3fr 2fr',
+                    gap: 20,
+                    alignItems: 'start',
+                  }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <p data-anim="" style={h2Style}>{renderedItem.heading}</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {renderedItem.paragraphs.map((p, i) => (
+                          <p key={i} data-anim="" style={ts}>{p}</p>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {renderedItem.examples && renderedItem.examples.length > 0 && (
+                        <>
+                          <p data-anim="" style={ts}>Примеры</p>
+                          {renderedItem.examples.map((ex, idx) => (
+                            <a
+                              key={ex.href}
+                              data-anim=""
+                              href={ex.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                ...ts,
+                                textDecoration: 'underline',
+                                textDecorationStyle: 'dotted',
+                                textUnderlineOffset: '3px',
+                              }}
+                            >
+                              [{idx + 1}] {ex.label}
+                            </a>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <a
+                    data-anim=""
+                    href="#"
+                    style={{
+                      display: 'block',
+                      marginTop: 40,
+                      ...ts,
+                      textDecoration: 'underline',
+                      textDecorationStyle: 'dotted',
+                      textUnderlineOffset: '3px',
+                    }}
+                  >
+                    {SERVICES[renderedSvcIdx].ctaLabel}
+                  </a>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Cases — 3 per row, max 3, filtered by selection ── */}
+        {filteredCases.length > 0 && (
+          <div style={{ marginTop: 200 }}>
+            <div style={{ marginBottom: 40, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <p style={ts}>{selectedId ? 'Кейсы по услуге' : 'Кейсы'}</p>
+              {!selectedId && (
+                <button
+                  className="link-l2"
+                  style={{ background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 'var(--text-size)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'], lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)' }}
+                  onClick={onNavigateCases}
+                >перейти</button>
+              )}
+            </div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: 20,
+              rowGap: 60,
+            }}>
+              {filteredCases.map(c => (
+                <ExCaseCard key={c.id} {...c} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Media — shared block (same as on the home page) ── */}
+        <MediaSection />
+
+        <ContactForm onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
+
+      </div>
+    </div>
+  );
+}

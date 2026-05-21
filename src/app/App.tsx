@@ -1,461 +1,747 @@
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useEffect, useState, useCallback, Fragment } from 'react';
 import { gsap } from 'gsap';
+import Lenis from 'lenis';
+import svgPaths from '../imports/Index/svg-3bjnx36a2y';
+import { useReveal } from './utils/reveal';
 import ScrollHero from './components/ScrollHero';
 import ProjectGallery from './components/ProjectGallery';
 import Footer from './components/Footer';
-import { useGsapAnimations } from './hooks/useGsapAnimations';
+import CasesPage from './components/CasesPage';
+import InstrumentsPage from './components/InstrumentsPage';
+import ExpertizaPage from './components/ExpertizaPage';
+import MindMapBlock from './components/MindMapBlock';
+import PolicyPage from './components/PolicyPage';
+import Index2Page from './components/Index2Page';
+import CaseTemplatePage from './components/CaseTemplatePage';
+import GuidePage from './components/GuidePage';
+import MoscowTime from './components/MoscowTime';
+import BunnyHero from './components/BunnyHero';
+import BunnyFollower from './components/BunnyFollower';
+import ContactForm from './components/ContactForm';
+import { ToolsSection } from './components/ToolsSection';
+import { MediaSection } from './components/MediaSection';
+import s from './App.module.css';
 
-function ContactFormSection() {
-  const [isHovered, setIsHovered] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
-  const [activeTab, setActiveTab] = useState(0); // 0 = Проектная основа, 1 = Поддержка команды
-  const [taskType, setTaskType] = useState('');
-  const [department, setDepartment] = useState('');
-  const [formStep, setFormStep] = useState(0); // 0 = main form, 1 = strategist, 2 = art director
-  const cardRef = useRef<HTMLDivElement>(null);
+function ScrollHint() {
+  const ref = useRef<HTMLDivElement>(null);
+  const shown = useRef(false);
+  const gone = useRef(false);
 
-  const handleSkip = () => {
-    if (!cardRef.current) return;
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
 
-    // Animate out
-    gsap.to(cardRef.current, {
-      y: 50,
-      opacity: 0,
-      duration: 0.3,
-      ease: 'power2.in',
-      onComplete: () => {
-        setFormStep((prev) => (prev + 1) % 3);
+    const xTo = gsap.quickTo(el, 'x', { duration: 0.5, ease: 'power3.out' });
+    const yTo = gsap.quickTo(el, 'y', { duration: 0.5, ease: 'power3.out' });
 
-        // Animate in
-        gsap.fromTo(
-          cardRef.current,
-          { y: -50, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.3, ease: 'power2.out' }
-        );
-      },
-    });
-  };
+    const onMove = (e: MouseEvent) => {
+      if (gone.current) return;
+      xTo(e.clientX + 16);
+      yTo(e.clientY + 6);
+      if (!shown.current) {
+        shown.current = true;
+        gsap.to(el, { opacity: 0.35, duration: 0.5, ease: 'power2.out' });
+      }
+    };
+
+    const dismiss = () => {
+      if (gone.current) return;
+      gone.current = true;
+      gsap.to(el, { opacity: 0, duration: 0.3, ease: 'power2.in' });
+    };
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('wheel', dismiss, { once: true, passive: true });
+    window.addEventListener('scroll', dismiss, { once: true, passive: true });
+
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('wheel', dismiss);
+      window.removeEventListener('scroll', dismiss);
+    };
+  }, []);
 
   return (
-    <div className="px-[20px] mt-[200px] mb-[200px]">
-      <div
-        data-animate="form"
-        className="flex flex-col gap-[20px] items-end"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <p
-          onClick={handleSkip}
-          className={`decoration-solid font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] underline cursor-pointer transition-opacity duration-300 ${
-            isHovered ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          skip
-        </p>
+    <div
+      ref={ref}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        zIndex: 9999,
+        pointerEvents: 'none',
+        opacity: 0,
+        fontSize: '11px',
+        letterSpacing: '0.08em',
+        color: 'var(--c-text)',
+        userSelect: 'none',
+      }}
+    >
+      scroll
+    </div>
+  );
+}
 
-        <div className="bg-[#8382fc] w-full relative overflow-hidden">
-          {/* Fixed padding container with hover effect */}
-          <div className={`transition-all duration-300 ${isHovered ? 'py-[20px]' : 'py-[40px]'}`}>
-            <div
-              ref={cardRef}
-              className="flex items-start justify-between px-[20px] gap-[20px]"
-            >
-              {/* Step 0: Main Form */}
-              {formStep === 0 && (
-                <>
-                  {/* Left: Format selection */}
-                  <div className="flex flex-col gap-[20px] flex-1">
-                    <p className="font-['Inter',sans-serif] font-medium leading-[0.81] text-[#231f20] text-[40px] tracking-[-0.8px]">
-                      Для сотрудничества<br />с нами выберите формат:
-                    </p>
-                    <div className="flex flex-col gap-[10px]">
-                      <p
-                        onClick={() => setActiveTab(0)}
-                        className={`font-['Inter',sans-serif] font-medium leading-[0.81] text-[#231f20] text-[40px] tracking-[-0.8px] cursor-pointer transition-opacity duration-300 ${
-                          activeTab === 0 ? 'opacity-100' : 'opacity-30'
-                        }`}
-                      >
-                        ① Проектная основа {activeTab === 0 && '↵'}
-                      </p>
-                      <p
-                        onClick={() => setActiveTab(1)}
-                        className={`font-['Inter',sans-serif] font-medium leading-[0.81] text-[#231f20] text-[40px] tracking-[-0.8px] cursor-pointer transition-opacity duration-300 ${
-                          activeTab === 1 ? 'opacity-100' : 'opacity-30'
-                        }`}
-                      >
-                        ② Поддержка команды {activeTab === 1 && '↵'}
-                      </p>
-                    </div>
-                  </div>
+const HERO_MODE: 'arcade' | 'bunny' = 'arcade';
 
-                  {/* Right: Contact form */}
-                  <div className="flex flex-col gap-[160px] w-[592px] shrink-0">
-                    <div className="flex flex-col gap-[20px]">
-                      <p className="font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px]">
-                        Заполните форму.<br />Свяжемся в течение дня с 11:00-20:00
-                      </p>
 
-                      {/* Form fields */}
-                      <div className="flex flex-col gap-[20px]">
-                        <div className="flex items-center py-[10px] border-b border-solid border-[rgba(35,31,32,0.07)]">
-                          <input
-                            type="text"
-                            placeholder="Имя"
-                            className="bg-transparent font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] placeholder:opacity-30 placeholder:text-[#231f20] outline-none w-full"
-                          />
-                        </div>
+const PRELOADER_LINES = ['дизайн', 'как', 'правила', 'игры'];
+const DOT_R = 5;
 
-                        <div className="flex items-center py-[10px] border-b border-solid border-[rgba(35,31,32,0.07)]">
-                          <input
-                            type="text"
-                            placeholder="Компания"
-                            className="bg-transparent font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] placeholder:opacity-30 placeholder:text-[#231f20] outline-none w-full"
-                          />
-                        </div>
+// Logo dot path extracted for the preloader ball (index 4 in the svg paths)
+const _svgAll = svgPaths.pb7e9300.match(/M[^M]+/g)!;
+const LOGO_DOT_PATH = _svgAll[4];
+// Tight bounds from actual path coords: x 32.56–37.25, y -0.064–4.648
+const LOGO_DOT_VB = '32.5 -0.1 4.8 4.8';
+// Custom dot shape for the preloader bounce animation
+const DOT_SVG_PATH = 'M4.1039 0.455549C3.70433 0.0538952 3.13298 -0.0637445 2.56514 0.0308883C1.99631 0.125949 1.40685 0.435787 0.920048 0.925298C0.433272 1.41492 0.125334 2.00778 0.0307815 2.5799C-0.0634312 3.15115 0.0534589 3.7256 0.453 4.12756C0.852782 4.52912 1.42488 4.6482 1.9928 4.55327C2.5613 4.45795 3.15139 4.14814 3.63789 3.65886C4.12438 3.16946 4.43246 2.57611 4.52716 2.00425C4.6216 1.43309 4.50304 0.857676 4.1039 0.455549Z';
+const DOT_SVG_VB = '0 0 5 5';
 
-                        {/* Conditional dropdown based on active tab */}
-                        {activeTab === 0 ? (
-                          <div className="flex items-center py-[10px] border-b border-solid border-[rgba(35,31,32,0.07)]">
-                            <select
-                              value={taskType}
-                              onChange={(e) => setTaskType(e.target.value)}
-                              className="bg-transparent font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] outline-none w-full cursor-pointer appearance-none"
-                              style={{ opacity: taskType ? 1 : 0.3 }}
-                            >
-                              <option value="" disabled>Тип задачи</option>
-                              <option value="branding">Брендинг</option>
-                              <option value="website">Сайт</option>
-                              <option value="interface">Интерфейс</option>
-                              <option value="automation">Автоматизация</option>
-                            </select>
-                          </div>
-                        ) : (
-                          <div className="flex items-center py-[10px] border-b border-solid border-[rgba(35,31,32,0.07)]">
-                            <select
-                              value={department}
-                              onChange={(e) => setDepartment(e.target.value)}
-                              className="bg-transparent font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] outline-none w-full cursor-pointer appearance-none"
-                              style={{ opacity: department ? 1 : 0.3 }}
-                            >
-                              <option value="" disabled>Для отдела</option>
-                              <option value="marketing">Маркетинг</option>
-                              <option value="product">Продукт</option>
-                            </select>
-                          </div>
-                        )}
+function Preloader({ onDone }: { onDone: () => void }) {
+  const bgRef   = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLParagraphElement>(null);
 
-                        <div className="flex items-center py-[10px] border-b border-solid border-[rgba(35,31,32,0.07)]">
-                          <input
-                            type="text"
-                            placeholder="Опишите задачу"
-                            className="bg-transparent font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] placeholder:opacity-30 placeholder:text-[#231f20] outline-none w-full"
-                          />
-                        </div>
+  useEffect(() => {
+    const bg   = bgRef.current;
+    const wrap = wrapRef.current;
+    const wordSpans = Array.from(wrap?.querySelectorAll<HTMLElement>('[data-word]') ?? []);
+    if (!bg || !wordSpans.length) return;
 
-                        <div className="flex items-center py-[10px]">
-                          <button className="decoration-solid font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] underline cursor-pointer bg-transparent border-none p-0">
-                            Отправить
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+    gsap.set(wordSpans, { opacity: 0, y: 12 });
 
-                    <div className="flex items-center gap-[10px]">
-                      <div
-                        onClick={() => setIsChecked(!isChecked)}
-                        className="w-[16px] h-[16px] border border-solid border-[rgba(35,31,32,0.3)] cursor-pointer flex items-center justify-center transition-all duration-200"
-                      >
-                        {isChecked && (
-                          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                            <path d="M1 4L3.5 6.5L9 1" stroke="#231f20" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        )}
-                      </div>
-                      <label
-                        onClick={() => setIsChecked(!isChecked)}
-                        className="font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] cursor-pointer"
-                      >
-                        Галочка про конфиденциальность
-                      </label>
-                    </div>
-                  </div>
-                </>
-              )}
+    const tl = gsap.timeline({ delay: 0.1 });
 
-              {/* Step 1: Strategist Card */}
-              {formStep === 1 && (
-                <>
-                  {/* Left: Strategist text */}
-                  <div className="flex flex-col gap-[20px] flex-1">
-                    <p className="font-['Inter',sans-serif] font-medium leading-[0.81] text-[#231f20] text-[40px] tracking-[-0.8px]">
-                      Пообщаться<br />со стратегом,<br />обсудить<br />позиционирование
-                    </p>
-                  </div>
+    // Слова появляются — плавный подъём с замедлением
+    tl.to(wordSpans, {
+      opacity: 1,
+      y: 0,
+      duration: 0.5,
+      ease: 'power3.out',
+      stagger: (i: number) => [0, 0.12, 0.12, 0.24][i] ?? i * 0.12,
+    });
 
-                  {/* Right: Contact form */}
-                  <div className="flex flex-col gap-[160px] w-[592px] shrink-0">
-                    <div className="flex flex-col gap-[20px]">
-                      <p className="font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px]">
-                        Заполните форму.<br />Свяжемся в течение дня с 11:00-20:00
-                      </p>
+    // Подъём и исчезновение — одновременно, как будто слова тянут страницу
+    tl.to(wordSpans, {
+      y: -32,
+      opacity: 0,
+      duration: 0.4,
+      ease: 'power2.in',
+      stagger: (i: number) => ([0, 0.05, 0.05, 0.10][i] ?? i * 0.05),
+    }, '+=0.15');
 
-                      {/* Form fields */}
-                      <div className="flex flex-col gap-[20px]">
-                        <div className="flex items-center py-[10px] border-b border-solid border-[rgba(35,31,32,0.07)]">
-                          <input
-                            type="text"
-                            placeholder="Имя"
-                            className="bg-transparent font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] placeholder:opacity-30 placeholder:text-[#231f20] outline-none w-full"
-                          />
-                        </div>
+    // Фон чуть-чуть поднимается и плавно растворяется
+    tl.to(bg, {
+      y: -20,
+      opacity: 0,
+      duration: 0.5,
+      ease: 'power2.in',
+      onComplete: onDone,
+    }, '-=0.25');
 
-                        <div className="flex items-center py-[10px] border-b border-solid border-[rgba(35,31,32,0.07)]">
-                          <input
-                            type="text"
-                            placeholder="Компания"
-                            className="bg-transparent font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] placeholder:opacity-30 placeholder:text-[#231f20] outline-none w-full"
-                          />
-                        </div>
+    return () => { tl.kill(); };
+  }, []);
 
-                        <div className="flex items-center py-[10px] border-b border-solid border-[rgba(35,31,32,0.07)]">
-                          <input
-                            type="text"
-                            placeholder="Телефон или телеграм"
-                            className="bg-transparent font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] placeholder:opacity-30 placeholder:text-[#231f20] outline-none w-full"
-                          />
-                        </div>
+  return (
+    <div ref={bgRef} style={{
+      position: 'fixed', inset: 0, zIndex: 9999,
+      background: 'var(--c-bg)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexDirection: 'column',
+      gap: 14,
+      pointerEvents: 'none',
+    }}>
+      <p ref={wrapRef} style={{
+        fontFamily: 'var(--font)',
+        fontSize: 'var(--text-size)',
+        fontWeight: 'var(--text-weight)',
+        letterSpacing: 'var(--text-ls)',
+        lineHeight: 'var(--text-lh)',
+        color: 'var(--c-text)',
+        margin: 0,
+      }}>
+        {PRELOADER_LINES.map((line, i) => (
+          <Fragment key={line}>
+            <span data-word style={{ display: 'inline-block', opacity: 0, verticalAlign: 'top' }}>{line}</span>
+            {i < PRELOADER_LINES.length - 1 && ' '}
+          </Fragment>
+        ))}
+      </p>
+    </div>
+  );
+}
 
-                        <div className="flex items-center py-[10px]">
-                          <button className="decoration-solid font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] underline cursor-pointer bg-transparent border-none p-0">
-                            Отправить
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-[10px]">
-                      <div
-                        onClick={() => setIsChecked(!isChecked)}
-                        className="w-[16px] h-[16px] border border-solid border-[rgba(35,31,32,0.3)] cursor-pointer flex items-center justify-center transition-all duration-200"
-                      >
-                        {isChecked && (
-                          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                            <path d="M1 4L3.5 6.5L9 1" stroke="#231f20" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        )}
-                      </div>
-                      <label
-                        onClick={() => setIsChecked(!isChecked)}
-                        className="font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] cursor-pointer"
-                      >
-                        Галочка про конфиденциальность
-                      </label>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Step 2: Art Director Card */}
-              {formStep === 2 && (
-                <>
-                  {/* Left: Art Director text */}
-                  <div className="flex flex-col gap-[20px] flex-1">
-                    <p className="font-['Inter',sans-serif] font-medium leading-[0.81] text-[#231f20] text-[40px] tracking-[-0.8px]">
-                      Пообщаться<br />с арт-директором<br />про визуальную<br />систему
-                    </p>
-                  </div>
-
-                  {/* Right: Contact form */}
-                  <div className="flex flex-col gap-[160px] w-[592px] shrink-0">
-                    <div className="flex flex-col gap-[20px]">
-                      <p className="font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px]">
-                        Заполните форму.<br />Свяжемся в течение дня с 11:00-20:00
-                      </p>
-
-                      {/* Form fields */}
-                      <div className="flex flex-col gap-[20px]">
-                        <div className="flex items-center py-[10px] border-b border-solid border-[rgba(35,31,32,0.07)]">
-                          <input
-                            type="text"
-                            placeholder="Имя"
-                            className="bg-transparent font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] placeholder:opacity-30 placeholder:text-[#231f20] outline-none w-full"
-                          />
-                        </div>
-
-                        <div className="flex items-center py-[10px] border-b border-solid border-[rgba(35,31,32,0.07)]">
-                          <input
-                            type="text"
-                            placeholder="Компания"
-                            className="bg-transparent font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] placeholder:opacity-30 placeholder:text-[#231f20] outline-none w-full"
-                          />
-                        </div>
-
-                        <div className="flex items-center py-[10px] border-b border-solid border-[rgba(35,31,32,0.07)]">
-                          <input
-                            type="text"
-                            placeholder="Телефон или телеграм"
-                            className="bg-transparent font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] placeholder:opacity-30 placeholder:text-[#231f20] outline-none w-full"
-                          />
-                        </div>
-
-                        <div className="flex items-center py-[10px]">
-                          <button className="decoration-solid font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] underline cursor-pointer bg-transparent border-none p-0">
-                            Отправить
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-[10px]">
-                      <div
-                        onClick={() => setIsChecked(!isChecked)}
-                        className="w-[16px] h-[16px] border border-solid border-[rgba(35,31,32,0.3)] cursor-pointer flex items-center justify-center transition-all duration-200"
-                      >
-                        {isChecked && (
-                          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                            <path d="M1 4L3.5 6.5L9 1" stroke="#231f20" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        )}
-                      </div>
-                      <label
-                        onClick={() => setIsChecked(!isChecked)}
-                        className="font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] cursor-pointer"
-                      >
-                        Галочка про конфиденциальность
-                      </label>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
+// ── 404 page — flying bunny with "Перейти на главную" link ────────────────────
+function NotFoundPage({ onGoHome }: { onGoHome: () => void }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 160,
+      background: 'var(--c-bg)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      gap: 40,
+      animation: 'pageIn 0.35s 0.05s ease both',
+    }}>
+      {/* Flying bunny — BunnyHero in idle/float mode */}
+      <div style={{ width: 480, height: 270, overflow: 'hidden' }}>
+        <BunnyHero activeSection={-1} />
       </div>
+      <div style={{
+        fontFamily: 'var(--font-display)',
+        fontSize: 'var(--heading-size)',
+        fontWeight: 'var(--heading-weight)' as React.CSSProperties['fontWeight'],
+        lineHeight: 'var(--heading-lh)',
+        letterSpacing: 'var(--heading-ls)',
+        color: 'var(--c-text)',
+      }}>404</div>
+      <button
+        onClick={onGoHome}
+        style={{
+          background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+          fontFamily: 'var(--font)',
+          fontSize: 'var(--text-size)',
+          fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+          lineHeight: 'var(--text-lh)',
+          letterSpacing: 'var(--text-ls)',
+          color: 'var(--c-text)',
+          textDecoration: 'underline',
+          textDecorationStyle: 'dotted',
+          textUnderlineOffset: '3px',
+        }}
+      >Перейти на главную</button>
+    </div>
+  );
+}
+
+// Split the logo SVG into animatable groups
+const logoPaths = (() => {
+  const all = svgPaths.pb7e9300.match(/M[^M]+/g)!;
+  // order: 0=P_OUTER, 1=S, 2=K, 3=P_INNER, 4=DOT
+  return {
+    s:   all[1],
+    k:   all[2],
+    dot: all[4],
+    p:   all[0] + all[3],
+  };
+})();
+
+// ── Password gate — site is hidden behind a simple password ────────────────────
+const SITE_PASSWORD = '3454';
+function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
+  const [val, setVal] = useState('');
+  const [shake, setShake] = useState(false);
+  const submit = () => {
+    if (val.trim() === SITE_PASSWORD) {
+      try { sessionStorage.setItem('skip-unlocked', '1'); } catch {}
+      onUnlock();
+    } else {
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+    }
+  };
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 99999,
+      background: 'var(--c-bg)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      gap: 16,
+      fontFamily: 'var(--font)',
+    }}>
+      <p style={{
+        fontFamily: 'var(--font-display)',
+        fontSize: 'var(--heading-size)',
+        fontWeight: 'var(--heading-weight)' as React.CSSProperties['fontWeight'],
+        lineHeight: 'var(--heading-lh)',
+        letterSpacing: 'var(--heading-ls)',
+        color: 'var(--c-text)',
+        margin: 0,
+      }}>скип</p>
+      <input
+        type="password"
+        autoFocus
+        value={val}
+        onChange={e => setVal(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && submit()}
+        placeholder="пароль"
+        style={{
+          background: 'transparent',
+          border: '1px solid var(--c-text)',
+          color: 'var(--c-text)',
+          padding: '10px 16px',
+          fontFamily: 'var(--font)',
+          fontSize: 'var(--text-size)',
+          lineHeight: 'var(--text-lh)',
+          letterSpacing: 'var(--text-ls)',
+          outline: 'none',
+          width: 200,
+          textAlign: 'center',
+          transition: 'transform 0.1s',
+          transform: shake ? 'translateX(4px)' : 'translateX(0)',
+          animation: shake ? 'gateShake 0.4s' : undefined,
+        }}
+      />
+      <style>{`@keyframes gateShake {
+        10%, 90% { transform: translateX(-2px); }
+        20%, 80% { transform: translateX( 3px); }
+        30%, 50%, 70% { transform: translateX(-5px); }
+        40%, 60% { transform: translateX( 5px); }
+      }`}</style>
+      <button
+        onClick={submit}
+        style={{
+          background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+          fontFamily: 'var(--font)',
+          fontSize: 'var(--text-size)',
+          color: 'var(--c-text)',
+          textDecoration: 'underline',
+          textDecorationStyle: 'dotted',
+          textUnderlineOffset: '3px',
+        }}
+      >войти</button>
     </div>
   );
 }
 
 export default function App() {
-  useGsapAnimations();
+  const [unlocked, setUnlocked] = useState(() => {
+    try { return sessionStorage.getItem('skip-unlocked') === '1'; }
+    catch { return false; }
+  });
+  if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />;
+  return <AppInner />;
+}
+
+function AppInner() {
+  const [pathname, setPathname] = useState(() => window.location.pathname);
+  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/policy', '/index2', '/case-template', '/guide'];
+  const page = pathname === '/cases' ? 'cases'
+             : pathname === '/instruments' ? 'instruments'
+             : (pathname === '/expertiza' || pathname === '/services') ? 'expertiza'
+             : pathname === '/policy' ? 'policy'
+             : pathname === '/index2' ? 'index2'
+             : pathname === '/case-template' ? 'case-template'
+             : pathname === '/guide' ? 'guide'
+             : pathname === '/' ? 'home'
+             : pathname === '/404' || !KNOWN_PATHS.includes(pathname) ? 'notfound'
+             : 'home';
+
+  const navigate = useCallback((path: string) => {
+    window.history.pushState({}, '', path);
+    setPathname(path);
+  }, []);
+
+  useEffect(() => {
+    const handlePop = () => setPathname(window.location.pathname);
+    window.addEventListener('popstate', handlePop);
+    return () => window.removeEventListener('popstate', handlePop);
+  }, []);
+
+  const [preloaderDone, setPreloaderDone] = useState(() => window.location.pathname !== '/');
+  const [gridVisible, setGridVisible] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const sRef   = useRef<SVGGElement>(null);
+  const kRef   = useRef<SVGGElement>(null);
+  const dotRef = useRef<SVGGElement>(null);
+  const pRef   = useRef<SVGGElement>(null);
+  const mainRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
+
+  // Reveal refs
+  const studioTextRef = useRef<HTMLDivElement>(null);
+  const clientLabelRef = useRef<HTMLParagraphElement>(null);
+  const clientNamesRef = useRef<HTMLDivElement>(null);
+  const toolsRowsRef = useRef<HTMLDivElement>(null);
+
+  useReveal(studioTextRef, { selector: 'p', fromY: 20, stagger: 0.09, duration: 0.6 }, preloaderDone);
+  useReveal(clientLabelRef, { fromY: 12, duration: 0.45 }, preloaderDone);
+  useReveal(clientNamesRef, { selector: 'p', fromX: 28, fromY: 0, stagger: 0.09, duration: 0.5, ease: 'power2.out' }, preloaderDone);
+  useReveal(toolsRowsRef, { selector: `.${s.toolRow}`, fromY: 14, stagger: 0.08, duration: 0.55 }, preloaderDone);
+
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      const prev = window.history.scrollRestoration;
+      window.history.scrollRestoration = 'manual';
+      window.scrollTo(0, 0);
+      return () => { window.history.scrollRestoration = prev; };
+    }
+  }, []);
+
+  // Reset privacy visibility on page change
+  useEffect(() => { setShowPrivacy(false); }, [pathname]);
+
+  // Detect scroll-to-bottom on both the main page (window) and inner fixed pages
+  useEffect(() => {
+    const onScroll = (e: Event) => {
+      const t = e.target as HTMLElement;
+      if (t === document || t === document.documentElement || t === document.body) {
+        const scrolled = window.scrollY + window.innerHeight;
+        setShowPrivacy(scrolled >= document.documentElement.scrollHeight - 120);
+      } else if (t && t.scrollHeight) {
+        setShowPrivacy(t.scrollTop + t.clientHeight >= t.scrollHeight - 120);
+      }
+    };
+    document.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    return () => document.removeEventListener('scroll', onScroll, { capture: true });
+  }, []);
+
+  useEffect(() => {
+    const reduce = typeof window !== 'undefined'
+      && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+    const lenis = new Lenis({
+      duration: reduce ? 0 : 0.7,
+      easing: (t: number) => 1 - Math.pow(1 - t, 3),
+      smoothWheel: !reduce,
+      prevent: (node: Element) => !!node.closest('[data-lenis-prevent]'),
+    });
+    (window as any).__lenis = lenis;
+    const raf = (time: number) => lenis.raf(time * 1000);
+    gsap.ticker.add(raf);
+    gsap.ticker.lagSmoothing(0);
+    return () => {
+      gsap.ticker.remove(raf);
+      lenis.destroy();
+      (window as any).__lenis = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.shiftKey) && e.code === 'KeyG') {
+        e.preventDefault();
+        setGridVisible(v => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const casesLinkRef = useRef<HTMLElement>(null);
+  const toolsLinkRef = useRef<HTMLElement>(null);
+  const expertizaLinkRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const logo = logoRef.current;
+    const links = [casesLinkRef.current, expertizaLinkRef.current, toolsLinkRef.current].filter(Boolean);
+    if (!logo || !links.length) return;
+    gsap.set(logo, { opacity: 0, x: 10 });
+    gsap.set(links, { opacity: 0, y: 8 });
+  }, []);
+
+  useEffect(() => {
+    if (!preloaderDone) return;
+    const logo = logoRef.current;
+    const links = [casesLinkRef.current, expertizaLinkRef.current, toolsLinkRef.current].filter(Boolean);
+    if (!logo || !links.length) return;
+
+    const tl = gsap.timeline();
+    tl.to(logo, { opacity: 1, x: 0, duration: 0.45, ease: 'power3.out' }, 0)
+      .to(links, { opacity: 1, y: 0, duration: 0.4, stagger: 0.07, ease: 'power3.out' }, 0);
+
+    return () => { tl.kill(); };
+  }, [preloaderDone]);
+
+  // Line-by-line page exit: stagger visible text elements upward
+  const exitPageLines = (onDone: () => void) => {
+    if (!mainRef.current) { onDone(); return; }
+    const viewport = { top: 0, bottom: window.innerHeight };
+    // Collect all direct text nodes visible in viewport
+    const candidates = Array.from(
+      mainRef.current.querySelectorAll<HTMLElement>('span[style], p, h1, h2, h3, a')
+    ).filter(el => {
+      const r = el.getBoundingClientRect();
+      return r.bottom > viewport.top && r.top < viewport.bottom && r.height > 0;
+    });
+    if (!candidates.length) { onDone(); return; }
+    gsap.to(candidates, {
+      y: 36,
+      opacity: 0,
+      duration: 0.3,
+      ease: 'power3.in',
+      stagger: { amount: 0.18, from: 'start' },
+      onComplete: onDone,
+    });
+  };
+
+  // Page exit then navigate
+  const navigateWithExit = useCallback((dest: string) => {
+    if (!mainRef.current) { navigate(dest); return; }
+    const allLinks = [casesLinkRef.current, toolsLinkRef.current, expertizaLinkRef.current].filter(Boolean);
+    gsap.to(allLinks, { opacity: 0, duration: 0.2, ease: 'power2.in' });
+    gsap.to(mainRef.current, {
+      opacity: 0,
+      y: 20,
+      duration: 0.35,
+      ease: 'power3.in',
+      onComplete: () => {
+        navigate(dest);
+        // If we're navigating BACK to home, restore the main wrapper —
+        // otherwise it stays at opacity 0 from the exit animation and the page looks blank.
+        if (dest === '/' && mainRef.current) {
+          gsap.set(mainRef.current, { opacity: 1, y: 0 });
+          gsap.to(allLinks, { opacity: 1, duration: 0.2 });
+        }
+      },
+    });
+  }, [navigate]);
+
+  // Safety net: any time we land on the home page, make sure the main wrapper is fully visible.
+  useEffect(() => {
+    if (page === 'home' && mainRef.current) {
+      gsap.set(mainRef.current, { opacity: 1, y: 0 });
+    }
+  }, [page]);
+
+  const flyToTitle = (_label: string, _linkEl: HTMLAnchorElement, dest: string) => {
+    navigateWithExit(dest);
+  };
+
+  const handleCasesClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (casesLinkRef.current) flyToTitle('Кейсы', casesLinkRef.current, '/cases');
+    else navigate('/cases');
+  };
+
+  const handleInstrumentsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (toolsLinkRef.current) flyToTitle('Инструменты', toolsLinkRef.current, '/instruments');
+    else navigate('/instruments');
+  };
+
+  const handleExpertizaClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (expertizaLinkRef.current) flyToTitle('Услуги', expertizaLinkRef.current, '/services');
+    else navigate('/services');
+  };
+
+  const handleBack = () => {
+    navigate('/');
+  };
+
+  const prevPath = useRef(pathname);
+  useEffect(() => {
+    const was = prevPath.current;
+    prevPath.current = pathname;
+    if (pathname === '/' && (was === '/cases' || was === '/instruments' || was === '/expertiza' || was === '/services' || was === '/policy' || was === '/case-template' || was === '/guide')) {
+      requestAnimationFrame(() => {
+        if (casesLinkRef.current) gsap.set(casesLinkRef.current, { opacity: 1 });
+        if (toolsLinkRef.current) gsap.set(toolsLinkRef.current, { opacity: 1 });
+        if (expertizaLinkRef.current) gsap.set(expertizaLinkRef.current, { opacity: 1 });
+        if (mainRef.current) {
+          gsap.fromTo(mainRef.current, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
+        }
+      });
+    }
+  }, [pathname]);
 
   return (
-    <div className="min-h-screen w-full bg-white">
-      <ScrollHero />
+    <>
+      {!preloaderDone && <Preloader onDone={() => setPreloaderDone(true)} />}
 
-      {/* Project Gallery Section */}
-      <div id="cases">
-        <ProjectGallery />
+      {gridVisible && (
+        <>
+          <BunnyFollower />
+          <div className={s.gridOverlay} aria-hidden="true">
+            {Array.from({ length: 5 }).map((_, i) => <div key={i} className={s.gridCol} />)}
+          </div>
+        </>
+      )}
+
+      <nav className={s.nav}>
+        {page !== 'home' && page !== 'index2' ? (
+          <button className={s.navBack} onClick={handleBack}>← назад</button>
+        ) : (
+          <>
+            <span ref={casesLinkRef as React.RefObject<HTMLSpanElement>}>
+              <a href="/cases" className={s.navLink} onClick={handleCasesClick}>Кейсы</a>
+            </span>
+            <span ref={expertizaLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <span className={s.navSep}>,&nbsp;</span>
+              <a href="/services" className={s.navLink} onClick={handleExpertizaClick}>Услуги</a>
+            </span>
+            <span ref={toolsLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <span className={s.navSep}>,&nbsp;</span>
+              <a href="/instruments" className={s.navLink} onClick={handleInstrumentsClick}>Подход</a>
+            </span>
+          </>
+        )}
+      </nav>
+
+      <div
+        ref={logoRef}
+        className={s.logo}
+        onClick={page !== 'home' ? handleBack : () => {
+          const lenis = (window as any).__lenis;
+          if (lenis) lenis.scrollTo(0, { duration: 1.2 });
+          else window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        style={{ cursor: 'pointer' }}
+        onMouseEnter={() => {
+          const refs = [dotRef.current, sRef.current, kRef.current, pRef.current];
+          gsap.killTweensOf(refs);
+          gsap.to(dotRef.current, { y: -2,   duration: 0.18, ease: 'power2.out' });
+          gsap.to(sRef.current,   { x: -2,   duration: 0.18, ease: 'power2.out' });
+          gsap.to(kRef.current,   { x: -1.5, duration: 0.18, ease: 'power2.out' });
+          gsap.to(pRef.current,   { x: 2,    duration: 0.18, ease: 'power2.out' });
+        }}
+        onMouseLeave={() => {
+          const refs = [dotRef.current, sRef.current, kRef.current, pRef.current];
+          gsap.killTweensOf(refs);
+          gsap.to(dotRef.current, { y: 0, duration: 0.22, ease: 'power3.out' });
+          gsap.to(sRef.current,   { x: 0, duration: 0.22, ease: 'power3.out' });
+          gsap.to(kRef.current,   { x: 0, duration: 0.22, ease: 'power3.out' });
+          gsap.to(pRef.current,   { x: 0, duration: 0.22, ease: 'power3.out' });
+        }}
+      >
+        <svg fill="none" preserveAspectRatio="none" viewBox="0 0 52.5283 32" overflow="visible" style={{ overflow: 'visible' }}>
+          <g ref={sRef}><path d={logoPaths.s} fill="#ffffff" /></g>
+          <g ref={kRef}><path d={logoPaths.k} fill="#ffffff" /></g>
+          <g ref={dotRef}><path d={logoPaths.dot} fill="#ffffff" /></g>
+          <g ref={pRef}><path d={logoPaths.p} fill="#ffffff" fillRule="evenodd" /></g>
+        </svg>
       </div>
 
-      {/* Studio Section */}
-      <div id="studio" className="px-[20px] mt-[200px]">
-        <div className="flex flex-col gap-[80px]">
-          {/* 5 columns grid layout */}
-          <div className="grid grid-cols-5 gap-[20px]">
-            {/* Column 1: Title */}
-            <div className="col-span-1">
-              <p data-animate="title" className="font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px]">
-                Студия
-              </p>
-            </div>
+      <Footer />
 
-            {/* Column 2: Empty */}
-            <div className="col-span-1"></div>
+      {/* Privacy links — bottom-left, appear when scrolled to page bottom */}
+      <div style={{
+        position: 'fixed',
+        left: 'var(--pad)',
+        bottom: 'var(--pad)',
+        zIndex: 165,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '4px',
+        opacity: showPrivacy ? 0.4 : 0,
+        transition: 'opacity 0.4s ease',
+        pointerEvents: showPrivacy ? 'auto' : 'none',
+        fontSize: 'var(--text-size)',
+        fontFamily: 'var(--font)',
+        fontWeight: 'var(--text-weight)',
+        letterSpacing: 'var(--text-ls)',
+        lineHeight: 'var(--text-lh)',
+        color: 'var(--c-text)',
+        userSelect: 'none',
+      }}>
+        <a href="/policy" onClick={e => { e.preventDefault(); navigate('/policy'); }} style={{ textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px', color: 'inherit' }}>Политика конфиденциальности</a>
+      </div>
 
-            {/* Column 3: Description */}
-            <div className="col-span-1">
-              <p data-animate="text-line" className="font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px]">
-                Skip Design — бутиковая студия цифрового дизайна и автоматизации продакшна.
-              </p>
-            </div>
+      {/* Fixed bottom: /en + time — bottom-left on index2, bottom-right elsewhere */}
+      <div style={{
+        position: 'fixed',
+        ...(page === 'index2'
+          ? { left: 'var(--pad)' }
+          : { right: 'var(--pad)' }),
+        bottom: 'var(--pad)',
+        zIndex: 200,
+        display: 'flex',
+        gap: '10px',
+        alignItems: 'center',
+        fontSize: 'var(--text-size)',
+        fontFamily: 'var(--font)',
+        fontWeight: 'var(--text-weight)',
+        letterSpacing: 'var(--text-ls)',
+        lineHeight: 'var(--text-lh)',
+        color: '#fff',
+        mixBlendMode: 'difference',
+        pointerEvents: 'auto',
+        userSelect: 'none',
+      }}>
+        <span style={{ color: 'inherit' }}><MoscowTime /> (GMT+3)</span>
+        <a href="/en" style={{ color: 'inherit', textDecoration: 'none' }}>/en</a>
+      </div>
 
-            {/* Column 4: Philosophy and Clients */}
-            <div className="col-span-1 flex flex-col gap-[40px]">
-              <p data-animate="text-line" className="font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px]">
-                Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться сути.
-              </p>
+      {/* Two decorative circles at start of last column, same height as time block */}
+      <div style={{
+        position: 'fixed',
+        left: 'calc(var(--pad) + 4 * ((100% - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap)))',
+        bottom: 'var(--pad)',
+        zIndex: 200,
+        display: 'flex',
+        gap: '10px',
+        alignItems: 'center',
+        pointerEvents: 'none',
+        mixBlendMode: 'difference',
+      }}>
+        <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#fff' }} />
+        <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#fff' }} />
+      </div>
 
-              <div className="flex flex-col gap-[20px]">
-                <p data-animate="text-line" className="font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px]">
-                  Нам доверяют задачи:
-                </p>
-                <div className="flex flex-col gap-[20px] text-[40px] leading-[0.81] tracking-[-0.8px] font-['Inter',sans-serif] font-medium text-[#231f20]">
-                  <p data-animate="text-line">AliExpress</p>
-                  <p data-animate="text-line">Gate Legal</p>
-                  <p data-animate="text-line">Юрий Мурадян</p>
-                  <p data-animate="text-line">Futura Digital</p>
-                  <p data-animate="text-line">Senior*s</p>
+      {page === 'cases' && <CasesPage
+        onBack={handleBack}
+        onCaseClick={() => navigateWithExit('/case-template')}
+        onNavigatePolicy={() => navigateWithExit('/policy')}
+        onGridMode={setGridVisible}
+      />}
+      {page === 'instruments' && <InstrumentsPage
+        onNavigateCases={() => navigateWithExit('/cases')}
+        onNavigatePolicy={() => navigateWithExit('/policy')}
+        onGridMode={setGridVisible}
+      />}
+      {page === 'expertiza' && <ExpertizaPage
+        onNavigateCases={() => navigateWithExit('/cases')}
+        onNavigatePolicy={() => navigateWithExit('/policy')}
+        onGridMode={setGridVisible}
+      />}
+      {page === 'policy' && <PolicyPage />}
+      {page === 'index2' && <Index2Page />}
+      {page === 'case-template' && <CaseTemplatePage onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} />}
+      {page === 'guide' && <GuidePage />}
+      {page === 'notfound' && <NotFoundPage onGoHome={() => navigateWithExit('/')} />}
+
+      <div
+        ref={mainRef}
+        className={s.page}
+        style={{ visibility: page === 'home' ? 'visible' : 'hidden' }}
+      >
+        <ScrollHero
+          mode={HERO_MODE}
+          ready={preloaderDone}
+          onNavigateExpertiza={(anchor) => navigateWithExit('/services' + (anchor ? '#' + anchor : ''))}
+          onNavigateCases={() => navigateWithExit('/cases')}
+        />
+
+        <div id="studio" className={s.section} style={{ marginTop: 100 }}>
+          <div className={s.studio}>
+            <div ref={studioTextRef} className={s.grid5}>
+              <p className={s.studioLabel}>Студия</p>
+              <div />
+              <p className={s.studioDesc}>Skip Design — бутиковая студия цифрового дизайна. Мы ценим человечность, здравый смысл и мастерство.</p>
+              <div className={s.studioPhilosophy}>
+                <p className={s.studioDesc}>Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться сути.</p>
+                <div className={s.studioClients}>
+                  <p ref={clientLabelRef} className={s.studioClientsLabel}>Нам доверяют проекты:</p>
+                  <div ref={clientNamesRef} className={s.studioClientNames}>
+                    <p>AliExpress</p><p>Юрий Мурадян</p><p>Gate Legal</p><p>Senior*s Bar</p>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Column 5: Empty */}
-            <div className="col-span-1"></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tools and Solutions Section */}
-      <div id="tools" className="px-[20px] mt-[200px]">
-        <div className="flex flex-col gap-[80px]">
-          <p data-animate="title" className="font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px]">
-            Инструменты и решения
-          </p>
-
-          <div className="flex flex-col gap-[40px] w-full">
-            {/* Row 1 */}
-            <div data-animate="grid-item" className="grid grid-cols-5 gap-[20px] items-start pt-[12px] relative w-full border-t border-solid border-[rgba(35,31,32,0.12)]">
-              <p className="col-span-1 font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px]">
-                Конструктор
-              </p>
-              <div className="col-span-1"></div>
-              <p className="col-span-1 font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px]">
-                Skip Design — бутиковая студия цифрового дизайна и автоматизации продакшна. <span className="underline decoration-dotted cursor-pointer">Читать</span>
-              </p>
-              <div className="col-span-1"></div>
-              <p className="col-span-1 font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] text-right">
-                2026
-              </p>
-            </div>
-
-            {/* Row 2 */}
-            <div data-animate="grid-item" className="grid grid-cols-5 gap-[20px] items-start pt-[12px] relative w-full border-t border-solid border-[rgba(35,31,32,0.12)]">
-              <p className="col-span-1 font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px]">
-                Метод
-              </p>
-              <div className="col-span-1"></div>
-              <p className="col-span-1 font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px]">
-                Skip Design — бутиковая студия цифрового дизайна и автоматизации продакшна. <span className="underline decoration-dotted cursor-pointer">Читать</span>
-              </p>
-              <div className="col-span-1"></div>
-              <p className="col-span-1 font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] text-right">
-                2026
-              </p>
-            </div>
-
-            {/* Row 3 */}
-            <div data-animate="grid-item" className="grid grid-cols-5 gap-[20px] items-start pt-[12px] relative w-full border-t border-solid border-[rgba(35,31,32,0.12)]">
-              <p className="col-span-1 font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px]">
-                Решение
-              </p>
-              <div className="col-span-1"></div>
-              <p className="col-span-1 font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px]">
-                Skip Design — бутиковая студия цифрового дизайна и автоматизации продакшна. <span className="underline decoration-dotted cursor-pointer">Читать</span>
-              </p>
-              <div className="col-span-1"></div>
-              <p className="col-span-1 font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] text-right">
-                2026
-              </p>
+              <div />
             </div>
           </div>
         </div>
+
+        <div id="cases" style={{ marginTop: 200 }}>
+          <ProjectGallery onCaseClick={() => navigateWithExit('/case-template')} />
+        </div>
+
+        <div data-section="media" className={s.fullVideo}>
+          <video autoPlay muted loop playsInline>
+            <source src="/video2.mov" type="video/mp4" />
+          </video>
+        </div>
+
+        <ToolsSection />
+
+        <MediaSection toolsRowsRef={toolsRowsRef} />
+
+        <ContactForm onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} />
+
+        {/* MindMapBlock temporarily hidden — keep for later */}
+        {/* <div className={s.section} style={{ marginTop: 200 }}>
+          <MindMapBlock />
+        </div> */}
       </div>
-
-      {/* Contact Form Section */}
-      <ContactFormSection />
-
-      {/* Footer with curtain effect */}
-      <Footer />
-    </div>
+    </>
   );
 }

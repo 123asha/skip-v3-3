@@ -126,7 +126,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-family: 'CoFo Sans VF Trial', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
   }
 
   /**
@@ -136,7 +136,6 @@
 
   html {
     font-size: var(--font-size);
-    scroll-behavior: smooth;
     scroll-padding-top: 60px;
   }
 

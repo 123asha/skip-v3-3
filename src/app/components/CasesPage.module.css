@@ -1,0 +1,159 @@
+.page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--c-bg);
+  z-index: 160;
+  overflow-y: scroll;
+  animation: pageIn 0.35s 0.05s ease both;
+  scrollbar-gutter: stable;
+}
+
+.scrollbar {
+  position: fixed;
+  right: var(--pad);
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--c-border, rgba(35,31,32,0.12));
+  z-index: 170;
+}
+
+.scrollbarThumb {
+  position: absolute;
+  left: -0.5px;
+  width: 2px;
+  background: var(--c-text);
+  border-radius: 1px;
+  transition: height 0.1s, top 0.1s;
+}
+
+@keyframes pageIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.title {
+  position: absolute;
+  left: calc(var(--pad) - 3px);
+  top: calc(var(--pad) + var(--text-size) * var(--text-lh) + 20px);
+  font-family: var(--font-display);
+  font-size: var(--heading-size);
+  font-weight: var(--heading-weight);
+  line-height: var(--heading-lh);
+  letter-spacing: var(--heading-ls);
+}
+
+.body {
+  /* 80px gap between h1 bottom and first content block */
+  padding-top: calc(var(--pad) + var(--text-size) * var(--text-lh) + 20px + var(--heading-size) * var(--heading-lh) + 80px);
+  padding-bottom: 200px;
+}
+
+/* ── Tabs ── */
+.tabsBar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--c-bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: var(--pad) var(--pad);
+}
+.tabsBar .zoomBtns {
+  position: absolute;
+  left: var(--pad);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tab {
+  line-height: var(--text-lh);
+  letter-spacing: var(--text-ls);
+  transition: opacity 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: var(--text-size);
+  font-family: var(--font-mono);
+  font-weight: var(--text-weight);
+  color: var(--c-text);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+
+/* ── Cases grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  column-gap: var(--gap);
+  row-gap: 120px;
+  padding: 0 var(--pad);
+  align-items: center;
+}
+
+/* ── Project card ── */
+.card {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cardMeta {
+  overflow: hidden;
+  transition: height 0.3s ease, padding 0.3s ease;
+}
+
+.cardMetaText {
+  line-height: var(--text-lh);
+  letter-spacing: var(--text-ls);
+  transition: opacity 0.3s;
+}
+
+.cardImage {
+  flex: 1;
+  overflow: hidden;
+  background: var(--c-surface);
+}
+
+.cardImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.cardBottom {
+  overflow: hidden;
+  transition: height 0.3s ease, padding 0.3s ease;
+}
+
+.cardBottomText {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  overflow: hidden;
+  line-height: var(--text-lh);
+  letter-spacing: var(--text-ls);
+  transition: opacity 0.3s;
+}
+
+.cardLink {
+  font-family: var(--font-mono);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  flex-shrink: 0;
+}

@@ -1,0 +1,22 @@
+.footer a {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  color: inherit;
+}
+
+.footer {
+  position: fixed;
+  bottom: var(--pad);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 165;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  line-height: var(--text-lh);
+  letter-spacing: var(--text-ls);
+  white-space: nowrap;
+  mix-blend-mode: difference;
+  color: #fff;
+}

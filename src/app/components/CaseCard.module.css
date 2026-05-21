@@ -1,0 +1,56 @@
+/* ── Shared CaseCard (horizontal 16/9 and vertical 3/4) ── */
+.card {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cardMeta {
+  overflow: hidden;
+  transition: height 0.3s ease, padding 0.3s ease;
+}
+
+.cardMetaText {
+  line-height: var(--text-lh);
+  letter-spacing: var(--text-ls);
+  transition: opacity 0.3s;
+}
+
+.cardImage {
+  flex: 1;
+  overflow: hidden;
+  background: var(--c-surface);
+}
+
+.cardImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cardBottom {
+  overflow: hidden;
+  transition: height 0.3s ease, padding 0.3s ease, margin-top 0.3s ease;
+}
+
+.cardBottomText {
+  display: flex;
+  align-items: flex-start;
+  height: 100%;
+  line-height: var(--text-lh);
+  letter-spacing: var(--text-ls);
+  transition: opacity 0.3s;
+  gap: 4px;
+}
+
+.cardLink {
+  font-family: var(--font-mono);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  flex-shrink: 0;
+}

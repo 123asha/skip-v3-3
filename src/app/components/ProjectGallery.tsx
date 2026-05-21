@@ -1,257 +1,166 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
+import s from './ProjectGallery.module.css';
+import CaseCard from './CaseCard';
 
-const categories = ['Брендинг', 'Сайты', 'Интерфейсы'];
+const H = '16/9' as const;
+const V = '3/4' as const;
+type AR = typeof H | typeof V;
 
-const projects = [
-  {
-    id: 1,
-    image: 'https://images.unsplash.com/photo-1770315200927-b7282cffbd45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBicmFuZGluZyUyMGRlc2lnbnxlbnwxfHx8fDE3Nzg0MzI5MTF8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    title: 'Брендинг AliExpress',
-    description: 'Исследования рынка, категории и целевой аудитории.',
-    link: 'Перейти'
-  },
-  {
-    id: 2,
-    image: 'https://images.unsplash.com/photo-1560461396-ec0ef7bb29dd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtaW5pbWFsJTIwcHJvZHVjdCUyMGRlc2lnbnxlbnwxfHx8fDE3Nzg0MzI5MTJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    title: 'Gate Legal',
-    description: 'Платформа бренда и визуальная идентичность',
-    link: 'Перейти'
-  },
-  {
-    id: 3,
-    image: 'https://images.unsplash.com/photo-1618761714954-0b8cd0026356?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx1aSUyMGRlc2lnbiUyMGludGVyZmFjZXxlbnwxfHx8fDE3Nzg0MzI5MTZ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    title: 'Senior\'s Platform',
-    description: 'Дизайн-система и интерфейсы',
-    link: 'Перейти'
-  },
-  {
-    id: 4,
-    image: 'https://images.unsplash.com/photo-1609921212029-bb5a28e60960?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxncmFwaGljJTIwZGVzaWduJTIwd29ya3NwYWNlfGVufDF8fHx8MTc3ODQzMjkxMnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    title: 'Futura Digital',
-    description: 'Нейминг и регистрация, платформа бренда',
-    link: 'Перейти'
-  },
-  {
-    id: 5,
-    image: 'https://images.unsplash.com/photo-1774999631724-1854d2daafc2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjbGVhbiUyMGJyYW5kJTIwaWRlbnRpdHl8ZW58MXx8fHwxNzc4NDMyOTEzfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    title: 'Юрий Мурадян',
-    description: 'Персональный брендинг',
-    link: 'Перейти'
-  },
-  {
-    id: 6,
-    image: 'https://images.unsplash.com/photo-1711563386439-75ce269ac998?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkaWdpdGFsJTIwcHJvZHVjdCUyMG1vY2t1cHxlbnwxfHx8fDE3Nzg0MzI5MTN8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-    title: 'Digital Experience',
-    description: 'Исследования и автоматизация процессов',
-    link: 'Перейти'
-  }
+interface Project {
+  id: number;
+  cats: string[];
+  ar: AR;
+  image: string;
+  title: string;
+  desc: string;
+}
+
+export const PROJECTS: Project[] = [
+  { id: 1, cats: ['branding', 'sites', 'interfaces'],            ar: H, image: 'https://cdn.prod.website-files.com/675f094fa71fc3ba49590b83/68dd523f3242f983fe4bcef5_main%20ae.png', title: 'AliExpress',         desc: 'AE Platform: дизайн B2B-платформы для партнёров AliExpress' },
+  { id: 2, cats: ['sites', 'interfaces', 'instruments'],         ar: V, image: 'https://cdn.prod.website-files.com/675f094fa71fc3ba49590b83/68dd57358ebd2acb0ec91f25_ae%201.1.png',   title: 'AE Platform',        desc: 'Редизайн браузерного расширения для AE Platform' },
+  { id: 3, cats: ['branding', 'interfaces', 'instruments'],      ar: V, image: 'https://cdn.prod.website-files.com/675f094fa71fc3ba49590b83/68ab337ce793eadbdb71c93b_ae7.png',         title: "Senior's Platform",  desc: 'Дизайн-система и интерфейсы' },
+  { id: 4, cats: ['branding', 'sites', 'interfaces'],            ar: H, image: 'https://images.unsplash.com/photo-1609921212029-bb5a28e60960?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080', title: 'Futura Digital',     desc: 'Нейминг и регистрация, платформа бренда' },
+  { id: 5, cats: ['branding', 'sites', 'instruments'],           ar: V, image: 'https://cdn.prod.website-files.com/675f094fa71fc3ba49590b83/68ae0490ec1cc0adc7c7b3f3_Frame%202087328484.png', title: 'Юрий Мурадян',       desc: 'Персональный брендинг' },
+  { id: 6, cats: ['sites', 'interfaces', 'instruments'],         ar: H, image: 'https://images.unsplash.com/photo-1711563386439-75ce269ac998?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080', title: 'Digital Experience', desc: 'Исследования и автоматизация процессов' },
 ];
 
-export default function ProjectGallery() {
-  const [activeCategory, setActiveCategory] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
+const TABS = [
+  { key: 'branding',   label: 'Брендинг' },
+  { key: 'sites',      label: 'Сайты'    },
+  { key: 'interfaces', label: 'UX/UI'    },
+];
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!containerRef.current) return;
+// ── Row configs: each card = 2 cols in 5-col grid ────────────────────────────
+const CFG_GAP = { a: '1 / 3', b: '4 / 6' };  // left card col 1-2, right col 4-5
+const CFG_ADJ = { a: '2 / 4', b: '4 / 6' };  // left card col 2-3, right col 4-5
 
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const containerTop = containerRect.top;
-      const viewportHeight = window.innerHeight;
+interface RowItem { project: Project; col: string; }
+interface Row { key: string; items: RowItem[]; }
 
-      // Trigger when row starts entering the middle of viewport
-      const triggerPoint = viewportHeight * 0.5;
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
-      // Get all rows
-      const rows = containerRef.current.querySelectorAll('.project-row');
+function buildRows(projects: Project[]): Row[] {
+  const hs = shuffle(projects.filter(p => p.ar === H));
+  const vs = shuffle(projects.filter(p => p.ar === V));
 
-      if (rows.length >= 3) {
-        const row1 = rows[0].getBoundingClientRect();
-        const row2 = rows[1].getBoundingClientRect();
-        const row3 = rows[2].getBoundingClientRect();
+  type Pair = { a: Project; b: Project; isHH: boolean };
+  const pairs: Pair[] = [];
 
-        if (row3.top < triggerPoint) {
-          setActiveCategory(2); // Интерфейсы
-        } else if (row2.top < triggerPoint) {
-          setActiveCategory(1); // Сайты
-        } else {
-          setActiveCategory(0); // Брендинг
-        }
-      }
-    };
+  while (hs.length && vs.length) {
+    pairs.push({ a: hs.pop()!, b: vs.pop()!, isHH: false });
+  }
+  if (hs.length >= 2) pairs.push({ a: hs.pop()!, b: hs.pop()!, isHH: true });
+  else if (vs.length >= 2) pairs.push({ a: vs.pop()!, b: vs.pop()!, isHH: false });
 
-    window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Initial check
+  const rows: Row[] = [];
+  let lastWasGap = Math.random() < 0.5;
+  const nextCfg = () => {
+    if (!lastWasGap) { lastWasGap = true; return CFG_GAP; }
+    lastWasGap = false; return CFG_ADJ;
+  };
 
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  let prevRightWasV = false;
 
+  for (const { a, b, isHH } of shuffle(pairs)) {
+    let cfg;
+    if (isHH) { cfg = CFG_GAP; lastWasGap = true; }
+    else { cfg = nextCfg(); }
+
+    let left = Math.random() < 0.5 ? a : b;
+    let right = left === a ? b : a;
+
+    if (prevRightWasV && right.ar === V && left.ar !== V) {
+      [left, right] = [right, left];
+    }
+
+    prevRightWasV = right.ar === V;
+    rows.push({ key: `r${rows.length}`, items: [{ project: left, col: cfg.a }, { project: right, col: cfg.b }] });
+  }
+
+  for (const p of [...hs, ...vs]) {
+    rows.push({ key: `r${rows.length}`, items: [{ project: p, col: '2 / 4' }] });
+  }
+
+  return rows;
+}
+
+function ProjectCard({ project, onClick }: { project: Project; onClick?: () => void }) {
   return (
-    <div ref={containerRef} className="bg-white relative w-full">
-      {/* Navigation tabs - sticky positioned */}
-      <div className="sticky top-0 left-0 right-0 z-50 content-stretch flex flex-col items-center py-[20px] mb-[120px] mix-blend-difference">
-        <div className="content-stretch flex font-['Inter',sans-serif] font-medium gap-[20px] h-[16px] items-center leading-none pl-[20px] relative shrink-0 text-white text-[16px] tracking-[-0.32px] whitespace-nowrap">
-          <p className="relative shrink-0">Разработали</p>
-          <div className="content-stretch flex gap-[10px] items-center relative shrink-0">
-            {categories.map((category, idx) => (
-              <button
-                key={idx}
-                onClick={() => setActiveCategory(idx)}
-                className={`relative shrink-0 transition-opacity duration-300 hover:opacity-100 ${
-                  activeCategory === idx ? 'opacity-100' : 'opacity-30'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Main content grid - 5 column grid system */}
-      <div className="relative bg-white w-full px-[20px]">
-        <div className="flex flex-col gap-[120px]">
-          {/* Row 1: Horizontal + Vertical */}
-          <div className="grid grid-cols-5 gap-[20px] project-row">
-            <div className="col-span-2">
-              <ProjectCard
-                image={projects[0].image}
-                aspectRatio="612/345"
-                title={projects[0].title}
-                description={projects[0].description}
-                link={projects[0].link}
-              />
-            </div>
-            <div className="col-span-1"></div>
-            <div className="col-span-2">
-              <ProjectCard
-                image={projects[1].image}
-                aspectRatio="612/765"
-                title={projects[1].title}
-                description={projects[1].description}
-                link={projects[1].link}
-              />
-            </div>
-          </div>
-
-          {/* Row 2: Horizontal + Vertical */}
-          <div className="grid grid-cols-5 gap-[20px] project-row">
-            <div className="col-span-1"></div>
-            <div className="col-span-2">
-              <ProjectCard
-                image={projects[2].image}
-                aspectRatio="612/345"
-                title={projects[2].title}
-                description={projects[2].description}
-                link={projects[2].link}
-              />
-            </div>
-            <div className="col-span-2">
-              <ProjectCard
-                image={projects[3].image}
-                aspectRatio="612/765"
-                title={projects[3].title}
-                description={projects[3].description}
-                link={projects[3].link}
-              />
-            </div>
-          </div>
-
-          {/* Row 3: Horizontal only */}
-          <div className="grid grid-cols-5 gap-[20px] project-row">
-            <div className="col-span-2">
-              <ProjectCard
-                image={projects[4].image}
-                aspectRatio="612/345"
-                title={projects[4].title}
-                description={projects[4].description}
-                link={projects[4].link}
-              />
-            </div>
-            <div className="col-span-3"></div>
-          </div>
-
-          {/* Row 4: Vertical only */}
-          <div className="grid grid-cols-5 gap-[20px] project-row">
-            <div className="col-span-2"></div>
-            <div className="col-span-2">
-              <ProjectCard
-                image={projects[5].image}
-                aspectRatio="612/765"
-                title={projects[5].title}
-                description={projects[5].description}
-                link={projects[5].link}
-              />
-            </div>
-            <div className="col-span-1"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <CaseCard
+      ar={project.ar}
+      title={project.title}
+      desc={project.desc}
+      image={project.image}
+      onClick={onClick}
+    />
   );
 }
 
-interface ProjectCardProps {
-  image: string;
-  aspectRatio: string;
-  title?: string;
-  description?: string;
-  link?: string;
-}
+export default function ProjectGallery({ onCaseClick }: { onCaseClick?: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [rows, setRows] = useState<Row[]>(() => buildRows(PROJECTS));
 
-function ProjectCard({ image, aspectRatio, title, description, link }: ProjectCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
+  const handleTab = useCallback((key: string) => {
+    const next = key === activeTab ? null : key;
+    setActiveTab(next);
+    const filtered = next ? PROJECTS.filter(p => p.cats.includes(next)) : PROJECTS;
+    setRows(buildRows(filtered));
+
+    // Скролл к началу блока кейсов после фильтрации
+    const el = containerRef.current;
+    if (el) {
+      const y = el.getBoundingClientRect().top + window.scrollY;
+      const lenis = (window as any).__lenis;
+      if (lenis) lenis.scrollTo(y, { duration: 0.8 });
+      else window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  }, [activeTab]);
 
   return (
-    <div
-      data-animate="card"
-      className="relative w-full cursor-pointer bg-white flex flex-col overflow-hidden"
-      style={{ aspectRatio }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Top text area - appears on hover */}
-      <div
-        className={`transition-all duration-300 ease-out bg-white relative z-0 ${
-          isHovered ? 'h-[36px] pt-[10px]' : 'h-0'
-        }`}
-      >
-        {title && (
-          <p
-            className={`font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] transition-opacity duration-300 ${
-              isHovered ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            {title}
-          </p>
-        )}
+    <div ref={containerRef} className={s.root}>
+      <div className={s.tabsBar}>
+        <div className={s.tabsGroup}>
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              className={s.tab}
+              style={{ opacity: activeTab === tab.key ? 1 : activeTab ? 0.35 : 0.6 }}
+              onClick={() => handleTab(tab.key)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Image - shrinks on hover, image scales up */}
-      <div className="flex-1 overflow-hidden bg-[#f6f6f6] relative z-10">
-        <img
-          alt=""
-          className={`w-full h-full object-cover transition-transform duration-300 ease-out ${
-            isHovered ? 'scale-105' : 'scale-100'
-          }`}
-          src={image}
-        />
-      </div>
-
-      {/* Bottom text area - appears on hover */}
       <div
-        className={`transition-all duration-300 ease-out bg-white relative z-0 ${
-          isHovered ? 'h-[36px] pb-[10px]' : 'h-0'
-        }`}
+        className={s.grid}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          columnGap: 'var(--gap)',
+          rowGap: 120,
+          padding: '0 var(--pad)',
+          alignItems: 'center',
+        }}
       >
-        {description && link && (
-          <p
-            className={`font-['Inter',sans-serif] font-medium leading-none text-[#231f20] text-[16px] tracking-[-0.32px] transition-opacity duration-300 flex items-end h-full ${
-              isHovered ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            {description}<span className="inline-block w-[4px]"></span><span className="underline decoration-dotted">{link}</span>
-          </p>
+        {rows.map((row, rowIdx) =>
+          row.items.map(item => (
+            <div
+              key={item.project.id}
+              style={{ gridColumn: item.col, gridRow: rowIdx + 1 }}
+            >
+              <ProjectCard project={item.project} onClick={onCaseClick} />
+            </div>
+          ))
         )}
       </div>
     </div>

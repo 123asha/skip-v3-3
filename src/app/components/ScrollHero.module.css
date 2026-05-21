@@ -1,0 +1,91 @@
+.nav {
+  position: fixed;
+  left: var(--pad);
+  top: var(--pad);
+  z-index: 50;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  line-height: var(--text-lh);
+  letter-spacing: var(--text-ls);
+  mix-blend-mode: difference;
+  color: #fff;
+}
+.nav a { text-decoration: underline; }
+
+.logo {
+  position: fixed;
+  right: var(--pad);
+  top: 10px;
+  z-index: 50;
+  width: 52.5px;
+  height: 32px;
+  mix-blend-mode: difference;
+}
+.logo svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.container { position: relative; min-height: 300vh; }
+
+.sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  background: var(--c-bg);
+  overflow: hidden;
+}
+
+.headline {
+  position: absolute;
+  left: calc(var(--pad) - 3px);
+  top: calc(var(--pad) + var(--text-size) * var(--text-lh) + 20px);
+  font-family: var(--font-display);
+  font-size: var(--heading-size);
+  font-weight: var(--heading-weight);
+  line-height: var(--heading-lh);
+  letter-spacing: var(--heading-ls);
+  width: 38%;
+  z-index: 4;
+  color: #fff;
+  mix-blend-mode: difference;
+}
+
+/* Panel */
+.panel {
+  position: absolute;
+  overflow: hidden;
+  background: #000;
+}
+
+.panelLayer {
+  position: absolute;
+  inset: 0;
+}
+
+.panelLayer video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.panelCaption {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  line-height: var(--text-lh);
+  letter-spacing: var(--text-ls);
+  opacity: 0.4;
+}
+
+.bottomLinks {
+  position: absolute;
+  bottom: var(--pad);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--gap);
+  line-height: var(--text-lh);
+  letter-spacing: var(--text-ls);
+  white-space: nowrap;
+}
+.bottomLinks a { text-decoration: underline; }

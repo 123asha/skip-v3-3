@@ -679,7 +679,7 @@ function AppInner() {
             transition: 'opacity 0.2s ease',
           }}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ transform: 'translate(-0.5px, 0.5px)' }}>
             <path d="M22 4 2.5 11.5l5.6 1.9 2.2 7 3.7-3.6 5.2 3.8L22 4Zm-5.3 4.6-8 7.2-2.5-.9 10.5-6.3Zm-6 9.2 1.2-3.6 6.4 4.7-3.4-1.5-4.2.4Z" fill="#fff" />
           </svg>
         </a>

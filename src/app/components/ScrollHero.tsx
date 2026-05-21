@@ -198,31 +198,36 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
     }
   }, []);
 
-  // Case-name rectangle: text swap as if the cube face flipped — old text rolls up and out,
-  // new text rolls up from below in lock-step (same direction, same colour).
+  // Case-name rectangle: text swap as a true 3D cube-face rotation around the X-axis.
+  // Old face tilts forward and disappears over the top edge; new face emerges from
+  // the bottom edge tilting from below into a flat face-on position.
   useEffect(() => {
-    // Case-name text — slide whole word UP as one cube face. Old leaves through the top,
-    // new enters from below at exactly the same moment.
     const c = VS_CASES[Math.min(imgIdx, VS_CASES.length - 1)];
     const nameEl = caseNameRef.current;
     if (nameEl) {
+      // Container gets perspective so the rotateX reads as 3D depth.
+      nameEl.style.perspective = '600px';
+      nameEl.style.transformStyle = 'preserve-3d';
+
       const oldChars = Array.from(nameEl.querySelectorAll<HTMLElement>('[data-char]'));
       gsap.killTweensOf(oldChars);
-      // Old face: roll up and out (uniform — no stagger so it reads like one solid face)
+      // Old face: tilts away over the top — the face rotates 90° as it rolls up.
       gsap.to(oldChars, {
         yPercent: -100,
+        rotateX: 90,
+        transformOrigin: '50% 50% -8px',
         duration: 0.45,
         ease: 'power3.inOut',
       });
-      // Swap text mid-flight and roll the new face up from below
+      // Swap text mid-flight, then the new face rotates from below into face-on view.
       gsap.delayedCall(0.45, () => {
         if (!nameEl) return;
         renderSplitText(nameEl, c.name);
         if (caseLinkRef.current) caseLinkRef.current.href = c.href;
         const newChars = Array.from(nameEl.querySelectorAll<HTMLElement>('[data-char]'));
         gsap.fromTo(newChars,
-          { yPercent: 100 },
-          { yPercent: 0, duration: 0.45, ease: 'power3.inOut' },
+          { yPercent: 100, rotateX: -90, transformOrigin: '50% 50% -8px' },
+          { yPercent: 0,   rotateX: 0,   duration: 0.45, ease: 'power3.inOut' },
         );
       });
     }

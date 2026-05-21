@@ -108,8 +108,8 @@
     grid-row:    auto !important;
   }
 
-  /* Contact card spans full width on the 2-col contactWrap grid */
-  [class*="_contactCard_"] { grid-column: 1 / -1 !important; }
+  /* Contact card spans full width on mobile (flex-centered parent) */
+  [class*="_contactCard_"] { width: 100% !important; }
 }
 
 html {

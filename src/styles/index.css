@@ -58,38 +58,58 @@
 /* Muted text helper — matches L2 link opacity */
 .text-muted { opacity: var(--opacity-muted); }
 
-/* ── Mobile (≤ 768px) ─────────────────────────────────────────────────── */
+/* ── Mobile (≤ 768px) — 2-column layout ────────────────────────────────
+   Fonts scale with viewport but never below floors: h1 ≥ 28, h2 ≥ 20, text ≥ 12.
+   Layout follows a 2-col grid (down from 5 on desktop). */
 @media (max-width: 768px) {
   :root {
     --pad: 16px;
     --gap: 12px;
-    --text-size: 14px;
-    --heading-size: 30px;
-    --h2-size: 22px;
+    --text-size:    clamp(12px, 3.5vw, 16px);
+    --heading-size: clamp(28px, 8vw,   40px);
+    --h2-size:      clamp(20px, 5.5vw, 28px);
   }
 
-  /* Make 5-col grids stack into a single column */
+  /* 5-col and 3-col grids collapse to 2-col on mobile.
+     Catches both inline styles and CSS-module classes (hashed _grid_, _row_, etc.). */
   .grid5,
+  [class*="_grid_"],
+  [class*="_grid5_"],
+  [class*="_row_"],
+  [class*="_tabsBar_"],
+  [class*="_toolRow_"],
+  [class*="_contactWrap_"],
+  [class*="_contactInner_"],
   [style*="repeat(5, 1fr)"],
   [style*="repeat(3, 1fr)"] {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr 1fr !important;
   }
 
-  /* gridColumn spans don't make sense on a single column — neutralise them */
-  [style*="gridColumn"], [style*="grid-column"] {
+  /* Default: every child of a remapped 5-col grid stacks as a full-width row */
+  .grid5 > *,
+  [class*="_grid5_"] > *,
+  [class*="_row_"] > *,
+  [class*="_tabsBar_"] > *,
+  [class*="_toolRow_"] > *,
+  [class*="_contactInner_"] > *,
+  [style*="repeat(5, 1fr)"] > *,
+  [style*="repeat(3, 1fr)"] > * {
     grid-column: 1 / -1 !important;
+    grid-row:    auto !important;
   }
 
-  /* Stack the contact form game + center column */
-  .contactCard, [class*="contactCard"] {
-    min-height: 0 !important;
+  /* Exception: project / case galleries — children flow as 2-up cards.
+     Inline grid-column gets serialised to grid-area, so direct rewrites fail;
+     clearing the placement and letting auto-flow handle it is reliable.
+     Placed AFTER the default to win the cascade when both rules match
+     (equal specificity, later one wins). */
+  [class*="_grid_"] > * {
+    grid-column: auto !important;
+    grid-row:    auto !important;
   }
-  [class*="contactGameBg"] { display: none !important; }
-  [class*="contactGameControls"] { display: none !important; }
-  [class*="contactCenter"] {
-    max-width: 100% !important;
-    padding: 24px 16px !important;
-  }
+
+  /* Contact card spans full width on the 2-col contactWrap grid */
+  [class*="_contactCard_"] { grid-column: 1 / -1 !important; }
 }
 
 html {

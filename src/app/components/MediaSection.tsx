@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import s from '../App.module.css';
+import { MagneticDivider } from './MagneticDivider';
 
 const tools = [
   { name: 'Конструктор', desc: 'Разбираем архитектуру бренда до основания.', year: '2026' },
@@ -15,14 +16,11 @@ export function ToolsList({ toolsRowsRef }: { toolsRowsRef?: React.RefObject<HTM
         <div
           key={tool.name}
           className={s.toolRow}
-          style={{
-            borderTopColor: hoveredTool === tool.name ? 'var(--c-text)' : undefined,
-            cursor: 'pointer',
-            transition: 'border-top-color 0.2s ease',
-          }}
+          style={{ cursor: 'pointer', position: 'relative' }}
           onMouseEnter={() => setHoveredTool(tool.name)}
           onMouseLeave={() => setHoveredTool(null)}
         >
+          <MagneticDivider active={hoveredTool === tool.name} />
           <p className={s.toolRowText}>{tool.name}</p>
           <div />
           <p className={s.toolRowText}>{tool.desc}{' '}<span className={s.toolRowLink}>Читать</span></p>

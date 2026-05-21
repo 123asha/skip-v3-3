@@ -25,10 +25,11 @@ export const PROJECTS: Project[] = [
 ];
 
 const TABS = [
-  { key: 'branding',   label: 'Брендинг' },
-  { key: 'sites',      label: 'Сайты'    },
-  { key: 'interfaces', label: 'UX/UI'    },
+  { key: 'branding', label: 'Брендинг' },
+  { key: 'digital',  label: 'Диджитал' },
 ];
+
+const DIGITAL_CATS = ['sites', 'interfaces', 'instruments'];
 
 // ── Row configs: each card = 2 cols in 5-col grid ────────────────────────────
 const CFG_GAP = { a: '1 / 3', b: '4 / 6' };  // left card col 1-2, right col 4-5
@@ -111,7 +112,11 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: () => vo
   const handleTab = useCallback((key: string) => {
     const next = key === activeTab ? null : key;
     setActiveTab(next);
-    const filtered = next ? PROJECTS.filter(p => p.cats.includes(next)) : PROJECTS;
+    const filtered = next === 'digital'
+      ? PROJECTS.filter(p => p.cats.some(c => DIGITAL_CATS.includes(c)))
+      : next
+        ? PROJECTS.filter(p => p.cats.includes(next))
+        : PROJECTS;
     setRows(buildRows(filtered));
 
     // Скролл к началу блока кейсов после фильтрации

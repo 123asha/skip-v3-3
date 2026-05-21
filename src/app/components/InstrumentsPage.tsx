@@ -7,6 +7,7 @@ import { ToolsSection } from './ToolsSection';
 import { MediaSection } from './MediaSection';
 import CaseCard from './CaseCard';
 import { PROJECTS } from './ProjectGallery';
+import { asset } from '../utils/asset';
 
 const problems = [
   {
@@ -152,9 +153,9 @@ function ExCaseCard({ title, tag, ar }: { title: string; tag: string; ar: '16/9'
 // ── Branding cycle card ────────────────────────────────────────────────────
 
 const BRANDING_PROJECTS = [
-  { name: "Senior's",                   image: '/1.png'   },
-  { name: 'Magic moon от Юры Мурадяна', image: '/1.1.png' },
-  { name: 'Gate Legal',                 image: '/2.png'   },
+  { name: "Senior's",                   image: asset('/1.png')   },
+  { name: 'Magic moon от Юры Мурадяна', image: asset('/1.1.png') },
+  { name: 'Gate Legal',                 image: asset('/2.png')   },
 ];
 
 function BrandingCycleCard() {
@@ -267,8 +268,12 @@ export default function InstrumentsPage({ onNavigateCases, onNavigatePolicy, onG
 
         {/* ── Кейсы — те же, что в основном разделе кейсов (показываем первые 3) ── */}
         <div style={{ marginTop: 200, marginBottom: 200 }}>
-          <div style={{ marginBottom: 40 }}>
-            <p style={headingStyle}>Кейсы</p>
+          <div style={{ marginBottom: 40, display: 'flex', alignItems: 'baseline', gap: 16 }}>
+            <h2 style={{ ...headingStyle, margin: 0 }}>Кейсы</h2>
+            <button
+              onClick={onNavigateCases}
+              style={{ ...textStyle, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}
+            >все кейсы</button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, rowGap: 60 }}>
             {PROJECTS.slice(0, 3).map(p => (

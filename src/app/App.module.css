@@ -206,7 +206,7 @@
   gap: var(--gap);
   align-items: start;
   padding-top: 12px;
-  border-top: 1px solid var(--c-border);
+  position: relative;
 }
 
 .toolRowText {
@@ -216,13 +216,17 @@
 
 .toolRowTextRight { text-align: right; }
 
-.toolRowLink { text-decoration: underline; text-decoration-style: dotted; cursor: pointer; }
+.toolRowLink { text-decoration: underline; text-decoration-style: dotted; cursor: pointer; opacity: var(--opacity-muted); transition: opacity 0.2s; }
+.toolRowLink:hover { opacity: 1; }
 
 /* ── Contact form ── */
 .contactWrap {
   margin-top: 200px;
   margin-bottom: 200px;
   padding: 0 var(--pad);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--gap);
 }
 
 .contactSkip {
@@ -291,17 +295,19 @@
 .contactCard {
   background: var(--c-accent);
   width: 100%;
-  padding: 20px;
   position: relative;
-  min-height: 720px;
   overflow: hidden;
   box-sizing: border-box;
+  grid-column: 4 / 6;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Snake / game canvas as a full-card background layer (behind the centered content) */
+/* Snake / game canvas — sits below the form, vertical stack */
 .contactGameBg {
-  position: absolute;
-  inset: 20px;
+  position: relative;
+  width: 100%;
+  height: 420px;
   z-index: 0;
   pointer-events: auto;
 }
@@ -309,6 +315,19 @@
   width: 100% !important;
   height: 100% !important;
   display: block;
+}
+
+/* Form content — full width of the 2-col card, flows above the game */
+.contactFormArea {
+  position: relative;
+  width: 100%;
+  padding: 40px 20px;
+  background: var(--c-accent);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-sizing: border-box;
 }
 
 /* Skip control / game-done overlay — top-right corner */

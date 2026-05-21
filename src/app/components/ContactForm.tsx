@@ -31,7 +31,6 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
       window.setTimeout(() => setEmailError(false), 600);
       return;
     }
-    // TODO: real submit logic
   };
   const handleTelegramSubmit = () => {
     if (!isValidTelegram(telegram)) {
@@ -39,12 +38,13 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
       window.setTimeout(() => setTelegramError(false), 600);
       return;
     }
-    // TODO: real submit logic
   };
-  const wordRef  = useRef<HTMLSpanElement>(null);
-  const wrapRef  = useRef<HTMLDivElement>(null);
 
-  // Start games only when form scrolls into view
+  const wordRef     = useRef<HTMLSpanElement>(null);
+  const wrapRef     = useRef<HTMLDivElement>(null);
+  const formAreaRef = useRef<HTMLDivElement>(null);
+
+  // Start game when form scrolls into view
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
@@ -63,7 +63,6 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
     activeFocus === 'email'    ? 'почту' :
     activeFocus === 'telegram' ? 'телеграм' : 'контакт';
 
-  // Animate word when it changes
   useEffect(() => {
     if (!wordRef.current) return;
     gsap.fromTo(wordRef.current,
@@ -100,40 +99,18 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
     <div ref={wrapRef} className={s.contactWrap}>
       <div className={s.contactCard}>
 
-        {/* Background snake — covers the whole card, behind the centered form content */}
-        <div className={s.contactGameBg}>
-          {gameFinished ? null : (
-            gameIndex === 0
-              ? <FormSnakeGame    key={gameKey} active={gameActive} onFinish={() => setGameFinished(true)} />
-              : <FormBreakoutGame key={gameKey} active={gameActive} onFinish={() => setGameFinished(true)} />
-          )}
-        </div>
-
-        {/* Skip control + game-done message stay top-right */}
-        <div className={s.contactGameControls}>
-          {gameFinished ? (
-            <div className={s.contactGameDone}>
-              <p>Круто что вы доиграли.<br />Давайте обсудим проект?</p>
-              <a href="https://t.me/skipdesign" target="_blank" rel="noopener noreferrer">Написать в Telegram</a>
-              <button onClick={() => { setGameFinished(false); setGameKey(k => k + 1); }}>играть снова</button>
-            </div>
-          ) : (
-            <button className={s.contactSkip} onClick={() => { setGameIndex(i => (i + 1) % 2); setGameKey(k => k + 1); }}>skip</button>
-          )}
-        </div>
-
-        {/* Centered content stack — all form items, center-aligned, opaque so they cover the snake behind */}
-        <div className={s.contactCenter}>
+        {/* Form content — top of card, stacks vertically */}
+        <div ref={formAreaRef} className={s.contactFormArea}>
 
           {/* Tabs */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0, alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0, alignItems: 'flex-start' }}>
             {([
               { key: 'discuss', label: 'Обсудить проект' },
               { key: 'join',    label: 'Стать частью команды' },
             ] as const).map(tab => (
               <button
                 key={tab.key}
-                style={{ ...tabStyle(activeTab === tab.key), textAlign: 'center' }}
+                style={tabStyle(activeTab === tab.key)}
                 onClick={() => { setActiveTab(tab.key); onGridMode?.(tab.key === 'join'); }}
               >
                 {tab.label}{activeTab === tab.key ? ' ↵' : ''}
@@ -141,22 +118,21 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
             ))}
           </div>
 
-          {/* Heading with animated word — 40px below the tabs */}
-          <p className={s.contactTitle} style={{ marginTop: 40, textAlign: 'center' }}>
+          {/* Heading with animated word */}
+          <p className={s.contactTitle} style={{ marginTop: 40 }}>
             Оставьте{' '}
             <span ref={wordRef}>{word}</span>,<br />мы назначим встречу
           </p>
 
-          {/* Subtitle — 10px below the heading */}
-          <p className={s.contactFormHeader} style={{ marginTop: 10, textAlign: 'center' }}>
+          {/* Subtitle */}
+          <p className={s.contactFormHeader} style={{ marginTop: 10 }}>
             Напишем в течение дня с 11:00 до 20:00
           </p>
 
-          {/* Inputs — 40px below the subtitle */}
-          <div className={s.contactFields} style={{ marginTop: 40 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center' }}>
+          {/* Inputs */}
+          <div className={s.contactFields} style={{ marginTop: 20, width: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'flex-start', width: '100%' }}>
 
-              {/* Email — disabled when telegram is focused */}
               <CircleInput
                 placeholder="EMAIL" size={44}
                 value={email} onChange={v => { setEmail(v); if (emailError) setEmailError(false); }}
@@ -173,7 +149,6 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
                 ) : undefined}
               />
 
-              {/* Telegram — disabled when email is focused */}
               <CircleInput
                 placeholder="@ТЕЛЕГРАМ" size={44}
                 value={telegram} onChange={v => { handleTelegramChange(v); if (telegramError) setTelegramError(false); }}
@@ -193,16 +168,10 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
             </div>
           </div>
 
-          {/* Checkbox — block is centered on the page, ~1 column wide, text left-aligned */}
+          {/* Checkbox */}
           <div
             className={s.contactCheckbox}
-            style={{
-              marginTop: 40,
-              gap: 6,
-              width: 'calc((100vw - 2 * var(--pad) - 4 * var(--gap)) / 5)',
-              maxWidth: '100%',
-              alignSelf: 'center',
-            }}
+            style={{ marginTop: 40, gap: 6, width: '100%' }}
             onClick={() => setChecked(!checked)}
           >
             <div className={`${s.checkbox} ${checked ? s.checked : ''}`}>
@@ -221,6 +190,28 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
             </span>
           </div>
 
+        </div>
+
+        {/* Snake/Breakout canvas — sits below the form */}
+        <div className={s.contactGameBg}>
+          {gameFinished ? null : (
+            gameIndex === 0
+              ? <FormSnakeGame    key={gameKey} active={gameActive} onFinish={() => setGameFinished(true)} />
+              : <FormBreakoutGame key={gameKey} active={gameActive} onFinish={() => setGameFinished(true)} />
+          )}
+        </div>
+
+        {/* Skip/done controls — top-right of card */}
+        <div className={s.contactGameControls}>
+          {gameFinished ? (
+            <div className={s.contactGameDone}>
+              <p>Круто что вы доиграли.<br />Давайте обсудим проект?</p>
+              <a href="https://t.me/skipdesign" target="_blank" rel="noopener noreferrer">Написать в Telegram</a>
+              <button onClick={() => { setGameFinished(false); setGameKey(k => k + 1); }}>играть снова</button>
+            </div>
+          ) : (
+            <button className={s.contactSkip} onClick={() => { setGameIndex(i => (i + 1) % 2); setGameKey(k => k + 1); }}>skip</button>
+          )}
         </div>
 
       </div>

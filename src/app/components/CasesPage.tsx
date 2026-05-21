@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import s from './CasesPage.module.css';
 import CaseCard from './CaseCard';
 import ContactForm from './ContactForm';
+import { asset } from '../utils/asset';
 
 interface Props {
   onBack: () => void;
@@ -24,7 +25,7 @@ interface Project {
   desc: string;
 }
 
-const LOCAL_IMGS = ['/1.png', '/1.1.png', '/2.png'];
+const LOCAL_IMGS = [asset('/1.png'), asset('/1.1.png'), asset('/2.png')];
 
 const PROJECTS: Project[] = [
   { id: 1,  cats: ['branding', 'sites', 'interfaces'],       ar: H, image: LOCAL_IMGS[0], title: 'Брендинг AliExpress',  desc: 'Исследования рынка, категории и целевой аудитории.' },
@@ -40,11 +41,11 @@ const PROJECTS: Project[] = [
 ];
 
 const TABS = [
-  { key: 'branding',    label: 'Брендинг'    },
-  { key: 'sites',       label: 'Сайты'       },
-  { key: 'interfaces',  label: 'UX/UI'       },
-  { key: 'instruments', label: 'Инструменты' },
+  { key: 'branding', label: 'Брендинг' },
+  { key: 'digital',  label: 'Диджитал' },
 ];
+
+const DIGITAL_CATS = ['sites', 'interfaces', 'instruments'];
 
 // ── Row configs: each card = 2 cols in 5-col grid ────────────────────────────
 const CFG_GAP  = { a: '1 / 3', b: '4 / 6' };  // left card col 1-2, right col 4-5
@@ -131,7 +132,11 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
   const [zoom, setZoom] = useState(2);
   const zoomMountRef = useRef(false);
 
-  const filteredProjects = activeTab ? PROJECTS.filter(p => p.cats.includes(activeTab)) : PROJECTS;
+  const filteredProjects = activeTab === 'digital'
+    ? PROJECTS.filter(p => p.cats.some(c => DIGITAL_CATS.includes(c)))
+    : activeTab
+      ? PROJECTS.filter(p => p.cats.includes(activeTab))
+      : PROJECTS;
 
   useEffect(() => {
     const mainLenis = (window as any).__lenis;
@@ -188,7 +193,11 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
   const handleTab = useCallback((key: string) => {
     const next = key === activeTab ? null : key;
     setActiveTab(next);
-    const filtered = next ? PROJECTS.filter(p => p.cats.includes(next)) : PROJECTS;
+    const filtered = next === 'digital'
+      ? PROJECTS.filter(p => p.cats.some(c => DIGITAL_CATS.includes(c)))
+      : next
+        ? PROJECTS.filter(p => p.cats.includes(next))
+        : PROJECTS;
     setRows(buildRows(filtered));
   }, [activeTab]);
 

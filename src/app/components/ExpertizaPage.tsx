@@ -3,8 +3,8 @@ import { gsap } from 'gsap';
 import s from './CasesPage.module.css';
 import { TEXT_STYLE as ts, H2_STYLE } from '../utils/typography';
 import ContactForm from './ContactForm';
-import CaseCard from './CaseCard';
 import { MediaSection } from './MediaSection';
+import { MagneticDivider } from './MagneticDivider';
 
 // ── Service data ──────────────────────────────────────────────────────────────
 
@@ -26,7 +26,7 @@ type Service = {
 const SERVICES: Service[] = [
   {
     number: '①',
-    title: 'Бренд-стратегия',
+    title: 'Бренд-\nстратегия',
     ctaLabel: 'получить кп от стратега',
     items: [
       {
@@ -34,8 +34,8 @@ const SERVICES: Service[] = [
         label: 'платформа бренда',
         heading: 'Платформа бренда',
         paragraphs: [
-          'Разрабатываем ядро бренда: миссию, ценности, архетип, позиционирование. Результат — документ, который объясняет, почему вы, для кого и чем отличаетесь.',
-          'Используем собственную методологию — конструктор миссии, проверенный на 40+ проектах.',
+          'Разрабатываем ядро бренда: убираем лишнее, чтобы увидеть суть. Результат — документ, который объясняет команде и ИИ, почему вы, для кого и чем отличаетесь.',
+          'Используем собственную методологию — конструктор миссии, проверенный на 20+ проектах.',
         ],
         examples: [
           { label: 'конструктор миссии', href: 'https://vc.ru/marketing/2205037-konstruktor-missii-dlya-brenda' },
@@ -111,6 +111,15 @@ const SERVICES: Service[] = [
         ],
       },
       {
+        id: 'interfaces',
+        label: 'интерфейсы',
+        heading: 'Интерфейсы',
+        paragraphs: [
+          'Проектируем пользовательские интерфейсы для веб-приложений, мобильных продуктов и B2B-платформ.',
+          'От исследования и прототипа до готовой дизайн-системы с компонентами в Figma.',
+        ],
+      },
+      {
         id: 'special',
         label: 'спецпроекты',
         heading: 'Спецпроекты',
@@ -123,44 +132,17 @@ const SERVICES: Service[] = [
   },
 ];
 
-// ── Cases data ────────────────────────────────────────────────────────────────
-
-type CaseEntry = {
-  id: string;
-  title: string;
-  tag: string;
-  serviceIds: string[];
-  ar: '16/9' | '3/4';
-};
-
-const CASES: CaseEntry[] = [
-  { id: 'c1', ar: '16/9', title: 'Бренд банка данных',         tag: 'Брендинг',    serviceIds: ['brand-platform', 'identity'] },
-  { id: 'c2', ar: '3/4',  title: 'Визуальная система стартапа', tag: 'Брендинг',    serviceIds: ['identity', 'guides'] },
-  { id: 'c3', ar: '3/4',  title: 'Нейминг IT-сервиса',          tag: 'Стратегия',   serviceIds: ['naming', 'research'] },
-  { id: 'c4', ar: '16/9', title: 'Корпоративный сайт',          tag: 'Сайты',       serviceIds: ['sites'] },
-  { id: 'c5', ar: '3/4',  title: 'Маркетинг-кит агентства',     tag: 'Инструменты', serviceIds: ['templates'] },
-  { id: 'c6', ar: '16/9', title: 'Дизайн-система продукта',     tag: 'Брендинг',    serviceIds: ['guides', 'identity'] },
-  { id: 'c7', ar: '16/9', title: 'Спецпроект к запуску',        tag: 'Сайты',       serviceIds: ['sites', 'brand-platform'] },
-  { id: 'c8', ar: '3/4',  title: 'Платформа бренда группы',     tag: 'Стратегия',   serviceIds: ['brand-platform', 'research'] },
-];
-
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
 // ts = TEXT_STYLE from shared typography (imported above)
 const h2Style: React.CSSProperties = { ...H2_STYLE, whiteSpace: 'pre-line' };
-
-// ── ExCaseCard — uses the shared CaseCard component ────────────────────────────
-
-function ExCaseCard({ title, tag, ar }: Pick<CaseEntry, 'title' | 'tag' | 'ar'>) {
-  return <CaseCard ar={ar} title={title} desc={tag} />;
-}
 
 // ── Anchor IDs — must match SERVICE_ANCHORS in ScrollHero ────────────────────
 const SERVICE_IDS = ['brand', 'visual', 'tools'] as const;
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function ExpertizaPage({ onNavigateCases, onNavigatePolicy, onGridMode }: { onNavigateCases?: () => void; onNavigatePolicy?: () => void; onGridMode?: (on: boolean) => void }) {
+export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavigatePolicy?: () => void; onGridMode?: (on: boolean) => void }) {
   const pageRef    = useRef<HTMLDivElement>(null);
   const rowRefs    = useRef<(HTMLDivElement | null)[]>([]);
   const panelRef   = useRef<HTMLDivElement>(null);   // single outer sticky panel
@@ -186,11 +168,6 @@ export default function ExpertizaPage({ onNavigateCases, onNavigatePolicy, onGri
     : (renderedItem
         ? SERVICES.findIndex(svc => svc.items.some(i => i.id === renderedItem!.id))
         : -1);
-
-  const filteredCases = (selectedId
-    ? CASES.filter(c => c.serviceIds.includes(selectedId))
-    : CASES
-  ).slice(0, 3);
 
   // ── Animate content swap inside the outer panel on selection change ─────────
   useEffect(() => {
@@ -321,17 +298,19 @@ export default function ExpertizaPage({ onNavigateCases, onNavigatePolicy, onGri
                   ref={el => { rowRefs.current[svcIdx] = el; }}
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    columnGap: 20,
-                    borderTop: '1px solid var(--c-border)',
+                    gridTemplateColumns: 'repeat(5, 1fr)',
+                    gap: 'var(--gap)',
+                    position: 'relative',
                     paddingTop: 16,
                     paddingBottom: 32,
                     alignItems: 'start',
                   }}
                 >
+                  <MagneticDivider />
                   <p style={{ ...ts, gridColumn: '1' }}>{svc.number}</p>
-                  <p style={{ ...h2Style, gridColumn: '2' }}>{svc.title}</p>
-                  <div style={{ gridColumn: '3', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div />
+                  <p style={{ ...h2Style, gridColumn: '3' }}>{svc.title}</p>
+                  <div style={{ gridColumn: '4 / 6', display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {itemButtons}
                   </div>
                 </div>
@@ -426,36 +405,14 @@ export default function ExpertizaPage({ onNavigateCases, onNavigatePolicy, onGri
           </div>
         </div>
 
-        {/* ── Cases — 3 per row, max 3, filtered by selection ── */}
-        {filteredCases.length > 0 && (
-          <div style={{ marginTop: 200 }}>
-            <div style={{ marginBottom: 40, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <p style={ts}>{selectedId ? 'Кейсы по услуге' : 'Кейсы'}</p>
-              {!selectedId && (
-                <button
-                  className="link-l2"
-                  style={{ background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: 'var(--text-size)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'], lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)' }}
-                  onClick={onNavigateCases}
-                >перейти</button>
-              )}
-            </div>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: 20,
-              rowGap: 60,
-            }}>
-              {filteredCases.map(c => (
-                <ExCaseCard key={c.id} {...c} />
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* ── Media — shared block (same as on the home page) ── */}
-        <MediaSection />
+        <div style={{ marginLeft: -20, marginRight: -20 }}>
+          <MediaSection />
+        </div>
 
-        <ContactForm onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
+        <div style={{ marginLeft: -20, marginRight: -20 }}>
+          <ContactForm onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
+        </div>
 
       </div>
     </div>

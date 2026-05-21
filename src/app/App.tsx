@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import Lenis from 'lenis';
 import svgPaths from '../imports/Index/svg-3bjnx36a2y';
 import { useReveal } from './utils/reveal';
+import { asset } from './utils/asset';
 import ScrollHero from './components/ScrollHero';
 import ProjectGallery from './components/ProjectGallery';
 import Footer from './components/Footer';
@@ -303,16 +304,19 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
 }
 
 export default function App() {
-  const [unlocked, setUnlocked] = useState(() => {
-    try { return sessionStorage.getItem('skip-unlocked') === '1'; }
-    catch { return false; }
-  });
-  if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />;
   return <AppInner />;
 }
 
+// Strip the Vite base path (/skip-design) from the browser pathname so
+// the app's internal router always sees paths starting with '/'.
+const _BASE = import.meta.env.BASE_URL.replace(/\/$/, ''); // e.g. '/skip-design' or ''
+function stripBase(p: string): string {
+  if (_BASE && p.startsWith(_BASE)) return p.slice(_BASE.length) || '/';
+  return p;
+}
+
 function AppInner() {
-  const [pathname, setPathname] = useState(() => window.location.pathname);
+  const [pathname, setPathname] = useState(() => stripBase(window.location.pathname));
   const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/policy', '/index2', '/case-template', '/guide'];
   const page = pathname === '/cases' ? 'cases'
              : pathname === '/instruments' ? 'instruments'
@@ -326,17 +330,17 @@ function AppInner() {
              : 'home';
 
   const navigate = useCallback((path: string) => {
-    window.history.pushState({}, '', path);
+    window.history.pushState({}, '', _BASE + path);
     setPathname(path);
   }, []);
 
   useEffect(() => {
-    const handlePop = () => setPathname(window.location.pathname);
+    const handlePop = () => setPathname(stripBase(window.location.pathname));
     window.addEventListener('popstate', handlePop);
     return () => window.removeEventListener('popstate', handlePop);
   }, []);
 
-  const [preloaderDone, setPreloaderDone] = useState(() => window.location.pathname !== '/');
+  const [preloaderDone, setPreloaderDone] = useState(() => stripBase(window.location.pathname) !== '/');
   const [gridVisible, setGridVisible] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const sRef   = useRef<SVGGElement>(null);
@@ -559,7 +563,7 @@ function AppInner() {
               <span className={s.navSep}>,&nbsp;</span>
               <a href="/services" className={s.navLink} onClick={handleExpertizaClick}>Услуги</a>
             </span>
-            <span ref={toolsLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
+            <span ref={toolsLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'none' }}>
               <span className={s.navSep}>,&nbsp;</span>
               <a href="/instruments" className={s.navLink} onClick={handleInstrumentsClick}>Подход</a>
             </span>
@@ -710,7 +714,6 @@ function AppInner() {
         onGridMode={setGridVisible}
       />}
       {page === 'expertiza' && <ExpertizaPage
-        onNavigateCases={() => navigateWithExit('/cases')}
         onNavigatePolicy={() => navigateWithExit('/policy')}
         onGridMode={setGridVisible}
       />}
@@ -758,7 +761,7 @@ function AppInner() {
 
         <div data-section="media" className={s.fullVideo}>
           <video autoPlay muted loop playsInline>
-            <source src="/video2.mov" type="video/mp4" />
+            <source src={asset('/video2.mov')} type="video/mp4" />
           </video>
         </div>
 

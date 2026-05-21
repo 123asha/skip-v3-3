@@ -5,6 +5,7 @@ import BunnyHero from './BunnyHero';
 import MoscowTime from './MoscowTime';
 import s from './ScrollHero.module.css';
 import { TEXT_STYLE } from '../utils/typography';
+import { asset } from '../utils/asset';
 
 
 export const sections = [
@@ -27,16 +28,16 @@ export const sections = [
 // ── Visual Systems grid board ─────────────────────────────────────────────────
 // Center panel images — paired with BG_IMGS by index (3 cases in slide 2)
 const BOARD_IMGS = [
-  '/2.png',
-  '/2pic.png',
-  '/2c.png',   // add to /public
+  asset('/2.png'),
+  asset('/2pic.png'),
+  asset('/2c.png'),
 ];
 
 // Gray block backgrounds — paired with BOARD_IMGS
 const BG_IMGS = [
-  '/1.png',
-  '/2bg.png',
-  '/3bg.png',
+  asset('/1.png'),
+  asset('/2bg.png'),
+  asset('/3bg.png'),
 ];
 
 // Visual-systems case info — labels shown on the small black rectangle
@@ -57,9 +58,9 @@ const SLOT_H = 405;
 const SLOT_GAP = 20;
 
 const HEADLINE_LINES = [
-  'Визуальные системы,',
-  'в которых бренд держит',
-  'форму при росте',
+  'Визуальные системы',
+  'для быстрорастущих',
+  'компаний',
 ];
 
 // ── easings ─────────────────────────────────────────────────────────────────
@@ -131,24 +132,19 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
   const rightNumRef   = useRef<HTMLDivElement>(null);
   const rightNumFirst = useRef(true);
   const grayBlockRef  = useRef<HTMLDivElement>(null);
-  // Gray block background — double-buffered, cycles with BOARD_IMGS
-  const bgWrapRef = useRef<HTMLDivElement>(null);
-  const bgARef    = useRef<HTMLImageElement>(null);
-  const bgBRef    = useRef<HTMLImageElement>(null);
-  const bgIsARef  = useRef(true);
+  // Background slides — 3 divs, one per BG_IMGS, driven by scroll
+  const bgWrapRef   = useRef<HTMLDivElement>(null);
+  const bgSlideRefs = useRef<(HTMLDivElement | null)[]>([null, null, null]);
+  const bgImgRefs   = useRef<(HTMLImageElement | null)[]>([null, null, null]);
   // Satellite images inside gray block — 4 columns, each double-buffered
   const satARef = useRef<(HTMLImageElement | null)[]>(Array(4).fill(null));
   const satBRef = useRef<(HTMLImageElement | null)[]>(Array(4).fill(null));
   const satIsARef = useRef<boolean[]>(Array(4).fill(true));
-  const satIdxRef    = useRef(0);
+  const satIdxRef     = useRef(0);
   const lastImgIdxRef = useRef(0);
-  const bgImgFirstRef = useRef(true);
 
-  // Seed background and satellite images on mount — scroll drives crossfades
+  // Seed satellite images on mount
   useEffect(() => {
-    if (bgARef.current) { bgARef.current.src = BG_IMGS[0]; gsap.set(bgARef.current, { opacity: 1 }); }
-    if (bgBRef.current) { bgBRef.current.src = BG_IMGS[0]; gsap.set(bgBRef.current, { opacity: 0 }); }
-
     const COUNT = 4;
     for (let i = 0; i < COUNT; i++) {
       const a = satARef.current[i];
@@ -202,26 +198,9 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
     }
   }, []);
 
-  // Background image: slides UP from bottom to top (no crossfade).
   // Case-name rectangle: text swap as if the cube face flipped — old text rolls up and out,
   // new text rolls up from below in lock-step (same direction, same colour).
   useEffect(() => {
-    if (bgImgFirstRef.current) { bgImgFirstRef.current = false; return; }
-    const idx = Math.min(BG_IMGS.length - 1, imgIdx);
-    const bgIsA = bgIsARef.current;
-    const bgOut = bgIsA ? bgARef.current : bgBRef.current;
-    const bgIn  = bgIsA ? bgBRef.current : bgARef.current;
-    if (bgIn && bgOut) {
-      bgIn.src = BG_IMGS[idx];
-      gsap.killTweensOf([bgIn, bgOut]);
-      gsap.set(bgIn,  { yPercent: 0, opacity: 0 });
-      gsap.set(bgOut, { yPercent: 0, opacity: 1 });
-      // Simple cross-fade — no slide
-      gsap.to(bgOut, { opacity: 0, duration: 0.4, ease: 'power2.in' });
-      gsap.to(bgIn,  { opacity: 1, duration: 0.45, delay: 0.1, ease: 'power2.out' });
-      bgIsARef.current = !bgIsA;
-    }
-
     // Case-name text — slide whole word UP as one cube face. Old leaves through the top,
     // new enters from below at exactly the same moment.
     const c = VS_CASES[Math.min(imgIdx, VS_CASES.length - 1)];
@@ -274,6 +253,18 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
     if (titles.length) gsap.set(titles, { opacity: 0, y: 24 });
     if (hlSpans?.length) gsap.set(hlSpans, { opacity: 0, y: 24 });
     if (captionRef.current) gsap.set(captionRef.current, { opacity: 0, y: 0 });
+    // Init bg slides: tape-strip — slide i stacked at yP = i × 100 (below the frame)
+    bgSlideRefs.current.forEach((el, i) => {
+      if (el) gsap.set(el, { yPercent: i * 100, scale: 1 });
+    });
+    // Init image parallax offsets to match slide yP (counter-translate)
+    bgImgRefs.current.forEach((img, i) => {
+      if (img) gsap.set(img, { yPercent: (-i * 100 * 0.15) / 1.3, scale: 1 });
+    });
+    // Clear any prior wrap transform (was set by older tape-strip code)
+    if (bgWrapRef.current) {
+      gsap.set(bgWrapRef.current, { clearProps: 'transform' });
+    }
   }, []);
 
   // Measure natural top-Y, default height, and final height (at 32px font)
@@ -392,7 +383,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
     const setHeight = (dur: number) => {
       // After the video: only the visual-systems section (no separate tools slide)
       container.style.height =
-        window.innerHeight + dur * PX_PER_SEC + visualPx + 100 + 'px';
+        window.innerHeight + dur * PX_PER_SEC + visualPx + 'px';
       durationCache = dur;
     };
 
@@ -472,36 +463,6 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
         videoLayerRef.current.style.transform = `translate3d(0, ${videoTY}%, 0)`;
       }
 
-      // ── Gray block: rises with the video, then stays in place — leaves with
-      //    the rest of the hero naturally when the sticky container ends.
-      {
-        if (grayBlockRef.current) {
-          let ty: number;
-          if (gp < VIDEO_STICK) {
-            ty = 100;
-          } else if (gp < 1.0) {
-            ty = 100 * (1 - (gp - VIDEO_STICK) / (1.0 - VIDEO_STICK));
-          } else {
-            ty = 0;
-          }
-          grayBlockRef.current.style.transform = `translateY(${ty}%)`;
-        }
-        // Background image wrapper:
-        //   gp <1.0    hidden (gray rectangle is still rising)
-        //   gp 1→1.10  fade in (rectangle is risen, first bg appears)
-        //   gp →1.85   fully visible (3 cases cycle)
-        //   gp 1.85→2  fade out (panel grows back, only gray remains)
-        //   gp ≥2.0    hidden (gray block retreats with the eye video)
-        if (bgWrapRef.current) {
-          let bgOp: number;
-          if      (gp < 1.0)   bgOp = 0;
-          else if (gp < 1.10)  bgOp = sm((gp - 1.0) / 0.10);
-          else if (gp < 1.85)  bgOp = 1;
-          else if (gp < 2.0)   bgOp = 1 - sm((gp - 1.85) / 0.15);
-          else                  bgOp = 0;
-          bgWrapRef.current.style.opacity = String(bgOp);
-        }
-      }
 
       // Slots: match video stick so snake arrives in sync with video lifting
       {
@@ -521,25 +482,22 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
         }
       }
 
-      // Panel size flow:
-      //   gp 0 → 0.85     720×405                (brand-strategy video)
-      //   gp 0.85 → 1.0   snaps to 320×56        ("magnetic" shrink as the video scrolls off)
-      //   gp 1.0+         holds at 320×56        (cases cycle, then Инструменты — both in the same small rectangle)
-      // Background layers cross-fade behind it: BG images for gp 1-2, eye video for gp 2+.
+      // Panel size:
+      //   gp 0 → 0.85     720×405  (brand-strategy video)
+      //   gp 0.85 → 1.0   shrinks to 320×56  (magnetic snap as video slides off)
+      //   gp 1.0+          holds at 320×56   (small black rectangle — cases cycle)
       {
         const BASE_W  = 720;
         const BASE_H  = 405;
         const SMALL_W = 320;
         const SMALL_H = 56;
         const SHRINK_DUR = 0.15;
-        // Ease-out cubic — gives the magnetic "snap into place" feel
         const easeOut = (t: number) => 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);
 
         let panelW = BASE_W;
         let panelH = BASE_H;
 
         if (gp > 1 - SHRINK_DUR && gp <= 1.0) {
-          // Magnetic shrink — happens during the last bit of the video slide-up
           const t = easeOut((gp - (1 - SHRINK_DUR)) / SHRINK_DUR);
           panelW = BASE_W + (SMALL_W - BASE_W) * t;
           panelH = BASE_H + (SMALL_H - BASE_H) * t;
@@ -553,7 +511,6 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
           panelRef.current.style.height = Math.round(panelH) + 'px';
         }
 
-        // Case rectangle overlay (cases) — visible during gp 1-2
         let overlayOp = 0;
         if (gp > 1 - SHRINK_DUR && gp <= 1.0)  overlayOp = easeOut((gp - (1 - SHRINK_DUR)) / SHRINK_DUR);
         else if (gp > 1.0)                       overlayOp = 1;
@@ -566,6 +523,40 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
           captionRef.current.style.top = `calc(50% + ${Math.round(panelH) / 2 + 10}px)`;
           captionRef.current.style.opacity = String((1 - overlayOp) * 0.4);
         }
+      }
+
+      // Background wrap — fade in at gp 1.0, stays visible after (sticky scrolls away naturally)
+      if (bgWrapRef.current) {
+        let bgOp = 0;
+        if      (gp < 1.0)  bgOp = 0;
+        else if (gp < 1.10) bgOp = sm((gp - 1.0) / 0.10);
+        else                bgOp = 1;
+        bgWrapRef.current.style.opacity = String(bgOp);
+      }
+
+      // Tape-strip — slides tile vertically, never overlap. Equal 0.5 gp slot each.
+      // Slide 0 centered at gp=1.0, exits top by gp=1.5
+      // Slide 1 enters at gp=1.0, centered at gp=1.5, exits top by gp=2.0
+      // Slide 2 enters at gp=1.5, centered at gp=2.0 (lands when section ends)
+      // Inside each slide the image lags the slide motion → parallax depth.
+      // Image is 130% tall, top -15% — has ±15% slide-height of headroom for the parallax shift.
+      {
+        const PARALLAX = 0.15; // lag factor: image moves at (1 - 0.15) of slide speed
+        const IMG_H_RATIO = 1.3; // image height = 130% of slide height
+
+        bgSlideRefs.current.forEach((el, i) => {
+          if (!el) return;
+          const yP = (i - (gp - 1.0) * 2) * 100;
+          gsap.set(el, { yPercent: yP, scale: 1 });
+
+          const imgEl = bgImgRefs.current[i];
+          if (imgEl) {
+            // Counter-translate the image so it lags the slide.
+            // yPercent on image is relative to image height — convert from slide-height units.
+            const imgY = (-yP * PARALLAX) / IMG_H_RATIO;
+            gsap.set(imgEl, { yPercent: imgY });
+          }
+        });
       }
 
     };
@@ -742,6 +733,28 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
 
 
 
+        {/* Background slides — scroll-driven, въезжают снизу + scale */}
+        <div ref={bgWrapRef} style={{
+          position: 'absolute', inset: '-30px',
+          opacity: 0, pointerEvents: 'none', zIndex: 2,
+          overflow: 'hidden',
+        }}>
+          {BG_IMGS.map((src, i) => (
+            <div
+              key={i}
+              ref={el => { bgSlideRefs.current[i] = el; }}
+              style={{ position: 'absolute', inset: 0, willChange: 'transform', zIndex: i, overflow: 'hidden' }}
+            >
+              <img
+                ref={el => { bgImgRefs.current[i] = el; }}
+                src={src}
+                style={{ position: 'absolute', top: '-15%', left: 0, width: '100%', height: '130%', objectFit: 'cover', willChange: 'transform' }}
+                alt=""
+              />
+            </div>
+          ))}
+        </div>
+
         {/* Panel: video / game — horizontally centered, clickable to navigate to service */}
         <div ref={panelRef} className={s.panel}
           onClick={() => {
@@ -774,7 +787,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
                 }}>
                   <div className={s.panelLayer}>
                     <video ref={vidRef} playsInline preload="auto" muted>
-                      <source src="/video.mp4" type="video/mp4" />
+                      <source src={asset('/video.mp4')} type="video/mp4" />
                     </video>
                   </div>
                 </div>
@@ -906,64 +919,6 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
           ))}
         </div>
 
-        {/* ── Gray block (1.1): plain gray, rises behind panel ────────────── */}
-        <div
-          ref={grayBlockRef}
-          style={{
-            position: 'absolute',
-            top: -2,
-            left: -2,
-            right: -2,
-            bottom: -2,
-            background: 'var(--c-surface)',
-            zIndex: 3,
-            transform: 'translateY(100%)',
-          }}
-        >
-          {/* Background layers — double-buffered, crossfade in sync with center panel.
-              Wrapper opacity is driven by scroll: hidden until gray rectangle is fully risen. */}
-          <div ref={bgWrapRef} style={{ position: 'absolute', inset: 0, opacity: 0, pointerEvents: 'none' }}>
-            <img ref={bgARef} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-            <img ref={bgBRef} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-          </div>
-
-
-          {/* Satellite images — hidden for now, code preserved */}
-          {false && ([
-            // col = (100% - 2*pad - 4*gap) / 5  (dynamic, matches real grid)
-            // sat 0 — right col 5, vertically centered
-            { right: 'var(--pad)', top: '50%', transform: 'translateY(-50%)' },
-            // sat 1 — left bottom: left edge at col 2 start
-            { left: 'calc(var(--pad) + (100% - 2*var(--pad) - 4*var(--gap))/5 + var(--gap))',                                               bottom: '120px' },
-            // sat 2 — right top: centered on gap 4-5 (symmetric to original sat 0)
-            { right: 'calc(var(--pad) + (100% - 2*var(--pad) - 4*var(--gap))/5 + var(--gap)/2 - (100% - 2*var(--pad) - 4*var(--gap))/10)', top: '80px'     },
-            // sat 3 — right bottom: right edge at col 5 right boundary
-            { right: 'var(--pad)',                                                                                                           bottom: '78px'  },
-          ] as React.CSSProperties[]).map((pos, satIdx) => (
-            <div
-              key={satIdx}
-              style={{
-                position: 'absolute',
-                ...pos,
-                width: 'calc((100% - 2*var(--pad) - 4*var(--gap)) / 5)',
-                aspectRatio: '16/9',
-                overflow: 'hidden',
-                pointerEvents: 'none',
-              }}
-            >
-              <img
-                ref={el => { satARef.current[satIdx] = el; }}
-                alt=""
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-              <img
-                ref={el => { satBRef.current[satIdx] = el; }}
-                alt=""
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            </div>
-          ) as React.ReactNode[])}
-        </div>
 
         {/* rightNumRef — hidden anchor, kept for scroll engine logic */}
         <div ref={rightNumRef} style={{ display: 'none' }} />

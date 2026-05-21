@@ -127,8 +127,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
 
   const captionRef    = useRef<HTMLParagraphElement>(null);
   const caseInfoRef     = useRef<HTMLDivElement>(null);
-  const caseNameRef     = useRef<HTMLSpanElement>(null);
-  const caseLinkRef     = useRef<HTMLAnchorElement>(null);
+  const caseCubeRef     = useRef<HTMLDivElement>(null);
   const rightNumRef   = useRef<HTMLDivElement>(null);
   const rightNumFirst = useRef(true);
   const grayBlockRef  = useRef<HTMLDivElement>(null);
@@ -182,53 +181,15 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
   }, [activeSection]);
 
 
-  // Helper: split a string into <span data-char> nodes for stagger animation.
-  // Spaces become &nbsp; so they keep width and animate too.
-  const renderSplitText = (el: HTMLElement, text: string) => {
-    el.innerHTML = text
-      .split('')
-      .map(ch => `<span data-char style="display:inline-block;will-change:transform,opacity">${ch === ' ' ? '&nbsp;' : ch}</span>`)
-      .join('');
-  };
-
-  // On mount, prime the case-name span with split chars so the first swap animates correctly.
-  useLayoutEffect(() => {
-    if (caseNameRef.current && !caseNameRef.current.querySelector('[data-char]')) {
-      renderSplitText(caseNameRef.current, VS_CASES[0].name);
-    }
-  }, []);
-
-  // Case-name rectangle: text swap as a true 3D cube-face rotation around the X-axis.
-  // Old face tilts forward and disappears over the top edge; new face emerges from
-  // the bottom edge tilting from below into a flat face-on position.
+  // Case-info as a 3D rotating prism — each case is a face. As imgIdx changes,
+  // the cube rotates 90° around the X-axis to bring the next face forward.
   useEffect(() => {
-    const c = VS_CASES[Math.min(imgIdx, VS_CASES.length - 1)];
-    const nameEl = caseNameRef.current;
-    if (nameEl) {
-      // Container gets perspective so the rotateX reads as 3D depth.
-      nameEl.style.perspective = '600px';
-      nameEl.style.transformStyle = 'preserve-3d';
-
-      const oldChars = Array.from(nameEl.querySelectorAll<HTMLElement>('[data-char]'));
-      gsap.killTweensOf(oldChars);
-      // Old face: tilts away over the top — the face rotates 90° as it rolls up.
-      gsap.to(oldChars, {
-        yPercent: -100,
-        rotateX: 90,
-        transformOrigin: '50% 50% -8px',
-        duration: 0.45,
+    const cube = caseCubeRef.current;
+    if (cube) {
+      gsap.to(cube, {
+        rotateX: imgIdx * 90,
+        duration: 0.65,
         ease: 'power3.inOut',
-      });
-      // Swap text mid-flight, then the new face rotates from below into face-on view.
-      gsap.delayedCall(0.45, () => {
-        if (!nameEl) return;
-        renderSplitText(nameEl, c.name);
-        if (caseLinkRef.current) caseLinkRef.current.href = c.href;
-        const newChars = Array.from(nameEl.querySelectorAll<HTMLElement>('[data-char]'));
-        gsap.fromTo(newChars,
-          { yPercent: 100, rotateX: -90, transformOrigin: '50% 50% -8px' },
-          { yPercent: 0,   rotateX: 0,   duration: 0.45, ease: 'power3.inOut' },
-        );
       });
     }
   }, [imgIdx]);
@@ -797,52 +758,68 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
                   </div>
                 </div>
 
-                {/* Case info overlay — minimal black label with single text + Перейти */}
+                {/* Case info — dark 3D prism, one face per slide. Rotates on imgIdx change. */}
                 <div ref={caseInfoRef} style={{
                   position: 'absolute', inset: 0,
-                  background: '#000',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '0 20px',
-                  gap: 16,
                   opacity: 0, pointerEvents: 'none',
                   zIndex: 10,
+                  perspective: '1500px',
                 }}>
-                  <span ref={caseNameRef} style={{
-                    fontFamily: 'var(--font)',
-                    fontSize: 'var(--text-size)',
-                    fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
-                    lineHeight: 'var(--text-lh)',
-                    letterSpacing: 'var(--text-ls)',
-                    color: '#fff',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    display: 'inline-block',
-                    flex: 1,
-                    minWidth: 0,
+                  <div ref={caseCubeRef} style={{
+                    position: 'absolute', inset: 0,
+                    transformStyle: 'preserve-3d',
+                    willChange: 'transform',
                   }}>
-                    {VS_CASES[0].name}
-                  </span>
-                  <a
-                    ref={caseLinkRef}
-                    href={VS_CASES[0].href}
-                    onClick={e => e.stopPropagation()}
-                    style={{
-                      fontFamily: 'var(--font)',
-                      fontSize: 'var(--text-size)',
-                      fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
-                      lineHeight: 'var(--text-lh)',
-                      letterSpacing: 'var(--text-ls)',
-                      color: '#fff',
-                      textDecoration: 'underline',
-                      textDecorationStyle: 'dotted',
-                      textUnderlineOffset: '3px',
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                    }}
-                  >
-                    Перейти
-                  </a>
+                    {VS_CASES.map((c, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          position: 'absolute', inset: 0,
+                          background: '#000',
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          padding: '0 20px',
+                          gap: 16,
+                          color: '#fff',
+                          backfaceVisibility: 'hidden',
+                          // Each face is at i × -90° around X and pushed out by half the panel
+                          // height so the prism's vertical depth ≈ its visible height.
+                          transform: `rotateX(${i * -90}deg) translateZ(202.5px)`,
+                        }}
+                      >
+                        <span style={{
+                          fontFamily: 'var(--font)',
+                          fontSize: 'var(--text-size)',
+                          fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+                          lineHeight: 'var(--text-lh)',
+                          letterSpacing: 'var(--text-ls)',
+                          color: '#fff',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          display: 'inline-block',
+                          flex: 1,
+                          minWidth: 0,
+                        }}>{c.name}</span>
+                        <a
+                          href={c.href}
+                          onClick={e => e.stopPropagation()}
+                          style={{
+                            fontFamily: 'var(--font)',
+                            fontSize: 'var(--text-size)',
+                            fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+                            lineHeight: 'var(--text-lh)',
+                            letterSpacing: 'var(--text-ls)',
+                            color: '#fff',
+                            textDecoration: 'underline',
+                            textDecorationStyle: 'dotted',
+                            textUnderlineOffset: '3px',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                          }}
+                        >Перейти</a>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
               </>

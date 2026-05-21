@@ -97,13 +97,22 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
 
   return (
     <div ref={wrapRef} className={s.contactWrap}>
-      <div className={s.contactCard}>
 
-        {/* Form content — top of card, stacks vertically */}
+      {/* Snake/Breakout canvas — full-bleed background of the wrap, navigates around the form */}
+      <div className={s.contactGameBg}>
+        {gameFinished ? null : (
+          gameIndex === 0
+            ? <FormSnakeGame    key={gameKey} active={gameActive} formRef={formAreaRef} onFinish={() => setGameFinished(true)} />
+            : <FormBreakoutGame key={gameKey} active={gameActive} onFinish={() => setGameFinished(true)} />
+        )}
+      </div>
+
+      <div className={s.contactCard}>
+        {/* Form content — centered column on top of the snake background */}
         <div ref={formAreaRef} className={s.contactFormArea}>
 
-          {/* Tabs */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0, alignItems: 'flex-start' }}>
+          {/* Tabs — centered */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0, alignItems: 'center' }}>
             {([
               { key: 'discuss', label: 'Обсудить проект' },
               { key: 'join',    label: 'Стать частью команды' },
@@ -118,20 +127,20 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
             ))}
           </div>
 
-          {/* Heading with animated word */}
-          <p className={s.contactTitle} style={{ marginTop: 40 }}>
+          {/* Heading with animated word — centered */}
+          <p className={s.contactTitle} style={{ marginTop: 40, textAlign: 'center' }}>
             Оставьте{' '}
             <span ref={wordRef}>{word}</span>,<br />мы назначим встречу
           </p>
 
-          {/* Subtitle */}
-          <p className={s.contactFormHeader} style={{ marginTop: 10 }}>
+          {/* Subtitle — centered */}
+          <p className={s.contactFormHeader} style={{ marginTop: 10, textAlign: 'center' }}>
             Напишем в течение дня с 11:00 до 20:00
           </p>
 
-          {/* Inputs */}
+          {/* Inputs — centered, 10px gap between them */}
           <div className={s.contactFields} style={{ marginTop: 20, width: '100%' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'flex-start', width: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', width: '100%' }}>
 
               <CircleInput
                 placeholder="EMAIL" size={44}
@@ -168,10 +177,10 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
             </div>
           </div>
 
-          {/* Checkbox */}
+          {/* Checkbox — centered */}
           <div
             className={s.contactCheckbox}
-            style={{ marginTop: 40, gap: 6, width: '100%' }}
+            style={{ marginTop: 40, gap: 6, justifyContent: 'center' }}
             onClick={() => setChecked(!checked)}
           >
             <div className={`${s.checkbox} ${checked ? s.checked : ''}`}>
@@ -181,7 +190,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
                 </svg>
               )}
             </div>
-            <span className={s.checkboxLabel} style={{ textAlign: 'left' }}>
+            <span className={s.checkboxLabel} style={{ textAlign: 'center' }}>
               Даю согласие на обработку персональных данных в соответствии с&nbsp;
               <button
                 style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'inherit', letterSpacing: 'inherit', lineHeight: 'inherit', color: 'inherit', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}
@@ -191,18 +200,10 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
           </div>
 
         </div>
+      </div>
 
-        {/* Snake/Breakout canvas — sits below the form */}
-        <div className={s.contactGameBg}>
-          {gameFinished ? null : (
-            gameIndex === 0
-              ? <FormSnakeGame    key={gameKey} active={gameActive} onFinish={() => setGameFinished(true)} />
-              : <FormBreakoutGame key={gameKey} active={gameActive} onFinish={() => setGameFinished(true)} />
-          )}
-        </div>
-
-        {/* Skip/done controls — top-right of card */}
-        <div className={s.contactGameControls}>
+      {/* Skip/done controls — top-right of the wrap */}
+      <div className={s.contactGameControls}>
           {gameFinished ? (
             <div className={s.contactGameDone}>
               <p>Круто что вы доиграли.<br />Давайте обсудим проект?</p>
@@ -212,9 +213,8 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
           ) : (
             <button className={s.contactSkip} onClick={() => { setGameIndex(i => (i + 1) % 2); setGameKey(k => k + 1); }}>skip</button>
           )}
-        </div>
-
       </div>
+
     </div>
   );
 }

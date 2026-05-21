@@ -338,13 +338,15 @@
   box-sizing: border-box;
 }
 
-/* Skip control / game-done overlay — top-right corner */
+/* Skip control / game-done overlay — bottom-centre, below the game */
 .contactGameControls {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 2;
   pointer-events: auto;
+  text-align: center;
 }
 
 /* Centered content stack — sits on top of the snake; opaque-ish to mask the snake under it */

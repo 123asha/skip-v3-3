@@ -58,9 +58,8 @@ const SLOT_H = 405;
 const SLOT_GAP = 20;
 
 const HEADLINE_LINES = [
-  'Визуальные системы',
-  'для быстрорастущих',
-  'компаний',
+  'Визуальные системы для',
+  'растущих команд',
 ];
 
 // ── easings ─────────────────────────────────────────────────────────────────
@@ -453,9 +452,9 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       //   gp 0.85 → 1.0   shrinks to 320×56  (magnetic snap as video slides off)
       //   gp 1.0+          holds at 320×56   (small black rectangle — cases cycle)
       {
-        const BASE_W  = 720;
+        const BASE_W  = 900;
         const BASE_H  = 405;
-        const SMALL_W = 320;
+        const SMALL_W = 520;
         const SMALL_H = 56;
         const SHRINK_DUR = 0.15;
         const easeOut = (t: number) => 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);
@@ -734,7 +733,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
             position: 'absolute',
             left: '50%',
             top: '50%',
-            width: 720,
+            width: 900,
             height: 405,
             zIndex: 5,
             cursor: 'pointer',
@@ -781,9 +780,9 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
                           gap: 16,
                           color: '#fff',
                           backfaceVisibility: 'hidden',
-                          // Each face is at i × -90° around X and pushed out by half the panel
-                          // height so the prism's vertical depth ≈ its visible height.
-                          transform: `rotateX(${i * -90}deg) translateZ(202.5px)`,
+                          // Each face is at i × -90° around X and pushed out by half the small
+                          // panel height so the prism's depth matches the visible bar height.
+                          transform: `rotateX(${i * -90}deg) translateZ(28px)`,
                         }}
                       >
                         <span style={{

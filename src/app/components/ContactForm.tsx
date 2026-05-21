@@ -103,7 +103,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
         {gameFinished ? null : (
           gameIndex === 0
             ? <FormSnakeGame    key={gameKey} active={gameActive} formRef={formAreaRef} onFinish={() => setGameFinished(true)} />
-            : <FormBreakoutGame key={gameKey} active={gameActive} onFinish={() => setGameFinished(true)} />
+            : <FormBreakoutGame key={gameKey} active={gameActive} formRef={formAreaRef} onFinish={() => setGameFinished(true)} />
         )}
       </div>
 

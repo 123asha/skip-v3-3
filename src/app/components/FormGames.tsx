@@ -195,18 +195,8 @@ export function FormSnakeGame({
 
       const R = SCELL / 2 - 2; // circle radius ≈ 18px (diameter ≈ 36px, fits 40px cell)
 
-      // Grid dots — 1px, very light, skip forbidden cells
-      ctx.fillStyle = 'rgba(35,31,32,0.15)';
-      for (let x = 0; x < SCOLS; x++) {
-        for (let y = 0; y < SROWS; y++) {
-          if (forbiddenSet.has(`${x},${y}`)) continue;
-          const cx = x * SCELL + SCELL / 2;
-          const cy = y * SCELL + SCELL / 2;
-          ctx.beginPath();
-          ctx.arc(cx, cy, 0.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
+      // (Grid dots are drawn by the CSS background of .contactWrap — a single
+      // 1px dot every 16px — so the snake no longer paints its own grid.)
 
       // Food — outlined circle + letter
       const fx = food.x * SCELL + SCELL / 2;
@@ -371,7 +361,7 @@ const BW = 260, BH = 150;
 const PAD_W = 40, PAD_H = 3;
 const BALL_R = 3.5;
 
-export function FormBreakoutGame({ active, onFinish }: { active?: boolean; onFinish?: () => void }) {
+export function FormBreakoutGame({ active, formRef, onFinish }: { active?: boolean; formRef?: React.RefObject<HTMLElement>; onFinish?: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -380,20 +370,49 @@ export function FormBreakoutGame({ active, onFinish }: { active?: boolean; onFin
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
 
+    // Uniform-scale letterbox so the game space stays BW×BH no matter what
+    // shape the canvas takes. Stored at module-scope so collision math can
+    // re-use them.
+    let cssScale = 1, cssOffX = 0, cssOffY = 0;
+    let formRectGame: { x: number; y: number; w: number; h: number } | null = null;
+
     const setupCanvas = () => {
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
-      const displayW = rect.width || BW;
-      const displayH = displayW * BH / BW;
+      const displayW = rect.width  || BW;
+      const displayH = rect.height || BH;
       canvas.width  = Math.round(displayW * dpr);
       canvas.height = Math.round(displayH * dpr);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.scale(canvas.width / BW, canvas.height / BH);
+      // Uniform scale with letterboxing — preserves aspect, no text stretch
+      cssScale = Math.min(displayW / BW, displayH / BH);
+      cssOffX  = (displayW - BW * cssScale) / 2;
+      cssOffY  = (displayH - BH * cssScale) / 2;
+      const pxScale = cssScale * dpr;
+      ctx.translate(cssOffX * dpr, cssOffY * dpr);
+      ctx.scale(pxScale, pxScale);
       ctx.imageSmoothingEnabled = false;
+      computeFormRect();
     };
+
+    const computeFormRect = () => {
+      if (!formRef?.current) { formRectGame = null; return; }
+      const cr = canvas.getBoundingClientRect();
+      const fr = formRef.current.getBoundingClientRect();
+      const fL = fr.left - cr.left, fT = fr.top    - cr.top;
+      const fR = fr.right - cr.left, fB = fr.bottom - cr.top;
+      formRectGame = {
+        x: (fL - cssOffX) / cssScale,
+        y: (fT - cssOffY) / cssScale,
+        w: (fR - fL) / cssScale,
+        h: (fB - fT) / cssScale,
+      };
+    };
+
     setupCanvas();
-    const ro = new ResizeObserver(setupCanvas);
+    const ro = new ResizeObserver(() => { setupCanvas(); });
     ro.observe(canvas);
+    if (formRef?.current) ro.observe(formRef.current);
 
     const WORD = 'skip design';
     let FS = 42;
@@ -422,7 +441,9 @@ export function FormBreakoutGame({ active, onFinish }: { active?: boolean; onFin
 
     const onMove = (e: MouseEvent) => {
       const r = canvas.getBoundingClientRect();
-      padX = Math.max(0, Math.min(BW - PAD_W, (e.clientX - r.left) * (BW / r.width) - PAD_W / 2));
+      // Convert mouse position into game coords (account for letterbox offset)
+      const gameX = ((e.clientX - r.left) - cssOffX) / cssScale;
+      padX = Math.max(0, Math.min(BW - PAD_W, gameX - PAD_W / 2));
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft')  { padX = Math.max(0, padX - 8); if (mouseOn) e.preventDefault(); }
@@ -438,6 +459,7 @@ export function FormBreakoutGame({ active, onFinish }: { active?: boolean; onFin
 
     const update = () => {
       if (done || paused) return;
+      computeFormRect();
       ball.x += ball.vx; ball.y += ball.vy;
       if (ball.x - BALL_R < 0)  { ball.x = BALL_R;      ball.vx =  Math.abs(ball.vx); }
       if (ball.x + BALL_R > BW) { ball.x = BW - BALL_R; ball.vx = -Math.abs(ball.vx); }
@@ -455,6 +477,27 @@ export function FormBreakoutGame({ active, onFinish }: { active?: boolean; onFin
             ball.y + BALL_R > ltop && ball.y - BALL_R < lbot) {
           l.alive = false; ball.vy = -ball.vy;
           if (!letters.some(lt => lt.alive && lt.char !== ' ')) { done = true; onFinish?.(); }
+        }
+      }
+      // Form-rect collision: ball bounces off the form's bounding box (treated
+      // as a solid AABB inside the play area).
+      if (formRectGame) {
+        const r = formRectGame;
+        const cx = Math.max(r.x, Math.min(ball.x, r.x + r.w));
+        const cy = Math.max(r.y, Math.min(ball.y, r.y + r.h));
+        const dx = ball.x - cx;
+        const dy = ball.y - cy;
+        if (dx * dx + dy * dy < BALL_R * BALL_R) {
+          // Decide which side: bigger penetration axis flips that velocity
+          const penX = BALL_R - Math.abs(dx);
+          const penY = BALL_R - Math.abs(dy);
+          if (penX < penY) {
+            ball.vx = dx >= 0 ? Math.abs(ball.vx) : -Math.abs(ball.vx);
+            ball.x  = (dx >= 0 ? cx + BALL_R : cx - BALL_R);
+          } else {
+            ball.vy = dy >= 0 ? Math.abs(ball.vy) : -Math.abs(ball.vy);
+            ball.y  = (dy >= 0 ? cy + BALL_R : cy - BALL_R);
+          }
         }
       }
     };

@@ -639,7 +639,7 @@ export function FormCarrotGame({ active, formRef, onFinish }: { active?: boolean
     let prevHeadY = bunnyY - BUNNY_H;
     let wt = 0;
     let bumps = 0;
-    const WIN_BUMPS = 5;
+    const WIN_BUMPS = 15;
     type Carrot = { x: number; y: number; vy: number; life: number };
     let carrots: Carrot[] = [];
     let done = false, paused = true, mouseOn = false;

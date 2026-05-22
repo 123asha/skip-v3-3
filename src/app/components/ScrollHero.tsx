@@ -453,12 +453,16 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       //   gp 1.0+          holds at 320×56   (small black rectangle — cases cycle)
       {
         // Panel sizing — mobile fits the viewport with a 10px gutter each side.
+        // Small case-info bar scales with viewport so the case name + 20px gap +
+        // "Перейти" fit at any reasonable desktop width (capped 260..400).
         const vw = window.innerWidth;
         const isMobile = vw <= 768;
         const mobilePad = 10;
         const BASE_W  = isMobile ? Math.max(100, vw - mobilePad * 2) : 900;
         const BASE_H  = isMobile ? Math.round(BASE_W * 506 / 900)    : 506;
-        const SMALL_W = isMobile ? Math.min(260, vw - mobilePad * 2) : 260;
+        const SMALL_W = isMobile
+          ? Math.min(260, vw - mobilePad * 2)
+          : Math.max(260, Math.min(400, Math.round(vw * 0.21)));
         const SMALL_H = 56;
         const SHRINK_DUR = 0.15;
         const easeOut = (t: number) => 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);

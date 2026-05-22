@@ -454,7 +454,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       {
         const BASE_W  = 900;
         const BASE_H  = 506;
-        const SMALL_W = 420;
+        const SMALL_W = 260;
         const SMALL_H = 56;
         const SHRINK_DUR = 0.15;
         const easeOut = (t: number) => 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);
@@ -777,7 +777,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
                           background: '#000',
                           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                           padding: '0 20px',
-                          gap: 16,
+                          gap: 20,
                           color: '#fff',
                           backfaceVisibility: 'hidden',
                           // Each face is at i × -90° around X and pushed out by half the small

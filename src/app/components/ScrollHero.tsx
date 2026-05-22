@@ -149,6 +149,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       return;
     }
 
+    if (!sections[activeSection]) return;
     const num = sections[activeSection].number;
     if (el.textContent === num) {
       gsap.to(el, { opacity: 1, duration: 0.25, ease: 'power2.out' });
@@ -186,7 +187,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
     const titles = blockRefs.current.filter(Boolean) as HTMLDivElement[];
     const hlSpans = headlineRef.current?.querySelectorAll<HTMLElement>('span');
 
-    if (rightNumRef.current) {
+    if (rightNumRef.current && sections.length > 0) {
       rightNumRef.current.textContent = sections[0].number;
       gsap.set(rightNumRef.current, { opacity: 0 });
     }

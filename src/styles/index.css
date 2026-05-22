@@ -75,6 +75,12 @@
     font-size: max(12px, var(--text-size));
   }
 
+  /* Hard-stop any horizontal scroll on small screens. The hero's bgWrap uses
+     a negative `inset: -30px` for the cube tilt — clamp it back to 0 here so
+     nothing pokes out of the viewport. */
+  html, body { overflow-x: hidden !important; max-width: 100vw; }
+  [style*="inset: -30px"] { inset: 0 !important; }
+
   /* 5-col and 3-col grids collapse to 3-col on mobile.
      Catches both inline styles and CSS-module classes (hashed _grid_, _row_, etc.). */
   .grid5,

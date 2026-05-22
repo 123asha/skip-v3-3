@@ -45,7 +45,7 @@
   line-height: var(--heading-lh);
   letter-spacing: -0.03em;
   width: 38%;
-  z-index: 4;
+  z-index: 10;
   color: #fff;
   mix-blend-mode: difference;
 }

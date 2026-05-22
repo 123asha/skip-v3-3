@@ -435,14 +435,13 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       }
 
       // Panel size:
-      //   gp 0 → 0.85     720×405  (brand-strategy video)
-      //   gp 0.85 → 1.0   shrinks to 320×56  (magnetic snap as video slides off)
-      //   gp 1.0+          holds at 320×56   (small black rectangle — cases cycle)
+      //   gp 0           full-screen (vw × vh) — video on whole screen
+      //   gp 0 → 0.50    shrinks to 900×506
+      //   gp 0.85 → 1.0  shrinks further to case-info bar (SMALL_W × 56)
+      //   gp 1.0+        holds at case-info bar
       {
-        // Panel sizing — mobile fits the viewport with a 10px gutter each side.
-        // Small case-info bar scales with viewport so the case name + 20px gap +
-        // "Перейти" fit at any reasonable desktop width (capped 260..400).
         const vw = window.innerWidth;
+        const vh = window.innerHeight;
         const isMobile = vw <= 768;
         const mobilePad = 10;
         const BASE_W  = isMobile ? Math.max(100, vw - mobilePad * 2) : 900;
@@ -451,17 +450,28 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
           ? Math.min(260, vw - mobilePad * 2)
           : Math.max(260, Math.min(400, Math.round(vw * 0.21)));
         const SMALL_H = 56;
-        const SHRINK_DUR = 0.15;
+        const SHRINK_DUR   = 0.15;
+        const FULLSCREEN_END = 0.50;
         const easeOut = (t: number) => 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);
 
-        let panelW = BASE_W;
-        let panelH = BASE_H;
+        let panelW: number;
+        let panelH: number;
 
-        if (gp > 1 - SHRINK_DUR && gp <= 1.0) {
+        if (gp <= 0) {
+          panelW = vw;
+          panelH = vh;
+        } else if (gp < FULLSCREEN_END) {
+          const t = easeOut(gp / FULLSCREEN_END);
+          panelW = vw + (BASE_W - vw) * t;
+          panelH = vh + (BASE_H - vh) * t;
+        } else if (gp < 1 - SHRINK_DUR) {
+          panelW = BASE_W;
+          panelH = BASE_H;
+        } else if (gp <= 1.0) {
           const t = easeOut((gp - (1 - SHRINK_DUR)) / SHRINK_DUR);
           panelW = BASE_W + (SMALL_W - BASE_W) * t;
           panelH = BASE_H + (SMALL_H - BASE_H) * t;
-        } else if (gp > 1.0) {
+        } else {
           panelW = SMALL_W;
           panelH = SMALL_H;
         }
@@ -693,7 +703,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
 
 
 
-        {/* Background slides — scroll-driven, въезжают снизу + scale */}
+        {/* Background slides — full-bleed behind panel, scroll-driven */}
         <div ref={bgWrapRef} style={{
           position: 'absolute', inset: '-30px',
           opacity: 0, pointerEvents: 'none', zIndex: 2,

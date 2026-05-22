@@ -415,9 +415,10 @@ export function FormBreakoutGame({ active, formRef, onFinish }: { active?: boole
     if (formRef?.current) ro.observe(formRef.current);
 
     const WORD = 'skip design';
-    let FS = 42;
+    // Bigger background text — start large, shrink only if it overflows ~98% of BW
+    let FS = 72;
     ctx.font = `700 ${FS}px "CoFo Sans VF", system-ui, sans-serif`;
-    while (ctx.measureText(WORD).width > BW * 0.91 && FS > 18) {
+    while (ctx.measureText(WORD).width > BW * 0.98 && FS > 24) {
       FS--;
       ctx.font = `700 ${FS}px "CoFo Sans VF", system-ui, sans-serif`;
     }
@@ -436,7 +437,10 @@ export function FormBreakoutGame({ active, formRef, onFinish }: { active?: boole
 
     const PAD_Y = BH - 10;
     let padX = BW / 2 - PAD_W / 2;
-    let ball = { x: BW / 2, y: BH * 0.62, vx: 1.6, vy: -2.2 };
+    // Spawn ball on the side (just inside the left wall) heading down-right, so it
+    // doesn't immediately slam into the centred form.
+    const spawnBall = () => ({ x: BALL_R + 6, y: BH * 0.18, vx: 1.6, vy: 2.0 });
+    let ball = spawnBall();
     let done = false, paused = false, mouseOn = false;
 
     const onMove = (e: MouseEvent) => {
@@ -464,7 +468,7 @@ export function FormBreakoutGame({ active, formRef, onFinish }: { active?: boole
       if (ball.x - BALL_R < 0)  { ball.x = BALL_R;      ball.vx =  Math.abs(ball.vx); }
       if (ball.x + BALL_R > BW) { ball.x = BW - BALL_R; ball.vx = -Math.abs(ball.vx); }
       if (ball.y - BALL_R < 0)  { ball.y = BALL_R;      ball.vy =  Math.abs(ball.vy); }
-      if (ball.y > BH + 16) ball = { x: BW / 2, y: BH * 0.62, vx: 1.6, vy: -2.2 };
+      if (ball.y > BH + 16) ball = spawnBall();
       if (ball.y + BALL_R >= PAD_Y && ball.y + BALL_R <= PAD_Y + PAD_H + 5 &&
           ball.x >= padX - 2 && ball.x <= padX + PAD_W + 2) {
         ball.vy = -Math.abs(ball.vy);

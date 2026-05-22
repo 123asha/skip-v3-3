@@ -607,6 +607,45 @@ function AppInner() {
 
       <Footer />
 
+      {/* "Обсудить проект" — sticky bottom-left, visible on home page */}
+      {(page === 'home' || page === 'index2') && preloaderDone && (
+        <button
+          style={{
+            position: 'fixed',
+            left: 'var(--pad)',
+            bottom: 'var(--pad)',
+            zIndex: 160,
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            cursor: 'pointer',
+            fontFamily: 'var(--font)',
+            fontSize: 'var(--text-size)',
+            fontWeight: 'var(--text-weight)',
+            letterSpacing: 'var(--text-ls)',
+            lineHeight: 'var(--text-lh)',
+            color: 'var(--c-text)',
+            textDecoration: 'underline',
+            textDecorationStyle: 'dotted',
+            textUnderlineOffset: '3px',
+            opacity: showPrivacy ? 0 : 0.7,
+            pointerEvents: showPrivacy ? 'none' : 'auto',
+            transition: 'opacity 0.3s ease',
+            mixBlendMode: 'difference',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+          onMouseLeave={e => (e.currentTarget.style.opacity = showPrivacy ? '0' : '0.7')}
+          onClick={() => {
+            const el = document.querySelector('[class*="contactWrap"]') as HTMLElement;
+            const lenis = (window as any).__lenis;
+            if (el && lenis) lenis.scrollTo(el, { duration: 1.2, offset: -40 });
+            else if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+        >
+          Обсудить проект
+        </button>
+      )}
+
       {/* Privacy links — bottom-left, appear when scrolled to page bottom */}
       <div style={{
         position: 'fixed',

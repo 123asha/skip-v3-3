@@ -494,22 +494,33 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       // Tape-strip — slides tile vertically, never overlap. Equal 0.5 gp slot each.
       // Slide 0 centered at gp=1.0, exits top by gp=1.5
       // Slide 1 enters at gp=1.0, centered at gp=1.5, exits top by gp=2.0
-      // Slide 2 enters at gp=1.5, centered at gp=2.0 (lands when section ends)
-      // Inside each slide the image lags the slide motion → parallax depth.
-      // Image is 130% tall, top -15% — has ±15% slide-height of headroom for the parallax shift.
+      // Tape-strip with dwell: each background slide lingers at center before transitioning.
+      // Raw t (0→1 within gp 1→2) is remapped so 30% is dwell at center + 20% fast transition.
+      // Layout: [dwell0=0.3] [trans0→1=0.2] [dwell1=0.3] [trans1→2=0.2] = 1.0
       {
-        const PARALLAX = 0.15; // lag factor: image moves at (1 - 0.15) of slide speed
-        const IMG_H_RATIO = 1.3; // image height = 130% of slide height
+        const PARALLAX = 0.15;
+        const IMG_H_RATIO = 1.3;
+
+        const rawT = Math.max(0, Math.min(1, gp - 1));
+        const D = 0.3; // dwell fraction per slot
+        const TR = 0.2; // transition fraction per slot
+
+        let stickyT: number;
+        if (rawT < D)                      stickyT = 0;
+        else if (rawT < D + TR)            stickyT = sm((rawT - D) / TR) * 0.5;
+        else if (rawT < D + TR + D)        stickyT = 0.5;
+        else if (rawT < D + TR + D + TR)   stickyT = 0.5 + sm((rawT - D - TR - D) / TR) * 0.5;
+        else                               stickyT = 1;
+
+        const stickyGp = 1 + stickyT; // 1.0→2.0
 
         bgSlideRefs.current.forEach((el, i) => {
           if (!el) return;
-          const yP = (i - (gp - 1.0) * 2) * 100;
+          const yP = (i - (stickyGp - 1.0) * 2) * 100;
           gsap.set(el, { yPercent: yP, scale: 1 });
 
           const imgEl = bgImgRefs.current[i];
           if (imgEl) {
-            // Counter-translate the image so it lags the slide.
-            // yPercent on image is relative to image height — convert from slide-height units.
             const imgY = (-yP * PARALLAX) / IMG_H_RATIO;
             gsap.set(imgEl, { yPercent: imgY });
           }
@@ -543,8 +554,6 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       if (rafId) return;
       rafId = requestAnimationFrame(computeAndApply);
     };
-
-    let snapTimer = 0;
 
     const handleScroll = () => {
       const dur = mode === 'bunny' ? BUNNY_DUR : vid?.duration;
@@ -580,24 +589,6 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       progressRef.current = gp;
       pendingGp = gp;
       scheduleApply();
-
-      // Snap to nearest slide center when scrolling stops in the cases section.
-      // Each slide is "centred" at gp = 1.0, 1.5, 2.0 which maps to:
-      //   scrollY = videoPx, videoPx + s0/2, videoPx + s0
-      clearTimeout(snapTimer);
-      snapTimer = window.setTimeout(() => {
-        const d2 = mode === 'bunny' ? BUNNY_DUR : vid?.duration;
-        if (!d2 || !isFinite(d2)) return;
-        const sy2 = window.scrollY;
-        const vPx = d2 * PX_PER_SEC;
-        const s0  = sec0Px();
-        if (sy2 < vPx || sy2 > vPx + s0) return;          // only snap inside cases
-        const centers = [vPx, vPx + s0 / 2, vPx + s0];   // slide 0, 1, 2
-        const nearest = centers.reduce((a, b) => Math.abs(b - sy2) < Math.abs(a - sy2) ? b : a);
-        if (Math.abs(nearest - sy2) < 5) return;           // already close enough
-        const lenis = (window as any).__lenis;
-        if (lenis) lenis.scrollTo(nearest, { duration: 0.55, easing: (t: number) => 1 - Math.pow(1 - t, 3) });
-      }, 100);
     };
 
     const handleResize = () => { setHeight(durationCache); handleScroll(); };
@@ -610,7 +601,6 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
-      clearTimeout(snapTimer);
       if (rafId) cancelAnimationFrame(rafId);
       applyRef.current = null;
     };

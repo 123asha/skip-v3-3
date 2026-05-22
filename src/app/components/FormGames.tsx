@@ -236,6 +236,10 @@ export function FormSnakeGame({
 
     // ── Input ─────────────────────────────────────────────────────────────────
 
+    const canvasInView = () => {
+      const r = canvas.getBoundingClientRect();
+      return r.bottom > 0 && r.top < window.innerHeight;
+    };
     const onKey = (e: KeyboardEvent) => {
       const map: Record<string, Dir> = {
         ArrowUp:'U', ArrowDown:'D', ArrowLeft:'L', ArrowRight:'R',
@@ -243,7 +247,10 @@ export function FormSnakeGame({
       if (map[e.key]) {
         queueDir = map[e.key];
         playerControlled = true;
-        if (mouseOn) e.preventDefault();
+      }
+      // Lock page scroll for arrows/space whenever the canvas is on-screen
+      if (canvasInView() && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) {
+        e.preventDefault();
       }
     };
 
@@ -334,7 +341,16 @@ export function FormBunnyGame({ active, onFinish }: { active?: boolean; onFinish
       for (const c of carrots) drawCarrot(c.x, c.y);
     };
     const jump = () => { if (onGround && !done) { velY = -6; onGround = false; } };
-    const onKey = (e: KeyboardEvent) => { if (e.key === ' ' || e.key === 'ArrowUp') { jump(); if (mouseOn) e.preventDefault(); } };
+    const bunnyInView = () => {
+      const r = canvas.getBoundingClientRect();
+      return r.bottom > 0 && r.top < window.innerHeight;
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === ' ' || e.key === 'ArrowUp') jump();
+      if (bunnyInView() && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) {
+        e.preventDefault();
+      }
+    };
     const onClick = () => jump();
     const onMouseEnter = () => { mouseOn = true; paused = false; };
     const onMouseLeave = () => { mouseOn = false; paused = true; };
@@ -449,9 +465,16 @@ export function FormBreakoutGame({ active, formRef, onFinish }: { active?: boole
       const gameX = ((e.clientX - r.left) - cssOffX) / cssScale;
       padX = Math.max(0, Math.min(BW - PAD_W, gameX - PAD_W / 2));
     };
+    const breakoutInView = () => {
+      const r = canvas.getBoundingClientRect();
+      return r.bottom > 0 && r.top < window.innerHeight;
+    };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft')  { padX = Math.max(0, padX - 8); if (mouseOn) e.preventDefault(); }
-      if (e.key === 'ArrowRight') { padX = Math.min(BW - PAD_W, padX + 8); if (mouseOn) e.preventDefault(); }
+      if (e.key === 'ArrowLeft')  { padX = Math.max(0, padX - 8); }
+      if (e.key === 'ArrowRight') { padX = Math.min(BW - PAD_W, padX + 8); }
+      if (breakoutInView() && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) {
+        e.preventDefault();
+      }
     };
     const onMouseEnter = () => { mouseOn = true; paused = false; };
     const onMouseLeave = () => { mouseOn = false; paused = true; };
@@ -693,8 +716,15 @@ export function FormCarrotGame({ active, formRef, onFinish }: { active?: boolean
     };
 
     const jump = () => { if (onGround && !done) { velY = -3.4; onGround = false; } };
+    const carrotInView = () => {
+      const r = canvas.getBoundingClientRect();
+      return r.bottom > 0 && r.top < window.innerHeight;
+    };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === ' ' || e.key === 'ArrowUp') { jump(); if (mouseOn) e.preventDefault(); }
+      if (e.key === ' ' || e.key === 'ArrowUp') jump();
+      if (carrotInView() && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) {
+        e.preventDefault();
+      }
     };
     const onClick = () => jump();
     const onMouseEnter = () => { mouseOn = true; paused = false; };

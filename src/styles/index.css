@@ -69,6 +69,11 @@
     --heading-size: clamp(32px, 8vw,   40px);
     --h2-size:      clamp(18px, 5.5vw, 28px);
   }
+  /* Belt-and-braces: no rendered text drops below 12px on mobile */
+  html, body { font-size: max(12px, var(--text-size)); }
+  p, span, a, button, input, textarea, select, label, li, th, td {
+    font-size: max(12px, var(--text-size));
+  }
 
   /* 5-col and 3-col grids collapse to 3-col on mobile.
      Catches both inline styles and CSS-module classes (hashed _grid_, _row_, etc.). */

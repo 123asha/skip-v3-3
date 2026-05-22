@@ -453,7 +453,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       //   gp 1.0+          holds at 320×56   (small black rectangle — cases cycle)
       {
         const BASE_W  = 900;
-        const BASE_H  = 405;
+        const BASE_H  = 506;
         const SMALL_W = 520;
         const SMALL_H = 56;
         const SHRINK_DUR = 0.15;
@@ -734,7 +734,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
             left: '50%',
             top: '50%',
             width: 900,
-            height: 405,
+            height: 506,
             zIndex: 5,
             cursor: 'pointer',
           }}>

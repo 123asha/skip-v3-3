@@ -483,24 +483,36 @@ export function FormBreakoutGame({ active, formRef, onFinish }: { active?: boole
           if (!letters.some(lt => lt.alive && lt.char !== ' ')) { done = true; onFinish?.(); }
         }
       }
-      // Form-rect collision: ball bounces off the form's bounding box (treated
-      // as a solid AABB inside the play area).
+      // Form-rect collision: ball bounces off the form's bounding box.
       if (formRectGame) {
         const r = formRectGame;
-        const cx = Math.max(r.x, Math.min(ball.x, r.x + r.w));
-        const cy = Math.max(r.y, Math.min(ball.y, r.y + r.h));
-        const dx = ball.x - cx;
-        const dy = ball.y - cy;
-        if (dx * dx + dy * dy < BALL_R * BALL_R) {
-          // Decide which side: bigger penetration axis flips that velocity
-          const penX = BALL_R - Math.abs(dx);
-          const penY = BALL_R - Math.abs(dy);
-          if (penX < penY) {
-            ball.vx = dx >= 0 ? Math.abs(ball.vx) : -Math.abs(ball.vx);
-            ball.x  = (dx >= 0 ? cx + BALL_R : cx - BALL_R);
-          } else {
-            ball.vy = dy >= 0 ? Math.abs(ball.vy) : -Math.abs(ball.vy);
-            ball.y  = (dy >= 0 ? cy + BALL_R : cy - BALL_R);
+        const inside = ball.x > r.x && ball.x < r.x + r.w && ball.y > r.y && ball.y < r.y + r.h;
+        if (inside) {
+          // Got past the wall somehow — eject toward the nearest edge.
+          const dL = ball.x - r.x;
+          const dR = (r.x + r.w) - ball.x;
+          const dT = ball.y - r.y;
+          const dB = (r.y + r.h) - ball.y;
+          const m = Math.min(dL, dR, dT, dB);
+          if      (m === dL) { ball.x = r.x - BALL_R;          ball.vx = -Math.abs(ball.vx); }
+          else if (m === dR) { ball.x = r.x + r.w + BALL_R;    ball.vx =  Math.abs(ball.vx); }
+          else if (m === dT) { ball.y = r.y - BALL_R;          ball.vy = -Math.abs(ball.vy); }
+          else               { ball.y = r.y + r.h + BALL_R;    ball.vy =  Math.abs(ball.vy); }
+        } else {
+          const cx = Math.max(r.x, Math.min(ball.x, r.x + r.w));
+          const cy = Math.max(r.y, Math.min(ball.y, r.y + r.h));
+          const dx = ball.x - cx;
+          const dy = ball.y - cy;
+          if (dx * dx + dy * dy < BALL_R * BALL_R) {
+            const penX = BALL_R - Math.abs(dx);
+            const penY = BALL_R - Math.abs(dy);
+            if (penX < penY) {
+              ball.vx = dx >= 0 ? Math.abs(ball.vx) : -Math.abs(ball.vx);
+              ball.x  = dx >= 0 ? cx + BALL_R : cx - BALL_R;
+            } else {
+              ball.vy = dy >= 0 ? Math.abs(ball.vy) : -Math.abs(ball.vy);
+              ball.y  = dy >= 0 ? cy + BALL_R : cy - BALL_R;
+            }
           }
         }
       }
@@ -538,6 +550,169 @@ export function FormBreakoutGame({ active, formRef, onFinish }: { active?: boole
       ref={canvasRef}
       style={{ width: '100%', height: '100%', display: 'block', cursor: 'none' }}
       title="Move mouse to control paddle"
+    />
+  );
+}
+
+// ── Carrot bunny ─────────────────────────────────────────────────────────────
+// Bunny stands under the form, on the ground. Press ↑ or Space and the bunny
+// jumps. When its head bumps the form's bottom edge, a carrot pops out of the
+// form's top (Mario-block style). 5 bumps wins.
+export function FormCarrotGame({ active, formRef, onFinish }: { active?: boolean; formRef?: React.RefObject<HTMLElement>; onFinish?: () => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    if (!active) return;
+
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
+
+    let cssScale = 1, cssOffX = 0, cssOffY = 0;
+    let formRectGame: { x: number; y: number; w: number; h: number } | null = null;
+
+    const setupCanvas = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const displayW = rect.width  || BW;
+      const displayH = rect.height || BH;
+      canvas.width  = Math.round(displayW * dpr);
+      canvas.height = Math.round(displayH * dpr);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      cssScale = Math.min(displayW / BW, displayH / BH);
+      cssOffX  = (displayW - BW * cssScale) / 2;
+      cssOffY  = (displayH - BH * cssScale) / 2;
+      const pxScale = cssScale * dpr;
+      ctx.translate(cssOffX * dpr, cssOffY * dpr);
+      ctx.scale(pxScale, pxScale);
+      ctx.imageSmoothingEnabled = false;
+      computeFormRect();
+    };
+
+    const computeFormRect = () => {
+      if (!formRef?.current) { formRectGame = null; return; }
+      const cr = canvas.getBoundingClientRect();
+      const fr = formRef.current.getBoundingClientRect();
+      formRectGame = {
+        x: ((fr.left - cr.left) - cssOffX) / cssScale,
+        y: ((fr.top  - cr.top ) - cssOffY) / cssScale,
+        w: (fr.right - fr.left) / cssScale,
+        h: (fr.bottom - fr.top) / cssScale,
+      };
+    };
+
+    setupCanvas();
+    const ro = new ResizeObserver(() => setupCanvas());
+    ro.observe(canvas);
+    if (formRef?.current) ro.observe(formRef.current);
+
+    const BUNNY_H = 16;       // sprite height (body + ears)
+    const BUNNY_W = 12;       // sprite width
+    const GROUND_Y = BH - 2;  // bunny feet rest here
+    let bunnyX = BW / 2 - BUNNY_W / 2;
+    let bunnyY = GROUND_Y;
+    let velY = 0;
+    let onGround = true;
+    let prevHeadY = bunnyY - BUNNY_H;
+    let bumps = 0;
+    const WIN_BUMPS = 5;
+    type Carrot = { x: number; y: number; vy: number; life: number };
+    let carrots: Carrot[] = [];
+    let done = false, paused = true, mouseOn = false;
+
+    const drawBunny = (x: number, y: number) => {
+      ctx.fillStyle = FG;
+      ctx.fillRect(x, y - 10, 12, 10);            // body
+      ctx.fillRect(x + 1, y - 16, 2, 6);          // left ear
+      ctx.fillRect(x + 8, y - 16, 2, 6);          // right ear
+      ctx.fillRect(x - 2, y - 5, 2, 2);           // tail
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(x + 8, y - 8, 1.5, 1.5);       // eye
+    };
+    const drawCarrot = (cx: number, cy: number) => {
+      ctx.fillStyle = FG;
+      ctx.fillRect(cx, cy, 6, 8);
+      ctx.fillRect(cx + 1, cy + 8, 4, 2);
+      ctx.fillRect(cx + 1, cy - 2, 1.5, 2);
+      ctx.fillRect(cx + 3.5, cy - 3, 1.5, 3);
+    };
+
+    const jump = () => { if (onGround && !done) { velY = -3.4; onGround = false; } };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === ' ' || e.key === 'ArrowUp') { jump(); if (mouseOn) e.preventDefault(); }
+    };
+    const onClick = () => jump();
+    const onMouseEnter = () => { mouseOn = true; paused = false; };
+    const onMouseLeave = () => { mouseOn = false; paused = true; };
+
+    canvas.addEventListener('click', onClick);
+    canvas.addEventListener('mouseenter', onMouseEnter);
+    canvas.addEventListener('mouseleave', onMouseLeave);
+    window.addEventListener('keydown', onKey);
+
+    const update = () => {
+      if (done || paused) return;
+      computeFormRect();
+
+      // Re-anchor bunny horizontally under the form (in case the form moved)
+      if (formRectGame) bunnyX = formRectGame.x + formRectGame.w / 2 - BUNNY_W / 2;
+
+      // Physics
+      prevHeadY = bunnyY - BUNNY_H;
+      velY += 0.18;
+      bunnyY += velY;
+
+      // Head bumps form bottom (sweep test: was below last frame, crossed it now)
+      if (formRectGame && velY < 0) {
+        const formBottom = formRectGame.y + formRectGame.h;
+        const headY = bunnyY - BUNNY_H;
+        const bunnyL = bunnyX, bunnyR = bunnyX + BUNNY_W;
+        const horizOverlap = bunnyR > formRectGame.x && bunnyL < formRectGame.x + formRectGame.w;
+        if (horizOverlap && prevHeadY > formBottom && headY <= formBottom) {
+          // Stop the bunny at the form's bottom and bounce it back down
+          bunnyY = formBottom + BUNNY_H;
+          velY  = 1.0;
+          // Pop a carrot out of the top of the form
+          const cx = formRectGame.x + 4 + Math.random() * (formRectGame.w - 12);
+          const cy = formRectGame.y - 4;
+          carrots.push({ x: cx, y: cy, vy: -3.2, life: 90 });
+          bumps++;
+          if (bumps >= WIN_BUMPS) { done = true; onFinish?.(); }
+        }
+      }
+
+      // Ground
+      if (bunnyY >= GROUND_Y) { bunnyY = GROUND_Y; velY = 0; onGround = true; }
+
+      // Carrots gravity + lifespan
+      for (const c of carrots) { c.vy += 0.16; c.y += c.vy; c.life--; }
+      carrots = carrots.filter(c => c.life > 0 && c.y < BH + 20);
+    };
+
+    const draw = () => {
+      ctx.clearRect(0, 0, BW, BH);
+      drawBunny(bunnyX, bunnyY);
+      for (const c of carrots) drawCarrot(c.x, c.y);
+    };
+
+    let rafId: number;
+    const loop = () => { update(); draw(); rafId = requestAnimationFrame(loop); };
+    rafId = requestAnimationFrame(loop);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      canvas.removeEventListener('click', onClick);
+      canvas.removeEventListener('mouseenter', onMouseEnter);
+      canvas.removeEventListener('mouseleave', onMouseLeave);
+      window.removeEventListener('keydown', onKey);
+      ro.disconnect();
+    };
+  }, [active]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{ width: '100%', height: '100%', display: 'block', cursor: 'pointer' }}
+      title="Space or ↑ to jump"
     />
   );
 }

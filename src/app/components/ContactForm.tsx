@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import CircleInput from './CircleInput';
-import { FormSnakeGame, FormBreakoutGame } from './FormGames';
+import { FormSnakeGame, FormBreakoutGame, FormCarrotGame } from './FormGames';
 import s from '../App.module.css';
 
 interface ContactFormProps {
@@ -98,18 +98,29 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
   return (
     <div ref={wrapRef} className={s.contactWrap}>
 
-      {/* Snake/Breakout canvas — full-bleed background of the wrap, navigates around the form */}
+      {/* Game canvas — full-bleed background of the wrap, navigates around the form */}
       <div className={s.contactGameBg}>
         {gameFinished ? null : (
           gameIndex === 0
             ? <FormSnakeGame    key={gameKey} active={gameActive} formRef={formAreaRef} onFinish={() => setGameFinished(true)} />
-            : <FormBreakoutGame key={gameKey} active={gameActive} formRef={formAreaRef} onFinish={() => setGameFinished(true)} />
+          : gameIndex === 1
+            ? <FormBreakoutGame key={gameKey} active={gameActive} formRef={formAreaRef} onFinish={() => setGameFinished(true)} />
+            : <FormCarrotGame   key={gameKey} active={gameActive} formRef={formAreaRef} onFinish={() => setGameFinished(true)} />
         )}
       </div>
 
       <div className={s.contactCard}>
-        {/* Form content — centered column on top of the snake background */}
+        {/* Form content — centered column on top of the snake background. When the
+            user finishes a game, the done overlay replaces the form. */}
         <div ref={formAreaRef} className={s.contactFormArea}>
+          {gameFinished ? (
+            <div className={s.contactGameDone}>
+              <p>Круто что вы доиграли.<br />Давайте обсудим проект?</p>
+              <a href="https://t.me/skipdesign" target="_blank" rel="noopener noreferrer">Написать в Telegram</a>
+              <button onClick={() => { setGameFinished(false); setGameKey(k => k + 1); }}>играть снова</button>
+            </div>
+          ) : (
+          <>
 
           {/* Tabs — centered */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0, alignItems: 'center' }}>
@@ -199,19 +210,15 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
             </span>
           </div>
 
+          </>
+          )}
         </div>
       </div>
 
-      {/* Skip/done controls — top-right of the wrap */}
+      {/* Skip controls — bottom-centre of the wrap (hidden when game finishes) */}
       <div className={s.contactGameControls}>
-          {gameFinished ? (
-            <div className={s.contactGameDone}>
-              <p>Круто что вы доиграли.<br />Давайте обсудим проект?</p>
-              <a href="https://t.me/skipdesign" target="_blank" rel="noopener noreferrer">Написать в Telegram</a>
-              <button onClick={() => { setGameFinished(false); setGameKey(k => k + 1); }}>играть снова</button>
-            </div>
-          ) : (
-            <button className={s.contactSkip} onClick={() => { setGameIndex(i => (i + 1) % 2); setGameKey(k => k + 1); }}>skip</button>
+          {gameFinished ? null : (
+            <button className={s.contactSkip} onClick={() => { setGameIndex(i => (i + 1) % 3); setGameKey(k => k + 1); }}>skip</button>
           )}
       </div>
 

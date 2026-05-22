@@ -231,9 +231,9 @@
   align-items: stretch;
   min-height: 720px;
   /* Colorless full-bleed background with a fine gray dot grid — snake lives on it */
-  /* True 1px dot — solid out to 0.5px, transparent past that */
+  /* True 1px dot — solid out to 0.5px, transparent past that. Sparse 28px grid. */
   background-image: radial-gradient(circle, rgba(35, 31, 32, 0.35) 0.5px, transparent 0.5px);
-  background-size: 16px 16px;
+  background-size: 28px 28px;
   background-position: center;
 }
 

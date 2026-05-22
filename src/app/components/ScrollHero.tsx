@@ -544,6 +544,8 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       rafId = requestAnimationFrame(computeAndApply);
     };
 
+    let snapTimer = 0;
+
     const handleScroll = () => {
       const dur = mode === 'bunny' ? BUNNY_DUR : vid?.duration;
       if (!dur || !isFinite(dur)) {
@@ -578,6 +580,24 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       progressRef.current = gp;
       pendingGp = gp;
       scheduleApply();
+
+      // Snap to nearest slide center when scrolling stops in the cases section.
+      // Each slide is "centred" at gp = 1.0, 1.5, 2.0 which maps to:
+      //   scrollY = videoPx, videoPx + s0/2, videoPx + s0
+      clearTimeout(snapTimer);
+      snapTimer = window.setTimeout(() => {
+        const d2 = mode === 'bunny' ? BUNNY_DUR : vid?.duration;
+        if (!d2 || !isFinite(d2)) return;
+        const sy2 = window.scrollY;
+        const vPx = d2 * PX_PER_SEC;
+        const s0  = sec0Px();
+        if (sy2 < vPx || sy2 > vPx + s0) return;          // only snap inside cases
+        const centers = [vPx, vPx + s0 / 2, vPx + s0];   // slide 0, 1, 2
+        const nearest = centers.reduce((a, b) => Math.abs(b - sy2) < Math.abs(a - sy2) ? b : a);
+        if (Math.abs(nearest - sy2) < 5) return;           // already close enough
+        const lenis = (window as any).__lenis;
+        if (lenis) lenis.scrollTo(nearest, { duration: 0.55, easing: (t: number) => 1 - Math.pow(1 - t, 3) });
+      }, 100);
     };
 
     const handleResize = () => { setHeight(durationCache); handleScroll(); };
@@ -590,6 +610,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
+      clearTimeout(snapTimer);
       if (rafId) cancelAnimationFrame(rafId);
       applyRef.current = null;
     };

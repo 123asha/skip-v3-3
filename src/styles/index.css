@@ -59,15 +59,15 @@
 .text-muted { opacity: var(--opacity-muted); }
 
 /* ── Mobile (≤ 768px) — 2-column layout ────────────────────────────────
-   Fonts scale with viewport but never below floors: h1 ≥ 28, h2 ≥ 20, text ≥ 12.
+   Fonts scale with viewport but never below floors: h1 ≥ 32, h2 ≥ 18, text ≥ 12.
    Layout follows a 2-col grid (down from 5 on desktop). */
 @media (max-width: 768px) {
   :root {
     --pad: 16px;
     --gap: 12px;
     --text-size:    clamp(12px, 3.5vw, 16px);
-    --heading-size: clamp(28px, 8vw,   40px);
-    --h2-size:      clamp(20px, 5.5vw, 28px);
+    --heading-size: clamp(32px, 8vw,   40px);
+    --h2-size:      clamp(18px, 5.5vw, 28px);
   }
 
   /* 5-col and 3-col grids collapse to 2-col on mobile.

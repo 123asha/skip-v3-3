@@ -454,7 +454,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       {
         const BASE_W  = 900;
         const BASE_H  = 506;
-        const SMALL_W = 520;
+        const SMALL_W = 420;
         const SMALL_H = 56;
         const SHRINK_DUR = 0.15;
         const easeOut = (t: number) => 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);

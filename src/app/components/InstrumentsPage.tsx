@@ -4,8 +4,7 @@ import s from './CasesPage.module.css';
 import { TEXT_STYLE as textStyle } from '../utils/typography';
 import ContactForm from './ContactForm';
 import { ToolsSection } from './ToolsSection';
-import { MediaSection } from './MediaSection';
-import CaseCard from './CaseCard';
+import CaseCard, { CASE_AR_H, CASE_AR_V, type CaseCardAR } from './CaseCard';
 import { PROJECTS } from './ProjectGallery';
 import { asset } from '../utils/asset';
 
@@ -66,9 +65,9 @@ const approach = [
 ];
 
 const CASES = [
-  { id: 'c1', ar: '16/9' as const, title: 'Бренд банка данных',         tag: 'Брендинг' },
-  { id: 'c2', ar: '3/4'  as const, title: 'Визуальная система стартапа', tag: 'Брендинг' },
-  { id: 'c3', ar: '3/4'  as const, title: 'Нейминг IT-сервиса',          tag: 'Стратегия' },
+  { id: 'c1', ar: CASE_AR_H, title: 'Бренд банка данных',         tag: 'Брендинг' },
+  { id: 'c2', ar: CASE_AR_V, title: 'Визуальная система стартапа', tag: 'Брендинг' },
+  { id: 'c3', ar: CASE_AR_V, title: 'Нейминг IT-сервиса',          tag: 'Стратегия' },
 ];
 
 const headingStyle: React.CSSProperties = {
@@ -146,7 +145,7 @@ function Section({ heading, items }: { heading: string; items: { n: string; titl
 
 // ── Case card — uses the shared CaseCard component ────────────────────────
 
-function ExCaseCard({ title, tag, ar }: { title: string; tag: string; ar: '16/9' | '3/4' }) {
+function ExCaseCard({ title, tag, ar }: { title: string; tag: string; ar: CaseCardAR }) {
   return <CaseCard ar={ar} title={title} desc={tag} />;
 }
 
@@ -201,7 +200,7 @@ function BrandingCycleCard() {
   return (
     <div
       className={s.card}
-      style={{ aspectRatio: '16/9', cursor: 'pointer' }}
+      style={{ aspectRatio: CASE_AR_H, cursor: 'pointer' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -277,13 +276,10 @@ export default function InstrumentsPage({ onNavigateCases, onNavigatePolicy, onG
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, rowGap: 60 }}>
             {PROJECTS.slice(0, 3).map(p => (
-              <CaseCard key={p.id} ar={p.ar as '16/9' | '3/4'} title={p.title} desc={p.desc} image={p.image} />
+              <CaseCard key={p.id} ar={p.ar as CaseCardAR} title={p.title} desc={p.desc} image={p.image} />
             ))}
           </div>
         </div>
-
-        {/* ── Медиа (дублирует блок с главной) ── */}
-        <MediaSection />
 
         <ContactForm onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
 

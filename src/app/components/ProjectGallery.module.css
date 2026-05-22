@@ -2,7 +2,7 @@
   width: 100%;
 }
 
-/* ── Sticky tabs bar ── */
+/* ── Tabs bar: sticky to top while scrolling through gallery ── */
 .tabsBar {
   position: sticky;
   top: 0;
@@ -17,6 +17,16 @@
   letter-spacing: var(--text-ls);
 }
 
+.tabsDivider {
+  position: absolute;
+  top: 0;
+  left: var(--pad);
+  right: var(--pad);
+  height: 1px;
+  z-index: 1;
+  pointer-events: auto;
+}
+
 .tabsGroup {
   display: flex;
   gap: 10px;
@@ -26,8 +36,7 @@
 .tabsHeading {
   position: absolute;
   left: var(--pad);
-  top: 50%;
-  transform: translateY(-50%);
+  top: var(--pad);
   font-family: var(--font-display);
   font-size: var(--h2-size);
   font-weight: var(--h2-weight);

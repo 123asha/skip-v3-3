@@ -131,7 +131,6 @@
   min-height: 100vh;
   width: 100%;
   background: var(--c-bg);
-  padding-bottom: 200px;
 }
 
 /* ── Section wrapper ── */
@@ -223,18 +222,20 @@
 /* ── Contact form ── */
 .contactWrap {
   margin-top: 200px;
-  margin-bottom: 200px;
+  margin-bottom: 0;
   padding: 0 var(--pad);
   position: relative;
   display: flex;
   justify-content: center;
-  align-items: stretch;
-  min-height: 720px;
+  align-items: center;
+  min-height: 100vh;
   /* Colorless full-bleed background with a fine gray dot grid — snake lives on it */
-  /* True 1px dot — solid out to 0.5px, transparent past that. Sparse 28px grid. */
-  background-image: radial-gradient(circle, rgba(35, 31, 32, 0.35) 0.5px, transparent 0.5px);
-  background-size: 28px 28px;
-  background-position: center;
+  /* Dots arranged on a 40px grid — same size as the snake cells / circles.
+     Each snake circle (40px diameter) fits exactly inside a 40px square cell.
+     Four dots at each cell's corners outline the snake's grid. */
+  background-image: radial-gradient(circle, rgba(35, 31, 32, 0.28) 0.9px, transparent 0.9px);
+  background-size: 40px 40px;
+  background-position: 0 0;
 }
 
 .contactSkip {
@@ -304,6 +305,7 @@
   background: var(--c-accent);
   /* Width of 2 cols + 1 gap inside the 5-col system — centered via the flex parent */
   width: calc(2 / 5 * (100% - 4 * var(--gap)) + var(--gap));
+  min-height: 70vh;
   position: relative;
   z-index: 1;
   overflow: hidden;
@@ -330,7 +332,8 @@
 .contactFormArea {
   position: relative;
   width: 100%;
-  padding: 40px 20px 60px;
+  flex: 1;
+  padding: 20px;
   background: var(--c-accent);
   z-index: 1;
   display: flex;

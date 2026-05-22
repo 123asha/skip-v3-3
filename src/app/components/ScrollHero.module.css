@@ -44,7 +44,7 @@
   font-weight: var(--heading-weight);
   line-height: var(--heading-lh);
   letter-spacing: -0.03em;
-  width: 38%;
+  width: 46%;
   z-index: 4;
   color: #fff;
   mix-blend-mode: difference;
@@ -54,7 +54,7 @@
 .panel {
   position: absolute;
   overflow: hidden;
-  background: #000;
+  background: var(--c-surface);
 }
 
 .panelLayer {

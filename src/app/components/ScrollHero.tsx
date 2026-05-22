@@ -22,16 +22,16 @@ const BOARD_IMGS = [
 
 // Gray block backgrounds — paired with BOARD_IMGS
 const BG_IMGS = [
-  asset('/1.png'),
   asset('/2bg.png'),
+  asset('/1.png'),
   asset('/3bg.png'),
 ];
 
 // Visual-systems case info — labels shown on the small black rectangle
 const VS_CASES = [
-  { name: 'Magic Moon от Юря Мурадян', href: '#' },
-  { name: 'Senior* Bar',               href: '#' },
-  { name: 'AliExpress B2B',            href: '#' },
+  { name: 'Стратегия', href: '#' },
+  { name: 'Брендинг',  href: '#' },
+  { name: 'Диджитал',  href: '#' },
 ];
 
 
@@ -45,7 +45,8 @@ const SLOT_H = 405;
 const SLOT_GAP = 20;
 
 const HEADLINE_LINES = [
-  'Стратегия и визуальные системы для бизнеса',
+  'Визуальные системы для',
+  'быстрорастущих компаний',
 ];
 
 // ── easings ─────────────────────────────────────────────────────────────────
@@ -167,18 +168,9 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
   }, [activeSection]);
 
 
-  // Case-info as a 3D rotating prism — each case is a face. As imgIdx changes,
-  // the cube rotates 90° around the X-axis to bring the next face forward.
-  useEffect(() => {
-    const cube = caseCubeRef.current;
-    if (cube) {
-      gsap.to(cube, {
-        rotateX: imgIdx * 90,
-        duration: 0.65,
-        ease: 'power3.inOut',
-      });
-    }
-  }, [imgIdx]);
+  // Cube rotation is now driven directly by scroll (stickyT) inside applyProgress —
+  // see "Case-info cube rotation" block below. This keeps the face-flip exactly
+  // synchronised with the background tape-strip transition.
 
   useLayoutEffect(() => {
     reducedMotion.current = prefersReducedMotion();
@@ -435,9 +427,9 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       }
 
       // Panel size:
-      //   gp 0 → 0.85     900×506  (brand-strategy video)
-      //   gp 0.85 → 1.0   shrinks to SMALL_W×56  (magnetic snap as video slides off)
-      //   gp 1.0+          holds at SMALL_W×56   (small black rectangle — cases cycle)
+      //   gp 0 → 0.85    holds at 900×506
+      //   gp 0.85 → 1.0  shrinks to SMALL_W×56
+      //   gp 1.0+        holds at SMALL_W×56
       {
         const vw = window.innerWidth;
         const isMobile = vw <= 768;
@@ -445,22 +437,23 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
         const BASE_W  = isMobile ? Math.max(100, vw - mobilePad * 2) : 900;
         const BASE_H  = isMobile ? Math.round(BASE_W * 506 / 900)    : 506;
         const SMALL_W = isMobile
-          ? Math.min(260, vw - mobilePad * 2)
-          : Math.max(260, Math.min(400, Math.round(vw * 0.21)));
+          ? Math.min(220, vw - mobilePad * 2)
+          : Math.max(220, Math.min(320, Math.round(vw * 0.18)));
         const SMALL_H = 56;
-        const SHRINK_DUR = 0.15;
+        const SHRINK_DUR   = 0.15;
         const easeOut = (t: number) => 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);
 
-        let panelW = BASE_W;
-        let panelH = BASE_H;
+        let panelW: number;
+        let panelH: number;
 
-        if (gp > 1 - SHRINK_DUR && gp <= 1.0) {
+        if (gp < 1 - SHRINK_DUR) {
+          panelW = BASE_W; panelH = BASE_H;
+        } else if (gp <= 1.0) {
           const t = easeOut((gp - (1 - SHRINK_DUR)) / SHRINK_DUR);
           panelW = BASE_W + (SMALL_W - BASE_W) * t;
           panelH = BASE_H + (SMALL_H - BASE_H) * t;
-        } else if (gp > 1.0) {
-          panelW = SMALL_W;
-          panelH = SMALL_H;
+        } else {
+          panelW = SMALL_W; panelH = SMALL_H;
         }
 
         if (panelRef.current) {
@@ -477,16 +470,16 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
         }
 
         if (captionRef.current) {
-          captionRef.current.style.top = `calc(50% + ${Math.round(panelH) / 2 + 10}px)`;
           captionRef.current.style.opacity = String((1 - overlayOp) * 0.4);
         }
       }
 
-      // Background wrap — fade in at gp 1.0, stays visible after (sticky scrolls away naturally)
+      // Background wrap — fade in early, in sync with panel shrink (gp 0.80 → 0.95),
+      // so the first case is visible by the time the panel becomes a small black bar.
       if (bgWrapRef.current) {
         let bgOp = 0;
-        if      (gp < 1.0)  bgOp = 0;
-        else if (gp < 1.10) bgOp = sm((gp - 1.0) / 0.10);
+        if      (gp < 0.80) bgOp = 0;
+        else if (gp < 0.95) bgOp = sm((gp - 0.80) / 0.15);
         else                bgOp = 1;
         bgWrapRef.current.style.opacity = String(bgOp);
       }
@@ -513,6 +506,12 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
         else                               stickyT = 1;
 
         const stickyGp = 1 + stickyT; // 1.0→2.0
+
+        // Case-info cube rotation — directly tied to stickyT so the face-flip
+        // is in lockstep with the background tape-strip transition.
+        if (caseCubeRef.current) {
+          gsap.set(caseCubeRef.current, { rotateX: stickyT * 180 });
+        }
 
         bgSlideRefs.current.forEach((el, i) => {
           if (!el) return;
@@ -777,11 +776,11 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
                         key={i}
                         style={{
                           position: 'absolute', inset: 0,
-                          background: '#000',
+                          background: '#e8e8e8',
                           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                           padding: '0 20px',
                           gap: 20,
-                          color: '#fff',
+                          color: 'var(--c-text)',
                           backfaceVisibility: 'hidden',
                           // Each face is at i × -90° around X and pushed out by half the small
                           // panel height so the prism's depth matches the visible bar height.
@@ -794,7 +793,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
                           fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
                           lineHeight: 'var(--text-lh)',
                           letterSpacing: 'var(--text-ls)',
-                          color: '#fff',
+                          color: 'var(--c-text)',
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           display: 'inline-block',
@@ -810,7 +809,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
                             fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
                             lineHeight: 'var(--text-lh)',
                             letterSpacing: 'var(--text-ls)',
-                            color: '#fff',
+                            color: 'var(--c-text)',
                             textDecoration: 'underline',
                             textDecorationStyle: 'dotted',
                             textUnderlineOffset: '3px',
@@ -829,13 +828,13 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
           </div>
         </div>
 
-        {/* Caption below centered panel */}
+        {/* Caption pinned to the bottom of the sticky hero (at the footer line) */}
         <p ref={captionRef} style={{
           ...TEXT_STYLE,
           position: 'absolute',
           left: '50%',
           transform: 'translateX(-50%)',
-          top: 'calc(50% + 202.5px + 10px)',
+          bottom: 'var(--pad)',
           opacity: 0.4,
           pointerEvents: 'none',
           userSelect: 'none',
@@ -906,7 +905,6 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
 
         {/* rightNumRef — hidden anchor, kept for scroll engine logic */}
         <div ref={rightNumRef} style={{ display: 'none' }} />
-
 
       </div>
     </div>

@@ -42,6 +42,8 @@ export function FormSnakeGame({
     let done   = false;
     let paused = true;
     let mouseOn = false;
+    // Visual recoil — non-zero when snake just bumped a wall / the form
+    let recoilTick = 0;
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -136,6 +138,23 @@ export function FormSnakeGame({
     const ro = new ResizeObserver(setupCanvas);
     ro.observe(canvas);
 
+    // Small kinetic shake when the snake bumps the form — matches FormCarrotGame
+    const shakeForm = () => {
+      const el = formRef?.current;
+      if (!el) return;
+      const start = performance.now();
+      const dur = 220;
+      const amp = 4;
+      const tick = (now: number) => {
+        const k = (now - start) / dur;
+        if (k >= 1) { el.style.transform = ''; return; }
+        const offset = Math.sin(k * Math.PI * 3) * amp * (1 - k);
+        el.style.transform = `translateX(${offset}px)`;
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    };
+
     // ── Game logic ────────────────────────────────────────────────────────────
 
     const isSafe = (d: Dir, head: Pt, occ: Set<string>) => {
@@ -168,14 +187,23 @@ export function FormSnakeGame({
       const [dx, dy] = DELTA[dir];
       const nh = { x: head.x + dx, y: head.y + dy };
 
-      // Collision = reset (walls, self, forbidden)
+      // Collision with form / wall / self: bounce off instead of resetting.
+      // Snake stays in place for one tick and immediately changes direction.
+      // This is the "bumping into the form" feeling — no game-over.
       if (!isOpen(nh.x, nh.y) || occ.has(`${nh.x},${nh.y}`)) {
-        snake    = makeInitSnake();
-        dir      = 'R'; queueDir = 'R'; foodCharIdx = 0;
-        playerControlled = false;
-        spawnFood();
+        const fallback = (['R','D','L','U'] as Dir[]).filter(d => isSafe(d, head, occ));
+        if (fallback.length) {
+          const perp = fallback.find(d => d !== dir && d !== OPP[dir]);
+          queueDir = perp || fallback[0];
+        }
+        // Bigger visual recoil — head springs back from the wall noticeably
+        recoilTick = 2.2;
+        // Was it the form (forbidden) — not a wall or self? Shake the form.
+        const hitForbidden = forbiddenSet.has(`${nh.x},${nh.y}`);
+        if (hitForbidden) shakeForm();
         return;
       }
+      recoilTick = 0;
 
       snake.unshift(nh);
       if (nh.x === food.x && nh.y === food.y) {
@@ -198,15 +226,18 @@ export function FormSnakeGame({
       // (Grid dots are drawn by the CSS background of .contactWrap — a single
       // 1px dot every 16px — so the snake no longer paints its own grid.)
 
-      // Food — outlined circle + letter
+      // Brand purple — matches var(--c-accent)
+      const ACCENT = '#8382fc';
+
+      // Food — outlined circle + letter (purple to match snake)
       const fx = food.x * SCELL + SCELL / 2;
       const fy = food.y * SCELL + SCELL / 2;
-      ctx.strokeStyle = FG;
+      ctx.strokeStyle = ACCENT;
       ctx.lineWidth   = 1.5;
       ctx.beginPath();
       ctx.arc(fx, fy, R, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.fillStyle = FG;
+      ctx.fillStyle = ACCENT;
       ctx.font      = `700 ${Math.round(R * 1.1)}px "CoFo Sans VF", system-ui, sans-serif`;
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'middle';
@@ -214,11 +245,19 @@ export function FormSnakeGame({
       ctx.textAlign    = 'left';
       ctx.textBaseline = 'alphabetic';
 
-      // Snake segments
+      // Recoil offset for the head — visual nudge backwards on collision
+      const recoilFactor = Math.min(0.6, recoilTick * 0.3); // capped at 60% of cell
+      const [rdx, rdy] = DELTA[dir];
+
+      // Snake segments — purple circles
       snake.forEach((seg, i) => {
-        const sx = seg.x * SCELL + SCELL / 2;
-        const sy = seg.y * SCELL + SCELL / 2;
-        ctx.fillStyle = FG;
+        let sx = seg.x * SCELL + SCELL / 2;
+        let sy = seg.y * SCELL + SCELL / 2;
+        if (i === 0 && recoilFactor > 0) {
+          sx -= rdx * SCELL * recoilFactor;
+          sy -= rdy * SCELL * recoilFactor;
+        }
+        ctx.fillStyle = ACCENT;
         ctx.beginPath();
         ctx.arc(sx, sy, R, 0, Math.PI * 2);
         ctx.fill();
@@ -232,6 +271,9 @@ export function FormSnakeGame({
           ctx.textBaseline = 'alphabetic';
         }
       });
+
+      // Decay recoil so it disappears within ~2 frames
+      if (recoilTick > 0) recoilTick = Math.max(0, recoilTick - 0.5);
     };
 
     // ── Input ─────────────────────────────────────────────────────────────────
@@ -663,7 +705,7 @@ export function FormCarrotGame({ active, formRef, onFinish }: { active?: boolean
     let wt = 0;
     let bumps = 0;
     const WIN_BUMPS = 15;
-    type Carrot = { x: number; y: number; vy: number; life: number };
+    type Carrot = { x: number; y: number; vx: number; vy: number; rot: number; vrot: number; life: number };
     let carrots: Carrot[] = [];
     let done = false, paused = true, mouseOn = false;
 
@@ -690,12 +732,35 @@ export function FormCarrotGame({ active, formRef, onFinish }: { active?: boolean
       drawSprite(wing, x + BUNNY_W, top + 3, WMAP, true);
       drawSprite(BUNNY_SPR, x, top, BMAP, false);
     };
-    const drawCarrot = (cx: number, cy: number) => {
-      ctx.fillStyle = FG;
-      ctx.fillRect(cx, cy, 6, 8);
-      ctx.fillRect(cx + 1, cy + 8, 4, 2);
-      ctx.fillRect(cx + 1, cy - 2, 1.5, 2);
-      ctx.fillRect(cx + 3.5, cy - 3, 1.5, 3);
+    // Pixel-art carrot in the same chunky style as the bunny sprite
+    //   0 empty, 1 leaf dark, 2 leaf light, 3 body dark, 4 body light
+    const CARROT_SPR: number[][] = [
+      [0,0,1,2,0,0,0],
+      [0,1,2,1,2,0,0],
+      [0,1,2,1,2,1,0],
+      [0,0,2,1,2,1,0],
+      [0,3,4,3,3,3,0],
+      [0,3,3,4,3,3,0],
+      [0,0,3,3,4,0,0],
+      [0,0,3,3,3,0,0],
+      [0,0,0,3,3,0,0],
+      [0,0,0,0,3,0,0],
+    ];
+    const CARROT_CMAP: Record<number, string> = {
+      1: '#3a6b2a', // leaf dark green
+      2: '#7bb755', // leaf light green
+      3: '#c95a1e', // body dark orange
+      4: '#f0782e', // body bright orange
+    };
+    const CARROT_W = CARROT_SPR[0].length;
+    const CARROT_H = CARROT_SPR.length;
+    const drawCarrot = (cx: number, cy: number, rot = 0) => {
+      ctx.save();
+      ctx.translate(cx + CARROT_W / 2, cy + CARROT_H / 2);
+      if (rot) ctx.rotate(rot);
+      ctx.translate(-CARROT_W / 2, -CARROT_H / 2);
+      drawSprite(CARROT_SPR, 0, 0, CARROT_CMAP, false);
+      ctx.restore();
     };
 
     // Small kinetic shake when the bunny bumps the form.
@@ -757,10 +822,24 @@ export function FormCarrotGame({ active, formRef, onFinish }: { active?: boolean
           // Stop the bunny at the form's bottom and bounce it back down
           bunnyY = formBottom + BUNNY_H;
           velY  = 1.0;
-          // Pop a carrot out of the top of the form
-          const cx = formRectGame.x + 4 + Math.random() * (formRectGame.w - 12);
-          const cy = formRectGame.y - 4;
-          carrots.push({ x: cx, y: cy, vy: -3.2, life: 90 });
+          // Pop several carrots flying upward & sideways above the form
+          // (they sit on top of the form visually thanks to a higher z-index).
+          const carrotsPerBump = 3 + Math.floor(Math.random() * 2); // 3–4 carrots
+          for (let i = 0; i < carrotsPerBump; i++) {
+            const cx = formRectGame.x + 4 + Math.random() * (formRectGame.w - 12);
+            const cy = formRectGame.y - 4;
+            const angleSpread = (i - (carrotsPerBump - 1) / 2) * 0.35;
+            const speed = 3.4 + Math.random() * 1.2;
+            carrots.push({
+              x: cx,
+              y: cy,
+              vx: Math.sin(angleSpread) * speed,
+              vy: -Math.cos(angleSpread) * speed,
+              rot: 0,
+              vrot: (Math.random() - 0.5) * 0.3,
+              life: 110,
+            });
+          }
           shakeForm();
           bumps++;
           if (bumps >= WIN_BUMPS) { done = true; onFinish?.(); }
@@ -770,15 +849,25 @@ export function FormCarrotGame({ active, formRef, onFinish }: { active?: boolean
       // Ground
       if (bunnyY >= GROUND_Y) { bunnyY = GROUND_Y; velY = 0; onGround = true; }
 
-      // Carrots gravity + lifespan
-      for (const c of carrots) { c.vy += 0.16; c.y += c.vy; c.life--; }
-      carrots = carrots.filter(c => c.life > 0 && c.y < BH + 20);
+      // Carrots: gravity + sideways drift + spin + lifespan.
+      // Each carrot is killed the moment it descends back into / below the
+      // form's top — so visually they only ever scatter ABOVE the form, never
+      // disappear "behind" the purple rectangle.
+      const formTop = formRectGame ? formRectGame.y : Infinity;
+      for (const c of carrots) {
+        c.vy += 0.16;
+        c.x  += c.vx;
+        c.y  += c.vy;
+        c.rot += c.vrot;
+        c.life--;
+      }
+      carrots = carrots.filter(c => c.life > 0 && c.y < formTop && c.y > -20);
     };
 
     const draw = () => {
       ctx.clearRect(0, 0, BW, BH);
       drawBunny(bunnyX, bunnyY);
-      for (const c of carrots) drawCarrot(c.x, c.y);
+      for (const c of carrots) drawCarrot(c.x, c.y, c.rot);
     };
 
     let rafId: number;

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import s from './CasesPage.module.css';
-import CaseCard from './CaseCard';
+import CaseCard, { CASE_AR_H as H, CASE_AR_V as V, type CaseCardAR as AR } from './CaseCard';
 import ContactForm from './ContactForm';
 import { asset } from '../utils/asset';
 
@@ -11,10 +11,6 @@ interface Props {
   onNavigatePolicy?: () => void;
   onGridMode?: (on: boolean) => void;
 }
-
-const H = '16/9' as const;
-const V = '3/4' as const;
-type AR = typeof H | typeof V;
 
 interface Project {
   id: number;
@@ -115,9 +111,10 @@ function buildRows(projects: Project[]): Row[] {
 }
 
 // ── ProjectCard ───────────────────────────────────────────────────────────────
-function ProjectCard({ image, ar, title, desc, onClick }: Project & { onClick?: () => void }) {
+function ProjectCard({ ar, title, desc, onClick }: Project & { onClick?: () => void }) {
+  // image temporarily omitted — gray placeholders
   return (
-    <CaseCard ar={ar} title={title} desc={desc} image={image} onClick={onClick} />
+    <CaseCard ar={ar} title={title} desc={desc} onClick={onClick} />
   );
 }
 

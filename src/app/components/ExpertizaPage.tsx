@@ -3,7 +3,6 @@ import { gsap } from 'gsap';
 import s from './CasesPage.module.css';
 import { TEXT_STYLE as ts, H2_STYLE } from '../utils/typography';
 import ContactForm from './ContactForm';
-import { MediaSection } from './MediaSection';
 import { MagneticDivider } from './MagneticDivider';
 
 // ── Service data ──────────────────────────────────────────────────────────────
@@ -306,7 +305,7 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                     alignItems: 'start',
                   }}
                 >
-                  <MagneticDivider />
+                  <MagneticDivider dotted />
                   <p style={{ ...ts, gridColumn: '1' }}>{svc.number}</p>
                   <div />
                   <p style={{ ...h2Style, gridColumn: '3' }}>{svc.title}</p>
@@ -403,11 +402,6 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
               )}
             </div>
           </div>
-        </div>
-
-        {/* ── Media — shared block (same as on the home page) ── */}
-        <div style={{ marginLeft: -20, marginRight: -20 }}>
-          <MediaSection />
         </div>
 
         <div style={{ marginLeft: -20, marginRight: -20 }}>

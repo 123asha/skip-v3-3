@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 
-export function MagneticDivider({ color = 'var(--c-border)', active = false }: { color?: string; active?: boolean }) {
+export function MagneticDivider({ color = 'var(--c-border)', active = false, dotted = false }: { color?: string; active?: boolean; dotted?: boolean }) {
   const svgRef  = useRef<SVGSVGElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
   const hitRef  = useRef<SVGPathElement>(null);
@@ -37,7 +37,7 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false }: {
       }
 
       if (live.current) {
-        p1.current.y = Math.max(-16, Math.min(16, (svgY - CY) * 1.6));
+        p1.current.y = Math.max(-6, Math.min(6, (svgY - CY) * 1.0));
       }
     };
 
@@ -71,7 +71,14 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false }: {
       }}
       aria-hidden="true"
     >
-      <path ref={pathRef} d="" fill="none" style={{ stroke: active ? 'var(--c-text)' : color, strokeWidth: '1', transition: 'stroke 0.2s ease' }} />
+      <path
+        ref={pathRef}
+        d=""
+        fill="none"
+        strokeLinecap={dotted ? 'round' : undefined}
+        strokeDasharray={dotted ? '0.1 4' : undefined}
+        style={{ stroke: active ? 'var(--c-text)' : color, strokeWidth: '1', transition: 'stroke 0.2s ease' }}
+      />
       <path ref={hitRef}  d="" fill="none" stroke="transparent" strokeWidth={40} />
     </svg>
   );

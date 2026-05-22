@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import s from './CasesPage.module.css';
 import { TEXT_STYLE as textStyle } from '../utils/typography';
 import ContactForm from './ContactForm';
+import { CASE_AR_H, CASE_AR_V } from './CaseCard';
 
 const headingStyle: React.CSSProperties = {
   fontFamily: 'var(--font-display)',
@@ -49,7 +50,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode }: { onN
 
           {/* ── Block 1: horizontal image ── */}
           <div style={{ marginTop: 40 }}>
-            <ImagePlaceholder aspectRatio="16/9" />
+            <ImagePlaceholder aspectRatio={CASE_AR_H} />
           </div>
 
           {/* Block 1 description — last 2 cols */}
@@ -68,8 +69,8 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode }: { onN
 
           {/* ── Block 2: two vertical images ── */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 80 }}>
-            <ImagePlaceholder aspectRatio="3/4" />
-            <ImagePlaceholder aspectRatio="3/4" />
+            <ImagePlaceholder aspectRatio={CASE_AR_V} />
+            <ImagePlaceholder aspectRatio={CASE_AR_V} />
           </div>
 
           {/* Block 2 description — last 2 cols */}
@@ -95,7 +96,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode }: { onN
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                aspectRatio: '16/9',
+                aspectRatio: CASE_AR_H,
                 background: 'var(--c-surface)',
                 textDecoration: 'none',
                 overflow: 'hidden',

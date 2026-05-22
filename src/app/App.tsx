@@ -21,6 +21,7 @@ import BunnyFollower from './components/BunnyFollower';
 import ContactForm from './components/ContactForm';
 import { ToolsSection } from './components/ToolsSection';
 import { MediaSection } from './components/MediaSection';
+import LabPage from './components/LabPage';
 import s from './App.module.css';
 
 function ScrollHint() {
@@ -86,7 +87,7 @@ function ScrollHint() {
 const HERO_MODE: 'arcade' | 'bunny' = 'arcade';
 
 
-const PRELOADER_LINES = ['дизайн', 'как', 'правила', 'игры'];
+const PRELOADER_LINES = ['дизайн', 'как правила', 'игры'];
 const DOT_R = 5;
 
 // Logo dot path extracted for the preloader ball (index 4 in the svg paths)
@@ -110,34 +111,32 @@ function Preloader({ onDone }: { onDone: () => void }) {
 
     gsap.set(wordSpans, { opacity: 0, y: 12 });
 
-    const tl = gsap.timeline({ delay: 0.1 });
+    const tl = gsap.timeline({ delay: 0.05 });
 
-    // Слова появляются — плавный подъём с замедлением
+    // Words appear one after another
     tl.to(wordSpans, {
       opacity: 1,
       y: 0,
-      duration: 0.5,
+      duration: 0.4,
       ease: 'power3.out',
-      stagger: (i: number) => [0, 0.12, 0.12, 0.24][i] ?? i * 0.12,
+      stagger: 0.18,
     });
 
-    // Подъём и исчезновение — одновременно, как будто слова тянут страницу
+    // Brief pause with everything visible, then fade everything together
     tl.to(wordSpans, {
-      y: -32,
+      y: -16,
       opacity: 0,
-      duration: 0.4,
+      duration: 0.25,
       ease: 'power2.in',
-      stagger: (i: number) => ([0, 0.05, 0.05, 0.10][i] ?? i * 0.05),
-    }, '+=0.15');
+      stagger: 0.04,
+    }, '+=0.3');
 
-    // Фон чуть-чуть поднимается и плавно растворяется
     tl.to(bg, {
-      y: -20,
       opacity: 0,
-      duration: 0.5,
+      duration: 0.3,
       ease: 'power2.in',
       onComplete: onDone,
-    }, '-=0.25');
+    }, '-=0.15');
 
     return () => { tl.kill(); };
   }, []);
@@ -152,13 +151,14 @@ function Preloader({ onDone }: { onDone: () => void }) {
       pointerEvents: 'none',
     }}>
       <p ref={wrapRef} style={{
-        fontFamily: 'var(--font)',
-        fontSize: 'var(--text-size)',
-        fontWeight: 'var(--text-weight)',
-        letterSpacing: 'var(--text-ls)',
-        lineHeight: 'var(--text-lh)',
+        fontFamily: 'var(--font-display)',
+        fontSize: 'var(--h2-size)',
+        fontWeight: 'var(--h2-weight)' as React.CSSProperties['fontWeight'],
+        letterSpacing: 'var(--h2-ls)',
+        lineHeight: 'var(--h2-lh)',
         color: 'var(--c-text)',
         margin: 0,
+        position: 'relative',
       }}>
         {PRELOADER_LINES.map((line, i) => (
           <Fragment key={line}>
@@ -317,7 +317,7 @@ function stripBase(p: string): string {
 
 function AppInner() {
   const [pathname, setPathname] = useState(() => stripBase(window.location.pathname));
-  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/policy', '/index2', '/case-template', '/guide'];
+  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/policy', '/index2', '/case-template', '/guide', '/lab'];
   const page = pathname === '/cases' ? 'cases'
              : pathname === '/instruments' ? 'instruments'
              : (pathname === '/expertiza' || pathname === '/services') ? 'expertiza'
@@ -325,6 +325,7 @@ function AppInner() {
              : pathname === '/index2' ? 'index2'
              : pathname === '/case-template' ? 'case-template'
              : pathname === '/guide' ? 'guide'
+             : pathname === '/lab' ? 'lab'
              : pathname === '/' ? 'home'
              : pathname === '/404' || !KNOWN_PATHS.includes(pathname) ? 'notfound'
              : 'home';
@@ -423,10 +424,11 @@ function AppInner() {
   const casesLinkRef = useRef<HTMLElement>(null);
   const toolsLinkRef = useRef<HTMLElement>(null);
   const expertizaLinkRef = useRef<HTMLElement>(null);
+  const labLinkRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const logo = logoRef.current;
-    const links = [casesLinkRef.current, expertizaLinkRef.current, toolsLinkRef.current].filter(Boolean);
+    const links = [casesLinkRef.current, expertizaLinkRef.current, labLinkRef.current, toolsLinkRef.current].filter(Boolean);
     if (!logo || !links.length) return;
     gsap.set(logo, { opacity: 0, x: 10 });
     gsap.set(links, { opacity: 0, y: 8 });
@@ -435,7 +437,7 @@ function AppInner() {
   useEffect(() => {
     if (!preloaderDone) return;
     const logo = logoRef.current;
-    const links = [casesLinkRef.current, expertizaLinkRef.current, toolsLinkRef.current].filter(Boolean);
+    const links = [casesLinkRef.current, expertizaLinkRef.current, labLinkRef.current, toolsLinkRef.current].filter(Boolean);
     if (!logo || !links.length) return;
 
     const tl = gsap.timeline();
@@ -470,7 +472,7 @@ function AppInner() {
   // Page exit then navigate
   const navigateWithExit = useCallback((dest: string) => {
     if (!mainRef.current) { navigate(dest); return; }
-    const allLinks = [casesLinkRef.current, toolsLinkRef.current, expertizaLinkRef.current].filter(Boolean);
+    const allLinks = [casesLinkRef.current, toolsLinkRef.current, expertizaLinkRef.current, labLinkRef.current].filter(Boolean);
     gsap.to(allLinks, { opacity: 0, duration: 0.2, ease: 'power2.in' });
     gsap.to(mainRef.current, {
       opacity: 0,
@@ -512,6 +514,12 @@ function AppInner() {
     else navigate('/instruments');
   };
 
+  const handleLabClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (labLinkRef.current) flyToTitle('Студия', labLinkRef.current, '/lab');
+    else navigate('/lab');
+  };
+
   const handleExpertizaClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (expertizaLinkRef.current) flyToTitle('Услуги', expertizaLinkRef.current, '/services');
@@ -526,11 +534,12 @@ function AppInner() {
   useEffect(() => {
     const was = prevPath.current;
     prevPath.current = pathname;
-    if (pathname === '/' && (was === '/cases' || was === '/instruments' || was === '/expertiza' || was === '/services' || was === '/policy' || was === '/case-template' || was === '/guide')) {
+    if (pathname === '/' && (was === '/cases' || was === '/instruments' || was === '/expertiza' || was === '/services' || was === '/policy' || was === '/case-template' || was === '/guide' || was === '/lab')) {
       requestAnimationFrame(() => {
         if (casesLinkRef.current) gsap.set(casesLinkRef.current, { opacity: 1 });
         if (toolsLinkRef.current) gsap.set(toolsLinkRef.current, { opacity: 1 });
         if (expertizaLinkRef.current) gsap.set(expertizaLinkRef.current, { opacity: 1 });
+        if (labLinkRef.current) gsap.set(labLinkRef.current, { opacity: 1 });
         if (mainRef.current) {
           gsap.fromTo(mainRef.current, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
         }
@@ -566,6 +575,10 @@ function AppInner() {
             <span ref={toolsLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'none' }}>
               <span className={s.navSep}>,&nbsp;</span>
               <a href="/instruments" className={s.navLink} onClick={handleInstrumentsClick}>Подход</a>
+            </span>
+            <span ref={labLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <span className={s.navSep}>,&nbsp;</span>
+              <a href="/lab" className={s.navLink} onClick={handleLabClick}>Студия</a>
             </span>
           </>
         )}
@@ -615,26 +628,40 @@ function AppInner() {
             left: 'var(--pad)',
             bottom: 'var(--pad)',
             zIndex: 160,
-            background: 'none',
+            background: 'var(--c-text)',
             border: 'none',
-            padding: 0,
+            borderRadius: 0,
+            padding: '9px 12px 11px',
             cursor: 'pointer',
             fontFamily: 'var(--font)',
             fontSize: 'var(--text-size)',
             fontWeight: 'var(--text-weight)',
             letterSpacing: 'var(--text-ls)',
             lineHeight: 'var(--text-lh)',
-            color: 'var(--c-text)',
-            textDecoration: 'underline',
-            textDecorationStyle: 'dotted',
-            textUnderlineOffset: '3px',
-            opacity: showPrivacy ? 0 : 0.7,
+            color: '#fff',
+            textDecoration: 'none',
+            opacity: showPrivacy ? 0 : 1,
             pointerEvents: showPrivacy ? 'none' : 'auto',
             transition: 'opacity 0.3s ease',
-            mixBlendMode: 'difference',
+            display: 'inline-flex',
+            alignItems: 'center',
           }}
-          onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
-          onMouseLeave={e => (e.currentTarget.style.opacity = showPrivacy ? '0' : '0.7')}
+          onMouseEnter={e => {
+            const plus = e.currentTarget.querySelector('[data-plus]') as HTMLElement | null;
+            if (plus) {
+              plus.style.maxWidth = '14px';
+              plus.style.opacity = '1';
+              plus.style.marginRight = '6px';
+            }
+          }}
+          onMouseLeave={e => {
+            const plus = e.currentTarget.querySelector('[data-plus]') as HTMLElement | null;
+            if (plus) {
+              plus.style.maxWidth = '0';
+              plus.style.opacity = '0';
+              plus.style.marginRight = '0';
+            }
+          }}
           onClick={() => {
             const el = document.querySelector('[class*="contactWrap"]') as HTMLElement;
             const lenis = (window as any).__lenis;
@@ -642,7 +669,18 @@ function AppInner() {
             else if (el) el.scrollIntoView({ behavior: 'smooth' });
           }}
         >
-          Обсудить проект
+          <span
+            data-plus
+            style={{
+              display: 'inline-block',
+              overflow: 'hidden',
+              maxWidth: '0',
+              opacity: 0,
+              marginRight: '0',
+              transition: 'max-width 0.25s ease, opacity 0.2s ease, margin-right 0.25s ease',
+            }}
+          >+</span>
+          новый проект
         </button>
       )}
 
@@ -753,6 +791,10 @@ function AppInner() {
         onGridMode={setGridVisible}
       />}
       {page === 'expertiza' && <ExpertizaPage
+        onNavigatePolicy={() => navigateWithExit('/policy')}
+        onGridMode={setGridVisible}
+      />}
+      {page === 'lab' && <LabPage
         onNavigatePolicy={() => navigateWithExit('/policy')}
         onGridMode={setGridVisible}
       />}

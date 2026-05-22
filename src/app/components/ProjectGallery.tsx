@@ -1,10 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import s from './ProjectGallery.module.css';
-import CaseCard from './CaseCard';
-
-const H = '16/9' as const;
-const V = '3/4' as const;
-type AR = typeof H | typeof V;
+import CaseCard, { CASE_AR_H as H, CASE_AR_V as V, type CaseCardAR as AR } from './CaseCard';
+import { MagneticDivider } from './MagneticDivider';
 
 interface Project {
   id: number;
@@ -98,7 +95,7 @@ function ProjectCard({ project, onClick }: { project: Project; onClick?: () => v
       ar={project.ar}
       title={project.title}
       desc={project.desc}
-      image={project.image}
+      // image temporarily omitted — gray placeholders
       onClick={onClick}
     />
   );
@@ -132,7 +129,11 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: () => vo
   return (
     <div ref={containerRef} className={s.root}>
       <div className={s.tabsBar}>
+        <div className={s.tabsDivider}>
+          <MagneticDivider dotted />
+        </div>
         <div className={s.tabsGroup}>
+          <span className={s.tabsLabel}>Сделали:</span>
           {TABS.map(tab => (
             <button
               key={tab.key}

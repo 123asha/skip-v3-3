@@ -8,22 +8,9 @@ import { TEXT_STYLE } from '../utils/typography';
 import { asset } from '../utils/asset';
 
 
-export const sections = [
-  {
-    id: 1,
-    number: '①',
-    title: 'Бренд-\nстратегия',
-    details: [
-      'платформа бренда, нейминг',
-    ],
-  },
-  {
-    id: 2,
-    number: '②',
-    title: 'Визуальные\nсистемы',
-    details: [],
-  },
-];
+// Sidebar section items hidden for now — keep the export so dependents still
+// type-check. Set to empty so nothing renders in the hero sidebar.
+export const sections: { id: number; number: string; title: string; details: string[] }[] = [];
 
 // ── Visual Systems grid board ─────────────────────────────────────────────────
 // Center panel images — paired with BG_IMGS by index (3 cases in slide 2)
@@ -58,7 +45,7 @@ const SLOT_H = 405;
 const SLOT_GAP = 20;
 
 const HEADLINE_LINES = [
-  'Визуальные системы',
+  'Стратегия и визуальные системы',
   'для бизнеса',
 ];
 

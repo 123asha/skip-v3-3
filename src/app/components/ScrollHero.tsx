@@ -452,9 +452,13 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       //   gp 0.85 → 1.0   shrinks to 320×56  (magnetic snap as video slides off)
       //   gp 1.0+          holds at 320×56   (small black rectangle — cases cycle)
       {
-        const BASE_W  = 900;
-        const BASE_H  = 506;
-        const SMALL_W = 260;
+        // Panel sizing — mobile fits the viewport with a 10px gutter each side.
+        const vw = window.innerWidth;
+        const isMobile = vw <= 768;
+        const mobilePad = 10;
+        const BASE_W  = isMobile ? Math.max(100, vw - mobilePad * 2) : 900;
+        const BASE_H  = isMobile ? Math.round(BASE_W * 506 / 900)    : 506;
+        const SMALL_W = isMobile ? Math.min(260, vw - mobilePad * 2) : 260;
         const SMALL_H = 56;
         const SHRINK_DUR = 0.15;
         const easeOut = (t: number) => 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);

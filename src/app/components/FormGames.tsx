@@ -605,28 +605,67 @@ export function FormCarrotGame({ active, formRef, onFinish }: { active?: boolean
     ro.observe(canvas);
     if (formRef?.current) ro.observe(formRef.current);
 
-    const BUNNY_H = 16;       // sprite height (body + ears)
-    const BUNNY_W = 12;       // sprite width
-    const GROUND_Y = BH - 2;  // bunny feet rest here
+    // Flying bunny — same sprite as the BunnyHero mascot, drawn pixel-by-pixel.
+    // Sprite cells (10×12 for the body, 4×3 for each wing) map 1:1 to game units.
+    const BUNNY_SPR: number[][] = [
+      [0,0,1,0,0,0,0,1,0,0],
+      [0,0,1,2,0,0,2,1,0,0],
+      [0,0,1,2,0,0,2,1,0,0],
+      [0,1,1,1,0,0,1,1,1,0],
+      [0,1,1,1,1,1,1,1,1,0],
+      [1,1,1,3,1,1,3,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1],
+      [1,1,2,1,1,1,1,2,1,1],
+      [0,1,1,1,2,2,1,1,1,0],
+      [0,1,1,1,1,1,1,1,1,0],
+      [0,0,1,1,0,0,1,1,0,0],
+      [0,0,1,1,0,0,1,1,0,0],
+    ];
+    const W_UP: number[][] = [[0,1,1,0],[1,1,1,1],[0,1,1,0]];
+    const W_DN: number[][] = [[0,0,1,0],[0,1,1,1],[1,1,0,0]];
+    const C1 = '#1a1a1a', C2 = '#888', C3 = '#f6f6f6';
+    const BMAP: Record<number, string> = { 1: C1, 2: C2, 3: C3 };
+    const WMAP: Record<number, string> = { 1: C2 };
+    const BUNNY_W_CELLS = 10;
+    const BUNNY_H_CELLS = 12;
+
+    const BUNNY_H = BUNNY_H_CELLS; // sprite height in game units (= cells)
+    const BUNNY_W = BUNNY_W_CELLS; // sprite width in game units
+    const GROUND_Y = BH - 2;       // bunny feet rest here
     let bunnyX = BW / 2 - BUNNY_W / 2;
     let bunnyY = GROUND_Y;
     let velY = 0;
     let onGround = true;
     let prevHeadY = bunnyY - BUNNY_H;
+    let wt = 0;
     let bumps = 0;
     const WIN_BUMPS = 5;
     type Carrot = { x: number; y: number; vy: number; life: number };
     let carrots: Carrot[] = [];
     let done = false, paused = true, mouseOn = false;
 
+    const drawSprite = (spr: number[][], ox: number, oy: number, map: Record<number, string>, flipX = false) => {
+      for (let ry = 0; ry < spr.length; ry++) {
+        const row = spr[ry];
+        for (let rx = 0; rx < row.length; rx++) {
+          const v = row[rx];
+          if (!v) continue;
+          const dx = flipX ? row.length - 1 - rx : rx;
+          ctx.fillStyle = map[v];
+          ctx.fillRect(ox + dx, oy + ry, 1, 1);
+        }
+      }
+    };
     const drawBunny = (x: number, y: number) => {
-      ctx.fillStyle = FG;
-      ctx.fillRect(x, y - 10, 12, 10);            // body
-      ctx.fillRect(x + 1, y - 16, 2, 6);          // left ear
-      ctx.fillRect(x + 8, y - 16, 2, 6);          // right ear
-      ctx.fillRect(x - 2, y - 5, 2, 2);           // tail
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(x + 8, y - 8, 1.5, 1.5);       // eye
+      // y is feet-y; top of sprite is y - BUNNY_H
+      const top = y - BUNNY_H;
+      wt += 0.22;
+      const wUp = onGround ? false : Math.sin(wt) > 0;
+      const wing = wUp ? W_UP : W_DN;
+      // Left wing at sprite (-3, +3); right wing at (+10, +3) flipped
+      drawSprite(wing, x - 3, top + 3, WMAP, false);
+      drawSprite(wing, x + BUNNY_W, top + 3, WMAP, true);
+      drawSprite(BUNNY_SPR, x, top, BMAP, false);
     };
     const drawCarrot = (cx: number, cy: number) => {
       ctx.fillStyle = FG;
@@ -634,6 +673,23 @@ export function FormCarrotGame({ active, formRef, onFinish }: { active?: boolean
       ctx.fillRect(cx + 1, cy + 8, 4, 2);
       ctx.fillRect(cx + 1, cy - 2, 1.5, 2);
       ctx.fillRect(cx + 3.5, cy - 3, 1.5, 3);
+    };
+
+    // Small kinetic shake when the bunny bumps the form.
+    const shakeForm = () => {
+      const el = formRef?.current;
+      if (!el) return;
+      const start = performance.now();
+      const dur = 260;
+      const amp = 6;
+      const tick = (now: number) => {
+        const k = (now - start) / dur;
+        if (k >= 1) { el.style.transform = ''; return; }
+        const offset = Math.sin(k * Math.PI * 3) * amp * (1 - k);
+        el.style.transform = `translateY(${offset}px)`;
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
     };
 
     const jump = () => { if (onGround && !done) { velY = -3.4; onGround = false; } };
@@ -675,6 +731,7 @@ export function FormCarrotGame({ active, formRef, onFinish }: { active?: boolean
           const cx = formRectGame.x + 4 + Math.random() * (formRectGame.w - 12);
           const cy = formRectGame.y - 4;
           carrots.push({ x: cx, y: cy, vy: -3.2, life: 90 });
+          shakeForm();
           bumps++;
           if (bumps >= WIN_BUMPS) { done = true; onFinish?.(); }
         }

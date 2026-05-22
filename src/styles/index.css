@@ -58,19 +58,19 @@
 /* Muted text helper — matches L2 link opacity */
 .text-muted { opacity: var(--opacity-muted); }
 
-/* ── Mobile (≤ 768px) — 2-column layout ────────────────────────────────
+/* ── Mobile (≤ 768px) — 3-column layout ────────────────────────────────
    Fonts scale with viewport but never below floors: h1 ≥ 32, h2 ≥ 18, text ≥ 12.
-   Layout follows a 2-col grid (down from 5 on desktop). */
+   Layout follows a 3-col grid (down from 5 on desktop). 10px gutter, 10px pad. */
 @media (max-width: 768px) {
   :root {
-    --pad: 16px;
-    --gap: 12px;
+    --pad: 10px;
+    --gap: 10px;
     --text-size:    clamp(12px, 3.5vw, 16px);
     --heading-size: clamp(32px, 8vw,   40px);
     --h2-size:      clamp(18px, 5.5vw, 28px);
   }
 
-  /* 5-col and 3-col grids collapse to 2-col on mobile.
+  /* 5-col and 3-col grids collapse to 3-col on mobile.
      Catches both inline styles and CSS-module classes (hashed _grid_, _row_, etc.). */
   .grid5,
   [class*="_grid_"],
@@ -82,7 +82,7 @@
   [class*="_contactInner_"],
   [style*="repeat(5, 1fr)"],
   [style*="repeat(3, 1fr)"] {
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
   }
 
   /* Default: every child of a remapped 5-col grid stacks as a full-width row */

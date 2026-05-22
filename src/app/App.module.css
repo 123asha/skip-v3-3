@@ -217,6 +217,7 @@
 .toolRowTextRight { text-align: right; }
 
 .toolRowLink { text-decoration: underline; text-decoration-style: dotted; cursor: pointer; opacity: var(--opacity-muted); transition: opacity 0.2s; }
+.toolRow:hover .toolRowLink,
 .toolRowLink:hover { opacity: 1; }
 
 /* ── Contact form ── */

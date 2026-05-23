@@ -37,14 +37,17 @@
 
 .headline {
   position: absolute;
-  left: calc(var(--pad) - 3px);
-  top: calc(var(--pad) + var(--text-size) * var(--text-lh) + 20px);
+  left: 50%;
+  transform: translateX(-50%);
+  top: var(--pad);
   font-family: var(--font-display);
   font-size: var(--heading-size);
   font-weight: var(--heading-weight);
   line-height: var(--heading-lh);
   letter-spacing: -0.03em;
-  width: 46%;
+  width: auto;
+  max-width: 80%;
+  text-align: center;
   z-index: 4;
   color: #fff;
   mix-blend-mode: difference;

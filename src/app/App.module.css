@@ -230,11 +230,11 @@
   align-items: center;
   min-height: 100vh;
   /* Colorless full-bleed background with a fine gray dot grid — snake lives on it */
-  /* Dots arranged on a 40px grid — same size as the snake cells / circles.
-     Each snake circle (40px diameter) fits exactly inside a 40px square cell.
+  /* Dots arranged on a 56px grid — same size as the snake cells / circles.
+     Each snake circle (56px diameter) fits exactly inside a 56px square cell.
      Four dots at each cell's corners outline the snake's grid. */
   background-image: radial-gradient(circle, rgba(35, 31, 32, 0.28) 0.9px, transparent 0.9px);
-  background-size: 40px 40px;
+  background-size: 56px 56px;
   background-position: 0 0;
 }
 
@@ -302,18 +302,19 @@
 }
 
 .contactCard {
-  background: var(--c-accent);
+  background: var(--c-surface);
   /* Width of 2 cols + 1 gap inside the 5-col system — centered via the flex parent */
   width: calc(2 / 5 * (100% - 4 * var(--gap)) + var(--gap));
   min-height: 70vh;
   position: relative;
-  z-index: 1;
+  z-index: 2;
   overflow: hidden;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-self: center;
 }
+
 
 /* Snake / game canvas — fills the entire wrap behind the form */
 .contactGameBg {
@@ -334,7 +335,7 @@
   width: 100%;
   flex: 1;
   padding: 20px;
-  background: var(--c-accent);
+  background: var(--c-surface);
   z-index: 1;
   display: flex;
   flex-direction: column;

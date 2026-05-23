@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 const FG = '#231f20';
 
 // ── Snake: food = letters of "skip design", snake avoids form area ────────────
-const SCELL = 40; // cell size in CSS pixels — circles are 40px diameter
+const SCELL = 56; // cell size in CSS pixels — circles are 56px diameter
 const FOOD_CHARS = ['S', 'K', 'I', 'P', 'D', 'E', 'S', 'I', 'G', 'N'];
 
 export function FormSnakeGame({
@@ -226,8 +226,8 @@ export function FormSnakeGame({
       // (Grid dots are drawn by the CSS background of .contactWrap — a single
       // 1px dot every 16px — so the snake no longer paints its own grid.)
 
-      // Brand purple — matches var(--c-accent)
-      const ACCENT = '#8382fc';
+      // Snake / food circle colour — the project's main grey (var(--c-surface))
+      const ACCENT = '#f6f6f6';
 
       // Food — outlined circle + letter (purple to match snake)
       const fx = food.x * SCELL + SCELL / 2;
@@ -732,25 +732,24 @@ export function FormCarrotGame({ active, formRef, onFinish }: { active?: boolean
       drawSprite(wing, x + BUNNY_W, top + 3, WMAP, true);
       drawSprite(BUNNY_SPR, x, top, BMAP, false);
     };
-    // Pixel-art carrot in the same chunky style as the bunny sprite
-    //   0 empty, 1 leaf dark, 2 leaf light, 3 body dark, 4 body light
+    // Pixel-art carrot in the same chunky style as the bunny sprite.
+    // Black-and-white only: 1 = dark, 2 = mid grey, 3 = light highlight.
     const CARROT_SPR: number[][] = [
       [0,0,1,2,0,0,0],
       [0,1,2,1,2,0,0],
       [0,1,2,1,2,1,0],
       [0,0,2,1,2,1,0],
-      [0,3,4,3,3,3,0],
-      [0,3,3,4,3,3,0],
-      [0,0,3,3,4,0,0],
-      [0,0,3,3,3,0,0],
-      [0,0,0,3,3,0,0],
-      [0,0,0,0,3,0,0],
+      [0,1,3,1,1,1,0],
+      [0,1,1,3,1,1,0],
+      [0,0,1,1,3,0,0],
+      [0,0,1,1,1,0,0],
+      [0,0,0,1,1,0,0],
+      [0,0,0,0,1,0,0],
     ];
     const CARROT_CMAP: Record<number, string> = {
-      1: '#3a6b2a', // leaf dark green
-      2: '#7bb755', // leaf light green
-      3: '#c95a1e', // body dark orange
-      4: '#f0782e', // body bright orange
+      1: '#1a1a1a', // body dark (matches bunny C1)
+      2: '#888',    // mid grey (matches bunny C2)
+      3: '#f6f6f6', // light highlight (matches bunny C3)
     };
     const CARROT_W = CARROT_SPR[0].length;
     const CARROT_H = CARROT_SPR.length;
@@ -849,19 +848,16 @@ export function FormCarrotGame({ active, formRef, onFinish }: { active?: boolean
       // Ground
       if (bunnyY >= GROUND_Y) { bunnyY = GROUND_Y; velY = 0; onGround = true; }
 
-      // Carrots: gravity + sideways drift + spin + lifespan.
-      // Each carrot is killed the moment it descends back into / below the
-      // form's top — so visually they only ever scatter ABOVE the form, never
-      // disappear "behind" the purple rectangle.
-      const formTop = formRectGame ? formRectGame.y : Infinity;
+      // Carrots: gravity + sideways drift + spin. They fall freely and only
+      // disappear when they leave the bottom of the canvas — no longer killed
+      // on the form's top edge.
       for (const c of carrots) {
         c.vy += 0.16;
         c.x  += c.vx;
         c.y  += c.vy;
         c.rot += c.vrot;
-        c.life--;
       }
-      carrots = carrots.filter(c => c.life > 0 && c.y < formTop && c.y > -20);
+      carrots = carrots.filter(c => c.y < BH + 40);
     };
 
     const draw = () => {

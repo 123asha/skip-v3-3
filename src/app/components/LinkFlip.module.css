@@ -1,0 +1,40 @@
+/* 3D-flip on hover. Inspired by the case-info cube in ScrollHero — front
+   face is the visible word, bottom face is a duplicate hidden underneath.
+   On :hover the inner spins +90° around X so the original word goes to the
+   top (out of view) and the duplicate rotates up to the front. */
+
+.wrap {
+  display: inline-block;
+  perspective: 300px;
+  line-height: inherit;
+}
+
+.inner {
+  display: inline-block;
+  position: relative;
+  transform-style: preserve-3d;
+  transform-origin: center center;
+  transform: rotateX(0deg);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wrap:hover .inner {
+  transform: rotateX(90deg);
+}
+
+.front,
+.bottom {
+  display: inline-block;
+  backface-visibility: hidden;
+}
+
+.front {
+  transform: translateZ(0.5em);
+}
+
+.bottom {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: rotateX(-90deg) translateZ(0.5em);
+}

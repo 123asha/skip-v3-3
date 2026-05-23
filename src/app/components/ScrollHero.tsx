@@ -828,21 +828,9 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
           </div>
         </div>
 
-        {/* Caption pinned to the bottom of the sticky hero (at the footer line) */}
-        <p ref={captionRef} style={{
-          ...TEXT_STYLE,
-          position: 'absolute',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          bottom: 'var(--pad)',
-          opacity: 0.4,
-          pointerEvents: 'none',
-          userSelect: 'none',
-          whiteSpace: 'nowrap',
-          zIndex: 5,
-          color: '#fff',
-          mixBlendMode: 'difference',
-        }}>дизайн как правила игры</p>
+        {/* Hidden caption ref — kept for opacity logic / refactor safety, but
+            the text itself moved into the global Footer (`hi@skip.design`). */}
+        <p ref={captionRef} style={{ display: 'none' }} aria-hidden="true" />
 
         {/* Bottom-left: section titles — width = 1 column, no numbers */}
         <div style={{

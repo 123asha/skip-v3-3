@@ -7,7 +7,7 @@ import { MagneticDivider } from './MagneticDivider';
 
 // ── Service data ──────────────────────────────────────────────────────────────
 
-type ServiceItem = {
+export type ServiceItem = {
   id: string;
   label: string;
   heading: string;
@@ -15,14 +15,14 @@ type ServiceItem = {
   examples?: { label: string; href: string }[];
 };
 
-type Service = {
+export type Service = {
   number: string;
   title: string;
   items: ServiceItem[];
   ctaLabel: string;
 };
 
-const SERVICES: Service[] = [
+export const SERVICES: Service[] = [
   {
     number: '①',
     title: 'Бренд-\nстратегия',
@@ -137,7 +137,7 @@ const SERVICES: Service[] = [
 const h2Style: React.CSSProperties = { ...H2_STYLE, whiteSpace: 'pre-line' };
 
 // ── Anchor IDs — must match SERVICE_ANCHORS in ScrollHero ────────────────────
-const SERVICE_IDS = ['brand', 'visual', 'tools'] as const;
+export const SERVICE_IDS = ['brand', 'visual', 'tools'] as const;
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -151,6 +151,7 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
   const lastItemRef = useRef<ServiceItem | null>(null);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [hoveredSvcIdx, setHoveredSvcIdx] = useState<number | null>(null);
 
   const anySelected   = !!selectedId;
   const selectedSvcIdx = selectedId
@@ -295,6 +296,8 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                   key={svc.number}
                   id={SERVICE_IDS[svcIdx]}
                   ref={el => { rowRefs.current[svcIdx] = el; }}
+                  onMouseEnter={() => setHoveredSvcIdx(svcIdx)}
+                  onMouseLeave={() => setHoveredSvcIdx(null)}
                   style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(5, 1fr)',
@@ -305,11 +308,14 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                     alignItems: 'start',
                   }}
                 >
-                  <MagneticDivider dotted />
+                  <MagneticDivider active={hoveredSvcIdx === svcIdx} />
                   <p style={{ ...ts, gridColumn: '1' }}>{svc.number}</p>
-                  <div />
-                  <p style={{ ...h2Style, gridColumn: '3' }}>{svc.title}</p>
-                  <div style={{ gridColumn: '4 / 6', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {/* Headings + service-items list — columns shift left by 1
+                      when a service is selected (panel takes the right 40%):
+                      normal  → heading col 3, items col 4
+                      expanded → heading col 2, items col 3 */}
+                  <p style={{ ...h2Style, gridColumn: anySelected ? '2' : '3' }}>{svc.title}</p>
+                  <div style={{ gridColumn: anySelected ? '3' : '4', display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {itemButtons}
                   </div>
                 </div>

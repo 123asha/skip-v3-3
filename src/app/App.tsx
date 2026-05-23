@@ -22,6 +22,7 @@ import ContactForm from './components/ContactForm';
 import { ToolsSection } from './components/ToolsSection';
 import { MediaSection } from './components/MediaSection';
 import LabPage from './components/LabPage';
+import LinkFlip from './components/LinkFlip';
 import s from './App.module.css';
 
 function ScrollHint() {
@@ -516,7 +517,7 @@ function AppInner() {
 
   const handleLabClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (labLinkRef.current) flyToTitle('Студия', labLinkRef.current, '/lab');
+    if (labLinkRef.current) flyToTitle('Skip Design', labLinkRef.current, '/lab');
     else navigate('/lab');
   };
 
@@ -565,20 +566,26 @@ function AppInner() {
           <button className={s.navBack} onClick={handleBack}>← назад</button>
         ) : (
           <>
-            <span ref={casesLinkRef as React.RefObject<HTMLSpanElement>}>
-              <a href="/cases" className={s.navLink} onClick={handleCasesClick}>Кейсы</a>
+            <span ref={labLinkRef as React.RefObject<HTMLSpanElement>}>
+              <a href="/lab" className={s.navLink} onClick={handleLabClick}>
+                <LinkFlip>Skip Design</LinkFlip>
+              </a>
+            </span>
+            <span ref={casesLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <span className={s.navSep}>,&nbsp;</span>
+              <a href="/cases" className={s.navLink} onClick={handleCasesClick}>
+                <LinkFlip>Кейсы</LinkFlip>
+              </a>
             </span>
             <span ref={expertizaLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
               <span className={s.navSep}>,&nbsp;</span>
-              <a href="/services" className={s.navLink} onClick={handleExpertizaClick}>Услуги</a>
+              <a href="/services" className={s.navLink} onClick={handleExpertizaClick}>
+                <LinkFlip>Услуги</LinkFlip>
+              </a>
             </span>
             <span ref={toolsLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'none' }}>
               <span className={s.navSep}>,&nbsp;</span>
               <a href="/instruments" className={s.navLink} onClick={handleInstrumentsClick}>Подход</a>
-            </span>
-            <span ref={labLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
-              <span className={s.navSep}>,&nbsp;</span>
-              <a href="/lab" className={s.navLink} onClick={handleLabClick}>Студия</a>
             </span>
           </>
         )}
@@ -620,7 +627,8 @@ function AppInner() {
 
       <Footer />
 
-      {/* "Обсудить проект" — sticky bottom-left, visible on home page */}
+      {/* "Обсудить проект" — sticky bottom-left, visible on home page.
+          Inverted against the background via mix-blend-mode: difference. */}
       {(page === 'home' || page === 'index2') && preloaderDone && (
         <button
           style={{
@@ -628,7 +636,8 @@ function AppInner() {
             left: 'var(--pad)',
             bottom: 'var(--pad)',
             zIndex: 160,
-            background: 'var(--c-text)',
+            mixBlendMode: 'difference',
+            background: '#fff',
             border: 'none',
             borderRadius: 0,
             padding: '9px 12px 11px',
@@ -638,7 +647,7 @@ function AppInner() {
             fontWeight: 'var(--text-weight)',
             letterSpacing: 'var(--text-ls)',
             lineHeight: 'var(--text-lh)',
-            color: '#fff',
+            color: '#000',
             textDecoration: 'none',
             opacity: showPrivacy ? 0 : 1,
             pointerEvents: showPrivacy ? 'none' : 'auto',
@@ -693,7 +702,7 @@ function AppInner() {
         display: 'flex',
         flexDirection: 'column',
         gap: '4px',
-        opacity: showPrivacy ? 0.4 : 0,
+        opacity: showPrivacy ? 0.7 : 0,
         transition: 'opacity 0.4s ease',
         pointerEvents: showPrivacy ? 'auto' : 'none',
         fontSize: 'var(--text-size)',
@@ -701,7 +710,8 @@ function AppInner() {
         fontWeight: 'var(--text-weight)',
         letterSpacing: 'var(--text-ls)',
         lineHeight: 'var(--text-lh)',
-        color: 'var(--c-text)',
+        color: '#fff',
+        mixBlendMode: 'difference',
         userSelect: 'none',
       }}>
         <a href="/policy" onClick={e => { e.preventDefault(); navigate('/policy'); }} style={{ textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px', color: 'inherit' }}>Политика конфиденциальности</a>
@@ -732,8 +742,68 @@ function AppInner() {
         <a href="/en" style={{ color: 'inherit', textDecoration: 'none' }}>/en</a>
       </div>
 
-      {/* Social icons — dark circles with white glyph inside.
-          LinkedIn icon is just the letterform "in" — no surrounding box. */}
+      {/* hi@skip.design — copy-on-click footer link, centred horizontally,
+          on the same row as the rest of the footer items. Doesn't shift any
+          other element because it's its own absolutely-centred fixed block. */}
+      <button
+        onClick={(e) => {
+          const text = 'hi@skip.design';
+          const el = e.currentTarget;
+          const showTip = (msg: string) => {
+            el.textContent = msg;
+            window.setTimeout(() => { el.textContent = text; }, 1200);
+          };
+          const fallback = () => {
+            try {
+              const ta = document.createElement('textarea');
+              ta.value = text;
+              ta.style.position = 'fixed';
+              ta.style.opacity = '0';
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand('copy');
+              document.body.removeChild(ta);
+              showTip('скопировано');
+            } catch { /* swallow */ }
+          };
+          if (navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(text).then(
+              () => showTip('скопировано'),
+              () => fallback(),
+            );
+          } else {
+            fallback();
+          }
+        }}
+        style={{
+          position: 'fixed',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          bottom: 'var(--pad)',
+          zIndex: 200,
+          background: 'none',
+          border: 'none',
+          padding: 0,
+          cursor: 'pointer',
+          fontFamily: 'var(--font)',
+          fontSize: 'var(--text-size)',
+          fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+          letterSpacing: 'var(--text-ls)',
+          lineHeight: 'var(--text-lh)',
+          color: '#fff',
+          mixBlendMode: 'difference',
+          textDecoration: 'underline',
+          textDecorationStyle: 'dotted',
+          textUnderlineOffset: '3px',
+          whiteSpace: 'nowrap',
+          transition: 'opacity 0.2s ease',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.opacity = '0.7')}
+        onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+      >hi@skip.design</button>
+
+      {/* Social icons — light circles with dark glyph inside.
+          Inverted against the background via mix-blend-mode: difference. */}
       <div style={{
         position: 'fixed',
         left: 'calc(var(--pad) + 4 * ((100% - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap)))',
@@ -742,6 +812,7 @@ function AppInner() {
         display: 'flex',
         gap: '10px',
         alignItems: 'center',
+        mixBlendMode: 'difference',
       }}>
         <a
           href="https://t.me/skipbot"
@@ -750,14 +821,14 @@ function AppInner() {
           aria-label="Telegram"
           style={{
             width: 24, height: 24, borderRadius: '50%',
-            background: 'var(--c-text)',
+            background: '#fff',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', textDecoration: 'none',
+            color: '#000', textDecoration: 'none',
             transition: 'opacity 0.2s ease',
           }}
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ transform: 'translate(-0.5px, 0.5px)' }}>
-            <path d="M22 4 2.5 11.5l5.6 1.9 2.2 7 3.7-3.6 5.2 3.8L22 4Zm-5.3 4.6-8 7.2-2.5-.9 10.5-6.3Zm-6 9.2 1.2-3.6 6.4 4.7-3.4-1.5-4.2.4Z" fill="#fff" />
+            <path d="M22 4 2.5 11.5l5.6 1.9 2.2 7 3.7-3.6 5.2 3.8L22 4Zm-5.3 4.6-8 7.2-2.5-.9 10.5-6.3Zm-6 9.2 1.2-3.6 6.4 4.7-3.4-1.5-4.2.4Z" fill="#000" />
           </svg>
         </a>
         <a
@@ -767,14 +838,14 @@ function AppInner() {
           aria-label="LinkedIn"
           style={{
             width: 24, height: 24, borderRadius: '50%',
-            background: 'var(--c-text)',
+            background: '#fff',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', textDecoration: 'none',
+            color: '#000', textDecoration: 'none',
             transition: 'opacity 0.2s ease',
           }}
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M6.94 5a2 2 0 1 1-4-.001 2 2 0 0 1 4 .001ZM7 8.48H3V21h4V8.48Zm6.32 0H9.34V21h3.94v-6.57c0-3.66 4.77-4 4.77 0V21H22v-7.93c0-6.17-7.06-5.94-8.72-2.91l.04-1.68Z" fill="#fff"/>
+            <path d="M6.94 5a2 2 0 1 1-4-.001 2 2 0 0 1 4 .001ZM7 8.48H3V21h4V8.48Zm6.32 0H9.34V21h3.94v-6.57c0-3.66 4.77-4 4.77 0V21H22v-7.93c0-6.17-7.06-5.94-8.72-2.91l.04-1.68Z" fill="#000"/>
           </svg>
         </a>
       </div>
@@ -827,7 +898,43 @@ function AppInner() {
                 <div className={s.studioClients}>
                   <p ref={clientLabelRef} className={s.studioClientsLabel}>Нам доверяют проекты:</p>
                   <div ref={clientNamesRef} className={s.studioClientNames}>
-                    <p>AliExpress</p><p>Юрий Мурадян</p><p>Gate Legal</p><p>Senior*s Bar</p>
+                    {['AliExpress', 'Юрий Мурадян', 'Gate Legal', 'Senior*s Bar'].map(name => (
+                      <p
+                        key={name}
+                        style={{ position: 'relative', margin: 0, cursor: 'pointer' }}
+                        onMouseEnter={e => {
+                          const logo = e.currentTarget.querySelector('[data-client-logo]') as HTMLElement | null;
+                          if (logo) { logo.style.opacity = '1'; logo.style.transform = 'translateX(0)'; }
+                        }}
+                        onMouseLeave={e => {
+                          const logo = e.currentTarget.querySelector('[data-client-logo]') as HTMLElement | null;
+                          if (logo) { logo.style.opacity = '0'; logo.style.transform = 'translateX(-8px)'; }
+                        }}
+                      >
+                        {/* Logo placeholder — absolutely positioned to the LEFT of
+                            the brand name. Sits outside the line box so the name
+                            text doesn't shift when the logo appears. Square
+                            ≈ heading line height. */}
+                        <span
+                          data-client-logo
+                          aria-hidden="true"
+                          style={{
+                            position: 'absolute',
+                            right: '100%',
+                            top: 0,
+                            marginRight: 16,
+                            width: 'calc(var(--heading-size) * var(--heading-lh))',
+                            height: 'calc(var(--heading-size) * var(--heading-lh))',
+                            background: 'var(--c-surface)',
+                            opacity: 0,
+                            transform: 'translateX(-8px)',
+                            transition: 'opacity 0.25s ease, transform 0.25s ease',
+                            pointerEvents: 'none',
+                          }}
+                        />
+                        {name}
+                      </p>
+                    ))}
                   </div>
                 </div>
               </div>

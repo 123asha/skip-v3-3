@@ -13,7 +13,7 @@ const headingStyle: React.CSSProperties = {
   color: 'var(--c-text)',
 };
 
-const TEAM = ['Имя Фамилия', 'Имя Фамилия', 'Имя Фамилия', 'Имя Фамилия'];
+const TEAM = ['Аша Саакян', 'Рузана Пшигонова', 'Михаил Орлов', 'Анна Морозова'];
 
 function ImagePlaceholder({ aspectRatio, style }: { aspectRatio: string; style?: React.CSSProperties }) {
   return (

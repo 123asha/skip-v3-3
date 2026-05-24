@@ -1,31 +1,38 @@
 import { useState, useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import CircleInput from './CircleInput';
-import { FormSnakeGame, FormBreakoutGame, FormCarrotGame } from './FormGames';
+import { FormSnakeGame } from './FormGames';
 import s from '../App.module.css';
 
 interface ContactFormProps {
   onNavigatePolicy?: () => void;
   onGridMode?: (on: boolean) => void;
+  /* "default" → second tab is "Стать частью команды" (resume input + bunny game)
+     "consult" → second tab is "Проконсультироваться" (telegram-only, no bunny)
+     used by the /services page. */
+  variant?: 'default' | 'consult';
 }
 
-export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFormProps) {
+export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'default' }: ContactFormProps) {
   const [checked, setChecked]   = useState(false);
   const [email, setEmail]       = useState('');
   const [telegram, setTelegram] = useState('');
+  const [phone, setPhone]       = useState('');
   const [cv, setCv]             = useState('');
   const [activeTab, setActiveTab] = useState<'discuss' | 'join'>('discuss');
   const [gameIndex, setGameIndex] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);
   const [gameKey, setGameKey] = useState(0);
-  const [activeFocus, setActiveFocus] = useState<'email' | 'telegram' | 'cv' | null>(null);
+  const [activeFocus, setActiveFocus] = useState<'email' | 'telegram' | 'phone' | 'cv' | null>(null);
   const [gameActive, setGameActive] = useState(false);
   const [emailError, setEmailError]       = useState(false);
   const [telegramError, setTelegramError] = useState(false);
+  const [phoneError, setPhoneError]       = useState(false);
   const [cvError, setCvError]             = useState(false);
 
   const isValidEmail    = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
   const isValidTelegram = (v: string) => /^@[a-zA-Z0-9_]{4,}$/.test(v.trim());
+  const isValidPhone    = (v: string) => /^[\d\s\-\+\(\)]{7,}$/.test(v.trim());
   const isValidCv       = (v: string) => /^https?:\/\/.+\..+/.test(v.trim());
 
   const handleEmailSubmit = () => {
@@ -39,6 +46,13 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
     if (!isValidTelegram(telegram)) {
       setTelegramError(true);
       window.setTimeout(() => setTelegramError(false), 600);
+      return;
+    }
+  };
+  const handlePhoneSubmit = () => {
+    if (!isValidPhone(phone)) {
+      setPhoneError(true);
+      window.setTimeout(() => setPhoneError(false), 600);
       return;
     }
   };
@@ -68,6 +82,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
 
   const emailRelevant    = /^[^@]+@/.test(email);
   const telegramRelevant = telegram.length > 1;
+  const phoneRelevant    = phone.trim().length > 2;
   const cvRelevant       = cv.trim().length > 3;
 
   const word =
@@ -76,13 +91,19 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
       : (activeFocus === 'email'    ? 'почту' :
          activeFocus === 'telegram' ? 'телеграм' : 'контакт');
 
+  // Word for consult variant's "Проконсультироваться" tab
+  const consultWord =
+    activeFocus === 'phone'    ? 'телефон' :
+    activeFocus === 'telegram' ? 'телеграм' : 'контакт';
+
+  const animatedWord = variant === 'consult' && activeTab === 'join' ? consultWord : word;
   useEffect(() => {
     if (!wordRef.current) return;
     gsap.fromTo(wordRef.current,
       { opacity: 0, y: 6 },
       { opacity: 1, y: 0, duration: 0.22, ease: 'power2.out' },
     );
-  }, [word]);
+  }, [animatedWord]);
 
   const handleTelegramChange = (v: string) => {
     if (!v) { setTelegram(''); return; }
@@ -114,11 +135,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
       {/* Game canvas — full-bleed background of the wrap, navigates around the form */}
       <div className={s.contactGameBg}>
         {gameFinished ? null : (
-          gameIndex === 0
-            ? <FormSnakeGame    key={gameKey} active={gameActive} formRef={formAreaRef} onFinish={() => setGameFinished(true)} />
-          : gameIndex === 1
-            ? <FormBreakoutGame key={gameKey} active={gameActive} formRef={formAreaRef} onFinish={() => setGameFinished(true)} />
-            : <FormCarrotGame   key={gameKey} active={gameActive} formRef={formAreaRef} onFinish={() => setGameFinished(true)} />
+          <FormSnakeGame key={gameKey} active={gameActive} formRef={formAreaRef} onFinish={() => setGameFinished(true)} />
         )}
       </div>
 
@@ -135,33 +152,108 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
           ) : (
           <>
 
-          {/* Tabs — centered, horizontal */}
+          {/* Tabs — centered, horizontal. Label of the 2nd tab + the side
+              effects (grid + bunny game) depend on the form variant. */}
           <div style={{ display: 'flex', flexDirection: 'row', gap: 20, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
             {([
               { key: 'discuss', label: 'Обсудить проект' },
-              { key: 'join',    label: 'Стать частью команды' },
+              { key: 'join',    label: variant === 'consult' ? 'Проконсультироваться' : 'Стать частью команды' },
             ] as const).map(tab => (
               <button
                 key={tab.key}
                 style={tabStyle(activeTab === tab.key)}
-                onClick={() => { setActiveTab(tab.key); onGridMode?.(tab.key === 'join'); }}
+                onClick={() => {
+                  setActiveTab(tab.key);
+                  // Grid + bunny game only on the "join us" tab of the default
+                  // variant. The consult variant keeps the form clean on tab 2.
+                  if (variant === 'default') onGridMode?.(tab.key === 'join');
+                }}
               >
                 {tab.label}{activeTab === tab.key ? ' ↵' : ''}
               </button>
             ))}
           </div>
 
-          {/* Heading with animated word — centered, 20px below tabs */}
-          <p className={s.contactTitle} style={{ marginTop: 20, textAlign: 'center' }}>
-            Оставьте{' '}
-            <span ref={wordRef}>{word}</span>,<br />мы назначим встречу
-          </p>
+          {/* Heading with animated word — centered, 20px below tabs.
+              On the consult variant + tab 2 the heading switches to
+              "Оставьте контакт, запланируем консультацию". */}
+          {variant === 'consult' && activeTab === 'join' ? (
+            <p className={s.contactTitle} style={{ marginTop: 20, textAlign: 'center' }}>
+              Оставьте{' '}
+              <span ref={wordRef}>{consultWord}</span>,<br />
+              чтобы проконсультироваться — мы свяжемся с вами
+            </p>
+          ) : activeTab === 'join' ? (
+            <p className={s.contactTitle} style={{ marginTop: 20, textAlign: 'center' }}>
+              Вставьте ссылку на CV или ваш сайт
+            </p>
+          ) : (
+            <p className={s.contactTitle} style={{ marginTop: 20, textAlign: 'center' }}>
+              Оставьте{' '}
+              <span ref={wordRef}>{word}</span>,<br />мы назначим встречу
+            </p>
+          )}
 
           {/* Inputs — pushed to the centre of the form rectangle */}
           <div className={s.contactFields} style={{ marginTop: 'auto', marginBottom: 'auto', width: '100%' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', width: '100%' }}>
 
-              {activeTab === 'discuss' ? (
+              {variant === 'consult' ? (
+                /* Consult variant:
+                   - "Обсудить проект" tab → Telegram only
+                   - "Проконсультироваться" tab → Телефон + Телеграм */
+                activeTab === 'join' ? (
+                  <>
+                    {activeFocus !== 'telegram' && (
+                      <CircleInput
+                        placeholder="ТЕЛЕФОН" size={44}
+                        value={phone} onChange={v => { setPhone(v); if (phoneError) setPhoneError(false); }}
+                        onFocus={() => setActiveFocus('phone')}
+                        onBlur={() => setActiveFocus(null)}
+                        error={phoneError}
+                        action={activeFocus === 'phone' && phoneRelevant ? (
+                          <button
+                            className={s.submitCircle}
+                            onMouseDown={e => e.preventDefault()}
+                            onClick={handlePhoneSubmit}
+                          >{arrowSvg}</button>
+                        ) : undefined}
+                      />
+                    )}
+                    {activeFocus !== 'phone' && (
+                      <CircleInput
+                        placeholder="@ТЕЛЕГРАМ" size={44}
+                        value={telegram} onChange={v => { handleTelegramChange(v); if (telegramError) setTelegramError(false); }}
+                        onFocus={() => setActiveFocus('telegram')}
+                        onBlur={() => setActiveFocus(null)}
+                        error={telegramError}
+                        action={activeFocus === 'telegram' && telegramRelevant ? (
+                          <button
+                            className={s.submitCircle}
+                            onMouseDown={e => e.preventDefault()}
+                            onClick={handleTelegramSubmit}
+                          >{arrowSvg}</button>
+                        ) : undefined}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <CircleInput
+                    placeholder="@ТЕЛЕГРАМ" size={44}
+                    value={telegram} onChange={v => { handleTelegramChange(v); if (telegramError) setTelegramError(false); }}
+                    onFocus={() => setActiveFocus('telegram')}
+                    onBlur={() => setActiveFocus(null)}
+                    error={telegramError}
+                    action={activeFocus === 'telegram' && telegramRelevant ? (
+                      <button
+                        className={s.submitCircle}
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={handleTelegramSubmit}
+                      >{arrowSvg}</button>
+                    ) : undefined}
+                  />
+                )
+              ) : activeTab === 'discuss' ? (
                 <>
                   <CircleInput
                     placeholder="EMAIL" size={44}
@@ -240,13 +332,6 @@ export default function ContactForm({ onNavigatePolicy, onGridMode }: ContactFor
           </>
           )}
         </div>
-      </div>
-
-      {/* Skip controls — bottom-centre of the wrap (hidden when game finishes) */}
-      <div className={s.contactGameControls}>
-          {gameFinished ? null : (
-            <button className={s.contactSkip} onClick={() => { setGameIndex(i => (i + 1) % 3); setGameKey(k => k + 1); }}>skip</button>
-          )}
       </div>
 
     </div>

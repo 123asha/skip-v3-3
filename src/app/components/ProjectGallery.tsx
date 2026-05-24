@@ -129,9 +129,6 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: () => vo
   return (
     <div ref={containerRef} className={s.root}>
       <div className={s.tabsBar}>
-        <div className={s.tabsDivider}>
-          <MagneticDivider dotted />
-        </div>
         <div className={s.tabsGroup}>
           <span className={s.tabsLabel}>Сделали:</span>
           {TABS.map(tab => (

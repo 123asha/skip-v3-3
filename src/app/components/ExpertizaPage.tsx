@@ -4,6 +4,7 @@ import s from './CasesPage.module.css';
 import { TEXT_STYLE as ts, H2_STYLE } from '../utils/typography';
 import ContactForm from './ContactForm';
 import { MagneticDivider } from './MagneticDivider';
+import { useReveal } from '../hooks/useReveal';
 
 // ── Service data ──────────────────────────────────────────────────────────────
 
@@ -49,6 +50,10 @@ export const SERVICES: Service[] = [
           'Анализируем конкурентов, категорию, целевую аудиторию. Выявляем белые пятна и незанятые позиции.',
           'На основе исследования формируем дифференциаторы и точки роста для бренда.',
         ],
+        examples: [
+          { label: 'карта категории', href: '#' },
+          { label: 'портрет аудитории', href: '#' },
+        ],
       },
       {
         id: 'naming',
@@ -57,6 +62,11 @@ export const SERVICES: Service[] = [
         paragraphs: [
           'Создаём имя бренда, которое работает на позиционирование и выдерживает юридическую проверку.',
           'Проверяем по базам Роспатента и помогаем с регистрацией товарного знака.',
+        ],
+        examples: [
+          { label: 'словарь смыслов', href: '#' },
+          { label: 'тест на регистрацию', href: '#' },
+          { label: 'фонетический тест', href: '#' },
         ],
       },
     ],
@@ -74,6 +84,10 @@ export const SERVICES: Service[] = [
           'Проектируем визуальную систему: логотип, цвет, типографику, паттерны, фотостиль. Всё, что формирует узнаваемость бренда.',
           'Разрабатываем не отдельные элементы, а систему — с логикой, правилами и примерами применения.',
         ],
+        examples: [
+          { label: 'логотип-конструктор', href: '#' },
+          { label: 'тон голоса', href: '#' },
+        ],
       },
       {
         id: 'guides',
@@ -83,6 +97,9 @@ export const SERVICES: Service[] = [
           'Создаём компонентные библиотеки в Figma и брендбуки, которыми команда пользуется каждый день.',
           'Гайды пишем под реальные задачи: как сделать пост, презентацию, баннер — не теория, а рабочий инструмент.',
         ],
+        examples: [
+          { label: 'figma-библиотека', href: '#' },
+        ],
       },
       {
         id: 'templates',
@@ -91,6 +108,11 @@ export const SERVICES: Service[] = [
         paragraphs: [
           'Разрабатываем шаблоны презентаций, постов, коммерческих предложений и других документов в фирменном стиле.',
           'Конструкторы позволяют маркетологам самостоятельно собирать материалы, не нарушая бренд.',
+        ],
+        examples: [
+          { label: 'шаблоны презентаций', href: '#' },
+          { label: 'конструктор баннеров', href: '#' },
+          { label: 'ии-ускоритель', href: '#' },
         ],
       },
     ],
@@ -108,6 +130,10 @@ export const SERVICES: Service[] = [
           'Проектируем и разрабатываем сайты: от лендингов до сложных продуктовых страниц.',
           'Дизайн и разработка внутри одной команды — без потерь при передаче.',
         ],
+        examples: [
+          { label: 'лендинг для стартапа', href: '#' },
+          { label: 'продуктовый сайт', href: '#' },
+        ],
       },
       {
         id: 'interfaces',
@@ -117,6 +143,11 @@ export const SERVICES: Service[] = [
           'Проектируем пользовательские интерфейсы для веб-приложений, мобильных продуктов и B2B-платформ.',
           'От исследования и прототипа до готовой дизайн-системы с компонентами в Figma.',
         ],
+        examples: [
+          { label: 'b2b-платформа', href: '#' },
+          { label: 'мобильное приложение', href: '#' },
+          { label: 'дизайн-система', href: '#' },
+        ],
       },
       {
         id: 'special',
@@ -125,6 +156,10 @@ export const SERVICES: Service[] = [
         paragraphs: [
           'Делаем нестандартные digital-форматы: промо-сайты, интерактивные истории, конфигураторы и игровые механики.',
           'Каждый спецпроект — отдельная задача с собственной механикой и визуальным языком.',
+        ],
+        examples: [
+          { label: 'промо-сайт', href: '#' },
+          { label: 'интерактивная история', href: '#' },
         ],
       },
     ],
@@ -149,6 +184,8 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
   const prevIdRef  = useRef<string | null>(null);
   // Keep last non-null item so the content stays in DOM during the close animation
   const lastItemRef = useRef<ServiceItem | null>(null);
+
+  useReveal(pageRef);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredSvcIdx, setHoveredSvcIdx] = useState<number | null>(null);
@@ -245,17 +282,21 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
 
   return (
     <div className={s.page} ref={pageRef}>
-      <h1 className={s.title}>Услуги</h1>
-      <div className={s.body} style={{ paddingLeft: 20, paddingRight: 20, paddingBottom: 200 }}>
+      <h1 className={s.title} data-reveal="">Услуги</h1>
+      <div className={s.body} style={{ paddingLeft: 20, paddingRight: 20, paddingBottom: 0 }}>
 
-        {/* ── Service rows (left) + sticky outer panel (right) ── */}
-        <div style={{ display: 'flex', gap: 20, alignItems: 'stretch' }}>
+        {/* ── Service rows (left) + sticky outer panel (right) ──
+            Gap is applied only when the panel is open. Without this, the
+            empty 0-width panel still consumed the 20px gap and pushed the
+            services container 20px narrower than the body — so the inner
+            5-col grid stopped matching the page's outer 5-col grid. */}
+        <div style={{ display: 'flex', gap: anySelected ? 20 : 0, alignItems: 'stretch' }}>
 
           {/* Left: services list — shrinks to ~60% width when a service is open and becomes
               sticky so all 3 services stay in view without scrolling.
               Dividers (border-top per row) live inside this column so they shrink with it. */}
           <div style={{
-            flex: anySelected ? '0 1 calc(60% - 10px)' : '1 1 100%',
+            flex: anySelected ? '0 1 calc(60% - 8px)' : '1 1 100%',
             minWidth: 0,
             transition: 'flex-basis 0.45s cubic-bezier(0.4, 0, 0.2, 1), flex-grow 0.45s cubic-bezier(0.4, 0, 0.2, 1)',
             position: anySelected ? 'sticky' : 'static',
@@ -296,11 +337,18 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                   key={svc.number}
                   id={SERVICE_IDS[svcIdx]}
                   ref={el => { rowRefs.current[svcIdx] = el; }}
+                  data-reveal=""
+                  data-reveal-delay={String(svcIdx * 0.08)}
                   onMouseEnter={() => setHoveredSvcIdx(svcIdx)}
                   onMouseLeave={() => setHoveredSvcIdx(null)}
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(5, 1fr)',
+                    /* In the expanded state the services container is only 3
+                       outer cols wide — use a 3-col inner grid so the inner
+                       columns line up perfectly with the page's outer 5-col
+                       grid (cols 1,2,3). Collapsed state keeps the full 5-col
+                       layout. */
+                    gridTemplateColumns: anySelected ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)',
                     gap: 'var(--gap)',
                     position: 'relative',
                     paddingTop: 16,
@@ -310,10 +358,9 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                 >
                   <MagneticDivider active={hoveredSvcIdx === svcIdx} />
                   <p style={{ ...ts, gridColumn: '1' }}>{svc.number}</p>
-                  {/* Headings + service-items list — columns shift left by 1
-                      when a service is selected (panel takes the right 40%):
-                      normal  → heading col 3, items col 4
-                      expanded → heading col 2, items col 3 */}
+                  {/* Number col 1 (always);
+                      collapsed → heading col 3 / items col 4
+                      expanded  → heading col 2 / items col 3 */}
                   <p style={{ ...h2Style, gridColumn: anySelected ? '2' : '3' }}>{svc.title}</p>
                   <div style={{ gridColumn: anySelected ? '3' : '4', display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {itemButtons}
@@ -327,7 +374,7 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
           <div
             ref={panelRef}
             style={{
-              flex: anySelected ? '0 0 calc(40% - 10px)' : '0 0 0px',
+              flex: anySelected ? '0 0 calc(40% - 12px)' : '0 0 0px',
               position: 'sticky',
               top: 0,
               alignSelf: 'stretch',
@@ -351,7 +398,7 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                 <>
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: '3fr 2fr',
+                    gridTemplateColumns: '1fr 1fr',
                     gap: 20,
                     alignItems: 'start',
                   }}>
@@ -410,10 +457,46 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
           </div>
         </div>
 
-        <div style={{ marginLeft: -20, marginRight: -20 }}>
-          <ContactForm onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
+        {/* ── Как работаем ─────────────────────────────────────────────────── */}
+        <div style={{ marginTop: 200 }}>
+          <h2 style={{ ...H2_STYLE, marginBottom: 40 }} data-reveal="">Как работаем</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--gap)' }} data-reveal-stagger="">
+            {([
+              {
+                num: '①',
+                title: 'Заявка',
+                text: (
+                  <>
+                    Пишете нам на{' '}
+                    <a href="mailto:hi@skip.design" style={{ ...ts, textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}>hi@skip.design</a>
+                    {' '}или оставляете{' '}
+                    <a
+                      href="#contact"
+                      style={{ ...ts, textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}
+                      onClick={e => { e.preventDefault(); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }); }}
+                    >контакт в форме</a>
+                    .<br />Отвечаем с 11 до 20 по Москве
+                  </>
+                ),
+              },
+              { num: '②', title: 'Знакомство',              text: 'Назначаем встречу — разбираемся в задаче и рассказываем о процессе. На встречу придут специалисты, с которыми вы дальше будете работать.' },
+              { num: '③', title: 'Коммерческое предложение', text: 'Собираем предложение и примеры под вашу задачу. Расскажем о видении и ответим на все вопросы.' },
+              { num: '④', title: 'Договор и старт работ',    text: 'Согласовываем условия, составляем роадмап и подписываем договор' },
+            ] as const).map((step, i) => (
+              <div key={i} style={{ paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ height: '1px', background: 'var(--c-text)', opacity: 0.12, marginBottom: 4 }} />
+                <p style={{ ...ts, margin: 0, opacity: 0.4 }}>{step.num}</p>
+                <p style={{ ...ts, margin: 0 }}>{step.title}</p>
+                <p style={{ ...ts, margin: 0, opacity: 0.55 }}>{step.text}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
+      </div>
+
+      <div id="contact">
+        <ContactForm variant="consult" onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
       </div>
     </div>
   );

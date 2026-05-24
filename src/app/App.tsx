@@ -4,6 +4,7 @@ import Lenis from 'lenis';
 import svgPaths from '../imports/Index/svg-3bjnx36a2y';
 import { useReveal } from './utils/reveal';
 import { asset } from './utils/asset';
+import { TEXT_STYLE as ts } from './utils/typography';
 import ScrollHero from './components/ScrollHero';
 import ProjectGallery from './components/ProjectGallery';
 import Footer from './components/Footer';
@@ -23,7 +24,25 @@ import { ToolsSection } from './components/ToolsSection';
 import { MediaSection } from './components/MediaSection';
 import LabPage from './components/LabPage';
 import LinkFlip from './components/LinkFlip';
+import PeopleVideoSlot, { type VideoConfig } from './components/PeopleVideoSlot';
 import s from './App.module.css';
+
+// ── People-block: client → video configuration ───────────────────────────────
+// Each client maps to a unique (src, objectPosition) pair for both card slots.
+// With only two video files available, we vary position to differentiate frames.
+const PEOPLE_CLIENTS = ['AliExpress', 'Юрий Мурадян', 'Gate Legal', 'Senior*s Bar'] as const;
+type PeopleClient = typeof PEOPLE_CLIENTS[number];
+
+const CLIENT_VIDEOS: Record<PeopleClient, { left: VideoConfig; right: VideoConfig }> = {
+  'AliExpress':   { left: { src: '/video.mp4',  pos: '50% 50%'  }, right: { src: '/video2.mov', pos: '50% 0%'   } },
+  'Юрий Мурадян': { left: { src: '/video2.mov', pos: '50% 0%'   }, right: { src: '/video.mp4',  pos: '50% 100%' } },
+  'Gate Legal':   { left: { src: '/video.mp4',  pos: '0% 50%'   }, right: { src: '/video2.mov', pos: '100% 50%' } },
+  'Senior*s Bar': { left: { src: '/video2.mov', pos: '50% 100%' }, right: { src: '/video.mp4',  pos: '50% 0%'   } },
+};
+const DEFAULT_PEOPLE_VIDEOS = {
+  left:  { src: '/video2.mov', pos: '50% 50%' } as VideoConfig,
+  right: { src: '/video2.mov', pos: '50% 50%' } as VideoConfig,
+};
 
 function ScrollHint() {
   const ref = useRef<HTMLDivElement>(null);
@@ -156,10 +175,15 @@ function Preloader({ onDone }: { onDone: () => void }) {
         fontSize: 'var(--h2-size)',
         fontWeight: 'var(--h2-weight)' as React.CSSProperties['fontWeight'],
         letterSpacing: 'var(--h2-ls)',
-        lineHeight: 'var(--h2-lh)',
+        lineHeight: 1,
         color: 'var(--c-text)',
         margin: 0,
         position: 'relative',
+        textAlign: 'center',
+        /* Slight visual nudge up — display font's baseline sits below the
+           geometric centre of its line-box, so flex-centred text reads as
+           slightly low. -0.18em compensates without changing layout. */
+        transform: 'translateY(-0.18em)',
       }}>
         {PRELOADER_LINES.map((line, i) => (
           <Fragment key={line}>
@@ -356,11 +380,24 @@ function AppInner() {
   const studioTextRef = useRef<HTMLDivElement>(null);
   const clientLabelRef = useRef<HTMLParagraphElement>(null);
   const clientNamesRef = useRef<HTMLDivElement>(null);
+  /* People-block (above the studio section) — same reveal pattern as the
+     studio's "Нам доверяют проекты" line by line. */
+  const heroClientLabelRef = useRef<HTMLParagraphElement>(null);
+  const heroClientNamesRef = useRef<HTMLDivElement>(null);
   const toolsRowsRef = useRef<HTMLDivElement>(null);
+
+  /* People-block: hover on a client name swaps the left/right videos with
+     a slide-up transition (PeopleVideoSlot handles the animation). */
+  const [hoveredClient, setHoveredClient] = useState<string | null>(null);
+  const peopleVideos = hoveredClient && (hoveredClient in CLIENT_VIDEOS)
+    ? CLIENT_VIDEOS[hoveredClient as PeopleClient]
+    : DEFAULT_PEOPLE_VIDEOS;
 
   useReveal(studioTextRef, { selector: 'p', fromY: 20, stagger: 0.09, duration: 0.6 }, preloaderDone);
   useReveal(clientLabelRef, { fromY: 12, duration: 0.45 }, preloaderDone);
   useReveal(clientNamesRef, { selector: 'p', fromX: 28, fromY: 0, stagger: 0.09, duration: 0.5, ease: 'power2.out' }, preloaderDone);
+  useReveal(heroClientLabelRef, { fromY: 12, duration: 0.45 }, preloaderDone);
+  useReveal(heroClientNamesRef, { selector: 'p', fromX: 0, fromY: 24, stagger: 0.09, duration: 0.55, ease: 'power3.out' }, preloaderDone);
   useReveal(toolsRowsRef, { selector: `.${s.toolRow}`, fromY: 14, stagger: 0.08, duration: 0.55 }, preloaderDone);
 
   useEffect(() => {
@@ -566,25 +603,25 @@ function AppInner() {
           <button className={s.navBack} onClick={handleBack}>← назад</button>
         ) : (
           <>
-            <span ref={labLinkRef as React.RefObject<HTMLSpanElement>}>
+            <span ref={labLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
               <a href="/lab" className={s.navLink} onClick={handleLabClick}>
                 <LinkFlip>Skip Design</LinkFlip>
               </a>
             </span>
             <span ref={casesLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
-              <span className={s.navSep}>,&nbsp;</span>
+              <span className={s.navSep}>,</span>
               <a href="/cases" className={s.navLink} onClick={handleCasesClick}>
                 <LinkFlip>Кейсы</LinkFlip>
               </a>
             </span>
             <span ref={expertizaLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
-              <span className={s.navSep}>,&nbsp;</span>
+              <span className={s.navSep}>,</span>
               <a href="/services" className={s.navLink} onClick={handleExpertizaClick}>
                 <LinkFlip>Услуги</LinkFlip>
               </a>
             </span>
             <span ref={toolsLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'none' }}>
-              <span className={s.navSep}>,&nbsp;</span>
+              <span className={s.navSep}>,</span>
               <a href="/instruments" className={s.navLink} onClick={handleInstrumentsClick}>Подход</a>
             </span>
           </>
@@ -631,16 +668,17 @@ function AppInner() {
           Inverted against the background via mix-blend-mode: difference. */}
       {(page === 'home' || page === 'index2') && preloaderDone && (
         <button
+          className={s.newProjectBtn}
           style={{
             position: 'fixed',
             left: 'var(--pad)',
             bottom: 'var(--pad)',
             zIndex: 160,
             mixBlendMode: 'difference',
-            background: '#fff',
+            background: 'transparent',
             border: 'none',
             borderRadius: 0,
-            padding: '9px 12px 11px',
+            padding: 0,
             cursor: 'pointer',
             fontFamily: 'var(--font)',
             fontSize: 'var(--text-size)',
@@ -652,24 +690,8 @@ function AppInner() {
             opacity: showPrivacy ? 0 : 1,
             pointerEvents: showPrivacy ? 'none' : 'auto',
             transition: 'opacity 0.3s ease',
-            display: 'inline-flex',
-            alignItems: 'center',
-          }}
-          onMouseEnter={e => {
-            const plus = e.currentTarget.querySelector('[data-plus]') as HTMLElement | null;
-            if (plus) {
-              plus.style.maxWidth = '14px';
-              plus.style.opacity = '1';
-              plus.style.marginRight = '6px';
-            }
-          }}
-          onMouseLeave={e => {
-            const plus = e.currentTarget.querySelector('[data-plus]') as HTMLElement | null;
-            if (plus) {
-              plus.style.maxWidth = '0';
-              plus.style.opacity = '0';
-              plus.style.marginRight = '0';
-            }
+            display: 'inline-block',
+            perspective: '500px',
           }}
           onClick={() => {
             const el = document.querySelector('[class*="contactWrap"]') as HTMLElement;
@@ -678,18 +700,44 @@ function AppInner() {
             else if (el) el.scrollIntoView({ behavior: 'smooth' });
           }}
         >
-          <span
-            data-plus
-            style={{
-              display: 'inline-block',
-              overflow: 'hidden',
-              maxWidth: '0',
-              opacity: 0,
-              marginRight: '0',
-              transition: 'max-width 0.25s ease, opacity 0.2s ease, margin-right 0.25s ease',
-            }}
-          >+</span>
-          новый проект
+          {/* Flip-inner — rotates the whole pill on hover.
+              Both faces always contain "+ новый проект" so the wrapper is
+              wide enough for the bottom face. On the front face the "+" is
+              opacity:0 (invisible but occupies layout space), so no width
+              jump occurs during the cube rotation. */}
+          <span className={s.newProjectFlipInner}>
+            {/* Front face — invisible "+" on both sides keeps text centred */}
+            <span
+              className={s.newProjectFace}
+              style={{
+                background: '#fff',
+                padding: '9px 8px 11px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <span style={{ marginRight: 6, opacity: 0 }}>+</span>
+              новый проект
+              <span style={{ marginLeft: 6, opacity: 0 }}>+</span>
+            </span>
+            {/* Bottom face — "+ новый проект" centred as a unit */}
+            <span
+              className={`${s.newProjectFace} ${s.newProjectFaceBottom}`}
+              style={{
+                background: '#fff',
+                padding: '9px 8px 11px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <span style={{ marginRight: 6 }}>+</span>
+              новый проект
+            </span>
+          </span>
         </button>
       )}
 
@@ -887,14 +935,16 @@ function AppInner() {
           onNavigateCases={() => navigateWithExit('/cases')}
         />
 
+
+        {/* Old #studio block removed — its content lives in the people block above. */}
+        {false && (
         <div id="studio" className={s.section} style={{ marginTop: 100 }}>
           <div className={s.studio}>
             <div ref={studioTextRef} className={s.grid5}>
               <p className={s.studioLabel}>Студия</p>
               <div />
-              <p className={s.studioDesc}>Skip Design — бутиковая студия цифрового дизайна. Мы ценим человечность, здравый смысл и мастерство.</p>
+              <p className={s.studioDesc}>Skip Design — бутиковая студия цифрового дизайна. Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться сути.</p>
               <div className={s.studioPhilosophy}>
-                <p className={s.studioDesc}>Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться сути.</p>
                 <div className={s.studioClients}>
                   <p ref={clientLabelRef} className={s.studioClientsLabel}>Нам доверяют проекты:</p>
                   <div ref={clientNamesRef} className={s.studioClientNames}>
@@ -942,15 +992,74 @@ function AppInner() {
             </div>
           </div>
         </div>
+        )}
+
+        {/* People block — vertical card (col 1) + centred text (col 3) + horizontal card (col 5) */}
+        <div
+          className={s.section}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(5, 1fr)',
+            gap: 'var(--gap)',
+            marginTop: 200,
+            alignItems: 'center',
+          }}
+        >
+          <div style={{ gridColumn: '1 / 2' }}>
+            <PeopleVideoSlot config={peopleVideos.left} aspectRatio="5/6" />
+          </div>
+
+          <div
+            style={{
+              gridColumn: '3 / 4',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 40,
+              height: '100%',
+              minHeight: '100%',
+              textAlign: 'center',
+            }}
+          >
+            <p style={{ ...ts, margin: 0 }}>
+              Skip&nbsp;Design&nbsp;— команда дизайнеров и стратегов. Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться суть.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
+              <p ref={heroClientLabelRef} style={{ ...ts, margin: 0 }}>Нам доверяют проекты:</p>
+              <div ref={heroClientNamesRef} style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 20,
+                fontFamily: 'var(--font-display)',
+                fontSize: 'var(--heading-size)',
+                fontWeight: 'var(--heading-weight)' as React.CSSProperties['fontWeight'],
+                lineHeight: 'var(--heading-lh)',
+                letterSpacing: 'var(--heading-ls)',
+                color: 'var(--c-text)',
+                textAlign: 'center',
+              }}>
+                {PEOPLE_CLIENTS.map(name => (
+                  <p
+                    key={name}
+                    style={{ margin: 0, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    onMouseEnter={() => setHoveredClient(name)}
+                    onMouseLeave={() => setHoveredClient(null)}
+                  >
+                    <LinkFlip>{name}</LinkFlip>
+                  </p>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ gridColumn: '5 / 6' }}>
+            <PeopleVideoSlot config={peopleVideos.right} aspectRatio="16/9" />
+          </div>
+        </div>
 
         <div id="cases" style={{ marginTop: 200 }}>
           <ProjectGallery onCaseClick={() => navigateWithExit('/case-template')} />
-        </div>
-
-        <div data-section="media" className={s.fullVideo}>
-          <video autoPlay muted loop playsInline>
-            <source src={asset('/video2.mov')} type="video/mp4" />
-          </video>
         </div>
 
         <ToolsSection />

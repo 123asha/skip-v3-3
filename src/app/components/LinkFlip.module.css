@@ -4,7 +4,8 @@
    top (out of view) and the duplicate rotates up to the front. */
 
 .wrap {
-  display: inline-block;
+  display: inline-flex;
+  vertical-align: baseline;
   perspective: 300px;
   line-height: inherit;
 }

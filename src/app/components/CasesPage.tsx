@@ -4,6 +4,7 @@ import s from './CasesPage.module.css';
 import CaseCard, { CASE_AR_H as H, CASE_AR_V as V, type CaseCardAR as AR } from './CaseCard';
 import ContactForm from './ContactForm';
 import { asset } from '../utils/asset';
+import { useReveal } from '../hooks/useReveal';
 
 interface Props {
   onBack: () => void;
@@ -125,6 +126,8 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
 
   const gridRef    = useRef<HTMLDivElement>(null);
   const pageRef    = useRef<HTMLDivElement>(null);
+
+  useReveal(pageRef);
   const mountedRef = useRef(false);
   const [zoom, setZoom] = useState(2);
   const zoomMountRef = useRef(false);
@@ -200,8 +203,8 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
 
   return (
     <div className={s.page} ref={pageRef}>
-      <h1 className={s.title}>Кейсы</h1>
-      <div className={s.tabsBar}>
+      <h1 className={s.title} data-reveal="">Кейсы</h1>
+      <div className={s.tabsBar} data-reveal="" data-reveal-delay="0.1">
         {/* Filter tabs — centered */}
         {TABS.map(tab => (
           <button
@@ -246,7 +249,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
         </div>
       </div>
 
-      <ContactForm onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
+      <ContactForm variant="consult" onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
     </div>
   );
 }

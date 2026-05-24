@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 const FG = '#231f20';
 
 // ── Snake: food = letters of "skip design", snake avoids form area ────────────
-const SCELL = 56; // cell size in CSS pixels — circles are 56px diameter
+const SCELL = 34; // cell size in CSS pixels
 const FOOD_CHARS = ['S', 'K', 'I', 'P', 'D', 'E', 'S', 'I', 'G', 'N'];
 
 export function FormSnakeGame({
@@ -33,11 +33,11 @@ export function FormSnakeGame({
     let SCOLS = 1, SROWS = 1, W = SCELL, H = SCELL;
     let forbiddenSet = new Set<string>();
 
-    let snake: Pt[]   = [];
-    let food: Pt      = { x: 0, y: 0 };
-    let dir: Dir      = 'R';
-    let queueDir: Dir = 'R';
-    let foodCharIdx   = 0;
+    let snake: Pt[]    = [];
+    let food: Pt       = { x: 0, y: 0 };
+    let dir: Dir       = 'R';
+    let dirQueue: Dir[] = [];   // buffered player inputs
+    let foodCharIdx    = 0;
     let playerControlled = false;
     let done   = false;
     let paused = true;
@@ -100,10 +100,15 @@ export function FormSnakeGame({
 
     const spawnFood = () => {
       const occ = new Set(snake.map(s => `${s.x},${s.y}`));
+      // Keep food away from the 10 % border on each side
+      const bx = Math.max(1, Math.round(SCOLS * 0.10));
+      const by = Math.max(1, Math.round(SROWS * 0.10));
+      const minX = bx, maxX = SCOLS - bx - 1;
+      const minY = by, maxY = SROWS - by - 1;
       let x = 0, y = 0, tries = 0;
       do {
-        x = Math.floor(Math.random() * SCOLS);
-        y = Math.floor(Math.random() * SROWS);
+        x = minX + Math.floor(Math.random() * Math.max(1, maxX - minX + 1));
+        y = minY + Math.floor(Math.random() * Math.max(1, maxY - minY + 1));
         tries++;
         if (tries > 2000) break;
       } while (!isOpen(x, y) || occ.has(`${x},${y}`));
@@ -128,7 +133,7 @@ export function FormSnakeGame({
       // Reset snake to a valid position in the new grid
       snake    = makeInitSnake();
       dir      = 'R';
-      queueDir = 'R';
+      dirQueue = [];
       playerControlled = false;
       foodCharIdx = 0;
       spawnFood();
@@ -176,14 +181,15 @@ export function FormSnakeGame({
         if (dy > 0) want.push('D'); else if (dy < 0) want.push('U');
         const safe = want.filter(d => isSafe(d, head, occ));
         if (safe.length) {
-          queueDir = safe[0];
+          dirQueue = [safe[0]];
         } else {
           const fallback = (['R','D','L','U'] as Dir[]).filter(d => isSafe(d, head, occ));
-          if (fallback.length) queueDir = fallback[0];
+          if (fallback.length) dirQueue = [fallback[0]];
         }
       }
 
-      dir = queueDir;
+      // Dequeue the next player-buffered direction (or keep current)
+      if (dirQueue.length) dir = dirQueue.shift()!;
       const [dx, dy] = DELTA[dir];
       const nh = { x: head.x + dx, y: head.y + dy };
 
@@ -194,7 +200,7 @@ export function FormSnakeGame({
         const fallback = (['R','D','L','U'] as Dir[]).filter(d => isSafe(d, head, occ));
         if (fallback.length) {
           const perp = fallback.find(d => d !== dir && d !== OPP[dir]);
-          queueDir = perp || fallback[0];
+          dirQueue = [perp || fallback[0]];
         }
         // Bigger visual recoil — head springs back from the wall noticeably
         recoilTick = 2.2;
@@ -221,13 +227,12 @@ export function FormSnakeGame({
     const draw = () => {
       ctx.clearRect(0, 0, W, H);
 
-      const R = SCELL / 2 - 2; // circle radius ≈ 18px (diameter ≈ 36px, fits 40px cell)
+      const R = (SCELL - 2) / 2; // 2px gap between adjacent circles
 
       // (Grid dots are drawn by the CSS background of .contactWrap — a single
       // 1px dot every 16px — so the snake no longer paints its own grid.)
 
-      // Snake / food circle colour — the project's main grey (var(--c-surface))
-      const ACCENT = '#f6f6f6';
+      const ACCENT = FG; // black snake
 
       // Food — outlined circle + letter (purple to match snake)
       const fx = food.x * SCELL + SCELL / 2;
@@ -287,7 +292,13 @@ export function FormSnakeGame({
         ArrowUp:'U', ArrowDown:'D', ArrowLeft:'L', ArrowRight:'R',
       };
       if (map[e.key]) {
-        queueDir = map[e.key];
+        const d = map[e.key];
+        // Reference direction: last buffered input, or current live direction
+        const last = dirQueue.length ? dirQueue[dirQueue.length - 1] : dir;
+        // Only queue if it's not a 180-degree reversal, and cap buffer at 2
+        if (d !== OPP[last] && dirQueue.length < 2) {
+          dirQueue.push(d);
+        }
         playerControlled = true;
       }
       // Lock page scroll for arrows/space whenever the canvas is on-screen
@@ -304,7 +315,7 @@ export function FormSnakeGame({
     window.addEventListener('keydown', onKey);
 
     draw();
-    const id = setInterval(() => { tick(); draw(); }, 185);
+    const id = setInterval(() => { tick(); draw(); }, 260);
 
     return () => {
       clearInterval(id);

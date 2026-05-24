@@ -78,7 +78,7 @@ export function ToolsSection() {
           lineHeight: 'var(--heading-lh)',
           letterSpacing: 'var(--heading-ls)',
           color: 'var(--c-text)',
-        }}>Инструменты и фреймворки</p>
+        }}>Фреймворки</p>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',

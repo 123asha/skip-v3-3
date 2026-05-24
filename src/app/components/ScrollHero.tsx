@@ -27,11 +27,12 @@ const BG_IMGS = [
   asset('/3bg.png'),
 ];
 
-// Visual-systems case info — labels shown on the small black rectangle
+// Visual-systems case info — labels shown on the small rectangle.
+// symbol: ASCII char shown bottom-left of the card.
 const VS_CASES = [
-  { name: 'Стратегия', href: '#' },
-  { name: 'Брендинг',  href: '#' },
-  { name: 'Диджитал',  href: '#' },
+  { name: 'Стратегия', anchor: 'brand',  symbol: '∴' },
+  { name: 'Брендинг',  anchor: 'visual', symbol: '◈' },
+  { name: 'Диджитал',  anchor: 'tools',  symbol: '⌘' },
 ];
 
 
@@ -86,6 +87,9 @@ const prefersReducedMotion = (): boolean => {
 export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigateCases }: { mode: 'arcade' | 'bunny'; ready: boolean; onNavigateExpertiza?: (anchor?: string) => void; onNavigateCases?: () => void }) {
   const [activeSection, setActiveSection] = useState(-1);
   const [imgIdx, setImgIdx]               = useState(0);
+  // Active background card during the post-video slider (0..BG_IMGS.length-1).
+  // Drives the rectangle text. Updated from `applyProgress` via lastBgIdxRef.
+  const [activeBgIdx, setActiveBgIdx]     = useState(0);
 
   const containerRef  = useRef<HTMLDivElement>(null);
   const stickyRef     = useRef<HTMLDivElement>(null);
@@ -127,6 +131,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
   const satIsARef = useRef<boolean[]>(Array(4).fill(true));
   const satIdxRef     = useRef(0);
   const lastImgIdxRef = useRef(0);
+  const lastBgIdxRef  = useRef(0);
 
   // Seed satellite images on mount
   useEffect(() => {
@@ -168,9 +173,20 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
   }, [activeSection]);
 
 
-  // Cube rotation is now driven directly by scroll (stickyT) inside applyProgress —
-  // see "Case-info cube rotation" block below. This keeps the face-flip exactly
-  // synchronised with the background tape-strip transition.
+  // Rectangle (case-info cube) rotates between faces whenever the active
+  // background slide changes. The slides themselves now scroll continuously
+  // (no dwell), but the cube animates with its own GSAP tween so each face
+  // has a brief moment of focus before flipping to the next one.
+  useEffect(() => {
+    const cube = caseCubeRef.current;
+    if (cube) {
+      gsap.to(cube, {
+        rotateX: activeBgIdx * 90,
+        duration: 0.65,
+        ease: 'power3.inOut',
+      });
+    }
+  }, [activeBgIdx]);
 
   useLayoutEffect(() => {
     reducedMotion.current = prefersReducedMotion();
@@ -319,13 +335,14 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
     let durationCache = mode === 'bunny' ? BUNNY_DUR : 5;
     let videoSeekTarget = -1;
 
-    // After the video, every sub-slide (3 cases + 1 tools = 4 sub-slides)
-    // gets PX_SLIDE pixels of scroll so the scroll experience is uniform.
-    const visualPx = BG_IMGS.length * PX_SLIDE;   // total px for visual-systems (3 cases)
+    // After the video, three full-bleed background cards scroll past the
+    // sticky frame. The single rectangle in the centre of the viewport stays
+    // visible the whole way — its text updates as each background becomes
+    // active. Each card gets PX_SLIDE of vertical scroll.
+    const visualPx = BG_IMGS.length * PX_SLIDE;
     const sec0Px = () => visualPx;
 
     const setHeight = (dur: number) => {
-      // After the video: only the visual-systems section (no separate tools slide)
       container.style.height =
         window.innerHeight + dur * PX_PER_SEC + visualPx + 'px';
       durationCache = dur;
@@ -395,16 +412,33 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
         accumY += (finalHeightRef.current[i] || 24) + 20;
       }
 
-      // Main video slide — sticks while brand strategy rises, then lifts
+      // Video transition into the rectangle. The video element keeps its
+      // natural aspect ratio and *physically rises* upward within the panel
+      // (translateY). Combined with the panel's overflow:hidden the top of
+      // the video clips out of view as it travels up — by gp 0.90 the
+      // video has slid out the top, and the rectangle is empty.
+      //   gp 0.55 → 0.90  video translates from 0% → -100% within panel
+      //   gp 0.85 → 0.95  video opacity 1 → 0 (fades out as it leaves)
+      //   gp 0.95 → 1.0   empty rectangle, then text fades in
       if (videoLayerRef.current) {
         let videoTY = 0;
-        if (gp > 0 && gp < 1) {
-          const vp = Math.max(0, Math.min(1, (gp - VIDEO_STICK) / (1 - VIDEO_STICK)));
-          videoTY = -100 * vp;
-        } else if (gp >= 1) {
+        let videoOp = 1;
+        if (gp <= 0.55) {
+          videoTY = 0;
+        } else if (gp < 0.90) {
+          const t = (gp - 0.55) / 0.35;
+          videoTY = -100 * t;
+        } else {
           videoTY = -100;
         }
+        if (gp >= 0.85 && gp < 0.95) {
+          videoOp = 1 - (gp - 0.85) / 0.10;
+        } else if (gp >= 0.95) {
+          videoOp = 0;
+        }
+        videoLayerRef.current.style.transformOrigin = '';
         videoLayerRef.current.style.transform = `translate3d(0, ${videoTY}%, 0)`;
+        videoLayerRef.current.style.opacity = String(videoOp);
       }
 
 
@@ -437,10 +471,10 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
         const BASE_W  = isMobile ? Math.max(100, vw - mobilePad * 2) : 900;
         const BASE_H  = isMobile ? Math.round(BASE_W * 506 / 900)    : 506;
         const SMALL_W = isMobile
-          ? Math.min(220, vw - mobilePad * 2)
-          : Math.max(220, Math.min(320, Math.round(vw * 0.18)));
-        const SMALL_H = 56;
-        const SHRINK_DUR   = 0.15;
+          ? Math.min(260, vw - mobilePad * 2)
+          : Math.max(260, Math.min(380, Math.round(vw * 0.22)));
+        const SMALL_H = 96;
+        const SHRINK_DUR   = 0.45;
         const easeOut = (t: number) => 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);
 
         let panelW: number;
@@ -457,13 +491,19 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
         }
 
         if (panelRef.current) {
-          panelRef.current.style.width  = Math.round(panelW) + 'px';
-          panelRef.current.style.height = Math.round(panelH) + 'px';
+          panelRef.current.style.width         = Math.round(panelW) + 'px';
+          panelRef.current.style.height        = Math.round(panelH) + 'px';
+          // Only make the panel clickable when it has fully shrunk into the small card
+          panelRef.current.style.pointerEvents = gp >= 1.0 ? 'auto' : 'none';
+          panelRef.current.style.cursor        = gp >= 1.0 ? 'pointer' : 'default';
         }
 
+        // Text overlay appears only AFTER the video has faded out
+        // (gp 0.95 → 1.0). Brief moment where the rectangle is empty
+        // before the text fades in — matches the user's screenshot.
         let overlayOp = 0;
-        if (gp > 1 - SHRINK_DUR && gp <= 1.0)  overlayOp = easeOut((gp - (1 - SHRINK_DUR)) / SHRINK_DUR);
-        else if (gp > 1.0)                       overlayOp = 1;
+        if (gp > 0.95 && gp <= 1.0)  overlayOp = easeOut((gp - 0.95) / 0.05);
+        else if (gp > 1.0)            overlayOp = 1;
         if (caseInfoRef.current) {
           caseInfoRef.current.style.opacity        = String(overlayOp);
           caseInfoRef.current.style.pointerEvents  = overlayOp > 0.5 ? 'auto' : 'none';
@@ -491,33 +531,47 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       // Raw t (0→1 within gp 1→2) is remapped so 30% is dwell at center + 20% fast transition.
       // Layout: [dwell0=0.3] [trans0→1=0.2] [dwell1=0.3] [trans1→2=0.2] = 1.0
       {
-        const PARALLAX = 0.15;
-        const IMG_H_RATIO = 1.3;
+        const PARALLAX = 0.35;
+        const IMG_H_RATIO = 1.6;
 
         const rawT = Math.max(0, Math.min(1, gp - 1));
-        const D = 0.3; // dwell fraction per slot
-        const TR = 0.2; // transition fraction per slot
-
-        let stickyT: number;
-        if (rawT < D)                      stickyT = 0;
-        else if (rawT < D + TR)            stickyT = sm((rawT - D) / TR) * 0.5;
-        else if (rawT < D + TR + D)        stickyT = 0.5;
-        else if (rawT < D + TR + D + TR)   stickyT = 0.5 + sm((rawT - D - TR - D) / TR) * 0.5;
-        else                               stickyT = 1;
-
+        // Linear scroll-to-slide mapping — no dwell zones. Every pixel of
+        // scroll moves the slides directly so the cards flow continuously
+        // past the viewport (matching the dulcedo reference).
+        const stickyT = rawT;
         const stickyGp = 1 + stickyT; // 1.0→2.0
 
-        // Case-info cube rotation — directly tied to stickyT so the face-flip
-        // is in lockstep with the background tape-strip transition.
-        if (caseCubeRef.current) {
-          gsap.set(caseCubeRef.current, { rotateX: stickyT * 180 });
+        // The rectangle no longer rotates between faces. Instead its single
+        // face shows the currently-active background's name. With tape-strip
+        // flow, slide i is centred at stickyT = i / (n-1), so we pick the
+        // nearest centred slide (Math.round) — i.e. the text updates when
+        // the next slide passes the halfway point of its transition.
+        const nBg = BG_IMGS.length;
+        const newBgIdx = Math.max(0, Math.min(nBg - 1, Math.round(stickyT * (nBg - 1))));
+        if (newBgIdx !== lastBgIdxRef.current) {
+          lastBgIdxRef.current = newBgIdx;
+          setActiveBgIdx(newBgIdx);
         }
 
+        // Tape-strip flow scroll (dulcedo-style): each slide moves up by
+        // 100 % of the viewport per slide-step. Both adjacent slides are
+        // visible during the transition (previous exits at the top while
+        // the next enters from the bottom — moving together with the scroll).
+        // With n = 3 slides, total travel range is `n - 1` slide-steps so
+        // slide 0 starts at centre and slide n-1 lands at centre by stickyT = 1.
+        const n = bgSlideRefs.current.length || 1;
+        const totalSteps = Math.max(1, n - 1);
         bgSlideRefs.current.forEach((el, i) => {
           if (!el) return;
-          const yP = (i - (stickyGp - 1.0) * 2) * 100;
-          gsap.set(el, { yPercent: yP, scale: 1 });
+          const yP = (i - stickyT * totalSteps) * 100;
+          gsap.set(el, { yPercent: yP, opacity: 1, scale: 1 });
 
+          // Parallax: the image inside each slide counter-translates a bit
+          // so it appears to scroll slower than the slide container — when
+          // the slide moves up the image lags behind. The image is rendered
+          // 30 % taller than the slide (IMG_H_RATIO), so we can safely
+          // translate by up to ±15 % within the slide without revealing the
+          // empty edges.
           const imgEl = bgImgRefs.current[i];
           if (imgEl) {
             const imgY = (-yP * PARALLAX) / IMG_H_RATIO;
@@ -579,7 +633,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
         if (mode === 'arcade' && vid && Math.abs(vid.currentTime - dur) > 0.1) {
           vid.currentTime = dur; videoSeekTarget = dur;
         }
-        // Visual systems: 3 sub-slides over `visualPx` total. After that we just clamp at gp=2.
+        // After video: 3 background cards over `visualPx` total. gp maps 1→2.
         const s0 = sec0Px();
         const svc = sy - videoPx;
         gp = 1 + Math.min(1, svc / s0);
@@ -647,8 +701,20 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       const gp = progressRef.current;
       const magnet = gp >= 1.0 ? 1 : 0;
 
-      const targetX = (mouseX - window.innerWidth  / 2) * magnet;
-      const targetY = (mouseY - window.innerHeight / 2) * magnet;
+      // Mouse offset from viewport centre.
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const dx = mouseX - vw / 2;
+      const dy = mouseY - vh / 2;
+      // Magnet only inside the central 90 % zone of the slide (45 % to each
+      // side of centre). Outside the zone the rectangle returns to the
+      // centre — mouse position has no effect.
+      const zoneW = vw * 0.45;
+      const zoneH = vh * 0.45;
+      const insideZone = Math.abs(dx) <= zoneW && Math.abs(dy) <= zoneH;
+      const STRENGTH = 0.35; // 35 % of mouse offset, softer pull than 1:1
+      const targetX = insideZone ? dx * STRENGTH * magnet : 0;
+      const targetY = insideZone ? dy * STRENGTH * magnet : 0;
       offX += (targetX - offX) * 0.20;
       offY += (targetY - offY) * 0.20;
 
@@ -715,7 +781,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
               <img
                 ref={el => { bgImgRefs.current[i] = el; }}
                 src={src}
-                style={{ position: 'absolute', top: '-15%', left: 0, width: '100%', height: '130%', objectFit: 'cover', willChange: 'transform' }}
+                style={{ position: 'absolute', top: '-30%', left: 0, width: '100%', height: '160%', objectFit: 'cover', willChange: 'transform' }}
                 alt=""
               />
             </div>
@@ -725,11 +791,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
         {/* Panel: video / game — horizontally centered, clickable to navigate to service */}
         <div ref={panelRef} className={s.panel}
           onClick={() => {
-            if (activeSection === 1) {
-              onNavigateCases?.();
-            } else {
-              onNavigateExpertiza?.(SERVICE_ANCHORS[Math.max(0, activeSection)]);
-            }
+            onNavigateExpertiza?.(VS_CASES[activeBgIdx]?.anchor ?? SERVICE_ANCHORS[0]);
           }}
           style={{
             position: 'absolute',
@@ -738,7 +800,8 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
             width: 900,
             height: 506,
             zIndex: 5,
-            cursor: 'pointer',
+            pointerEvents: 'none',
+            cursor: 'default',
           }}>
           <div ref={panelInnerRef} style={{ position: 'absolute', inset: 0 }}>
             {mode === 'bunny' ? (
@@ -766,6 +829,10 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
                   zIndex: 10,
                   perspective: '1500px',
                 }}>
+                  {/* 3D-rotating cube with one face per VS_CASE. Rotation is
+                      driven by `activeBgIdx` via the useEffect below — gsap
+                      animates the cube to the next face whenever the active
+                      background slide changes. */}
                   <div ref={caseCubeRef} style={{
                     position: 'absolute', inset: 0,
                     transformStyle: 'preserve-3d',
@@ -777,47 +844,56 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
                         style={{
                           position: 'absolute', inset: 0,
                           background: '#e8e8e8',
-                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                          padding: '0 20px',
-                          gap: 20,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          padding: '14px 20px 12px',
                           color: 'var(--c-text)',
                           backfaceVisibility: 'hidden',
-                          // Each face is at i × -90° around X and pushed out by half the small
-                          // panel height so the prism's depth matches the visible bar height.
-                          transform: `rotateX(${i * -90}deg) translateZ(28px)`,
+                          // translateZ = half of SMALL_H (96px) so the prism fits the bar
+                          transform: `rotateX(${i * -90}deg) translateZ(48px)`,
                         }}
                       >
-                        <span style={{
-                          fontFamily: 'var(--font)',
-                          fontSize: 'var(--text-size)',
-                          fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
-                          lineHeight: 'var(--text-lh)',
-                          letterSpacing: 'var(--text-ls)',
-                          color: 'var(--c-text)',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          display: 'inline-block',
-                          flex: 1,
-                          minWidth: 0,
-                        }}>{c.name}</span>
-                        <a
-                          href={c.href}
-                          onClick={e => e.stopPropagation()}
-                          style={{
+                        {/* Top row: name + link */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
+                          <span style={{
                             fontFamily: 'var(--font)',
                             fontSize: 'var(--text-size)',
                             fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
                             lineHeight: 'var(--text-lh)',
                             letterSpacing: 'var(--text-ls)',
                             color: 'var(--c-text)',
-                            textDecoration: 'underline',
-                            textDecorationStyle: 'dotted',
-                            textUnderlineOffset: '3px',
-                            cursor: 'pointer',
                             whiteSpace: 'nowrap',
-                            flexShrink: 0,
-                          }}
-                        >Перейти</a>
+                          }}>{c.name}</span>
+                          <a
+                            href="#"
+                            onClick={e => { e.preventDefault(); e.stopPropagation(); onNavigateExpertiza?.(c.anchor); }}
+                            style={{
+                              fontFamily: 'var(--font)',
+                              fontSize: 'var(--text-size)',
+                              fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+                              lineHeight: 'var(--text-lh)',
+                              letterSpacing: 'var(--text-ls)',
+                              color: 'var(--c-text)',
+                              textDecoration: 'underline',
+                              textDecorationStyle: 'dotted',
+                              textUnderlineOffset: '3px',
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                              flexShrink: 0,
+                            }}
+                          >Перейти</a>
+                        </div>
+                        {/* Bottom-left ASCII symbol */}
+                        <span style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: 'var(--text-size)',
+                          lineHeight: 1,
+                          letterSpacing: 0,
+                          color: 'var(--c-text)',
+                          opacity: 0.5,
+                          alignSelf: 'flex-start',
+                        }}>{c.symbol}</span>
                       </div>
                     ))}
                   </div>

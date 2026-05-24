@@ -22,8 +22,8 @@ const BOARD_IMGS = [
 
 // Gray block backgrounds — paired with BOARD_IMGS
 const BG_IMGS = [
+  asset('/1bg.png'),
   asset('/2bg.png'),
-  asset('/1.png'),
   asset('/3bg.png'),
 ];
 

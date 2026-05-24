@@ -517,10 +517,16 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       // Background wrap — fade in early, in sync with panel shrink (gp 0.80 → 0.95),
       // so the first case is visible by the time the panel becomes a small black bar.
       if (bgWrapRef.current) {
+        // Background appears only after the panel has fully shrunk to small card
+        // (gp ≈ 0.93). Tight 0.08 range with easeIn³ gives an inertia snap:
+        // barely visible for most of the range, then accelerates to full opacity.
         let bgOp = 0;
-        if      (gp < 0.80) bgOp = 0;
-        else if (gp < 0.95) bgOp = sm((gp - 0.80) / 0.15);
-        else                bgOp = 1;
+        if (gp >= 1.0) {
+          bgOp = 1;
+        } else if (gp >= 0.93) {
+          const t = (gp - 0.93) / 0.07;
+          bgOp = t * t * t; // easeIn³ — slow start, fast snap at the end
+        }
         bgWrapRef.current.style.opacity = String(bgOp);
       }
 

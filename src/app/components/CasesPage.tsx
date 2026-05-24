@@ -22,19 +22,17 @@ interface Project {
   desc: string;
 }
 
-const LOCAL_IMGS = [asset('/1.png'), asset('/1.1.png'), asset('/2.png')];
-
 const PROJECTS: Project[] = [
-  { id: 1,  cats: ['branding', 'sites', 'interfaces'],       ar: H, image: LOCAL_IMGS[0], title: 'Брендинг AliExpress',  desc: 'Исследования рынка, категории и целевой аудитории.' },
-  { id: 2,  cats: ['branding', 'sites', 'instruments'],      ar: H, image: LOCAL_IMGS[1], title: 'Gate Legal',           desc: 'Платформа бренда и визуальная идентичность' },
-  { id: 3,  cats: ['branding', 'interfaces', 'instruments'], ar: V, image: LOCAL_IMGS[2], title: "Senior's Platform",    desc: 'Дизайн-система и интерфейсы' },
-  { id: 4,  cats: ['branding', 'sites'],                     ar: V, image: LOCAL_IMGS[0], title: 'Юрий Мурадян',         desc: 'Персональный брендинг' },
-  { id: 5,  cats: ['branding', 'sites', 'interfaces'],       ar: H, image: LOCAL_IMGS[1], title: 'Futura Digital',       desc: 'Нейминг и регистрация, платформа бренда' },
-  { id: 6,  cats: ['sites', 'interfaces', 'instruments'],    ar: H, image: LOCAL_IMGS[2], title: 'Digital Experience',   desc: 'Исследования и автоматизация процессов' },
-  { id: 7,  cats: ['branding', 'sites', 'instruments'],      ar: V, image: LOCAL_IMGS[0], title: 'Nova Brand',           desc: 'Визуальная идентичность и система' },
-  { id: 8,  cats: ['sites', 'interfaces'],                   ar: V, image: LOCAL_IMGS[1], title: 'Orbit Studio',         desc: 'Концепция сайта и дизайн-библиотека' },
-  { id: 9,  cats: ['interfaces', 'instruments'],             ar: V, image: LOCAL_IMGS[2], title: 'Interface Pro',        desc: 'Дизайн-система для мобильных приложений' },
-  { id: 10, cats: ['sites', 'interfaces', 'instruments'],    ar: H, image: LOCAL_IMGS[0], title: 'Digital Platform',     desc: 'Веб-платформа и пользовательский опыт' },
+  { id: 1,  cats: ['branding', 'sites', 'interfaces'],       ar: H, image: asset('/case1.png'), title: 'Брендинг AliExpress',  desc: 'Исследования рынка, категории и целевой аудитории.' },
+  { id: 2,  cats: ['branding', 'sites', 'instruments'],      ar: H, image: asset('/case2.png'), title: 'Gate Legal',           desc: 'Платформа бренда и визуальная идентичность' },
+  { id: 3,  cats: ['branding', 'interfaces', 'instruments'], ar: V, image: asset('/case3.png'), title: "Senior's Platform",    desc: 'Дизайн-система и интерфейсы' },
+  { id: 4,  cats: ['branding', 'sites'],                     ar: V, image: asset('/case4.png'), title: 'Юрий Мурадян',         desc: 'Персональный брендинг' },
+  { id: 5,  cats: ['branding', 'sites', 'interfaces'],       ar: H, image: asset('/case5.png'), title: 'Futura Digital',       desc: 'Нейминг и регистрация, платформа бренда' },
+  { id: 6,  cats: ['sites', 'interfaces', 'instruments'],    ar: H, image: asset('/case6.png'), title: 'Digital Experience',   desc: 'Исследования и автоматизация процессов' },
+  { id: 7,  cats: ['branding', 'sites', 'instruments'],      ar: V, image: asset('/case1.png'), title: 'Nova Brand',           desc: 'Визуальная идентичность и система' },
+  { id: 8,  cats: ['sites', 'interfaces'],                   ar: V, image: asset('/case2.png'), title: 'Orbit Studio',         desc: 'Концепция сайта и дизайн-библиотека' },
+  { id: 9,  cats: ['interfaces', 'instruments'],             ar: V, image: asset('/case3.png'), title: 'Interface Pro',        desc: 'Дизайн-система для мобильных приложений' },
+  { id: 10, cats: ['sites', 'interfaces', 'instruments'],    ar: H, image: asset('/case4.png'), title: 'Digital Platform',     desc: 'Веб-платформа и пользовательский опыт' },
 ];
 
 const TABS = [

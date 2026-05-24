@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import s from './ProjectGallery.module.css';
 import CaseCard, { CASE_AR_H as H, CASE_AR_V as V, type CaseCardAR as AR } from './CaseCard';
 import { MagneticDivider } from './MagneticDivider';
+import { asset } from '../utils/asset';
 
 interface Project {
   id: number;
@@ -13,12 +14,12 @@ interface Project {
 }
 
 export const PROJECTS: Project[] = [
-  { id: 1, cats: ['branding', 'sites', 'interfaces'],            ar: H, image: 'https://cdn.prod.website-files.com/675f094fa71fc3ba49590b83/68dd523f3242f983fe4bcef5_main%20ae.png', title: 'AliExpress',         desc: 'AE Platform: дизайн B2B-платформы для партнёров AliExpress' },
-  { id: 2, cats: ['sites', 'interfaces', 'instruments'],         ar: V, image: 'https://cdn.prod.website-files.com/675f094fa71fc3ba49590b83/68dd57358ebd2acb0ec91f25_ae%201.1.png',   title: 'AE Platform',        desc: 'Редизайн браузерного расширения для AE Platform' },
-  { id: 3, cats: ['branding', 'interfaces', 'instruments'],      ar: V, image: 'https://cdn.prod.website-files.com/675f094fa71fc3ba49590b83/68ab337ce793eadbdb71c93b_ae7.png',         title: "Senior's Platform",  desc: 'Дизайн-система и интерфейсы' },
-  { id: 4, cats: ['branding', 'sites', 'interfaces'],            ar: H, image: 'https://images.unsplash.com/photo-1609921212029-bb5a28e60960?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080', title: 'Futura Digital',     desc: 'Нейминг и регистрация, платформа бренда' },
-  { id: 5, cats: ['branding', 'sites', 'instruments'],           ar: V, image: 'https://cdn.prod.website-files.com/675f094fa71fc3ba49590b83/68ae0490ec1cc0adc7c7b3f3_Frame%202087328484.png', title: 'Юрий Мурадян',       desc: 'Персональный брендинг' },
-  { id: 6, cats: ['sites', 'interfaces', 'instruments'],         ar: H, image: 'https://images.unsplash.com/photo-1711563386439-75ce269ac998?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080', title: 'Digital Experience', desc: 'Исследования и автоматизация процессов' },
+  { id: 1, cats: ['branding', 'sites', 'interfaces'],            ar: H, image: asset('/case1.png'), title: 'AliExpress',         desc: 'AE Platform: дизайн B2B-платформы для партнёров AliExpress' },
+  { id: 2, cats: ['sites', 'interfaces', 'instruments'],         ar: V, image: asset('/case2.png'), title: 'AE Platform',        desc: 'Редизайн браузерного расширения для AE Platform' },
+  { id: 3, cats: ['branding', 'interfaces', 'instruments'],      ar: V, image: asset('/case3.png'), title: "Senior's Platform",  desc: 'Дизайн-система и интерфейсы' },
+  { id: 4, cats: ['branding', 'sites', 'interfaces'],            ar: H, image: asset('/case4.png'), title: 'Futura Digital',     desc: 'Нейминг и регистрация, платформа бренда' },
+  { id: 5, cats: ['branding', 'sites', 'instruments'],           ar: V, image: asset('/case5.png'), title: 'Юрий Мурадян',       desc: 'Персональный брендинг' },
+  { id: 6, cats: ['sites', 'interfaces', 'instruments'],         ar: H, image: asset('/case6.png'), title: 'Digital Experience', desc: 'Исследования и автоматизация процессов' },
 ];
 
 const TABS = [

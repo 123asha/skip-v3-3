@@ -9,12 +9,12 @@ import { asset } from '../utils/asset';
 import { useReveal } from '../hooks/useReveal';
 
 const LAB_CASES = [
-  { ar: H, title: 'Брендинг AliExpress',  desc: 'Исследования рынка, категории и целевой аудитории.',  image: asset('/1.png'),   col: '1 / 3', row: 1 },
-  { ar: V, title: 'Gate Legal',            desc: 'Платформа бренда и визуальная идентичность',           image: asset('/1.1.png'), col: '4 / 6', row: 1 },
-  { ar: V, title: "Senior's Platform",     desc: 'Дизайн-система и интерфейсы',                         image: asset('/2.png'),   col: '2 / 4', row: 2 },
-  { ar: H, title: 'Юрий Мурадян',          desc: 'Персональный брендинг',                               image: asset('/1.png'),   col: '4 / 6', row: 2 },
-  { ar: H, title: 'Futura Digital',        desc: 'Нейминг и регистрация, платформа бренда',              image: asset('/1.1.png'), col: '1 / 3', row: 3 },
-  { ar: V, title: 'Nova Brand',            desc: 'Визуальная идентичность и система',                   image: asset('/2.png'),   col: '4 / 6', row: 3 },
+  { ar: H, title: 'Брендинг AliExpress',  desc: 'Исследования рынка, категории и целевой аудитории.',  image: asset('/case1.png'), col: '1 / 3', row: 1 },
+  { ar: V, title: 'Gate Legal',            desc: 'Платформа бренда и визуальная идентичность',           image: asset('/case2.png'), col: '4 / 6', row: 1 },
+  { ar: V, title: "Senior's Platform",     desc: 'Дизайн-система и интерфейсы',                         image: asset('/case3.png'), col: '2 / 4', row: 2 },
+  { ar: H, title: 'Юрий Мурадян',          desc: 'Персональный брендинг',                               image: asset('/case4.png'), col: '4 / 6', row: 2 },
+  { ar: H, title: 'Futura Digital',        desc: 'Нейминг и регистрация, платформа бренда',              image: asset('/case5.png'), col: '1 / 3', row: 3 },
+  { ar: V, title: 'Nova Brand',            desc: 'Визуальная идентичность и система',                   image: asset('/case6.png'), col: '4 / 6', row: 3 },
 ] as const;
 
 export default function LabPage({

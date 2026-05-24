@@ -22,9 +22,9 @@ const BOARD_IMGS = [
 
 // Gray block backgrounds — paired with BOARD_IMGS
 const BG_IMGS = [
-  asset('/1bg.png'),
-  asset('/2bg.png'),
-  asset('/3bg.png'),
+  asset('/1bg.webp'),
+  asset('/2bg.webp'),
+  asset('/3bg.webp'),
 ];
 
 // Visual-systems case info — labels shown on the small rectangle.
@@ -36,7 +36,7 @@ const VS_CASES = [
 ];
 
 
-const PX_PER_SEC = 95;
+const PX_PER_SEC = 143; // +50% — video section scrolls slower
 export const PX_SLIDE = 800;
 // Anchors matching SERVICE_IDS in ExpertizaPage
 const SERVICE_ANCHORS = ['brand', 'visual', 'tools'] as const;
@@ -83,8 +83,84 @@ const prefersReducedMotion = (): boolean => {
 };
 
 
+// ── Mobile static hero ───────────────────────────────────────────────────────
+function MobileHero({ onNavigateCases, onNavigateExpertiza }: { onNavigateCases?: () => void; onNavigateExpertiza?: (anchor?: string) => void }) {
+  return (
+    <div style={{
+      position: 'relative',
+      height: '100vh',
+      width: '100%',
+      overflow: 'hidden',
+      background: 'var(--c-bg)',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+    }}>
+      {/* Background image */}
+      <img
+        src={BG_IMGS[0]}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }}
+        alt=""
+      />
+      {/* Headline */}
+      <p style={{
+        position: 'absolute',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        top: 'var(--pad)',
+        fontFamily: 'var(--font-display)',
+        fontSize: 'var(--heading-size)',
+        fontWeight: 'var(--heading-weight)',
+        lineHeight: 'var(--heading-lh)',
+        letterSpacing: '-0.03em',
+        textAlign: 'center',
+        whiteSpace: 'nowrap',
+        color: '#fff',
+        mixBlendMode: 'difference',
+        zIndex: 4,
+        width: 'max-content',
+        maxWidth: '90vw',
+        whiteSpace: 'normal' as any,
+      }}>
+        {HEADLINE_LINES.map((line, i) => (
+          <span key={i} style={{ display: 'block' }}>{line}</span>
+        ))}
+      </p>
+      {/* Bottom links */}
+      <div style={{
+        position: 'absolute',
+        bottom: 'var(--pad)',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        display: 'flex',
+        gap: 'var(--gap)',
+        zIndex: 4,
+        color: '#fff',
+        mixBlendMode: 'difference',
+        fontFamily: 'var(--font)',
+        fontSize: 'var(--text-size)',
+        lineHeight: 'var(--text-lh)',
+        letterSpacing: 'var(--text-ls)',
+        whiteSpace: 'nowrap',
+      }}>
+        <a href="#" onClick={e => { e.preventDefault(); onNavigateCases?.(); }}
+          style={{ color: 'inherit', textDecoration: 'underline' }}>Кейсы</a>
+        <a href="#" onClick={e => { e.preventDefault(); onNavigateExpertiza?.(); }}
+          style={{ color: 'inherit', textDecoration: 'underline' }}>Услуги</a>
+      </div>
+    </div>
+  );
+}
+
 // ───────────────────────────────────────────────────────────────────────────
 export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigateCases }: { mode: 'arcade' | 'bunny'; ready: boolean; onNavigateExpertiza?: (anchor?: string) => void; onNavigateCases?: () => void }) {
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', check, { passive: true });
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   const [activeSection, setActiveSection] = useState(-1);
   const [imgIdx, setImgIdx]               = useState(0);
   // Active background card during the post-video slider (0..BG_IMGS.length-1).
@@ -495,7 +571,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
           panelRef.current.style.height        = Math.round(panelH) + 'px';
           // Only make the panel clickable when it has fully shrunk into the small card
           panelRef.current.style.pointerEvents = gp >= 1.0 ? 'auto' : 'none';
-          panelRef.current.style.cursor        = 'default';
+          panelRef.current.style.cursor        = gp >= 1.0 ? 'pointer' : 'default';
         }
 
         // Text overlay appears only AFTER the video has faded out
@@ -794,8 +870,12 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
           ))}
         </div>
 
-        {/* Panel: video / game — horizontally centered */}
+        {/* Panel: video / game — horizontally centered, clickable when small */}
         <div ref={panelRef} className={s.panel}
+          onClick={() => {
+            if (progressRef.current >= 1.0)
+              onNavigateExpertiza?.(VS_CASES[activeBgIdx]?.anchor ?? SERVICE_ANCHORS[0]);
+          }}
           style={{
             position: 'absolute',
             left: '50%',

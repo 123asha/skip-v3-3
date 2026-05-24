@@ -7,6 +7,9 @@
   background: var(--c-bg);
   z-index: 160;
   overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   animation: pageIn 0.35s 0.05s ease both;
   scrollbar-gutter: stable;
 }

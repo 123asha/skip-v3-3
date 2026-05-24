@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useMobile } from '../hooks/useMobile';
 import s from './CaseCard.module.css';
 
 /**
@@ -29,13 +30,27 @@ export default function CaseCard({
   ar, title, desc, image, onClick, linkLabel = 'Перейти',
 }: CaseCardProps) {
   const [hovered, setHovered] = useState(false);
+  const isMobile = useMobile();
 
+  // ── Mobile: image at its natural AR, title + desc always visible below ──
+  if (isMobile) {
+    return (
+      <div className={s.card} onClick={onClick}>
+        <div className={s.cardImage} style={{ aspectRatio: ar, width: '100%', flex: 'none' }}>
+          {image && <img src={image} alt={title} />}
+        </div>
+        <div style={{ paddingTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <p style={{ margin: 0, lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)', fontSize: 'var(--text-size)' }}>{title}</p>
+          <p style={{ margin: 0, lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)', fontSize: 'var(--text-size)', opacity: 0.5 }}>{desc}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Desktop: hover-driven reveal ────────────────────────────────────────
   const isHorizontal = ar === CASE_AR_H;
   // Horizontal cards: image initially is taller (4/3) and becomes CASE_AR_H on hover.
-  //                   The card outer has no fixed aspect-ratio — it grows to fit.
-  // Vertical cards (CASE_AR_V): unchanged — card outer is fixed to CASE_AR_V,
-  //                              image fills the space left after meta/bottom
-  //                              appear on hover.
+  // Vertical cards: card outer is fixed to CASE_AR_V, image fills remaining space.
   const imageStyle: React.CSSProperties = isHorizontal
     ? { aspectRatio: hovered ? CASE_AR_H : '4/3', transition: 'aspect-ratio 0.3s ease', width: '100%' }
     : { flex: 1 };

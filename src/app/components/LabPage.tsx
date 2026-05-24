@@ -1,21 +1,26 @@
 import { useEffect, useRef } from 'react';
+import { useMobile } from '../hooks/useMobile';
 import s from './CasesPage.module.css';
 import { MediaSection } from './MediaSection';
 import { ToolsSection } from './ToolsSection';
 import ContactForm from './ContactForm';
 import { TEXT_STYLE as ts } from '../utils/typography';
-import CaseCard, { CASE_AR_H as H, CASE_AR_V as V } from './CaseCard';
-import { asset } from '../utils/asset';
+import CaseCard, { CASE_AR_H as H, CASE_AR_V as V, type CaseCardAR as AR } from './CaseCard';
+import { asset, arSuffix } from '../utils/asset';
+
+function img(path: string): { image: string; ar: AR } {
+  return { image: asset(path), ar: arSuffix(path) === 'v' ? V : H };
+}
 import { useReveal } from '../hooks/useReveal';
 
 const LAB_CASES = [
-  { ar: H, title: 'Брендинг AliExpress',  desc: 'Исследования рынка, категории и целевой аудитории.',  image: asset('/case1.png'), col: '1 / 3', row: 1 },
-  { ar: V, title: 'Gate Legal',            desc: 'Платформа бренда и визуальная идентичность',           image: asset('/case2.png'), col: '4 / 6', row: 1 },
-  { ar: V, title: "Senior's Platform",     desc: 'Дизайн-система и интерфейсы',                         image: asset('/case3.png'), col: '2 / 4', row: 2 },
-  { ar: H, title: 'Юрий Мурадян',          desc: 'Персональный брендинг',                               image: asset('/case4.png'), col: '4 / 6', row: 2 },
-  { ar: H, title: 'Futura Digital',        desc: 'Нейминг и регистрация, платформа бренда',              image: asset('/case5.png'), col: '1 / 3', row: 3 },
-  { ar: V, title: 'Nova Brand',            desc: 'Визуальная идентичность и система',                   image: asset('/case6.png'), col: '4 / 6', row: 3 },
-] as const;
+  { ...img('/case1-h.webp'), title: 'AliExpress',         desc: 'AE Platform: дизайн B2B-платформы для партнёров AliExpress', col: '1 / 3', row: 1 },
+  { ...img('/case2-v.webp'), title: 'AE Platform',        desc: 'Редизайн браузерного расширения для AE Platform',            col: '4 / 6', row: 1 },
+  { ...img('/case3-h.webp'), title: "Senior's Platform",  desc: 'Дизайн-система и интерфейсы',                               col: '2 / 4', row: 2 },
+  { ...img('/case4-v.webp'), title: 'Futura Digital',     desc: 'Нейминг и регистрация, платформа бренда',                   col: '4 / 6', row: 2 },
+  { ...img('/case5-v.webp'), title: 'Юрий Мурадян',       desc: 'Персональный брендинг',                                    col: '1 / 3', row: 3 },
+  { ...img('/case6-h.webp'), title: 'Digital Experience', desc: 'Исследования и автоматизация процессов',                    col: '4 / 6', row: 3 },
+];
 
 export default function LabPage({
   onNavigatePolicy,
@@ -25,6 +30,7 @@ export default function LabPage({
   onGridMode?: (on: boolean) => void;
 }) {
   const pageRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMobile();
 
   useReveal(pageRef);
 
@@ -49,8 +55,8 @@ export default function LabPage({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 20,
+            gridTemplateColumns: 'var(--content-cols)',
+            gap: 'var(--content-gap)',
             marginBottom: 20,
             alignItems: 'start',
           }}
@@ -59,24 +65,21 @@ export default function LabPage({
             {
               ar: '16/9',
               title: 'Написали статью о том, как ИИ генерирует метафоры',
-              source: 'Workspace',
-              sourceHref: 'https://workspace.ru/blog/kak-ii-generiruet-metafory/',
-              linkLabel: 'май 2026',
+              meta: 'май 2026',
+              linkLabel: 'Workspace',
               href: 'https://workspace.ru/blog/kak-ii-generiruet-metafory/',
             },
             {
               ar: '5/6',
               title: 'Сделали конструктор миссии и выложили в открытом доступе',
-              source: 'Figma',
-              sourceHref: null,
+              meta: 'Figma',
               linkLabel: 'открыть',
               href: 'https://vc.ru/marketing/2205037-konstruktor-missii-dlya-brenda',
             },
             {
               ar: '16/9',
               title: 'Арт-директор Аша и стратег Ксения провели открытый вебинар.',
-              source: 'Телеграм-канал',
-              sourceHref: null,
+              meta: 'Телеграм-канал',
               linkLabel: 'смотреть',
               href: 'https://t.me/skpdsgn',
             },
@@ -91,10 +94,8 @@ export default function LabPage({
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20 }}>
                 <p style={{ ...ts, margin: 0 }}>{card.title}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, flexShrink: 0 }}>
-                  {card.source && (
-                    card.sourceHref
-                      ? <a href={card.sourceHref} target="_blank" rel="noopener noreferrer" style={{ ...ts, margin: 0, textAlign: 'right', color: 'var(--c-text-muted, rgba(35,31,32,0.4))', textDecoration: 'none' }}>{card.source}</a>
-                      : <p style={{ ...ts, margin: 0, textAlign: 'right' }}>{card.source}</p>
+                  {card.meta && (
+                    <p style={{ ...ts, margin: 0, textAlign: 'right', color: 'rgba(35,31,32,0.4)' }}>{card.meta}</p>
                   )}
                   {card.href && card.linkLabel && (
                     <a
@@ -116,14 +117,14 @@ export default function LabPage({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(5, 1fr)',
+            gridTemplateColumns: 'var(--people-cols)',
             gap: 'var(--gap)',
             marginBottom: 120,
             alignItems: 'start',
           }}
         >
           {/* Left portrait — col 1 */}
-          <div style={{ gridColumn: '1 / 2', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ gridColumn: isMobile ? 'auto' : '1 / 2', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ aspectRatio: '4/5', background: 'var(--c-surface)', width: '100%' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20 }}>
               <p style={{ ...ts, margin: 0 }}>Елена Новикова</p>
@@ -136,8 +137,8 @@ export default function LabPage({
           {/* Centred paragraph + telegram link — col 3 */}
           <div
             style={{
-              gridColumn: '3 / 4',
-              display: 'flex',
+              gridColumn: isMobile ? 'auto' : '3 / 4',
+              display: isMobile ? 'none' : 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
@@ -167,7 +168,7 @@ export default function LabPage({
           </div>
 
           {/* Right card — horizontal 16/9, col 5 */}
-          <div style={{ gridColumn: '5 / 6', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ gridColumn: isMobile ? 'auto' : '5 / 6', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ aspectRatio: '16/9', background: 'var(--c-surface)', width: '100%' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20 }}>
               <p style={{ ...ts, margin: 0 }}>Максим Кузнецов</p>
@@ -182,8 +183,8 @@ export default function LabPage({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 20,
+            gridTemplateColumns: 'var(--content-cols)',
+            gap: 'var(--content-gap)',
             marginBottom: 120,
             alignItems: 'start',
           }}
@@ -192,18 +193,18 @@ export default function LabPage({
             {
               ar: '5/6',
               title: 'Рабочий стол арт-директора',
-              source: null,
-              linkLabel: null,
-              href: null,
+              meta: null as string | null,
+              linkLabel: null as string | null,
+              href: null as string | null,
             },
             {
               ar: '16/9',
               title: "Сделали спецпроект Kon' Ogon'",
-              source: null,
+              meta: null as string | null,
               linkLabel: 'перейти',
               href: 'https://workspace.ru/blog/kak-ii-generiruet-metafory/',
             },
-          ] as const).map((card, i) => (
+          ]).map((card, i) => (
             <div
               key={i}
               data-reveal=""
@@ -214,7 +215,9 @@ export default function LabPage({
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20 }}>
                 <p style={{ ...ts, margin: 0 }}>{card.title}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, flexShrink: 0 }}>
-                  {card.source && <p style={{ ...ts, margin: 0, textAlign: 'right' }}>{card.source}</p>}
+                  {card.meta && (
+                    <p style={{ ...ts, margin: 0, textAlign: 'right', color: 'rgba(35,31,32,0.4)' }}>{card.meta}</p>
+                  )}
                   {card.href && card.linkLabel && (
                     <a
                       href={card.href}
@@ -233,14 +236,14 @@ export default function LabPage({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(5, 1fr)',
+            gridTemplateColumns: 'var(--lab-cases-cols)',
             gap: 'var(--gap)',
-            rowGap: 80,
+            rowGap: 'var(--lab-row-gap)',
             marginBottom: 120,
           }}
         >
           {LAB_CASES.map((c, i) => (
-            <div key={i} data-reveal="" data-reveal-delay={String(i * 0.07)} style={{ gridColumn: c.col, gridRow: c.row }}>
+            <div key={i} data-reveal="" data-reveal-delay={String(i * 0.07)} style={{ gridColumn: isMobile ? 'auto' : c.col, gridRow: isMobile ? 'auto' : c.row, minWidth: 0 }}>
               <CaseCard ar={c.ar} title={c.title} desc={c.desc} image={c.image} />
             </div>
           ))}

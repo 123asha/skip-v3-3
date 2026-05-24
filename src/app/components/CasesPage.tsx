@@ -1,9 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useMobile } from '../hooks/useMobile';
 import { gsap } from 'gsap';
 import s from './CasesPage.module.css';
 import CaseCard, { CASE_AR_H as H, CASE_AR_V as V, type CaseCardAR as AR } from './CaseCard';
 import ContactForm from './ContactForm';
-import { asset } from '../utils/asset';
+import { asset, arSuffix } from '../utils/asset';
+
+function img(path: string): { image: string; ar: AR } {
+  return { image: asset(path), ar: arSuffix(path) === 'v' ? V : H };
+}
 import { useReveal } from '../hooks/useReveal';
 
 interface Props {
@@ -23,16 +28,16 @@ interface Project {
 }
 
 const PROJECTS: Project[] = [
-  { id: 1,  cats: ['branding', 'sites', 'interfaces'],       ar: H, image: asset('/case1.png'), title: 'Брендинг AliExpress',  desc: 'Исследования рынка, категории и целевой аудитории.' },
-  { id: 2,  cats: ['branding', 'sites', 'instruments'],      ar: H, image: asset('/case2.png'), title: 'Gate Legal',           desc: 'Платформа бренда и визуальная идентичность' },
-  { id: 3,  cats: ['branding', 'interfaces', 'instruments'], ar: V, image: asset('/case3.png'), title: "Senior's Platform",    desc: 'Дизайн-система и интерфейсы' },
-  { id: 4,  cats: ['branding', 'sites'],                     ar: V, image: asset('/case4.png'), title: 'Юрий Мурадян',         desc: 'Персональный брендинг' },
-  { id: 5,  cats: ['branding', 'sites', 'interfaces'],       ar: H, image: asset('/case5.png'), title: 'Futura Digital',       desc: 'Нейминг и регистрация, платформа бренда' },
-  { id: 6,  cats: ['sites', 'interfaces', 'instruments'],    ar: H, image: asset('/case6.png'), title: 'Digital Experience',   desc: 'Исследования и автоматизация процессов' },
-  { id: 7,  cats: ['branding', 'sites', 'instruments'],      ar: V, image: asset('/case1.png'), title: 'Nova Brand',           desc: 'Визуальная идентичность и система' },
-  { id: 8,  cats: ['sites', 'interfaces'],                   ar: V, image: asset('/case2.png'), title: 'Orbit Studio',         desc: 'Концепция сайта и дизайн-библиотека' },
-  { id: 9,  cats: ['interfaces', 'instruments'],             ar: V, image: asset('/case3.png'), title: 'Interface Pro',        desc: 'Дизайн-система для мобильных приложений' },
-  { id: 10, cats: ['sites', 'interfaces', 'instruments'],    ar: H, image: asset('/case4.png'), title: 'Digital Platform',     desc: 'Веб-платформа и пользовательский опыт' },
+  { id: 1,  cats: ['branding', 'sites', 'interfaces'],       ...img('/case1-h.webp'), title: 'Брендинг AliExpress',  desc: 'Исследования рынка, категории и целевой аудитории.' },
+  { id: 2,  cats: ['branding', 'sites', 'instruments'],      ...img('/case2-v.webp'), title: 'Gate Legal',           desc: 'Платформа бренда и визуальная идентичность' },
+  { id: 3,  cats: ['branding', 'interfaces', 'instruments'], ...img('/case3-h.webp'), title: "Senior's Platform",    desc: 'Дизайн-система и интерфейсы' },
+  { id: 4,  cats: ['branding', 'sites'],                     ...img('/case4-v.webp'), title: 'Юрий Мурадян',         desc: 'Персональный брендинг' },
+  { id: 5,  cats: ['branding', 'sites', 'interfaces'],       ...img('/case5-v.webp'), title: 'Futura Digital',       desc: 'Нейминг и регистрация, платформа бренда' },
+  { id: 6,  cats: ['sites', 'interfaces', 'instruments'],    ...img('/case6-h.webp'), title: 'Digital Experience',   desc: 'Исследования и автоматизация процессов' },
+  { id: 7,  cats: ['branding', 'sites', 'instruments'],      ...img('/case1-h.webp'), title: 'Nova Brand',           desc: 'Визуальная идентичность и система' },
+  { id: 8,  cats: ['sites', 'interfaces'],                   ...img('/case2-v.webp'), title: 'Orbit Studio',         desc: 'Концепция сайта и дизайн-библиотека' },
+  { id: 9,  cats: ['interfaces', 'instruments'],             ...img('/case3-h.webp'), title: 'Interface Pro',        desc: 'Дизайн-система для мобильных приложений' },
+  { id: 10, cats: ['sites', 'interfaces', 'instruments'],    ...img('/case4-v.webp'), title: 'Digital Platform',     desc: 'Веб-платформа и пользовательский опыт' },
 ];
 
 const TABS = [
@@ -110,10 +115,9 @@ function buildRows(projects: Project[]): Row[] {
 }
 
 // ── ProjectCard ───────────────────────────────────────────────────────────────
-function ProjectCard({ ar, title, desc, onClick }: Project & { onClick?: () => void }) {
-  // image temporarily omitted — gray placeholders
+function ProjectCard({ ar, title, desc, image, onClick }: Project & { onClick?: () => void }) {
   return (
-    <CaseCard ar={ar} title={title} desc={desc} onClick={onClick} />
+    <CaseCard ar={ar} title={title} desc={desc} image={image} onClick={onClick} />
   );
 }
 
@@ -121,6 +125,7 @@ function ProjectCard({ ar, title, desc, onClick }: Project & { onClick?: () => v
 export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGridMode }: Props) {
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [rows, setRows] = useState<Row[]>(() => buildRows(PROJECTS));
+  const isMobile = useMobile();
 
   const gridRef    = useRef<HTMLDivElement>(null);
   const pageRef    = useRef<HTMLDivElement>(null);
@@ -220,9 +225,9 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
           ref={gridRef}
           className={s.grid}
           style={
-            zoom === 1 ? { gridTemplateColumns: 'repeat(3, 1fr)', rowGap: 80 } :
+            zoom === 1 ? { gridTemplateColumns: 'var(--content-cols, repeat(3, 1fr))', rowGap: 'var(--lab-row-gap, 80px)' } :
             zoom === 0 ? { gridTemplateColumns: 'repeat(4, 1fr)', rowGap: 60 } :
-            undefined
+            { gridTemplateColumns: 'var(--cases-cols)', rowGap: 'var(--cases-row-gap)' }
           }
         >
           {zoom === 2 ? (
@@ -231,7 +236,11 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
                 <div
                   key={item.project.id}
                   data-case-card=""
-                  style={{ gridColumn: item.col, gridRow: rowIdx + 1 }}
+                  style={{
+                    gridColumn: isMobile ? 'auto' : item.col,
+                    gridRow: isMobile ? 'auto' : rowIdx + 1,
+                    minWidth: 0,
+                  }}
                 >
                   <ProjectCard {...item.project} onClick={onCaseClick} />
                 </div>

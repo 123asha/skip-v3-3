@@ -67,6 +67,20 @@
   display: block;
 }
 
+@media (max-width: 768px) {
+  .fullVideo {
+    aspect-ratio: unset;
+    flex-direction: column;
+    margin: 60px auto;
+  }
+  .fullVideo video {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    flex: none;
+  }
+}
+
 /* ── Temporary grid overlay ── */
 .gridOverlay {
   position: fixed;
@@ -147,6 +161,16 @@
   text-decoration: underline;
   text-decoration-style: dotted;
   text-underline-offset: 3px;
+}
+
+/* ── Mobile nav: vertical stack, no separators ── */
+@media (max-width: 768px) {
+  .nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .navSep { display: none; }
 }
 
 /* ── Logo ── */

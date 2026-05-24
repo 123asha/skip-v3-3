@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useCallback, Fragment } from 'react';
+import { useMobile } from './hooks/useMobile';
 import { gsap } from 'gsap';
 import Lenis from 'lenis';
 import svgPaths from '../imports/Index/svg-3bjnx36a2y';
@@ -388,6 +389,7 @@ function AppInner() {
 
   /* People-block: hover on a client name swaps the left/right videos with
      a slide-up transition (PeopleVideoSlot handles the animation). */
+  const isMobile = useMobile();
   const [hoveredClient, setHoveredClient] = useState<string | null>(null);
   const peopleVideos = hoveredClient && (hoveredClient in CLIENT_VIDEOS)
     ? CLIENT_VIDEOS[hoveredClient as PeopleClient]
@@ -994,25 +996,27 @@ function AppInner() {
         </div>
         )}
 
-        {/* People block — vertical card (col 1) + centred text (col 3) + horizontal card (col 5) */}
+        {/* People block — on desktop: 5-col (video · · text · · video)
+            on mobile: 2-col (video · video) + text below */}
         <div
           className={s.section}
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(5, 1fr)',
+            gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)',
             gap: 'var(--gap)',
-            marginTop: 200,
+            marginTop: isMobile ? 80 : 200,
             alignItems: 'center',
           }}
         >
-          <div style={{ gridColumn: '1 / 2' }}>
+          <div style={{ gridColumn: isMobile ? 'auto' : '1 / 2' }}>
             <PeopleVideoSlot config={peopleVideos.left} aspectRatio="5/6" />
           </div>
 
+          {/* Centre text — hidden on mobile (shown below instead) */}
           <div
             style={{
-              gridColumn: '3 / 4',
-              display: 'flex',
+              gridColumn: isMobile ? 'auto' : '3 / 4',
+              display: isMobile ? 'none' : 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
@@ -1025,7 +1029,7 @@ function AppInner() {
             <p style={{ ...ts, margin: 0 }}>
               Skip&nbsp;Design&nbsp;— команда дизайнеров и стратегов. Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться суть.
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 40, alignItems: 'center' }}>
               <p ref={heroClientLabelRef} style={{ ...ts, margin: 0 }}>Нам доверяют проекты:</p>
               <div ref={heroClientNamesRef} style={{
                 display: 'flex',
@@ -1053,9 +1057,30 @@ function AppInner() {
             </div>
           </div>
 
-          <div style={{ gridColumn: '5 / 6' }}>
+          <div style={{ gridColumn: isMobile ? 'auto' : '5 / 6' }}>
             <PeopleVideoSlot config={peopleVideos.right} aspectRatio="16/9" />
           </div>
+
+          {/* Mobile-only: studio description + clients below videos */}
+          {isMobile && (
+            <div style={{ gridColumn: '1 / -1', marginTop: 20, display: 'flex', flexDirection: 'column', gap: 20, textAlign: 'center', alignItems: 'center' }}>
+              <p style={{ ...ts, margin: 0 }}>
+                Skip&nbsp;Design&nbsp;— команда дизайнеров и стратегов. Верим, что простота — не про упрощение, а смелость скипнуть лишнее.
+              </p>
+              <p ref={heroClientLabelRef} style={{ ...ts, margin: 0 }}>Нам доверяют проекты:</p>
+              <div ref={heroClientNamesRef} style={{
+                display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center',
+                fontFamily: 'var(--font-display)',
+                fontSize: 'var(--heading-size)',
+                fontWeight: 'var(--heading-weight)' as React.CSSProperties['fontWeight'],
+                lineHeight: 'var(--heading-lh)', letterSpacing: 'var(--heading-ls)',
+              }}>
+                {PEOPLE_CLIENTS.map(name => (
+                  <p key={name} style={{ margin: 0 }}>{name}</p>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div id="cases" style={{ marginTop: 200 }}>

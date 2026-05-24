@@ -1,8 +1,14 @@
 import { useState, useRef, useCallback } from 'react';
+import { useMobile } from '../hooks/useMobile';
 import s from './ProjectGallery.module.css';
 import CaseCard, { CASE_AR_H as H, CASE_AR_V as V, type CaseCardAR as AR } from './CaseCard';
 import { MagneticDivider } from './MagneticDivider';
-import { asset } from '../utils/asset';
+import { asset, arSuffix } from '../utils/asset';
+
+/** Returns { image, ar } — aspect ratio is inferred from the -h / -v filename suffix. */
+function img(path: string): { image: string; ar: AR } {
+  return { image: asset(path), ar: arSuffix(path) === 'v' ? V : H };
+}
 
 interface Project {
   id: number;
@@ -14,12 +20,12 @@ interface Project {
 }
 
 export const PROJECTS: Project[] = [
-  { id: 1, cats: ['branding', 'sites', 'interfaces'],            ar: H, image: asset('/case1.png'), title: 'AliExpress',         desc: 'AE Platform: дизайн B2B-платформы для партнёров AliExpress' },
-  { id: 2, cats: ['sites', 'interfaces', 'instruments'],         ar: V, image: asset('/case2.png'), title: 'AE Platform',        desc: 'Редизайн браузерного расширения для AE Platform' },
-  { id: 3, cats: ['branding', 'interfaces', 'instruments'],      ar: V, image: asset('/case3.png'), title: "Senior's Platform",  desc: 'Дизайн-система и интерфейсы' },
-  { id: 4, cats: ['branding', 'sites', 'interfaces'],            ar: H, image: asset('/case4.png'), title: 'Futura Digital',     desc: 'Нейминг и регистрация, платформа бренда' },
-  { id: 5, cats: ['branding', 'sites', 'instruments'],           ar: V, image: asset('/case5.png'), title: 'Юрий Мурадян',       desc: 'Персональный брендинг' },
-  { id: 6, cats: ['sites', 'interfaces', 'instruments'],         ar: H, image: asset('/case6.png'), title: 'Digital Experience', desc: 'Исследования и автоматизация процессов' },
+  { id: 1, cats: ['branding', 'sites', 'interfaces'],       ...img('/case1-h.webp'), title: 'AliExpress',         desc: 'AE Platform: дизайн B2B-платформы для партнёров AliExpress' },
+  { id: 2, cats: ['sites', 'interfaces', 'instruments'],    ...img('/case2-v.webp'), title: 'AE Platform',        desc: 'Редизайн браузерного расширения для AE Platform' },
+  { id: 3, cats: ['branding', 'interfaces', 'instruments'], ...img('/case3-h.webp'), title: "Senior's Platform",  desc: 'Дизайн-система и интерфейсы' },
+  { id: 4, cats: ['branding', 'sites', 'interfaces'],       ...img('/case4-v.webp'), title: 'Futura Digital',     desc: 'Нейминг и регистрация, платформа бренда' },
+  { id: 5, cats: ['branding', 'sites', 'instruments'],      ...img('/case5-v.webp'), title: 'Юрий Мурадян',       desc: 'Персональный брендинг' },
+  { id: 6, cats: ['sites', 'interfaces', 'instruments'],    ...img('/case6-h.webp'), title: 'Digital Experience', desc: 'Исследования и автоматизация процессов' },
 ];
 
 const TABS = [
@@ -96,7 +102,7 @@ function ProjectCard({ project, onClick }: { project: Project; onClick?: () => v
       ar={project.ar}
       title={project.title}
       desc={project.desc}
-      // image temporarily omitted — gray placeholders
+      image={project.image}
       onClick={onClick}
     />
   );
@@ -106,6 +112,7 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: () => vo
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [rows, setRows] = useState<Row[]>(() => buildRows(PROJECTS));
+  const isMobile = useMobile();
 
   const handleTab = useCallback((key: string) => {
     const next = key === activeTab ? null : key;
@@ -149,18 +156,22 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: () => vo
         className={s.grid}
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
+          gridTemplateColumns: 'var(--cases-cols)',
           columnGap: 'var(--gap)',
-          rowGap: 120,
+          rowGap: 'var(--cases-row-gap)',
           padding: '0 var(--pad)',
-          alignItems: 'center',
+          alignItems: 'start',
         }}
       >
         {rows.map((row, rowIdx) =>
           row.items.map(item => (
             <div
               key={item.project.id}
-              style={{ gridColumn: item.col, gridRow: rowIdx + 1 }}
+              style={{
+                gridColumn: isMobile ? 'auto' : item.col,
+                gridRow: isMobile ? 'auto' : rowIdx + 1,
+                minWidth: 0,
+              }}
             >
               <ProjectCard project={item.project} onClick={onCaseClick} />
             </div>

@@ -23,9 +23,9 @@ type Branch = {
 };
 
 const BRANCHES: Branch[] = [
-  { name: 'Стратегия', href: '#', image: asset('/2bg.png') },
+  { name: 'Стратегия', href: '#', image: asset('/2bg.webp') },
   { name: 'Брендинг',  href: '#', image: asset('/1.png')  },
-  { name: 'Диджитал',  href: '#', image: asset('/3bg.png') },
+  { name: 'Диджитал',  href: '#', image: asset('/3bg.webp') },
 ];
 
 export default function HeroBranches() {

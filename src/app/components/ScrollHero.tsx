@@ -495,7 +495,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
           panelRef.current.style.height        = Math.round(panelH) + 'px';
           // Only make the panel clickable when it has fully shrunk into the small card
           panelRef.current.style.pointerEvents = gp >= 1.0 ? 'auto' : 'none';
-          panelRef.current.style.cursor        = gp >= 1.0 ? 'pointer' : 'default';
+          panelRef.current.style.cursor        = 'default';
         }
 
         // Text overlay appears only AFTER the video has faded out
@@ -788,11 +788,8 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
           ))}
         </div>
 
-        {/* Panel: video / game — horizontally centered, clickable to navigate to service */}
+        {/* Panel: video / game — horizontally centered */}
         <div ref={panelRef} className={s.panel}
-          onClick={() => {
-            onNavigateExpertiza?.(VS_CASES[activeBgIdx]?.anchor ?? SERVICE_ANCHORS[0]);
-          }}
           style={{
             position: 'absolute',
             left: '50%',

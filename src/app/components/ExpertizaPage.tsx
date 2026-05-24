@@ -5,6 +5,7 @@ import { TEXT_STYLE as ts, H2_STYLE } from '../utils/typography';
 import ContactForm from './ContactForm';
 import { MagneticDivider } from './MagneticDivider';
 import { useReveal } from '../hooks/useReveal';
+import { useMobile } from '../hooks/useMobile';
 
 // ── Service data ──────────────────────────────────────────────────────────────
 
@@ -184,6 +185,7 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
   const prevIdRef  = useRef<string | null>(null);
   // Keep last non-null item so the content stays in DOM during the close animation
   const lastItemRef = useRef<ServiceItem | null>(null);
+  const isMobile   = useMobile();
 
   useReveal(pageRef);
 
@@ -332,6 +334,29 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                 );
               });
 
+              // Mobile: simple flex column — number, title, items stacked
+              if (isMobile) {
+                return (
+                  <div
+                    key={svc.number}
+                    id={SERVICE_IDS[svcIdx]}
+                    ref={el => { rowRefs.current[svcIdx] = el; }}
+                    style={{ position: 'relative', paddingTop: 16, paddingBottom: 24, opacity: 1, transform: 'none' }}
+                  >
+                    <MagneticDivider active={false} />
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                      <p style={{ ...ts, flexShrink: 0, width: 20 }}>{svc.number}</p>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ ...h2Style, marginBottom: 10 }}>{svc.title}</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {itemButtons}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div
                   key={svc.number}
@@ -343,11 +368,6 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                   onMouseLeave={() => setHoveredSvcIdx(null)}
                   style={{
                     display: 'grid',
-                    /* In the expanded state the services container is only 3
-                       outer cols wide — use a 3-col inner grid so the inner
-                       columns line up perfectly with the page's outer 5-col
-                       grid (cols 1,2,3). Collapsed state keeps the full 5-col
-                       layout. */
                     gridTemplateColumns: anySelected ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)',
                     gap: 'var(--gap)',
                     position: 'relative',
@@ -358,9 +378,6 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                 >
                   <MagneticDivider active={hoveredSvcIdx === svcIdx} />
                   <p style={{ ...ts, gridColumn: '1' }}>{svc.number}</p>
-                  {/* Number col 1 (always);
-                      collapsed → heading col 3 / items col 4
-                      expanded  → heading col 2 / items col 3 */}
                   <p style={{ ...h2Style, gridColumn: anySelected ? '2' : '3' }}>{svc.title}</p>
                   <div style={{ gridColumn: anySelected ? '3' : '4', display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {itemButtons}

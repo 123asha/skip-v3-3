@@ -846,7 +846,7 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
                         key={i}
                         style={{
                           position: 'absolute', inset: 0,
-                          background: '#e8e8e8',
+                          background: '#f6f6f6',
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'space-between',

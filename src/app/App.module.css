@@ -1,9 +1,7 @@
-/* "+ новый проект" sticky button — whole pill (background + text) rotates
-   on hover. Same cube mechanic as the hero rectangle and nav LinkFlip:
-   front face lives at translateZ(+h/2), bottom face at rotateX(-90°) translateZ(+h/2).
-   On hover the inner spins rotateX(90°) — front disappears upward, bottom
-   comes up to face the viewer. No background on the wrapper, so no white
-   side-walls are ever visible during the rotation. */
+/* "+ новый проект" sticky button — cube flip on hover (same LinkFlip
+   mechanic) AND the wrapper width grows because the front face contains
+   a width:0 "+" placeholder that animates to 0.7em + 6 px on hover.
+   Both faces stay the same width as each other throughout the flip. */
 .newProjectFlipInner {
   display: inline-block;
   position: relative;
@@ -19,9 +17,6 @@
   display: inline-block;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  /* Push the front face forward by half the button's real height.
-     Button height = paddingTop(9) + lineHeight(12) + paddingBottom(11) = 32px → half = 16px.
-     This makes the cube radius match the element so faces don't overlap during rotation. */
   transform: translateZ(16px);
 }
 .newProjectFaceBottom {
@@ -31,9 +26,15 @@
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  /* Bottom face — rotated 90° down, same radius (16px).
-     On hover (inner rotateX 90°) the rotations cancel → face comes to the front. */
   transform: rotateX(-90deg) translateZ(16px);
+}
+
+/* Permanent "+" in front face — keeps the wrapper at a constant
+   width on both faces so the cube rotation doesn't trigger any width
+   reflow. */
+.newProjectPlusGhost {
+  display: inline-block;
+  margin-right: 6px;
 }
 
 .fullVideo {
@@ -163,14 +164,16 @@
   text-underline-offset: 3px;
 }
 
-/* ── Mobile nav: vertical stack, no separators ── */
+/* ── Mobile nav: left-aligned, vertically centred with the logo ── */
 @media (max-width: 768px) {
   .nav {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+    top: 6px;
+    height: 52px;
+    font-size: 14px;
   }
-  .navSep { display: none; }
+  .navLink, .navSep {
+    font-size: 14px;
+  }
 }
 
 /* ── Logo ── */
@@ -204,10 +207,22 @@
   background: var(--c-bg);
 }
 
+/* "+ новый проект" sticky wrap — spans from the top of the home page to
+   just above the contact form. The button (sticky child) glues to the
+   viewport bottom inside this range, so it's visible while the user
+   scrolls through every section above the form. Once the wrap ends
+   (form starts), the button scrolls away naturally. */
+.newProjectStickyWrap {
+  /* No positioning — let sticky operate against the document scroll. */
+  pointer-events: none;
+  /* Wrap children: button is sticky, contained by this wrap. */
+}
+.newProjectStickyWrap > * { pointer-events: auto; }
+
 /* ── Section wrapper ── */
 .section {
   padding: 0 var(--pad);
-  margin-top: 200px;
+  margin-top: var(--space-xl);
 }
 
 /* ── 5-col grid ── */
@@ -218,7 +233,7 @@
 }
 
 /* ── Studio ── */
-.studio { display: flex; flex-direction: column; gap: 80px; }
+.studio { display: flex; flex-direction: column; gap: var(--space-md); }
 
 .studioLabel {
   font-family: var(--font-display);
@@ -238,11 +253,11 @@
 .studioPhilosophy {
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: var(--space-sm);
   align-items: end;
 }
 
-.studioClients { display: flex; flex-direction: column; gap: 20px; width: 100%; }
+.studioClients { display: flex; flex-direction: column; gap: var(--space-xs); width: 100%; }
 
 .studioClientsLabel {
   line-height: var(--text-lh);
@@ -252,7 +267,7 @@
 .studioClientNames {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-xs);
   font-family: var(--font-display);
   font-size: var(--heading-size);
   font-weight: var(--heading-weight);
@@ -261,14 +276,14 @@
 }
 
 /* ── Tools ── */
-.tools { display: flex; flex-direction: column; gap: 80px; }
+.tools { display: flex; flex-direction: column; gap: var(--space-md); }
 
 .toolsLabel {
   line-height: var(--text-lh);
   letter-spacing: var(--text-ls);
 }
 
-.toolsList { display: flex; flex-direction: column; gap: 40px; }
+.toolsList { display: flex; flex-direction: column; gap: var(--space-sm); }
 
 .toolRow {
   display: grid;
@@ -290,9 +305,26 @@
 .toolRow:hover .toolRowLink,
 .toolRowLink:hover { opacity: 1; }
 
+/* ── Mobile: stack rows, year floats right above the title ── */
+@media (max-width: 768px) {
+  .toolRow {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  /* Hide the two empty spacer divs */
+  .toolRow > div:not([class]) { display: none; }
+  /* Year moves to the top, right-aligned */
+  .toolRowTextRight {
+    order: -1;
+    align-self: flex-end;
+    text-align: right;
+  }
+}
+
 /* ── Contact form ── */
 .contactWrap {
-  margin-top: 200px;
+  margin-top: var(--space-xl);
   margin-bottom: 0;
   padding: 0 var(--pad);
   position: relative;

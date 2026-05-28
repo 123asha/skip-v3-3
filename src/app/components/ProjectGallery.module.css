@@ -12,9 +12,16 @@
   justify-content: center;
   align-items: center;
   padding: var(--pad) var(--pad);
-  margin-bottom: 120px;
+  margin-bottom: 80px;
   line-height: var(--text-lh);
   letter-spacing: var(--text-ls);
+}
+
+/* Mobile: don't pin the tabs row — it shouldn't follow the page scroll. */
+@media (max-width: 768px) {
+  .tabsBar {
+    position: static;
+  }
 }
 
 .tabsDivider {
@@ -47,7 +54,8 @@
 }
 
 .tabsLabel {
-  margin-right: 10px;
+  /* Spacing to the first tab is provided by .tabsGroup gap (10px) — no
+     extra margin so the gap doesn't double up. */
   line-height: var(--text-lh);
   letter-spacing: var(--text-ls);
 }
@@ -81,7 +89,7 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: var(--gap);
-  align-items: start;
+  align-items: center;
 }
 
 /* 120px between normal rows */

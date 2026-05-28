@@ -35,8 +35,8 @@ export const SERVICES: Service[] = [
         label: 'платформа бренда',
         heading: 'Платформа бренда',
         paragraphs: [
-          'Разрабатываем ядро бренда: убираем лишнее, чтобы увидеть суть. Результат — документ, который объясняет команде и ИИ, почему вы, для кого и чем отличаетесь.',
-          'Используем собственную методологию — конструктор миссии, проверенный на 20+ проектах.',
+          'Бренд без платформы — набор случайных решений: продажи говорят одно, маркетинг делает другое, в продукте — третье. В итоге бренд выглядит и звучит как пять разных человек вместо одного.',
+          'Мы собираем воедино все смыслы и формулируем суть: кто вы, почему это важно и чем отличаетесь от других. Платформа бренда помогает последовательно и здраво принимать решения: от нейминга до изменений в продукте.',
         ],
         examples: [
           { label: 'конструктор миссии', href: 'https://vc.ru/marketing/2205037-konstruktor-missii-dlya-brenda' },
@@ -45,11 +45,11 @@ export const SERVICES: Service[] = [
       },
       {
         id: 'research',
-        label: 'исследование категории',
-        heading: 'Исследование категории',
+        label: 'исследование',
+        heading: 'Исследование',
         paragraphs: [
-          'Анализируем конкурентов, категорию, целевую аудиторию. Выявляем белые пятна и незанятые позиции.',
-          'На основе исследования формируем дифференциаторы и точки роста для бренда.',
+          'Бренд не сферический конь в вакууме: вокруг всегда есть контекст, в котором компания находится и развивается. Люди, рынок, тренды в индустрии — всё это влияет на восприятие.',
+          'Мы проводим исследование рынка, конкурентов и аудитории. Это помогает бренду определить точки дифференциации, занять сильную позицию и быть понятным людям.',
         ],
         examples: [
           { label: 'карта категории', href: '#' },
@@ -61,8 +61,8 @@ export const SERVICES: Service[] = [
         label: 'нейминг и регистрация',
         heading: 'Нейминг и регистрация',
         paragraphs: [
-          'Создаём имя бренда, которое работает на позиционирование и выдерживает юридическую проверку.',
-          'Проверяем по базам Роспатента и помогаем с регистрацией товарного знака.',
+          'В название можно влюбиться на брейншторме, а после — выяснить, что оно конфликтует со стратегией или его невозможно зарегистрировать.',
+          'Мы генерируем варианты, отсеиваем лонги до шорт-листов, проверяем лингвистику и восприятие. Дальше юрист проверяет по базам и ведёт регистрацию товарного знака до свидетельства.',
         ],
         examples: [
           { label: 'словарь смыслов', href: '#' },
@@ -285,27 +285,29 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
   return (
     <div className={s.page} ref={pageRef}>
       <h1 className={s.title} data-reveal="">Услуги</h1>
-      <div className={s.body} style={{ paddingLeft: 20, paddingRight: 20, paddingBottom: 0 }}>
+      <div className={s.body} style={{ paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
 
-        {/* ── Service rows (left) + sticky outer panel (right) ──
-            Gap is applied only when the panel is open. Without this, the
-            empty 0-width panel still consumed the 20px gap and pushed the
-            services container 20px narrower than the body — so the inner
-            5-col grid stopped matching the page's outer 5-col grid. */}
-        <div style={{ display: 'flex', gap: anySelected ? 20 : 0, alignItems: 'stretch' }}>
+        {/* ── Service rows (left) + outer panel (right on desktop / below on mobile) ──
+            Desktop: side-by-side flex; details panel sticks to the viewport.
+            Mobile: column stack; the panel slides in below the services list. */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: anySelected ? (isMobile ? 16 : 20) : 0,
+          alignItems: isMobile ? 'stretch' : 'stretch',
+        }}>
 
-          {/* Left: services list — shrinks to ~60% width when a service is open and becomes
-              sticky so all 3 services stay in view without scrolling.
-              Dividers (border-top per row) live inside this column so they shrink with it. */}
+          {/* Services list */}
           <div style={{
-            flex: anySelected ? '0 1 calc(60% - 8px)' : '1 1 100%',
+            flex: !isMobile && anySelected ? '0 1 calc(60% - 8px)' : '1 1 100%',
             minWidth: 0,
             transition: 'flex-basis 0.45s cubic-bezier(0.4, 0, 0.2, 1), flex-grow 0.45s cubic-bezier(0.4, 0, 0.2, 1)',
-            position: anySelected ? 'sticky' : 'static',
-            top: anySelected ? 0 : 'auto',
+            position: !isMobile && anySelected ? 'sticky' : 'static',
+            top: !isMobile && anySelected ? 0 : 'auto',
             alignSelf: 'flex-start',
-            maxHeight: anySelected ? '100vh' : 'none',
-            overflow: anySelected ? 'hidden' : 'visible',
+            maxHeight: !isMobile && anySelected ? '100vh' : 'none',
+            overflow: !isMobile && anySelected ? 'hidden' : 'visible',
+            width: isMobile ? '100%' : 'auto',
           }}>
             {SERVICES.map((svc, svcIdx) => {
               const itemButtons = svc.items.map(item => {
@@ -334,7 +336,9 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                 );
               });
 
-              // Mobile: simple flex column — number, title, items stacked
+              // Mobile: 2-col layout — number + title in col 1, items list in col 2.
+              // Flat divider line (no magnetic effect on touch — and identical
+              // to the "Как работаем" divider so all on-page rules look the same).
               if (isMobile) {
                 return (
                   <div
@@ -343,14 +347,14 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                     ref={el => { rowRefs.current[svcIdx] = el; }}
                     style={{ position: 'relative', paddingTop: 16, paddingBottom: 24, opacity: 1, transform: 'none' }}
                   >
-                    <MagneticDivider active={false} />
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                      <p style={{ ...ts, flexShrink: 0, width: 20 }}>{svc.number}</p>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ ...h2Style, marginBottom: 10 }}>{svc.title}</p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          {itemButtons}
-                        </div>
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'var(--c-text)', opacity: 0.12 }} />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'flex-start' }}>
+                      <div>
+                        <p style={{ ...ts, margin: 0, marginBottom: 8, opacity: 0.4 }}>{svc.number}</p>
+                        <p style={{ ...h2Style, margin: 0 }}>{svc.title}</p>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {itemButtons}
                       </div>
                     </div>
                   </div>
@@ -387,10 +391,17 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
             })}
           </div>
 
-          {/* Right: outer sticky panel — stretches to match the list height (align-items: stretch on parent) */}
+          {/* Detail panel — desktop: 40 % wide sticky on the right;
+              mobile: full-width inline, slides in below the services list. */}
           <div
             ref={panelRef}
-            style={{
+            style={isMobile ? {
+              width: '100%',
+              maxHeight: anySelected ? 2000 : 0,
+              overflow: 'hidden',
+              background: 'var(--c-surface)',
+              transition: 'max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+            } : {
               flex: anySelected ? '0 0 calc(40% - 12px)' : '0 0 0px',
               position: 'sticky',
               top: 0,
@@ -402,7 +413,11 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
           >
             <div
               ref={contentRef}
-              style={{
+              style={isMobile ? {
+                padding: '20px',
+                width: '100%',
+                boxSizing: 'border-box',
+              } : {
                 padding: '20px 20px 40px 20px',
                 width: 'calc((100vw - 40px) * 0.4 - 10px)',
                 maxWidth: 'calc((100vw - 40px) * 0.4 - 10px)',
@@ -415,7 +430,7 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                 <>
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
+                    gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
                     gap: 20,
                     alignItems: 'start',
                   }}>
@@ -475,9 +490,9 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
         </div>
 
         {/* ── Как работаем ─────────────────────────────────────────────────── */}
-        <div style={{ marginTop: 200 }}>
-          <h2 style={{ ...H2_STYLE, marginBottom: 40 }} data-reveal="">Как работаем</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--gap)' }} data-reveal-stagger="">
+        <div style={{ marginTop: isMobile ? 80 : 200 }}>
+          <h2 style={{ ...H2_STYLE, marginBottom: isMobile ? 24 : 40 }} data-reveal="">Как работаем</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 'var(--gap)' }} data-reveal-stagger="">
             {([
               {
                 num: '①',

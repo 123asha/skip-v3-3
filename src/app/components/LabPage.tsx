@@ -5,22 +5,7 @@ import { MediaSection } from './MediaSection';
 import { ToolsSection } from './ToolsSection';
 import ContactForm from './ContactForm';
 import { TEXT_STYLE as ts } from '../utils/typography';
-import CaseCard, { CASE_AR_H as H, CASE_AR_V as V, type CaseCardAR as AR } from './CaseCard';
-import { asset, arSuffix } from '../utils/asset';
-
-function img(path: string): { image: string; ar: AR } {
-  return { image: asset(path), ar: arSuffix(path) === 'v' ? V : H };
-}
 import { useReveal } from '../hooks/useReveal';
-
-const LAB_CASES = [
-  { ...img('/case1-h.webp'), title: 'AliExpress',         desc: 'AE Platform: дизайн B2B-платформы для партнёров AliExpress', col: '1 / 3', row: 1 },
-  { ...img('/case2-v.webp'), title: 'AE Platform',        desc: 'Редизайн браузерного расширения для AE Platform',            col: '4 / 6', row: 1 },
-  { ...img('/case3-h.webp'), title: "Senior's Platform",  desc: 'Дизайн-система и интерфейсы',                               col: '2 / 4', row: 2 },
-  { ...img('/case4-v.webp'), title: 'Futura Digital',     desc: 'Нейминг и регистрация, платформа бренда',                   col: '4 / 6', row: 2 },
-  { ...img('/case5-v.webp'), title: 'Юрий Мурадян',       desc: 'Персональный брендинг',                                    col: '1 / 3', row: 3 },
-  { ...img('/case6-h.webp'), title: 'Digital Experience', desc: 'Исследования и автоматизация процессов',                    col: '4 / 6', row: 3 },
-];
 
 export default function LabPage({
   onNavigatePolicy,
@@ -49,7 +34,7 @@ export default function LabPage({
   return (
     <div className={s.page} ref={pageRef}>
       <h1 className={s.title} data-reveal="">Skip Design</h1>
-      <div className={s.body} style={{ paddingLeft: 20, paddingRight: 20, paddingBottom: 0 }}>
+      <div className={s.body} style={{ paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
 
         {/* Content cards — row 1: three items */}
         <div
@@ -92,17 +77,26 @@ export default function LabPage({
             >
               <div style={{ aspectRatio: card.ar, background: 'var(--c-surface)', width: '100%' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20 }}>
-                <p style={{ ...ts, margin: 0 }}>{card.title}</p>
+                {/* Title — left, clamped to 2 lines */}
+                <p style={{
+                  ...ts,
+                  margin: 0,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical' as React.CSSProperties['WebkitBoxOrient'],
+                  overflow: 'hidden',
+                }}>{card.title}</p>
+                {/* Meta column — right: year (black, on top), link (gray, below) */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, flexShrink: 0 }}>
                   {card.meta && (
-                    <p style={{ ...ts, margin: 0, textAlign: 'right', color: 'rgba(35,31,32,0.4)' }}>{card.meta}</p>
+                    <p style={{ ...ts, margin: 0, textAlign: 'right', color: 'var(--c-text)' }}>{card.meta}</p>
                   )}
                   {card.href && card.linkLabel && (
                     <a
                       href={card.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ ...ts, textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}
+                      style={{ ...ts, color: 'rgba(35,31,32,0.4)', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}
                     >{card.linkLabel}</a>
                   )}
                 </div>
@@ -110,6 +104,42 @@ export default function LabPage({
             </div>
           ))}
         </div>
+
+        {/* Intro text + telegram — mobile only, centred between the row of
+            content cards above and the people block below (desktop keeps
+            this text inside the people block's middle column). */}
+        {isMobile && (
+          <div
+            data-reveal=""
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 20,
+              alignItems: 'center',
+              textAlign: 'center',
+              marginTop: 40,
+              marginBottom: 40,
+            }}
+          >
+            <p style={{ ...ts, margin: 0 }}>
+              Skip&nbsp;Design&nbsp;— студия цифрового дизайна, которая любит своё дело. Мы ценим человечность, мастерство и здравый смысл.
+            </p>
+            <a
+              href="https://t.me/skpdsgn"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                ...ts,
+                color: 'var(--c-text)',
+                textDecoration: 'underline',
+                textDecorationStyle: 'dotted',
+                textUnderlineOffset: '3px',
+              }}
+            >
+              телеграм канал
+            </a>
+          </div>
+        )}
 
         {/* People block — two portrait cards (1 col wide each) with a centred
             paragraph between. Photos are gray placeholders for now. Captions
@@ -134,38 +164,40 @@ export default function LabPage({
             </div>
           </div>
 
-          {/* Centred paragraph + telegram link — col 3 */}
-          <div
-            style={{
-              gridColumn: isMobile ? 'auto' : '3 / 4',
-              display: isMobile ? 'none' : 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 20,
-              height: '100%',
-              minHeight: '100%',
-              textAlign: 'center',
-            }}
-          >
-            <p style={{ ...ts, margin: 0 }}>
-              Skip&nbsp;Design&nbsp;— команда дизайнеров и стратегов, которые любят свое дело. Мы ценим человечность, мастерство и здравый смысл.
-            </p>
-            <a
-              href="https://t.me/skpdsgn"
-              target="_blank"
-              rel="noopener noreferrer"
+          {/* Centred paragraph + telegram link — col 3 (desktop only) */}
+          {!isMobile && (
+            <div
               style={{
-                ...ts,
-                color: 'var(--c-text)',
-                textDecoration: 'underline',
-                textDecorationStyle: 'dotted',
-                textUnderlineOffset: '3px',
+                gridColumn: '3 / 4',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 20,
+                height: '100%',
+                minHeight: '100%',
+                textAlign: 'center',
               }}
             >
-              телеграм канал
-            </a>
-          </div>
+              <p style={{ ...ts, margin: 0 }}>
+                Skip&nbsp;Design&nbsp;— студия цифрового дизайна, которая любит своё дело. Мы ценим человечность, мастерство и здравый смысл.
+              </p>
+              <a
+                href="https://t.me/skpdsgn"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  ...ts,
+                  color: 'var(--c-text)',
+                  textDecoration: 'underline',
+                  textDecorationStyle: 'dotted',
+                  textUnderlineOffset: '3px',
+                }}
+              >
+                телеграм канал
+              </a>
+            </div>
+          )}
 
           {/* Right card — horizontal 16/9, col 5 */}
           <div style={{ gridColumn: isMobile ? 'auto' : '5 / 6', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -228,23 +260,6 @@ export default function LabPage({
                   )}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Cases block — 5-col staggered grid, same layout as CasesPage */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'var(--lab-cases-cols)',
-            gap: 'var(--gap)',
-            rowGap: 'var(--lab-row-gap)',
-            marginBottom: 120,
-          }}
-        >
-          {LAB_CASES.map((c, i) => (
-            <div key={i} data-reveal="" data-reveal-delay={String(i * 0.07)} style={{ gridColumn: isMobile ? 'auto' : c.col, gridRow: isMobile ? 'auto' : c.row, minWidth: 0 }}>
-              <CaseCard ar={c.ar} title={c.title} desc={c.desc} image={c.image} />
             </div>
           ))}
         </div>

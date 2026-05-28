@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
+import { sound } from '../sound/Sound';
 
 export function MagneticDivider({ color = 'var(--c-border)', active = false, dotted = false }: { color?: string; active?: boolean; dotted?: boolean }) {
   const svgRef  = useRef<SVGSVGElement>(null);
@@ -34,6 +35,7 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
       if (!live.current && e.target === hit) {
         live.current = true;
         gsap.killTweensOf(p1.current);
+        sound.play('tap');
       }
 
       if (live.current) {

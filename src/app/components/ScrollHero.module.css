@@ -92,3 +92,12 @@
   white-space: nowrap;
 }
 .bottomLinks a { text-decoration: underline; }
+
+@media (max-width: 768px) {
+  .headline {
+    top: 72px;
+    font-size: var(--heading-size);
+    max-width: 95%;
+    letter-spacing: -0.025em;
+  }
+}

@@ -1,0 +1,78 @@
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--pill-h, 44px);
+  cursor: text;
+  user-select: none;
+}
+
+/* Prefix circle — fixed-size, dark border, holds a single glyph like "@" */
+.prefix {
+  flex: 0 0 auto;
+  width: var(--pill-h, 44px);
+  height: var(--pill-h, 44px);
+  border-radius: 50%;
+  border: 1px solid var(--c-text);
+  background: var(--c-bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font);
+  font-size: calc(var(--pill-h, 44px) * 0.4);
+  line-height: 1;
+  color: var(--c-text);
+}
+
+/* Pill input — fully rounded, same height as the prefix circle */
+.field {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 calc(var(--pill-h, 44px) / 2);
+  border-radius: 9999px;
+  border: 1px solid var(--c-text);
+  background: var(--c-bg);
+  transition: border-color 0.2s ease;
+}
+
+.field input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font: inherit;
+  font-family: var(--font);
+  font-size: var(--text-size);
+  letter-spacing: var(--text-ls);
+  color: var(--c-text);
+}
+
+.field input::placeholder {
+  color: var(--c-text);
+  opacity: 0.35;
+  text-transform: lowercase;
+}
+
+.action {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+}
+
+/* Focus + error states */
+.focused .field {
+  border-color: var(--c-text);
+}
+.error .field {
+  border-color: #d23030;
+}
+.error .prefix {
+  border-color: #d23030;
+}

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import CircleInput from './CircleInput';
 import { FormSnakeGame } from './FormGames';
+import { useMobile } from '../hooks/useMobile';
 import s from '../App.module.css';
 
 interface ContactFormProps {
@@ -14,6 +15,7 @@ interface ContactFormProps {
 }
 
 export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'default' }: ContactFormProps) {
+  const isMobile = useMobile();
   const [checked, setChecked]   = useState(false);
   const [email, setEmail]       = useState('');
   const [telegram, setTelegram] = useState('');
@@ -132,12 +134,15 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
   return (
     <div ref={wrapRef} className={s.contactWrap}>
 
-      {/* Game canvas — full-bleed background of the wrap, navigates around the form */}
-      <div className={s.contactGameBg}>
-        {gameFinished ? null : (
-          <FormSnakeGame key={gameKey} active={gameActive} formRef={formAreaRef} onFinish={() => setGameFinished(true)} />
-        )}
-      </div>
+      {/* Game canvas — full-bleed background of the wrap, navigates around the form.
+          Hidden on mobile (touch UX + perf — the snake is a desktop hover delight). */}
+      {!isMobile && (
+        <div className={s.contactGameBg}>
+          {gameFinished ? null : (
+            <FormSnakeGame key={gameKey} active={gameActive} formRef={formAreaRef} onFinish={() => setGameFinished(true)} />
+          )}
+        </div>
+      )}
 
       <div className={s.contactCard}>
         {/* Form content — centered column on top of the snake background. When the
@@ -185,7 +190,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
             </p>
           ) : activeTab === 'join' ? (
             <p className={s.contactTitle} style={{ marginTop: 20, textAlign: 'center' }}>
-              Вставьте ссылку на CV или ваш сайт
+              Отправьте CV арт-диру
             </p>
           ) : (
             <p className={s.contactTitle} style={{ marginTop: 20, textAlign: 'center' }}>

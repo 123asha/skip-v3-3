@@ -160,7 +160,7 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: () => vo
           columnGap: 'var(--gap)',
           rowGap: 'var(--cases-row-gap)',
           padding: '0 var(--pad)',
-          alignItems: 'start',
+          alignItems: 'center',
         }}
       >
         {rows.map((row, rowIdx) =>

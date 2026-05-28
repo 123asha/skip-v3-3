@@ -83,8 +83,8 @@ const prefersReducedMotion = (): boolean => {
 };
 
 
-// ── Mobile static hero ───────────────────────────────────────────────────────
-function MobileHero({ onNavigateCases, onNavigateExpertiza }: { onNavigateCases?: () => void; onNavigateExpertiza?: (anchor?: string) => void }) {
+// ── Mobile hero — full-screen autoplay video + headline + slider hint ───────
+function MobileHero({ onNavigateCases, onNavigateExpertiza, onNavigateLab }: { onNavigateCases?: () => void; onNavigateExpertiza?: (anchor?: string) => void; onNavigateLab?: () => void }) {
   return (
     <div style={{
       position: 'relative',
@@ -96,18 +96,37 @@ function MobileHero({ onNavigateCases, onNavigateExpertiza }: { onNavigateCases?
       flexDirection: 'column',
       justifyContent: 'space-between',
     }}>
-      {/* Background image */}
-      <img
-        src={BG_IMGS[0]}
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }}
-        alt=""
-      />
-      {/* Headline */}
+      {/* Background video — autoplay/muted/inline so iOS plays it without a tap.
+          Preserves its native aspect ratio (object-fit: contain) and is centred
+          horizontally; no stretching/cropping. Poster fills the frame while
+          the source downloads. */}
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        poster={BG_IMGS[0]}
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '100%',
+          height: 'auto',
+          maxHeight: '100%',
+          objectFit: 'contain',
+          zIndex: 0,
+        }}
+      >
+        <source src={asset('/video.mp4')} type="video/mp4" />
+      </video>
+      {/* Headline — sits 80 px from the top */}
       <p style={{
         position: 'absolute',
         left: '50%',
         transform: 'translateX(-50%)',
-        top: 'var(--pad)',
+        top: 80,
         fontFamily: 'var(--font-display)',
         fontSize: 'var(--heading-size)',
         fontWeight: 'var(--heading-weight)',
@@ -143,6 +162,8 @@ function MobileHero({ onNavigateCases, onNavigateExpertiza }: { onNavigateCases?
         letterSpacing: 'var(--text-ls)',
         whiteSpace: 'nowrap',
       }}>
+        <a href="#" onClick={e => { e.preventDefault(); onNavigateLab?.(); }}
+          style={{ color: 'inherit', textDecoration: 'underline' }}>Skip Design</a>
         <a href="#" onClick={e => { e.preventDefault(); onNavigateCases?.(); }}
           style={{ color: 'inherit', textDecoration: 'underline' }}>Кейсы</a>
         <a href="#" onClick={e => { e.preventDefault(); onNavigateExpertiza?.(); }}
@@ -153,13 +174,19 @@ function MobileHero({ onNavigateCases, onNavigateExpertiza }: { onNavigateCases?
 }
 
 // ───────────────────────────────────────────────────────────────────────────
-export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigateCases }: { mode: 'arcade' | 'bunny'; ready: boolean; onNavigateExpertiza?: (anchor?: string) => void; onNavigateCases?: () => void }) {
-  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', check, { passive: true });
-    return () => window.removeEventListener('resize', check);
-  }, []);
+// Top-level wrapper — branches to mobile/desktop. Each branch is its own
+// component so hooks order is stable across breakpoint changes (otherwise
+// React would crash on resize across 768px).
+type ScrollHeroProps = { mode: 'arcade' | 'bunny'; ready: boolean; onNavigateExpertiza?: (anchor?: string) => void; onNavigateCases?: () => void; onNavigateLab?: () => void };
+
+// Single hero for all viewports — the same scroll-driven parallax + rectangle.
+// Mobile-specific sizing lives inside applyProgress (panel width adapts to vw).
+export default function ScrollHero(props: ScrollHeroProps) {
+  return <ScrollHeroDesktop {...props} />;
+}
+
+function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }: ScrollHeroProps) {
+  const isMobile = false; // desktop branch — keeps existing code that reads isMobile
 
   const [activeSection, setActiveSection] = useState(-1);
   const [imgIdx, setImgIdx]               = useState(0);
@@ -545,6 +572,8 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
         const isMobile = vw <= 768;
         const mobilePad = 10;
         const BASE_W  = isMobile ? Math.max(100, vw - mobilePad * 2) : 900;
+        // 900×506 matches the source video's native aspect (16:9 cropped).
+        // Anything else makes object-fit:cover crop the video frame.
         const BASE_H  = isMobile ? Math.round(BASE_W * 506 / 900)    : 506;
         const SMALL_W = isMobile
           ? Math.min(260, vw - mobilePad * 2)
@@ -593,17 +622,10 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
       // Background wrap — fade in early, in sync with panel shrink (gp 0.80 → 0.95),
       // so the first case is visible by the time the panel becomes a small black bar.
       if (bgWrapRef.current) {
-        // Background appears only after the panel has fully shrunk to small card
-        // (gp ≈ 0.93). Tight 0.08 range with easeIn³ gives an inertia snap:
-        // barely visible for most of the range, then accelerates to full opacity.
-        let bgOp = 0;
-        if (gp >= 1.0) {
-          bgOp = 1;
-        } else if (gp >= 0.93) {
-          const t = (gp - 0.93) / 0.07;
-          bgOp = t * t * t; // easeIn³ — slow start, fast snap at the end
-        }
-        bgWrapRef.current.style.opacity = String(bgOp);
+        // No opacity fade — the slide just rises from below into view.
+        // bgWrap is always fully opaque; the upward translate (below) is
+        // the only entrance signal.
+        bgWrapRef.current.style.opacity = '1';
       }
 
       // Tape-strip — slides tile vertically, never overlap. Equal 0.5 gp slot each.
@@ -617,10 +639,11 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
         const IMG_H_RATIO = 1.6;
 
         const rawT = Math.max(0, Math.min(1, gp - 1));
-        // Linear scroll-to-slide mapping — no dwell zones. Every pixel of
-        // scroll moves the slides directly so the cards flow continuously
-        // past the viewport (matching the dulcedo reference).
-        const stickyT = rawT;
+        // Slight dwell on slide 0 — the first 15 % of tape-strip range keeps
+        // it centred, so the slide feels held briefly before flowing on.
+        // Past the dwell, the remaining 85 % linearly maps to 0 → 1.
+        const STICK = 0.15;
+        const stickyT = rawT < STICK ? 0 : (rawT - STICK) / (1 - STICK);
         const stickyGp = 1 + stickyT; // 1.0→2.0
 
         // The rectangle no longer rotates between faces. Instead its single
@@ -643,9 +666,18 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
         // slide 0 starts at centre and slide n-1 lands at centre by stickyT = 1.
         const n = bgSlideRefs.current.length || 1;
         const totalSteps = Math.max(1, n - 1);
+
+        // First-slide entrance: slide 0 rises from below (100 % down) in
+        // lock-step with the video translating out of the panel (both run
+        // over gp 0.55 → 0.90). bg top edge tracks video bottom edge so the
+        // seam stays perfectly aligned through the whole transition; by
+        // gp = 0.90 the video has fully exited and the bg sits centered.
+        const entryT = gp < 0.55 ? 0 : gp >= 0.90 ? 1 : (gp - 0.55) / 0.35;
+        const slide0EntryOffset = (1 - entryT) * 100;
+
         bgSlideRefs.current.forEach((el, i) => {
           if (!el) return;
-          const yP = (i - stickyT * totalSteps) * 100;
+          const yP = (i - stickyT * totalSteps) * 100 + (i === 0 ? slide0EntryOffset : 0);
           gsap.set(el, { yPercent: yP, opacity: 1, scale: 1 });
 
           // Parallax: the image inside each slide counter-translates a bit
@@ -733,10 +765,39 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
     applyRef.current = applyProgress;
     handleScroll();
 
+    // ── Velocity-driven slide seam bow ────────────────────────────────────
+    // Magnitude of recent scroll velocity → CSS variable --slide-bow-v on
+    // bgWrap. Each slide's top edge curves by that many pixels (border-
+    // radius). Sign tracking flips which slide carries the curve so the
+    // bow appears convex going down, concave going up.
+    let lastY = window.scrollY;
+    let bow   = 0;
+    let dir = 0;
+    const tickVel = (() => {
+      let raf = 0;
+      const loop = () => {
+        const y = window.scrollY;
+        const dy = y - lastY;
+        lastY = y;
+        if (dy !== 0) dir = Math.sign(dy);
+        const target = Math.min(200, Math.abs(dy) * 2.0);
+        const ease = target > bow ? 0.45 : 0.12;
+        bow += (target - bow) * ease;
+        if (bgWrapRef.current) {
+          bgWrapRef.current.style.setProperty('--slide-bow-v', `${bow.toFixed(1)}px`);
+          bgWrapRef.current.style.setProperty('--slide-bow-dir', String(dir));
+        }
+        raf = requestAnimationFrame(loop);
+      };
+      raf = requestAnimationFrame(loop);
+      return () => cancelAnimationFrame(raf);
+    })();
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
       if (rafId) cancelAnimationFrame(rafId);
+      tickVel();
       applyRef.current = null;
     };
   }, [mode]);
@@ -848,7 +909,9 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
 
 
 
-        {/* Background slides — full-bleed behind panel, scroll-driven */}
+        {/* Background slides — full-bleed behind panel, scroll-driven.
+            White (var(--c-bg)) wrapper — slide containers overlap each
+            other vertically so the seams between them never reveal it. */}
         <div ref={bgWrapRef} style={{
           position: 'absolute', inset: '-30px',
           opacity: 0, pointerEvents: 'none', zIndex: 2,
@@ -858,7 +921,12 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
             <div
               key={i}
               ref={el => { bgSlideRefs.current[i] = el; }}
-              style={{ position: 'absolute', inset: 0, willChange: 'transform', zIndex: i, overflow: 'hidden' }}
+              style={{
+                position: 'absolute', inset: 0,
+                willChange: 'transform',
+                zIndex: i,
+                overflow: 'hidden',
+              }}
             >
               <img
                 ref={el => { bgImgRefs.current[i] = el; }}
@@ -880,8 +948,11 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
             position: 'absolute',
             left: '50%',
             top: '50%',
-            width: 900,
-            height: 506,
+            // Viewport-aware initial size — prevents overflow on narrow screens
+            // before applyProgress sets explicit pixel dimensions on scroll.
+            // 900×506 matches the source video's native aspect.
+            width: 'min(900px, calc(100vw - 20px))',
+            aspectRatio: '900 / 506',
             zIndex: 5,
             pointerEvents: 'none',
             cursor: 'default',
@@ -899,7 +970,19 @@ export default function ScrollHero({ mode, ready, onNavigateExpertiza, onNavigat
                   willChange: 'transform',
                 }}>
                   <div className={s.panelLayer}>
-                    <video ref={vidRef} playsInline preload="auto" muted>
+                    {/* preload="auto" downloads the video on page load so
+                        the first frame is decoded by the time the user
+                        scrolls. No poster — the original frame would be a
+                        bg slide image (wrong subject), and the brief gray
+                        flash before the video paints reads better than a
+                        misleading still. */}
+                    <video
+                      ref={vidRef}
+                      playsInline
+                      preload="auto"
+                      muted
+                      autoPlay
+                    >
                       <source src={asset('/video.mp4')} type="video/mp4" />
                     </video>
                   </div>

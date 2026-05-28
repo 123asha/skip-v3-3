@@ -74,7 +74,16 @@ export default function CaseCard({
       </div>
 
       <div className={s.cardImage} style={imageStyle}>
-        {image && <img src={image} alt={title} />}
+        {image && (
+          <img
+            src={image}
+            alt={title}
+            style={{
+              transform: hovered ? 'scale(1.06)' : 'scale(1)',
+              transition: 'transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1)',
+            }}
+          />
+        )}
       </div>
 
       <div

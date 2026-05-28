@@ -37,7 +37,7 @@
   --text-lh: 1;
   --text-ls: -0.02em;
 
-  --heading-size: clamp(40px, 2.857vw, 54px);
+  --heading-size: clamp(48px, 3.43vw, 65px);
   --heading-weight: 454;
   --heading-lh: 0.81;
   --heading-ls: -0.02em;
@@ -50,6 +50,15 @@
   --pad: 20px;
   --gap: 20px;
   --col: 296px;
+
+  /* ── Vertical spacing rhythm (desktop) ──────────────────────────────────
+     Use these tokens everywhere instead of hardcoded margin/gap values.
+     Scale collapses on mobile in the media query block below. */
+  --space-xl: 200px;  /* between major sections (e.g. Hero → Cases) */
+  --space-lg: 120px;  /* large gap (row-gap in case grid)            */
+  --space-md: 80px;   /* block gap (studio inner gap)                */
+  --space-sm: 40px;   /* item-group gap                              */
+  --space-xs: 20px;   /* item gap                                    */
 
   /* Secondary / muted text — used for all gray text and L2 links */
   --opacity-muted: 0.4;
@@ -74,23 +83,38 @@
 /* ── Mobile (≤ 768px) ───────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   :root {
-    --pad:            16px;
-    --gap:            12px;
-    --text-size:      clamp(14px, 4vw, 18px);
-    --heading-size:   clamp(36px, 9.5vw, 48px);
-    --h2-size:        clamp(20px, 6vw, 36px);
+    --pad:            8px;
+    --gap:            8px;
+    --text-size:      clamp(11px, 3.5vw, 18px);
+    /* Tight enough so "Визуальные системы для" / "новые горизонтальные" type
+       lines fit on a single row at 360-390 px viewport widths. */
+    --heading-size:   clamp(26px, 8.4vw, 53px);
+    --h2-size:        clamp(18px, 5.5vw, 36px);
+    /* Proportional vertical rhythm — keeps the same ratio as desktop */
+    --space-xl: 80px;
+    --space-lg: 48px;
+    --space-md: 32px;
+    --space-sm: 20px;
+    --space-xs: 12px;
     /* Override grid vars */
     --cases-cols:     minmax(0, 1fr) minmax(0, 1fr);
+    /* Proportional to desktop's 120 px (≈ 40 % shrink, in line with --space-md) */
     --cases-row-gap:  48px;
     --content-cols:   minmax(0, 1fr) minmax(0, 1fr);
-    --content-gap:    12px;
+    --content-gap:    8px;
     --people-cols:    minmax(0, 1fr) minmax(0, 1fr);
     --lab-cases-cols: minmax(0, 1fr) minmax(0, 1fr);
-    --lab-row-gap:    48px;
+    --lab-row-gap:    var(--space-sm);
   }
 
-  html, body { font-size: max(12px, var(--text-size)); overflow-x: hidden !important; max-width: 100vw; }
-  p, span, a, button, input, textarea, select, label, li, th, td { font-size: max(12px, var(--text-size)); }
+  html { font-size: max(11px, var(--text-size)); }
+  /* overflow-x lives on body only — putting it on <html> shifts the scroll
+     container away from documentElement and breaks window.scrollTo /
+     scrollIntoView on iOS. */
+  body { font-size: max(11px, var(--text-size)); overflow-x: hidden; max-width: 100vw; }
+  /* Do NOT reset font-size on individual tags — they inherit from html/body.
+     Overriding here breaks typographic hierarchy (heading-sized elements become 12px). */
+  input, textarea, select { font-size: max(11px, var(--text-size)); }
 
   [style*="inset: -30px"] { inset: 0 !important; }
 
@@ -115,25 +139,44 @@
   /* Contact card: full width */
   [class*="_contactCard_"] { width: 100% !important; }
 
+  /* Contact wrap: skip the 100vh min-height on mobile — it creates a huge
+     empty band above the card when the snake game isn't there. The card's
+     own height drives layout instead. */
+  [class*="_contactWrap_"] {
+    min-height: auto !important;
+    padding-top: var(--space-xl) !important;
+    padding-bottom: var(--space-xl) !important;
+  }
+  [class*="_contactCard_"] { min-height: auto !important; }
+
   /* Page title */
   [class*="_title_"] {
     padding-top: calc(var(--pad) * 3) !important;
     font-size: var(--heading-size) !important;
   }
 
-  /* Section spacing */
-  [class*="_section_"] { margin-top: 80px !important; }
+  /* Section spacing — uses the proportional vertical token */
+  [class*="_section_"] { margin-top: var(--space-xl) !important; }
 }
 
 /* ── Small mobile (≤ 490px) — exact pixel sizes, overrides 768px block ── */
 @media (max-width: 490px) {
   :root {
     --text-size:    12px;
-    --heading-size: 32px;
-    --h2-size:      20px;
+    /* H1 sized so "Визуальные системы для" (22 chars) fits on a single
+       line at 360–390 px viewport. */
+    --heading-size: 31px;
+    --h2-size:      18px;
   }
   html, body { font-size: 12px !important; }
-  p, span, a, button, input, textarea, select, label, li, th, td { font-size: 12px !important; }
+  /* No per-tag reset — elements inherit 12px from html/body.
+     Heading-sized elements keep their own font-size via inline styles. */
+  input, textarea, select { font-size: 12px; }
+}
+
+/* ── Hard floor: body text never below 11 px on any viewport ────────────── */
+@media (max-width: 768px) {
+  html, body { font-size: max(11px, var(--text-size)) !important; }
 }
 
 html {

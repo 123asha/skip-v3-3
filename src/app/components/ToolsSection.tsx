@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useMobile } from '../hooks/useMobile';
 import s from '../App.module.css';
 
 export const TOOL_TEXT: React.CSSProperties = {
@@ -68,6 +69,7 @@ export function ToolCard({ label, caseTitle, ar }: { label: string; caseTitle: s
 }
 
 export function ToolsSection() {
+  const isMobile = useMobile();
   return (
     <div id="tools" className={s.section}>
       <div className={s.tools}>
@@ -79,16 +81,58 @@ export function ToolsSection() {
           letterSpacing: 'var(--heading-ls)',
           color: 'var(--c-text)',
         }}>Фреймворки</p>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 'var(--gap)',
-          alignItems: 'start',
-        }}>
-          {TOOL_CARDS.map(c => (
-            <ToolCard key={c.label} {...c} />
-          ))}
-        </div>
+
+        {isMobile ? (
+          // Mobile: horizontal swipe carousel.
+          // Outer div: scroll container stretched to full viewport width via
+          // negative margin so it escapes the section's --pad padding.
+          // Inner div: flex row with paddingLeft = --pad so the first card
+          // aligns exactly with the "Фреймворки" heading above.
+          <div
+            style={{
+              overflowX: 'auto',
+              overflowY: 'hidden',
+              scrollSnapType: 'x mandatory',
+              WebkitOverflowScrolling: 'touch',
+              scrollbarWidth: 'none',
+              marginLeft: 'calc(-1 * var(--pad))',
+              width: 'calc(100% + 2 * var(--pad))',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                gap: 'var(--gap)',
+                paddingLeft: 'var(--pad)',
+                paddingRight: 'var(--pad)',
+              }}
+            >
+              {TOOL_CARDS.map(c => (
+                <div
+                  key={c.label}
+                  style={{
+                    flex: '0 0 45%',
+                    minWidth: 0,
+                    scrollSnapAlign: 'start',
+                  }}
+                >
+                  <ToolCard {...c} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: 'var(--gap)',
+            alignItems: 'start',
+          }}>
+            {TOOL_CARDS.map(c => (
+              <ToolCard key={c.label} {...c} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

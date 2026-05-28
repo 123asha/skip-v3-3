@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { sound } from '../sound/Sound';
 
 const FG = '#231f20';
 
@@ -217,6 +218,7 @@ export function FormSnakeGame({
         if (snake.length > 1) snake.pop();
         if (snake.length > 1) snake.pop();
         spawnFood();
+        sound.play('snake');
       } else {
         snake.pop();
       }
@@ -250,9 +252,17 @@ export function FormSnakeGame({
       ctx.textAlign    = 'left';
       ctx.textBaseline = 'alphabetic';
 
-      // Recoil offset for the head — visual nudge backwards on collision
-      const recoilFactor = Math.min(0.6, recoilTick * 0.3); // capped at 60% of cell
+      // Recoil offset for the head — small visual nudge backwards on collision.
+      // Capped lower than 0.5 so the recoiled head never overlaps the cell
+      // immediately after it (snake[1]). Suppress entirely when snake[1]
+      // sits directly behind the head (recoil would collide with body).
+      const head = snake[0];
+      const nextSeg = snake[1];
       const [rdx, rdy] = DELTA[dir];
+      const recoilSuppressed = !!nextSeg
+        && nextSeg.x === head.x - rdx
+        && nextSeg.y === head.y - rdy;
+      const recoilFactor = recoilSuppressed ? 0 : Math.min(0.35, recoilTick * 0.25);
 
       // Snake segments — purple circles
       snake.forEach((seg, i) => {

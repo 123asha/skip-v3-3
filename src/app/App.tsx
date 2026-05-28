@@ -7,6 +7,7 @@ import { useReveal } from './utils/reveal';
 import { asset } from './utils/asset';
 import { TEXT_STYLE as ts } from './utils/typography';
 import ScrollHero from './components/ScrollHero';
+import HeroBranches from './components/HeroBranches';
 import ProjectGallery from './components/ProjectGallery';
 import Footer from './components/Footer';
 import CasesPage from './components/CasesPage';
@@ -26,6 +27,8 @@ import { MediaSection } from './components/MediaSection';
 import LabPage from './components/LabPage';
 import LinkFlip from './components/LinkFlip';
 import PeopleVideoSlot, { type VideoConfig } from './components/PeopleVideoSlot';
+import SoundIcon from './sound/SoundIcon';
+import { sound } from './sound/Sound';
 import s from './App.module.css';
 
 // ── People-block: client → video configuration ───────────────────────────────
@@ -35,14 +38,14 @@ const PEOPLE_CLIENTS = ['AliExpress', 'Юрий Мурадян', 'Gate Legal', '
 type PeopleClient = typeof PEOPLE_CLIENTS[number];
 
 const CLIENT_VIDEOS: Record<PeopleClient, { left: VideoConfig; right: VideoConfig }> = {
-  'AliExpress':   { left: { src: '/video.mp4',  pos: '50% 50%'  }, right: { src: '/video2.mov', pos: '50% 0%'   } },
-  'Юрий Мурадян': { left: { src: '/video2.mov', pos: '50% 0%'   }, right: { src: '/video.mp4',  pos: '50% 100%' } },
-  'Gate Legal':   { left: { src: '/video.mp4',  pos: '0% 50%'   }, right: { src: '/video2.mov', pos: '100% 50%' } },
-  'Senior*s Bar': { left: { src: '/video2.mov', pos: '50% 100%' }, right: { src: '/video.mp4',  pos: '50% 0%'   } },
+  'AliExpress':   { left: { src: '/video.mp4', pos: '50% 50%'  }, right: { src: '/video.mp4', pos: '50% 0%'   } },
+  'Юрий Мурадян': { left: { src: '/video.mp4', pos: '50% 0%'   }, right: { src: '/video.mp4', pos: '50% 100%' } },
+  'Gate Legal':   { left: { src: '/video.mp4', pos: '0% 50%'   }, right: { src: '/video.mp4', pos: '100% 50%' } },
+  'Senior*s Bar': { left: { src: '/video.mp4', pos: '50% 100%' }, right: { src: '/video.mp4', pos: '50% 0%'   } },
 };
 const DEFAULT_PEOPLE_VIDEOS = {
-  left:  { src: '/video2.mov', pos: '50% 50%' } as VideoConfig,
-  right: { src: '/video2.mov', pos: '50% 50%' } as VideoConfig,
+  left:  { src: '/video.mp4', pos: '50% 50%' } as VideoConfig,
+  right: { src: '/video.mp4', pos: '50% 50%' } as VideoConfig,
 };
 
 function ScrollHint() {
@@ -109,16 +112,6 @@ const HERO_MODE: 'arcade' | 'bunny' = 'arcade';
 
 
 const PRELOADER_LINES = ['дизайн', 'как правила', 'игры'];
-const DOT_R = 5;
-
-// Logo dot path extracted for the preloader ball (index 4 in the svg paths)
-const _svgAll = svgPaths.pb7e9300.match(/M[^M]+/g)!;
-const LOGO_DOT_PATH = _svgAll[4];
-// Tight bounds from actual path coords: x 32.56–37.25, y -0.064–4.648
-const LOGO_DOT_VB = '32.5 -0.1 4.8 4.8';
-// Custom dot shape for the preloader bounce animation
-const DOT_SVG_PATH = 'M4.1039 0.455549C3.70433 0.0538952 3.13298 -0.0637445 2.56514 0.0308883C1.99631 0.125949 1.40685 0.435787 0.920048 0.925298C0.433272 1.41492 0.125334 2.00778 0.0307815 2.5799C-0.0634312 3.15115 0.0534589 3.7256 0.453 4.12756C0.852782 4.52912 1.42488 4.6482 1.9928 4.55327C2.5613 4.45795 3.15139 4.14814 3.63789 3.65886C4.12438 3.16946 4.43246 2.57611 4.52716 2.00425C4.6216 1.43309 4.50304 0.857676 4.1039 0.455549Z';
-const DOT_SVG_VB = '0 0 5 5';
 
 function Preloader({ onDone }: { onDone: () => void }) {
   const bgRef   = useRef<HTMLDivElement>(null);
@@ -181,9 +174,6 @@ function Preloader({ onDone }: { onDone: () => void }) {
         margin: 0,
         position: 'relative',
         textAlign: 'center',
-        /* Slight visual nudge up — display font's baseline sits below the
-           geometric centre of its line-box, so flex-centred text reads as
-           slightly low. -0.18em compensates without changing layout. */
         transform: 'translateY(-0.18em)',
       }}>
         {PRELOADER_LINES.map((line, i) => (
@@ -342,7 +332,16 @@ function stripBase(p: string): string {
 }
 
 function AppInner() {
-  const [pathname, setPathname] = useState(() => stripBase(window.location.pathname));
+  const [pathname, setPathname] = useState(() => {
+    // GitHub Pages SPA: 404.html stores the intended path in sessionStorage.
+    const redirect = sessionStorage.getItem('ghpages_redirect');
+    if (redirect) {
+      sessionStorage.removeItem('ghpages_redirect');
+      // Push the real URL without reloading so the browser history is clean.
+      window.history.replaceState(null, '', redirect);
+    }
+    return stripBase(window.location.pathname);
+  });
   const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/policy', '/index2', '/case-template', '/guide', '/lab'];
   const page = pathname === '/cases' ? 'cases'
              : pathname === '/instruments' ? 'instruments'
@@ -370,6 +369,7 @@ function AppInner() {
   const [preloaderDone, setPreloaderDone] = useState(() => stripBase(window.location.pathname) !== '/');
   const [gridVisible, setGridVisible] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [formInView, setFormInView] = useState(false);
   const sRef   = useRef<SVGGElement>(null);
   const kRef   = useRef<SVGGElement>(null);
   const dotRef = useRef<SVGGElement>(null);
@@ -429,26 +429,133 @@ function AppInner() {
     return () => document.removeEventListener('scroll', onScroll, { capture: true });
   }, []);
 
+  // Bootstrap saved sound preference + unlock audio on first user gesture.
   useEffect(() => {
+    sound.init();
+    const unlock = () => sound.unlock();
+    window.addEventListener('pointerdown', unlock, { once: true, passive: true });
+    return () => window.removeEventListener('pointerdown', unlock);
+  }, []);
+
+  // Fade the sticky "+ новый проект" pill when the contact form is in view.
+  // Watches the contactWrap element on the home page only.
+  useEffect(() => {
+    if (page !== 'home') { setFormInView(false); return; }
+    // Wait a tick so the contact form is mounted.
+    let cancelled = false;
+    const wire = () => {
+      if (cancelled) return;
+      const form = document.querySelector('[class*="contactWrap"]');
+      if (!form) { window.requestAnimationFrame(wire); return; }
+      const obs = new IntersectionObserver(
+        ([entry]) => setFormInView(entry.isIntersecting),
+        // Positive bottom margin expands the root downward — the button
+        // starts fading while the form is still well below the viewport.
+        // Note: rootMargin only accepts px or %, not vh, so we convert.
+        { rootMargin: `0px 0px ${Math.round(window.innerHeight * 0.7)}px 0px`, threshold: 0 },
+      );
+      obs.observe(form);
+      return () => obs.disconnect();
+    };
+    const cleanup = wire();
+    return () => { cancelled = true; if (cleanup) cleanup(); };
+  }, [page]);
+
+  // Global sound triggers (desktop only — touch devices skip).
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.matchMedia?.('(pointer: coarse)').matches) return;
+
+    const onPointerOver = (e: Event) => {
+      const t = e.target as HTMLElement | null;
+      if (!t) return;
+      // Links + buttons + nav items
+      if (t.closest('a, button, [role="link"], [role="button"]')) {
+        sound.play('hover');
+      }
+    };
+    const onInput = (e: Event) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) {
+        sound.play('type');
+      }
+    };
+    window.addEventListener('pointerover', onPointerOver, { passive: true });
+    window.addEventListener('input', onInput, { passive: true });
+    return () => {
+      window.removeEventListener('pointerover', onPointerOver);
+      window.removeEventListener('input', onInput);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Skip Lenis on mobile / coarse pointer devices entirely.
+    // Reason: on touch we want native momentum scroll — Lenis adds wheel
+    // listeners + a RAF loop that can delay touch events while heavy
+    // initial paint (images, videos, fonts) is decoding. Programmatic
+    // navigation falls back to window.scrollTo (handled at call sites
+    // that check `window.__lenis`).
+    const isTouch = typeof window !== 'undefined'
+      && (window.matchMedia?.('(max-width: 768px)').matches
+        || window.matchMedia?.('(pointer: coarse)').matches);
+    if (isTouch) return;
+
     const reduce = typeof window !== 'undefined'
       && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
     const lenis = new Lenis({
-      duration: reduce ? 0 : 0.7,
+      // Longer duration = more inertia → no hard stops between hero slides,
+      // the transition glides through the seam instead of snapping.
+      duration: reduce ? 0 : 1.4,
       easing: (t: number) => 1 - Math.pow(1 - t, 3),
       smoothWheel: !reduce,
+      smoothTouch: false,
       prevent: (node: Element) => !!node.closest('[data-lenis-prevent]'),
     });
     (window as any).__lenis = lenis;
     const raf = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(raf);
     gsap.ticker.lagSmoothing(0);
+
+    // Recalculate scroll limit after fonts/images load so the page never
+    // stops short. Lenis v1 doesn't auto-resize — we need to trigger it.
+    const resize = () => lenis.resize();
+    window.addEventListener('load', resize);
+
+    // Observe both body AND documentElement (some children resize without
+    // changing body's box; documentElement always reflects the total).
+    const ro = new ResizeObserver(resize);
+    ro.observe(document.body);
+    ro.observe(document.documentElement);
+
+    // Catch late layout shifts (canvas mounts, fonts metrics, lazy images
+    // that don't reserve space). The page on first load can grow by 500+ px
+    // after the initial measure — without these fallbacks Lenis caps scroll
+    // short of the contact form bottom.
+    const t1 = window.setTimeout(resize, 100);
+    const t2 = window.setTimeout(resize, 600);
+    const t3 = window.setTimeout(resize, 1500);
+
     return () => {
       gsap.ticker.remove(raf);
+      window.removeEventListener('load', resize);
+      ro.disconnect();
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
       lenis.destroy();
       (window as any).__lenis = null;
     };
   }, []);
+
+  // Designer mode (Cmd/Shift+G) auto-toggles sound — the bamboo feedback
+  // is part of the "design tools on" affordance. Outside designer mode,
+  // the user can still flip sound manually via the icon.
+  useEffect(() => {
+    sound.unlock();
+    if (gridVisible) sound.enable();
+    else sound.disable();
+  }, [gridVisible]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -538,6 +645,18 @@ function AppInner() {
     }
   }, [page]);
 
+  // Lock body scroll when an inner page overlay is open so iOS Safari
+  // directs touch-scroll to the overlay's own overflow container.
+  useEffect(() => {
+    const isInner = page !== 'home' && page !== 'index2';
+    document.documentElement.style.overflow = isInner ? 'hidden' : '';
+    document.body.style.overflow = isInner ? 'hidden' : '';
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [page]);
+
   const flyToTitle = (_label: string, _linkEl: HTMLAnchorElement, dest: string) => {
     navigateWithExit(dest);
   };
@@ -613,13 +732,13 @@ function AppInner() {
             <span ref={casesLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
               <span className={s.navSep}>,</span>
               <a href="/cases" className={s.navLink} onClick={handleCasesClick}>
-                <LinkFlip>Кейсы</LinkFlip>
+                <LinkFlip>кейсы</LinkFlip>
               </a>
             </span>
             <span ref={expertizaLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
               <span className={s.navSep}>,</span>
               <a href="/services" className={s.navLink} onClick={handleExpertizaClick}>
-                <LinkFlip>Услуги</LinkFlip>
+                <LinkFlip>услуги</LinkFlip>
               </a>
             </span>
             <span ref={toolsLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'none' }}>
@@ -640,6 +759,7 @@ function AppInner() {
         }}
         style={{ cursor: 'pointer' }}
         onMouseEnter={() => {
+          sound.play('logo');
           const refs = [dotRef.current, sRef.current, kRef.current, pRef.current];
           gsap.killTweensOf(refs);
           gsap.to(dotRef.current, { y: -2,   duration: 0.18, ease: 'power2.out' });
@@ -666,9 +786,10 @@ function AppInner() {
 
       <Footer />
 
-      {/* "Обсудить проект" — sticky bottom-left, visible on home page.
-          Inverted against the background via mix-blend-mode: difference. */}
-      {(page === 'home' || page === 'index2') && preloaderDone && (
+      {/* "Обсудить проект" — fixed-bottom only on /index2 (legacy).
+          On / (home) it lives inside the page flow as a sticky element, so
+          it disappears naturally once the contact form is reached. */}
+      {page === 'index2' && preloaderDone && (
         <button
           className={s.newProjectBtn}
           style={{
@@ -708,33 +829,16 @@ function AppInner() {
               opacity:0 (invisible but occupies layout space), so no width
               jump occurs during the cube rotation. */}
           <span className={s.newProjectFlipInner}>
-            {/* Front face — invisible "+" on both sides keeps text centred */}
             <span
               className={s.newProjectFace}
-              style={{
-                background: '#fff',
-                padding: '9px 8px 11px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                whiteSpace: 'nowrap',
-              }}
+              style={{ background: '#fff', padding: '9px 8px 11px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}
             >
-              <span style={{ marginRight: 6, opacity: 0 }}>+</span>
+              <span className={s.newProjectPlusGhost} aria-hidden="true">+</span>
               новый проект
-              <span style={{ marginLeft: 6, opacity: 0 }}>+</span>
             </span>
-            {/* Bottom face — "+ новый проект" centred as a unit */}
             <span
               className={`${s.newProjectFace} ${s.newProjectFaceBottom}`}
-              style={{
-                background: '#fff',
-                padding: '9px 8px 11px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                whiteSpace: 'nowrap',
-              }}
+              style={{ background: '#fff', padding: '9px 8px 11px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}
             >
               <span style={{ marginRight: 6 }}>+</span>
               новый проект
@@ -788,14 +892,14 @@ function AppInner() {
         pointerEvents: 'auto',
         userSelect: 'none',
       }}>
+        {!isMobile && <SoundIcon />}
         <span style={{ color: 'inherit' }}><MoscowTime /> (GMT+3)</span>
         <a href="/en" style={{ color: 'inherit', textDecoration: 'none' }}>/en</a>
       </div>
 
-      {/* hi@skip.design — copy-on-click footer link, centred horizontally,
-          on the same row as the rest of the footer items. Doesn't shift any
-          other element because it's its own absolutely-centred fixed block. */}
-      <button
+      {/* hi@skip.design — desktop only (on mobile it would overlap the
+          centred "новый проект" sticky button which sits at the same y) */}
+      {!isMobile && <button
         onClick={(e) => {
           const text = 'hi@skip.design';
           const el = e.currentTarget;
@@ -850,7 +954,7 @@ function AppInner() {
         }}
         onMouseEnter={e => (e.currentTarget.style.opacity = '0.7')}
         onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-      >hi@skip.design</button>
+      >hi@skip.design</button>}
 
       {/* Social icons — light circles with dark glyph inside.
           Inverted against the background via mix-blend-mode: difference. */}
@@ -930,12 +1034,21 @@ function AppInner() {
         className={s.page}
         style={{ visibility: page === 'home' ? 'visible' : 'hidden' }}
       >
+        {/* Sticky-CTA range — wraps everything from the hero down to the
+            media section. The "+ новый проект" button (a sticky child near
+            the end) glues to the viewport bottom for this entire range. */}
+        <div className={s.newProjectStickyWrap}>
+
         <ScrollHero
           mode={HERO_MODE}
           ready={preloaderDone}
           onNavigateExpertiza={(anchor) => navigateWithExit('/services' + (anchor ? '#' + anchor : ''))}
           onNavigateCases={() => navigateWithExit('/cases')}
+          onNavigateLab={() => navigateWithExit('/lab')}
         />
+
+        {/* HeroBranches removed — ScrollHero now runs on every viewport and
+            already includes the 3-slide sticky section. */}
 
 
         {/* Old #studio block removed — its content lives in the people block above. */}
@@ -997,39 +1110,50 @@ function AppInner() {
         )}
 
         {/* People block — on desktop: 5-col (video · · text · · video)
-            on mobile: 2-col (video · video) + text below */}
+            on mobile: text-only (videos hidden — heavy autoplay assets that
+            slow initial touch-scroll and add little on a small screen). */}
         <div
           className={s.section}
           style={{
             display: 'grid',
-            gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, 1fr)',
             gap: 'var(--gap)',
-            marginTop: isMobile ? 80 : 200,
+            marginTop: 'var(--space-xl)',
             alignItems: 'center',
           }}
         >
-          <div style={{ gridColumn: isMobile ? 'auto' : '1 / 2' }}>
-            <PeopleVideoSlot config={peopleVideos.left} aspectRatio="5/6" />
-          </div>
+          {/* Left video removed — desktop people block now: empty col 1,
+              centred text in col 3, right video in col 5. */}
 
-          {/* Centre text — hidden on mobile (shown below instead) */}
-          <div
-            style={{
-              gridColumn: isMobile ? 'auto' : '3 / 4',
-              display: isMobile ? 'none' : 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 40,
-              height: '100%',
-              minHeight: '100%',
-              textAlign: 'center',
-            }}
-          >
-            <p style={{ ...ts, margin: 0 }}>
-              Skip&nbsp;Design&nbsp;— команда дизайнеров и стратегов. Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться суть.
+          {/* Desktop layout — description spans the top row across cols 2-4,
+              the second row holds the client list (col 3) + the image (col 5).
+              The grid row's align-items:center then vertically centres the
+              image on just the list, not the description. */}
+          {!isMobile && (
+          <>
+            <p
+              style={{
+                ...ts,
+                gridColumn: '2 / 5',
+                gridRow: '1',
+                margin: 0,
+                marginBottom: 40,
+                textAlign: 'center',
+              }}
+            >
+              Skip&nbsp;Design&nbsp;— студия цифрового дизайна. Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться суть.
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 40, alignItems: 'center' }}>
+            <div
+              style={{
+                gridColumn: '3 / 4',
+                gridRow: '2',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 40,
+                textAlign: 'center',
+              }}
+            >
               <p ref={heroClientLabelRef} style={{ ...ts, margin: 0 }}>Нам доверяют проекты:</p>
               <div ref={heroClientNamesRef} style={{
                 display: 'flex',
@@ -1046,7 +1170,7 @@ function AppInner() {
                 {PEOPLE_CLIENTS.map(name => (
                   <p
                     key={name}
-                    style={{ margin: 0, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    style={{ margin: 0, fontSize: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap' }}
                     onMouseEnter={() => setHoveredClient(name)}
                     onMouseLeave={() => setHoveredClient(null)}
                   >
@@ -1055,17 +1179,17 @@ function AppInner() {
                 ))}
               </div>
             </div>
-          </div>
-
-          <div style={{ gridColumn: isMobile ? 'auto' : '5 / 6' }}>
-            <PeopleVideoSlot config={peopleVideos.right} aspectRatio="16/9" />
-          </div>
+            <div style={{ gridColumn: '5 / 6', gridRow: '2', alignSelf: 'center' }}>
+              <PeopleVideoSlot config={peopleVideos.right} aspectRatio="16/9" />
+            </div>
+          </>
+          )}
 
           {/* Mobile-only: studio description + clients below videos */}
           {isMobile && (
-            <div style={{ gridColumn: '1 / -1', marginTop: 20, display: 'flex', flexDirection: 'column', gap: 20, textAlign: 'center', alignItems: 'center' }}>
+            <div style={{ gridColumn: '1 / -1', marginTop: 'var(--space-xs)', display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)', textAlign: 'center', alignItems: 'center' }}>
               <p style={{ ...ts, margin: 0 }}>
-                Skip&nbsp;Design&nbsp;— команда дизайнеров и стратегов. Верим, что простота — не про упрощение, а смелость скипнуть лишнее.
+                Skip&nbsp;Design&nbsp;— студия цифрового дизайна. Верим, что простота — не про упрощение, а смелость скипнуть лишнее.
               </p>
               <p ref={heroClientLabelRef} style={{ ...ts, margin: 0 }}>Нам доверяют проекты:</p>
               <div ref={heroClientNamesRef} style={{
@@ -1076,20 +1200,81 @@ function AppInner() {
                 lineHeight: 'var(--heading-lh)', letterSpacing: 'var(--heading-ls)',
               }}>
                 {PEOPLE_CLIENTS.map(name => (
-                  <p key={name} style={{ margin: 0 }}>{name}</p>
+                  <p key={name} style={{ margin: 0, fontSize: 'inherit' }}>{name}</p>
                 ))}
               </div>
             </div>
           )}
         </div>
 
-        <div id="cases" style={{ marginTop: 200 }}>
+        <div id="cases" style={{ marginTop: 'var(--space-xl)' }}>
           <ProjectGallery onCaseClick={() => navigateWithExit('/case-template')} />
         </div>
 
         <ToolsSection />
 
         <MediaSection toolsRowsRef={toolsRowsRef} />
+
+        {/* "+ новый проект" — sticky pill above the contact form.
+            Fades to 0 the moment the form enters the viewport (driven by
+            an IntersectionObserver on .contactWrap). */}
+        <button
+          className={s.newProjectBtn}
+          style={{
+            position: 'sticky',
+            bottom: 'var(--pad)',
+            ...(isMobile
+              ? { left: '50%', transform: 'translateX(-50%)' }
+              : { left: 'var(--pad)' }),
+            zIndex: 60,
+            mixBlendMode: 'difference',
+            background: 'transparent',
+            border: 'none',
+            borderRadius: 0,
+            padding: 0,
+            margin: 0,
+            marginTop: 'calc(-1 * var(--text-size) * var(--text-lh) - 20px)',
+            cursor: formInView ? 'default' : 'pointer',
+            opacity: formInView ? 0 : 1,
+            pointerEvents: formInView ? 'none' : 'auto',
+            transition: 'opacity 0.35s ease',
+            fontFamily: 'var(--font)',
+            fontSize: 'var(--text-size)',
+            fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+            letterSpacing: 'var(--text-ls)',
+            lineHeight: 'var(--text-lh)',
+            color: '#000',
+            textDecoration: 'none',
+            display: 'inline-block',
+            perspective: '500px',
+            alignSelf: isMobile ? 'center' : 'flex-start',
+          }}
+          onClick={() => {
+            const el = document.querySelector('[class*="contactWrap"]') as HTMLElement;
+            const lenis = (window as any).__lenis;
+            if (el && lenis) lenis.scrollTo(el, { duration: 1.2, offset: -40 });
+            else if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+        >
+          <span className={s.newProjectFlipInner}>
+            <span
+              className={s.newProjectFace}
+              style={{ background: '#fff', padding: '9px 8px 11px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}
+            >
+              <span className={s.newProjectPlusGhost} aria-hidden="true">+</span>
+              новый проект
+            </span>
+            <span
+              className={`${s.newProjectFace} ${s.newProjectFaceBottom}`}
+              style={{ background: '#fff', padding: '9px 8px 11px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}
+            >
+              <span style={{ marginRight: 6 }}>+</span>
+              новый проект
+            </span>
+          </span>
+        </button>
+
+        </div>{/* /newProjectStickyWrap */}
 
         <ContactForm onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} />
 

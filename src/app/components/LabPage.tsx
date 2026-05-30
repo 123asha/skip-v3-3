@@ -121,7 +121,7 @@ export default function LabPage({
               marginBottom: 40,
             }}
           >
-            <p style={{ ...ts, margin: 0 }}>
+            <p style={{ ...ts, margin: 0, maxWidth: 'calc(2 / 3 * (100vw - 2 * var(--pad)))' }}>
               Skip&nbsp;Design&nbsp;— студия цифрового дизайна, которая любит своё дело. Мы ценим человечность, мастерство и здравый смысл.
             </p>
             <a
@@ -149,7 +149,7 @@ export default function LabPage({
             display: 'grid',
             gridTemplateColumns: 'var(--people-cols)',
             gap: 'var(--gap)',
-            marginBottom: 120,
+            marginBottom: 'var(--space-xl)',
             alignItems: 'start',
           }}
         >
@@ -217,7 +217,7 @@ export default function LabPage({
             display: 'grid',
             gridTemplateColumns: 'var(--content-cols)',
             gap: 'var(--content-gap)',
-            marginBottom: 120,
+            marginBottom: 'var(--space-xl)',
             alignItems: 'start',
           }}
         >

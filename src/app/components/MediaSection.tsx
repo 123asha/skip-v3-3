@@ -38,10 +38,10 @@ export function MediaSection({ toolsRowsRef }: { toolsRowsRef?: React.RefObject<
       <div className={s.tools}>
         <h2 style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 'var(--h2-size)',
-          fontWeight: 'var(--h2-weight)' as React.CSSProperties['fontWeight'],
-          lineHeight: 'var(--h2-lh)',
-          letterSpacing: 'var(--h2-ls)',
+          fontSize: 'var(--heading-size)',
+          fontWeight: 'var(--heading-weight)' as React.CSSProperties['fontWeight'],
+          lineHeight: 'var(--heading-lh)',
+          letterSpacing: 'var(--heading-ls)',
           color: 'var(--c-text)',
           margin: 0,
         }}>Медиа</h2>

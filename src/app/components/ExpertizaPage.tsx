@@ -290,25 +290,16 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
         {/* ── Service rows (left) + outer panel (right on desktop / below on mobile) ──
             Desktop: side-by-side flex; details panel sticks to the viewport.
             Mobile: column stack; the panel slides in below the services list. */}
-        <div style={{
+        {/* Desktop: plain full-width list; the detail panel is a fixed overlay
+            on the right so the list never shrinks/shifts when it opens. */}
+        <div style={isMobile ? {
           display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: anySelected ? (isMobile ? 16 : 20) : 0,
-          alignItems: isMobile ? 'stretch' : 'stretch',
-        }}>
+          flexDirection: 'column',
+          gap: anySelected ? 16 : 0,
+        } : {}}>
 
-          {/* Services list */}
-          <div style={{
-            flex: !isMobile && anySelected ? '0 1 calc(60% - 8px)' : '1 1 100%',
-            minWidth: 0,
-            transition: 'flex-basis 0.45s cubic-bezier(0.4, 0, 0.2, 1), flex-grow 0.45s cubic-bezier(0.4, 0, 0.2, 1)',
-            position: !isMobile && anySelected ? 'sticky' : 'static',
-            top: !isMobile && anySelected ? 0 : 'auto',
-            alignSelf: 'flex-start',
-            maxHeight: !isMobile && anySelected ? '100vh' : 'none',
-            overflow: !isMobile && anySelected ? 'hidden' : 'visible',
-            width: isMobile ? '100%' : 'auto',
-          }}>
+          {/* Services list — always full width, never shrinks */}
+          <div style={{ minWidth: 0, width: '100%' }}>
             {SERVICES.map((svc, svcIdx) => {
               const itemButtons = svc.items.map(item => {
                 const isSelected = selectedId === item.id;
@@ -350,7 +341,6 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'var(--c-text)', opacity: 0.12 }} />
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'flex-start' }}>
                       <div>
-                        <p style={{ ...ts, margin: 0, marginBottom: 8, opacity: 0.4 }}>{svc.number}</p>
                         <p style={{ ...h2Style, margin: 0 }}>{svc.title}</p>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -372,7 +362,7 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                   onMouseLeave={() => setHoveredSvcIdx(null)}
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: anySelected ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)',
+                    gridTemplateColumns: 'repeat(5, 1fr)',
                     gap: 'var(--gap)',
                     position: 'relative',
                     paddingTop: 16,
@@ -382,7 +372,9 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                 >
                   <MagneticDivider active={hoveredSvcIdx === svcIdx} />
                   <p style={{ ...ts, gridColumn: '1' }}>{svc.number}</p>
-                  <p style={{ ...h2Style, gridColumn: anySelected ? '2' : '3' }}>{svc.title}</p>
+                  {/* When the detail panel is open, the title + items shift one
+                      column to the left so the panel (right ~40%) doesn't cover them. */}
+                  <p style={{ ...h2Style, gridColumn: anySelected ? '2' : '3', transition: 'none' }}>{svc.title}</p>
                   <div style={{ gridColumn: anySelected ? '3' : '4', display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {itemButtons}
                   </div>
@@ -402,13 +394,17 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
               background: 'var(--c-surface)',
               transition: 'max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
             } : {
-              flex: anySelected ? '0 0 calc(40% - 12px)' : '0 0 0px',
-              position: 'sticky',
+              // Desktop: fixed overlay on the right — doesn't affect list layout.
+              position: 'fixed',
               top: 0,
-              alignSelf: 'stretch',
-              background: 'var(--c-surface)',
+              right: 0,
+              height: '100vh',
+              width: anySelected ? '40vw' : 0,
               overflow: 'hidden',
-              transition: 'flex-basis 0.45s cubic-bezier(0.4, 0, 0.2, 1)',
+              background: 'var(--c-surface)',
+              zIndex: 60,
+              pointerEvents: anySelected ? 'auto' : 'none',
+              transition: 'width 0.45s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           >
             <div
@@ -419,8 +415,8 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                 boxSizing: 'border-box',
               } : {
                 padding: '20px 20px 40px 20px',
-                width: 'calc((100vw - 40px) * 0.4 - 10px)',
-                maxWidth: 'calc((100vw - 40px) * 0.4 - 10px)',
+                width: '40vw',
+                maxWidth: '40vw',
                 height: '100%',
                 overflowY: 'auto',
                 boxSizing: 'border-box',

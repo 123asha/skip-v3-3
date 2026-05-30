@@ -305,21 +305,23 @@
 .toolRow:hover .toolRowLink,
 .toolRowLink:hover { opacity: 1; }
 
-/* ── Mobile: stack rows, year floats right above the title ── */
+/* ── Mobile: name + year on same row, desc below ── */
 @media (max-width: 768px) {
   .toolRow {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0 var(--gap);
+    align-items: baseline;
   }
   /* Hide the two empty spacer divs */
   .toolRow > div:not([class]) { display: none; }
-  /* Year moves to the top, right-aligned */
-  .toolRowTextRight {
-    order: -1;
-    align-self: flex-end;
-    text-align: right;
-  }
+  /* Name: takes remaining width on the first row */
+  .toolRow > p:nth-of-type(1) { flex: 1; min-width: 0; }
+  /* Year: right side, same row as name */
+  .toolRowTextRight { flex-shrink: 0; text-align: right; order: 0; }
+  /* Desc: full width on second row */
+  .toolRow > p:nth-of-type(2) { width: 100%; order: 1; }
 }
 
 /* ── Contact form ── */
@@ -407,9 +409,9 @@
 .contactCard {
   background: var(--c-surface);
   /* Width of 2 cols + 1 gap inside the 5-col system — centered via the flex parent */
-  width: calc(2 / 5 * (100% - 4 * var(--gap)) + var(--gap));
-  /* Form height reduced by 20 % (was 70vh) */
-  min-height: 56vh;
+  width: calc(2 / 5 * (100% - 4 * var(--gap)) + 1 * var(--gap));
+  /* Square — height equals width */
+  aspect-ratio: 1 / 1;
   position: relative;
   z-index: 2;
   overflow: hidden;
@@ -417,6 +419,12 @@
   display: flex;
   flex-direction: column;
   align-self: center;
+}
+
+@media (max-width: 768px) {
+  .contactCard { width: 100%; }
+  /* Without snake game, no need for full-viewport-height wrap on mobile */
+  .contactWrap { min-height: auto; }
 }
 
 
@@ -438,7 +446,7 @@
   position: relative;
   width: 100%;
   flex: 1;
-  padding: 20px;
+  padding: 20px 48px;
   background: var(--c-surface);
   z-index: 1;
   display: flex;

@@ -92,8 +92,7 @@ export function ToolsSection() {
             style={{
               overflowX: 'auto',
               overflowY: 'hidden',
-              scrollSnapType: 'x mandatory',
-              WebkitOverflowScrolling: 'touch',
+              scrollSnapType: 'x proximity',
               scrollbarWidth: 'none',
               marginLeft: 'calc(-1 * var(--pad))',
               width: 'calc(100% + 2 * var(--pad))',

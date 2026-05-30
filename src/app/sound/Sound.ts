@@ -64,6 +64,10 @@ export const SOUND_BUS = new SoundBus();
 class SoundEngine {
   private ctx: AudioContext | null = null;
   private lastByType: Record<string, number> = {};
+  // Sustained warm "festival" pad for case hover — reacts to mouse movement.
+  private epic: {
+    master: GainNode; oscs: OscillatorNode[]; lp: BiquadFilterNode;
+  } | null = null;
 
   private getCtx(): AudioContext | null {
     if (typeof window === 'undefined') return null;
@@ -133,6 +137,108 @@ class SoundEngine {
     if (!SOUND_BUS.on) return;
     this.play(kind, 0);
     setTimeout(() => this.play(kind, 0), 70);
+  }
+
+  /** Start a long, sustained "epic" background drone (a low fifth — 2 notes)
+      while hovering a case card. Mouse movement then bends the pitch up and
+      slightly muffles it via epicMove() — the drone "warps" with motion. */
+  epicStart() {
+    if (!SOUND_BUS.on) return;
+    const ctx = this.getCtx();
+    if (!ctx || this.epic) return;
+    const now = ctx.currentTime;
+
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(0.05, now + 0.9); // slow epic swell
+
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 1700; // dark/cinematic by default
+    lp.Q.value = 0.6;
+    master.connect(lp).connect(ctx.destination);
+
+    // Low open fifth — A2 + E3 — sustained, cinematic
+    const freqs = [110.0, 164.81];
+    const oscs: OscillatorNode[] = freqs.map((f, i) => {
+      const o = ctx.createOscillator();
+      o.type = i === 0 ? 'sawtooth' : 'sine'; // a little harmonic body on the root
+      o.frequency.value = f;
+      const g = ctx.createGain();
+      g.gain.value = i === 0 ? 0.22 : 0.6;
+      o.connect(g).connect(master);
+      o.start(now);
+      return o;
+    });
+
+    this.epic = { master, oscs, lp };
+  }
+
+  /** Mouse movement warps the drone: pitch bends up + a touch of muffle,
+      proportional to pointer speed, then glides back when still. `intensity` 0–1. */
+  epicMove(intensity: number) {
+    const e = this.epic;
+    if (!e) return;
+    const ctx = this.getCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const v = Math.max(0, Math.min(1, intensity));
+
+    // Pitch bends up to +5 semitones (500 cents) with speed, then eases back.
+    e.oscs.forEach(o => {
+      o.detune.cancelScheduledValues(now);
+      o.detune.setTargetAtTime(v * 500, now, 0.08);
+      o.detune.setTargetAtTime(0, now + 0.18, 0.5);
+    });
+    // Slight muffle while moving — filter dips, then recovers.
+    e.lp.frequency.cancelScheduledValues(now);
+    e.lp.frequency.setTargetAtTime(1700 - v * 700, now, 0.08);
+    e.lp.frequency.setTargetAtTime(1700, now + 0.25, 0.6);
+  }
+
+  /** Fade out + stop the bed. */
+  epicStop() {
+    const e = this.epic;
+    if (!e) return;
+    this.epic = null;
+    const ctx = this.getCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    e.master.gain.cancelScheduledValues(now);
+    e.master.gain.setTargetAtTime(0.0001, now, 0.3);
+    const stopAt = now + 1.4;
+    e.oscs.forEach(o => { try { o.stop(stopAt); } catch { /* already stopped */ } });
+  }
+
+  /** Soft, "epic" ambient swell — an open fifth/octave chord with slow attack
+      and long release at very low volume. One-shot version. */
+  playEpic(throttleMs = 700) {
+    if (!SOUND_BUS.on) return;
+    const ctx = this.getCtx();
+    if (!ctx) return;
+    const wall = performance.now();
+    if (wall - (this.lastByType['epic'] ?? 0) < throttleMs) return;
+    this.lastByType['epic'] = wall;
+
+    const now = ctx.currentTime;
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(0.045, now + 0.4);   // soft swell in
+    master.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);  // long release
+    master.connect(ctx.destination);
+
+    // Open, cinematic interval — root, fifth, octave
+    const freqs = [196, 294, 392]; // G3 · D4 · G4
+    freqs.forEach((f, i) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, now);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(i === 0 ? 1 : 0.55, now);
+      osc.connect(g).connect(master);
+      osc.start(now);
+      osc.stop(now + 1.9);
+    });
   }
 }
 

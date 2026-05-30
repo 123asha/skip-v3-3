@@ -156,7 +156,7 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: () => vo
         className={s.grid}
         style={{
           display: 'grid',
-          gridTemplateColumns: 'var(--cases-cols)',
+          gridTemplateColumns: isMobile ? '1fr' : 'var(--cases-cols)',
           columnGap: 'var(--gap)',
           rowGap: 'var(--cases-row-gap)',
           padding: '0 var(--pad)',
@@ -167,6 +167,7 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: () => vo
           row.items.map(item => (
             <div
               key={item.project.id}
+              data-case-card=""
               style={{
                 gridColumn: isMobile ? 'auto' : item.col,
                 gridRow: isMobile ? 'auto' : rowIdx + 1,

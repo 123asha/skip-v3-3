@@ -185,8 +185,8 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
           {variant === 'consult' && activeTab === 'join' ? (
             <p className={s.contactTitle} style={{ marginTop: 20, textAlign: 'center' }}>
               Оставьте{' '}
-              <span ref={wordRef}>{consultWord}</span>,<br />
-              чтобы проконсультироваться — мы свяжемся с вами
+              <span ref={wordRef}>{consultWord}</span>
+              {' '}— мы свяжемся с вами
             </p>
           ) : activeTab === 'join' ? (
             <p className={s.contactTitle} style={{ marginTop: 20, textAlign: 'center' }}>
@@ -199,116 +199,23 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
             </p>
           )}
 
-          {/* Inputs — pushed to the centre of the form rectangle */}
+          {/* Inputs — Telegram only, centred in the form rectangle */}
           <div className={s.contactFields} style={{ marginTop: 'auto', marginBottom: 'auto', width: '100%' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', width: '100%' }}>
-
-              {variant === 'consult' ? (
-                /* Consult variant:
-                   - "Обсудить проект" tab → Telegram only
-                   - "Проконсультироваться" tab → Телефон + Телеграм */
-                activeTab === 'join' ? (
-                  <>
-                    {activeFocus !== 'telegram' && (
-                      <CircleInput
-                        placeholder="ТЕЛЕФОН" size={44}
-                        value={phone} onChange={v => { setPhone(v); if (phoneError) setPhoneError(false); }}
-                        onFocus={() => setActiveFocus('phone')}
-                        onBlur={() => setActiveFocus(null)}
-                        error={phoneError}
-                        action={activeFocus === 'phone' && phoneRelevant ? (
-                          <button
-                            className={s.submitCircle}
-                            onMouseDown={e => e.preventDefault()}
-                            onClick={handlePhoneSubmit}
-                          >{arrowSvg}</button>
-                        ) : undefined}
-                      />
-                    )}
-                    {activeFocus !== 'phone' && (
-                      <CircleInput
-                        placeholder="@ТЕЛЕГРАМ" size={44}
-                        value={telegram} onChange={v => { handleTelegramChange(v); if (telegramError) setTelegramError(false); }}
-                        onFocus={() => setActiveFocus('telegram')}
-                        onBlur={() => setActiveFocus(null)}
-                        error={telegramError}
-                        action={activeFocus === 'telegram' && telegramRelevant ? (
-                          <button
-                            className={s.submitCircle}
-                            onMouseDown={e => e.preventDefault()}
-                            onClick={handleTelegramSubmit}
-                          >{arrowSvg}</button>
-                        ) : undefined}
-                      />
-                    )}
-                  </>
-                ) : (
-                  <CircleInput
-                    placeholder="@ТЕЛЕГРАМ" size={44}
-                    value={telegram} onChange={v => { handleTelegramChange(v); if (telegramError) setTelegramError(false); }}
-                    onFocus={() => setActiveFocus('telegram')}
-                    onBlur={() => setActiveFocus(null)}
-                    error={telegramError}
-                    action={activeFocus === 'telegram' && telegramRelevant ? (
-                      <button
-                        className={s.submitCircle}
-                        onMouseDown={e => e.preventDefault()}
-                        onClick={handleTelegramSubmit}
-                      >{arrowSvg}</button>
-                    ) : undefined}
-                  />
-                )
-              ) : activeTab === 'discuss' ? (
-                <>
-                  <CircleInput
-                    placeholder="EMAIL" size={44}
-                    value={email} onChange={v => { setEmail(v); if (emailError) setEmailError(false); }}
-                    onFocus={() => setActiveFocus('email')}
-                    onBlur={() => setActiveFocus(null)}
-                    disabled={activeFocus === 'telegram'}
-                    error={emailError}
-                    action={activeFocus === 'email' && emailRelevant ? (
-                      <button
-                        className={s.submitCircle}
-                        onMouseDown={e => e.preventDefault()}
-                        onClick={handleEmailSubmit}
-                      >{arrowSvg}</button>
-                    ) : undefined}
-                  />
-
-                  <CircleInput
-                    placeholder="@ТЕЛЕГРАМ" size={44}
-                    value={telegram} onChange={v => { handleTelegramChange(v); if (telegramError) setTelegramError(false); }}
-                    onFocus={() => setActiveFocus('telegram')}
-                    onBlur={() => setActiveFocus(null)}
-                    disabled={activeFocus === 'email'}
-                    error={telegramError}
-                    action={activeFocus === 'telegram' && telegramRelevant ? (
-                      <button
-                        className={s.submitCircle}
-                        onMouseDown={e => e.preventDefault()}
-                        onClick={handleTelegramSubmit}
-                      >{arrowSvg}</button>
-                    ) : undefined}
-                  />
-                </>
-              ) : (
-                <CircleInput
-                  placeholder="РЕЗЮМЕ" size={44}
-                  value={cv} onChange={v => { setCv(v); if (cvError) setCvError(false); }}
-                  onFocus={() => setActiveFocus('cv')}
-                  onBlur={() => setActiveFocus(null)}
-                  error={cvError}
-                  action={activeFocus === 'cv' && cvRelevant ? (
-                    <button
-                      className={s.submitCircle}
-                      onMouseDown={e => e.preventDefault()}
-                      onClick={handleCvSubmit}
-                    >{arrowSvg}</button>
-                  ) : undefined}
-                />
-              )}
-
+              <CircleInput
+                placeholder="@ТЕЛЕГРАМ" size={38} maxLength={32}
+                value={telegram} onChange={v => { handleTelegramChange(v); if (telegramError) setTelegramError(false); }}
+                onFocus={() => setActiveFocus('telegram')}
+                onBlur={() => setActiveFocus(null)}
+                error={telegramError}
+                action={activeFocus === 'telegram' && telegramRelevant ? (
+                  <button
+                    className={s.submitCircle}
+                    onMouseDown={e => e.preventDefault()}
+                    onClick={handleTelegramSubmit}
+                  >{arrowSvg}</button>
+                ) : undefined}
+              />
             </div>
           </div>
 

@@ -114,6 +114,13 @@ function buildRows(projects: Project[]): Row[] {
   return rows;
 }
 
+// ── Mobile mixed-grid helper ─────────────────────────────────────────────────
+// Cycle of 7: [half, half, FULL, half, half, half, half]
+// Full-width appears at sequential index % 7 === 2 — never two in a row.
+function mobileColSpan(idx: number): string {
+  return idx % 7 === 2 ? '1 / -1' : 'auto';
+}
+
 // ── ProjectCard ───────────────────────────────────────────────────────────────
 function ProjectCard({ ar, title, desc, image, onClick }: Project & { onClick?: () => void }) {
   return (
@@ -219,44 +226,74 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
             {tab.label}
           </button>
         ))}
+
       </div>
       <div className={s.body}>
         <div
           ref={gridRef}
           className={s.grid}
           style={
-            zoom === 1 ? { gridTemplateColumns: 'var(--content-cols, repeat(3, 1fr))', rowGap: 'var(--lab-row-gap, 80px)' } :
-            zoom === 0 ? { gridTemplateColumns: 'repeat(4, 1fr)', rowGap: 60 } :
-            { gridTemplateColumns: 'var(--cases-cols)', rowGap: 'var(--cases-row-gap)' }
+            isMobile
+              ? { gridTemplateColumns: '1fr', rowGap: 'var(--cases-row-gap)' }
+              : (zoom === 1 ? { gridTemplateColumns: 'var(--content-cols, repeat(3, 1fr))', rowGap: 'var(--lab-row-gap, 80px)' } :
+                 zoom === 0 ? { gridTemplateColumns: 'repeat(4, 1fr)', rowGap: 60 } :
+                 { gridTemplateColumns: 'var(--cases-cols)', rowGap: 'var(--cases-row-gap)' })
           }
         >
-          {zoom === 2 ? (
-            rows.map((row, rowIdx) =>
-              row.items.map(item => (
-                <div
-                  key={item.project.id}
-                  data-case-card=""
-                  style={{
-                    gridColumn: isMobile ? 'auto' : item.col,
-                    gridRow: isMobile ? 'auto' : rowIdx + 1,
-                    minWidth: 0,
-                  }}
-                >
-                  <ProjectCard {...item.project} onClick={onCaseClick} />
-                </div>
-              ))
-            )
-          ) : (
+          {isMobile ? (
+            // Mobile: flat list, layout controlled by mobileLayout toggle
             filteredProjects.map(project => (
-              <div key={project.id} data-case-card="">
+              <div key={project.id} data-case-card="" style={{ minWidth: 0 }}>
                 <ProjectCard {...project} onClick={onCaseClick} />
               </div>
             ))
+          ) : (
+            // Desktop: original staggered rows logic
+            zoom === 2
+              ? rows.map((row, rowIdx) =>
+                  row.items.map(item => (
+                    <div
+                      key={item.project.id}
+                      data-case-card=""
+                      style={{ gridColumn: item.col, gridRow: rowIdx + 1, minWidth: 0 }}
+                    >
+                      <ProjectCard {...item.project} onClick={onCaseClick} />
+                    </div>
+                  ))
+                )
+              : filteredProjects.map(project => (
+                  <div key={project.id} data-case-card="">
+                    <ProjectCard {...project} onClick={onCaseClick} />
+                  </div>
+                ))
           )}
         </div>
       </div>
 
       <ContactForm variant="consult" onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
+
+      {/* Privacy link — mobile only, at the bottom of the page */}
+      {isMobile && (
+        <div style={{
+          padding: 'var(--pad)',
+          paddingBottom: 'calc(64px + var(--pad))',
+          textAlign: 'center',
+          opacity: 0.4,
+          fontSize: 'var(--text-size)',
+          fontFamily: 'var(--font)',
+          fontWeight: 'var(--text-weight)',
+          lineHeight: 'var(--text-lh)',
+          letterSpacing: 'var(--text-ls)',
+        }}>
+          <a
+            href="/policy"
+            onClick={e => { e.preventDefault(); onNavigatePolicy?.(); }}
+            style={{ textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px', color: 'inherit' }}
+          >
+            Политика конфиденциальности
+          </a>
+        </div>
+      )}
     </div>
   );
 }

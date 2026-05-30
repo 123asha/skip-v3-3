@@ -37,11 +37,11 @@ export default function CaseCard({
     return (
       <div className={s.card} onClick={onClick}>
         <div className={s.cardImage} style={{ aspectRatio: ar, width: '100%', flex: 'none' }}>
-          {image && <img src={image} alt={title} />}
+          {image && <img src={image} alt={title} loading="lazy" />}
         </div>
         <div style={{ paddingTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
           <p style={{ margin: 0, lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)', fontSize: 'var(--text-size)' }}>{title}</p>
-          <p style={{ margin: 0, lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)', fontSize: 'var(--text-size)', opacity: 0.5 }}>{desc}</p>
+          <p style={{ margin: 0, lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)', fontSize: 'var(--text-size)' }}>{desc}</p>
         </div>
       </div>
     );
@@ -78,6 +78,7 @@ export default function CaseCard({
           <img
             src={image}
             alt={title}
+            loading="lazy"
             style={{
               transform: hovered ? 'scale(1.06)' : 'scale(1)',
               transition: 'transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1)',

@@ -6,6 +6,7 @@ import MoscowTime from './MoscowTime';
 import s from './ScrollHero.module.css';
 import { TEXT_STYLE } from '../utils/typography';
 import { asset } from '../utils/asset';
+import { useMobile } from '../hooks/useMobile';
 
 
 // Sidebar section items hidden for now — keep the export so dependents still
@@ -26,6 +27,12 @@ const BG_IMGS = [
   asset('/2bg.webp'),
   asset('/3bg.webp'),
 ];
+
+// VIDEO_PRELOADER: slides that are scroll-scrubbed videos instead of images.
+// (Slide 1 is an image for now — 2.mp4 temporarily disabled.)
+const SLIDE_VIDEO_SRC: Record<number, string> = {
+  0: '/s1.mp4',
+};
 
 // Visual-systems case info — labels shown on the small rectangle.
 // symbol: ASCII char shown bottom-left of the card.
@@ -177,7 +184,7 @@ function MobileHero({ onNavigateCases, onNavigateExpertiza, onNavigateLab }: { o
 // Top-level wrapper — branches to mobile/desktop. Each branch is its own
 // component so hooks order is stable across breakpoint changes (otherwise
 // React would crash on resize across 768px).
-type ScrollHeroProps = { mode: 'arcade' | 'bunny'; ready: boolean; onNavigateExpertiza?: (anchor?: string) => void; onNavigateCases?: () => void; onNavigateLab?: () => void };
+type ScrollHeroProps = { mode: 'arcade' | 'bunny'; ready: boolean; skipVideoPhase?: boolean; onNavigateExpertiza?: (anchor?: string) => void; onNavigateCases?: () => void; onNavigateLab?: () => void };
 
 // Single hero for all viewports — the same scroll-driven parallax + rectangle.
 // Mobile-specific sizing lives inside applyProgress (panel width adapts to vw).
@@ -185,8 +192,8 @@ export default function ScrollHero(props: ScrollHeroProps) {
   return <ScrollHeroDesktop {...props} />;
 }
 
-function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }: ScrollHeroProps) {
-  const isMobile = false; // desktop branch — keeps existing code that reads isMobile
+function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, onNavigateCases }: ScrollHeroProps) {
+  const isMobile = useMobile(); // true on touch/narrow viewports
 
   const [activeSection, setActiveSection] = useState(-1);
   const [imgIdx, setImgIdx]               = useState(0);
@@ -227,7 +234,12 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
   // Background slides — 3 divs, one per BG_IMGS, driven by scroll
   const bgWrapRef   = useRef<HTMLDivElement>(null);
   const bgSlideRefs = useRef<(HTMLDivElement | null)[]>([null, null, null]);
-  const bgImgRefs   = useRef<(HTMLImageElement | null)[]>([null, null, null]);
+  const bgImgRefs   = useRef<(HTMLElement | null)[]>([null, null, null]);
+  // VIDEO_PRELOADER: some slides are videos scrubbed by scroll (slide 0 = s1.mp4,
+  // slide 1 = 2.mp4). Slide 2 stays an image.
+  const slideVidRefs = useRef<(HTMLVideoElement | null)[]>([null, null, null]);
+  // Measured width of the widest plate label (symbol + word) → tight pill width.
+  const pillWRef = useRef(160);
   // Satellite images inside gray block — 4 columns, each double-buffered
   const satARef = useRef<(HTMLImageElement | null)[]>(Array(4).fill(null));
   const satBRef = useRef<(HTMLImageElement | null)[]>(Array(4).fill(null));
@@ -355,6 +367,22 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
     return () => window.removeEventListener('resize', measure);
   }, []);
 
+  // Measure the widest plate label so the pill hugs it with 10px padding.
+  useLayoutEffect(() => {
+    const measurePill = () => {
+      const els = stickyRef.current?.querySelectorAll<HTMLElement>('[data-plate]');
+      if (!els?.length) return;
+      let max = 0;
+      els.forEach(e => { max = Math.max(max, e.scrollWidth); });
+      if (max > 0) pillWRef.current = Math.ceil(max) + 26; // 10px left + 16px right
+    };
+    measurePill();
+    // Re-measure once fonts are ready (label widths shift when the font loads)
+    (document as any).fonts?.ready?.then?.(measurePill).catch?.(() => {});
+    window.addEventListener('resize', measurePill, { passive: true });
+    return () => window.removeEventListener('resize', measurePill);
+  }, []);
+
   useEffect(() => {
     if (!ready || reducedMotion.current) return;
     const nums    = numRefs.current.filter(Boolean) as HTMLDivElement[];
@@ -366,6 +394,17 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
     // Animation order:         section titles → caption → panel → headline
 
     const tl = gsap.timeline({ delay: 0.05 });
+
+    // 0. VIDEO_PRELOADER: the first screen rises up from below as a layered
+    //    parallax — the background slide travels the full height + a subtle
+    //    zoom-out settle (deepest layer), the headline rides in as its own
+    //    foreground layer with more travel (below, step 3).
+    if (skipVideoPhase && bgWrapRef.current) {
+      tl.fromTo(bgWrapRef.current,
+        { yPercent: 100, scale: 1.08 },
+        { yPercent: 0, scale: 1, duration: 0.95, ease: 'power3.out', transformOrigin: 'center center' },
+        0);
+    }
 
     // 1. Section titles — bottommost, animate first
     tl.to(nums,   { opacity: 0.4, y: 0, duration: 0.5, stagger: 0.07, ease: 'power3.out' }, 0);
@@ -383,13 +422,21 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
       },
     }, 0.14);
 
-    // 3. Headline — topmost
-    tl.to(hlSpans!, {
-      opacity: 1, y: 0,
-      duration: 0.5,
-      stagger: 0.07,
-      ease: 'power3.out',
-    }, 0.28);
+    // 3. Headline — foreground parallax layer. With the preloader→hero rise it
+    //    travels further and arrives slightly after the background slide.
+    if (skipVideoPhase && hlSpans?.length) {
+      tl.fromTo(hlSpans,
+        { opacity: 0, y: 70 },
+        { opacity: 1, y: 0, duration: 0.7, stagger: 0.08, ease: 'power3.out' },
+        0.18);
+    } else {
+      tl.to(hlSpans!, {
+        opacity: 1, y: 0,
+        duration: 0.5,
+        stagger: 0.07,
+        ease: 'power3.out',
+      }, 0.28);
+    }
 
     // 4. Caption — fades in last (just opacity, no y), after the video/panel appears
     tl.to(captionRef.current, { opacity: 0.4, duration: 0.5, ease: 'power2.out' }, 0.55);
@@ -443,11 +490,19 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
     // visible the whole way — its text updates as each background becomes
     // active. Each card gets PX_SLIDE of vertical scroll.
     const visualPx = BG_IMGS.length * PX_SLIDE;
-    const sec0Px = () => visualPx;
+    const sec0Px = () => window.innerWidth <= 768 ? BG_IMGS.length * 500 : visualPx;
 
     const setHeight = (dur: number) => {
-      container.style.height =
-        window.innerHeight + dur * PX_PER_SEC + visualPx + 'px';
+      const isMob = window.innerWidth <= 768;
+      const visPx = isMob ? BG_IMGS.length * 500 : visualPx;
+      // VIDEO_PRELOADER: no video phase — height is just the slides.
+      if (skipVideoPhase) {
+        container.style.height = window.innerHeight + visPx + 'px';
+        durationCache = dur;
+        return;
+      }
+      const vPx   = isMob ? 280 : dur * PX_PER_SEC;
+      container.style.height = window.innerHeight + vPx + visPx + 'px';
       durationCache = dur;
     };
 
@@ -571,14 +626,14 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
         const vw = window.innerWidth;
         const isMobile = vw <= 768;
         const mobilePad = 10;
-        const BASE_W  = isMobile ? Math.max(100, vw - mobilePad * 2) : 900;
-        // 900×506 matches the source video's native aspect (16:9 cropped).
-        // Anything else makes object-fit:cover crop the video frame.
-        const BASE_H  = isMobile ? Math.round(BASE_W * 506 / 900)    : 506;
-        const SMALL_W = isMobile
-          ? Math.min(260, vw - mobilePad * 2)
-          : Math.max(260, Math.min(380, Math.round(vw * 0.22)));
-        const SMALL_H = 96;
+        // Desktop: 3 col widths only (no inter-col gaps): 3*(vw-120)/5
+        const BASE_W  = isMobile ? Math.max(100, vw - mobilePad * 2) : Math.round(3 / 5 * (vw - 120));
+        // Height proportional to 16:9 (same crop as original 900×506 source).
+        const BASE_H  = Math.round(BASE_W * 506 / 900);
+        // Tight pill that hugs the «symbol + word» with ~10 px padding
+        // (measured from the widest label).
+        const SMALL_W = Math.min(pillWRef.current, vw - mobilePad * 2);
+        const SMALL_H = 42;
         const SHRINK_DUR   = 0.45;
         const easeOut = (t: number) => 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);
 
@@ -635,6 +690,8 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
       // Raw t (0→1 within gp 1→2) is remapped so 30% is dwell at center + 20% fast transition.
       // Layout: [dwell0=0.3] [trans0→1=0.2] [dwell1=0.3] [trans1→2=0.2] = 1.0
       {
+        // Parallax restored — image (and the video slide) counter-translate
+        // inside their slide so they scroll slower than the container.
         const PARALLAX = 0.35;
         const IMG_H_RATIO = 1.6;
 
@@ -642,7 +699,8 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
         // Slight dwell on slide 0 — the first 15 % of tape-strip range keeps
         // it centred, so the slide feels held briefly before flowing on.
         // Past the dwell, the remaining 85 % linearly maps to 0 → 1.
-        const STICK = 0.15;
+        // No dwell on any device — pure linear slide transitions
+        const STICK = 0;
         const stickyT = rawT < STICK ? 0 : (rawT - STICK) / (1 - STICK);
         const stickyGp = 1 + stickyT; // 1.0→2.0
 
@@ -688,8 +746,22 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
           // empty edges.
           const imgEl = bgImgRefs.current[i];
           if (imgEl) {
-            const imgY = (-yP * PARALLAX) / IMG_H_RATIO;
+            // Video slides stay at 1:1 (no inner parallax) so they aren't
+            // oversized/blurry. Image slides keep the parallax counter-translate.
+            const imgY = (skipVideoPhase && SLIDE_VIDEO_SRC[i]) ? 0 : (-yP * PARALLAX) / IMG_H_RATIO;
             gsap.set(imgEl, { yPercent: imgY });
+          }
+        });
+
+        // Video slides — scrub currentTime by scroll. Slide i scrubs 0→duration
+        // over its own active window: p_i = clamp(stickyT*totalSteps − i).
+        slideVidRefs.current.forEach((vEl, i) => {
+          if (!vEl || !vEl.duration || !isFinite(vEl.duration)) return;
+          const p = Math.max(0, Math.min(1, stickyT * totalSteps - i));
+          const t = p * vEl.duration;
+          if (Math.abs(vEl.currentTime - t) > 0.03) {
+            if (!vEl.paused) vEl.pause();
+            vEl.currentTime = t;
           }
         });
       }
@@ -723,6 +795,16 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
     };
 
     const handleScroll = () => {
+      // VIDEO_PRELOADER: skip video phase — scrollY 0→visualPx maps directly to
+      // gp 1.0→2.0 so the first background slide is centered at scrollY = 0.
+      if (skipVideoPhase) {
+        const s0 = sec0Px();
+        const gp = 1 + Math.min(1, Math.max(0, window.scrollY) / s0);
+        progressRef.current = gp;
+        pendingGp = gp;
+        scheduleApply();
+        return;
+      }
       const dur = mode === 'bunny' ? BUNNY_DUR : vid?.duration;
       if (!dur || !isFinite(dur)) {
         progressRef.current = 0;
@@ -730,8 +812,9 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
         scheduleApply();
         return;
       }
+      const isMob = window.innerWidth <= 768;
       const sy = window.scrollY;
-      const videoPx = dur * PX_PER_SEC;
+      const videoPx = isMob ? 280 : dur * PX_PER_SEC;
 
       let gp: number;
       if (sy <= 0) {
@@ -765,7 +848,7 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
     applyRef.current = applyProgress;
     handleScroll();
 
-    // ── Velocity-driven slide seam bow ────────────────────────────────────
+    // ── Velocity-driven slide seam bow (desktop only) ────────────────────
     // Magnitude of recent scroll velocity → CSS variable --slide-bow-v on
     // bgWrap. Each slide's top edge curves by that many pixels (border-
     // radius). Sign tracking flips which slide carries the curve so the
@@ -773,7 +856,7 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
     let lastY = window.scrollY;
     let bow   = 0;
     let dir = 0;
-    const tickVel = (() => {
+    const tickVel = isMobile ? () => {} : (() => {
       let raf = 0;
       const loop = () => {
         const y = window.scrollY;
@@ -800,7 +883,7 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
       tickVel();
       applyRef.current = null;
     };
-  }, [mode]);
+  }, [mode, isMobile]);
 
   useLayoutEffect(() => {
     applyRef.current?.(progressRef.current);
@@ -810,6 +893,9 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
   //     Also fades the panel out when the mouse is over the top nav or the bottom footer
   //     so it doesn't obscure those clickable areas. ──
   useEffect(() => {
+    // Touch devices have no mouse — skip the whole RAF loop to save battery/CPU.
+    if (isMobile) return;
+
     let rafId   = 0;
     let running = true;
     let mouseX  = window.innerWidth  / 2;
@@ -852,14 +938,17 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
       // Magnet only inside the central 90 % zone of the slide (45 % to each
       // side of centre). Outside the zone the rectangle returns to the
       // centre — mouse position has no effect.
-      const zoneW = vw * 0.45;
-      const zoneH = vh * 0.45;
+      const zoneW = vw * 0.5;
+      const zoneH = vh * 0.5;
       const insideZone = Math.abs(dx) <= zoneW && Math.abs(dy) <= zoneH;
-      const STRENGTH = 0.35; // 35 % of mouse offset, softer pull than 1:1
-      const targetX = insideZone ? dx * STRENGTH * magnet : 0;
+      const STRENGTH = 1.0; // 1:1 with the pointer
+      // Sit the plate just to the RIGHT of the cursor (left edge ≈ cursor + 16).
+      const pw = panelRef.current?.offsetWidth ?? 300;
+      const bias = pw / 2 + 16;
+      const targetX = insideZone ? (dx * STRENGTH + bias) * magnet : 0;
       const targetY = insideZone ? dy * STRENGTH * magnet : 0;
-      offX += (targetX - offX) * 0.20;
-      offY += (targetY - offY) * 0.20;
+      offX += (targetX - offX) * 0.28;
+      offY += (targetY - offY) * 0.28;
 
       // Only fade out when the panel is small (so the brand-strategy video at gp 0-1 stays visible).
       const wantOpacity = magnet ? targetOpacity : 1;
@@ -877,7 +966,7 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
       cancelAnimationFrame(rafId);
       window.removeEventListener('mousemove', onMove);
     };
-  }, []);
+  }, [isMobile]);
 
   const handleSectionClick = useCallback((idx: number) => {
     const dur = mode === 'bunny' ? BUNNY_DUR : (vidRef.current?.duration || 5);
@@ -895,10 +984,22 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
 
   return (
     <div id="hero" ref={containerRef} className={s.container}>
-      <div ref={stickyRef} className={s.sticky}>
+      <div
+        ref={stickyRef}
+        className={s.sticky}
+        style={{ cursor: 'pointer' }}
+        onClick={() => {
+          // The whole slide is clickable → /services page.
+          if (progressRef.current >= 1.0) onNavigateExpertiza?.();
+        }}
+      >
 
         {/* Headline — line by line entrance */}
-        <p ref={headlineRef} className={s.headline}>
+        <p
+          ref={headlineRef}
+          className={s.headline}
+          style={{ color: activeBgIdx === 0 ? '#fff' : '#000', transition: 'color 0.35s ease' }}
+        >
           {HEADLINE_LINES.map((line, i) => (
             <span key={i} style={{ display: 'block', opacity: 0 }}>
               {line}
@@ -928,12 +1029,24 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
                 overflow: 'hidden',
               }}
             >
-              <img
-                ref={el => { bgImgRefs.current[i] = el; }}
-                src={src}
-                style={{ position: 'absolute', top: '-30%', left: 0, width: '100%', height: '160%', objectFit: 'cover', willChange: 'transform' }}
-                alt=""
-              />
+              {skipVideoPhase && SLIDE_VIDEO_SRC[i] ? (
+                // Video slide scrubbed by scroll (s1.mp4 / 2.mp4)
+                <video
+                  ref={el => { bgImgRefs.current[i] = el; slideVidRefs.current[i] = el; }}
+                  src={asset(SLIDE_VIDEO_SRC[i])}
+                  muted
+                  playsInline
+                  preload="auto"
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', display: 'block' }}
+                />
+              ) : (
+                <img
+                  ref={el => { bgImgRefs.current[i] = el; }}
+                  src={src}
+                  style={{ position: 'absolute', top: '-30%', left: 0, width: '100%', height: '160%', objectFit: 'cover', willChange: 'transform' }}
+                  alt=""
+                />
+              )}
             </div>
           ))}
         </div>
@@ -941,8 +1054,7 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
         {/* Panel: video / game — horizontally centered, clickable when small */}
         <div ref={panelRef} className={s.panel}
           onClick={() => {
-            if (progressRef.current >= 1.0)
-              onNavigateExpertiza?.(VS_CASES[activeBgIdx]?.anchor ?? SERVICE_ANCHORS[0]);
+            if (progressRef.current >= 1.0) onNavigateExpertiza?.();
           }}
           style={{
             position: 'absolute',
@@ -950,8 +1062,8 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
             top: '50%',
             // Viewport-aware initial size — prevents overflow on narrow screens
             // before applyProgress sets explicit pixel dimensions on scroll.
-            // 900×506 matches the source video's native aspect.
-            width: 'min(900px, calc(100vw - 20px))',
+            // Desktop: 3 col widths (= 60vw - 72px); mobile: near full-width.
+            width: isMobile ? 'calc(100vw - 20px)' : 'calc(60vw - 72px)',
             aspectRatio: '900 / 506',
             zIndex: 5,
             pointerEvents: 'none',
@@ -963,19 +1075,14 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
             ) : (
               <>
 
-                {/* Main video layer — slides out upward as gp approaches 1 */}
+                {/* Main video layer — hidden when VIDEO_PRELOADER experiment is active */}
+                {!skipVideoPhase && (
                 <div ref={videoLayerRef} style={{
                   position: 'absolute', inset: 0,
                   transform: 'translate3d(0, 0, 0)',
                   willChange: 'transform',
                 }}>
                   <div className={s.panelLayer}>
-                    {/* preload="auto" downloads the video on page load so
-                        the first frame is decoded by the time the user
-                        scrolls. No poster — the original frame would be a
-                        bg slide image (wrong subject), and the brief gray
-                        flash before the video paints reads better than a
-                        misleading still. */}
                     <video
                       ref={vidRef}
                       playsInline
@@ -987,6 +1094,7 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
                     </video>
                   </div>
                 </div>
+                )}
 
                 {/* Case info — dark 3D prism, one face per slide. Rotates on imgIdx change. */}
                 <div ref={caseInfoRef} style={{
@@ -1012,16 +1120,23 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
                           background: '#f6f6f6',
                           display: 'flex',
                           flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          padding: '14px 20px 12px',
+                          justifyContent: 'center',
+                          alignItems: 'flex-start',
+                          padding: '10px',
                           color: 'var(--c-text)',
                           backfaceVisibility: 'hidden',
-                          // translateZ = half of SMALL_H (96px) so the prism fits the bar
-                          transform: `rotateX(${i * -90}deg) translateZ(48px)`,
+                          // translateZ = half of SMALL_H (42px) so the prism fits the bar
+                          transform: `rotateX(${i * -90}deg) translateZ(21px)`,
                         }}
                       >
-                        {/* Top row: name + link */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
+                        {/* Symbol + word only — no link */}
+                        <div data-plate style={{ display: 'inline-flex', alignItems: 'center', gap: 10, width: 'max-content' }}>
+                          <span style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: 'var(--text-size)',
+                            lineHeight: 1,
+                            color: 'var(--c-text)',
+                          }}>{c.symbol}</span>
                           <span style={{
                             fontFamily: 'var(--font)',
                             fontSize: 'var(--text-size)',
@@ -1031,35 +1146,7 @@ function ScrollHeroDesktop({ mode, ready, onNavigateExpertiza, onNavigateCases }
                             color: 'var(--c-text)',
                             whiteSpace: 'nowrap',
                           }}>{c.name}</span>
-                          <a
-                            href="#"
-                            onClick={e => { e.preventDefault(); e.stopPropagation(); onNavigateExpertiza?.(c.anchor); }}
-                            style={{
-                              fontFamily: 'var(--font)',
-                              fontSize: 'var(--text-size)',
-                              fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
-                              lineHeight: 'var(--text-lh)',
-                              letterSpacing: 'var(--text-ls)',
-                              color: 'var(--c-text)',
-                              textDecoration: 'underline',
-                              textDecorationStyle: 'dotted',
-                              textUnderlineOffset: '3px',
-                              cursor: 'pointer',
-                              whiteSpace: 'nowrap',
-                              flexShrink: 0,
-                            }}
-                          >Перейти</a>
                         </div>
-                        {/* Bottom-left ASCII symbol */}
-                        <span style={{
-                          fontFamily: 'var(--font-mono)',
-                          fontSize: 'var(--text-size)',
-                          lineHeight: 1,
-                          letterSpacing: 0,
-                          color: 'var(--c-text)',
-                          opacity: 0.5,
-                          alignSelf: 'flex-start',
-                        }}>{c.symbol}</span>
                       </div>
                     ))}
                   </div>

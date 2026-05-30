@@ -37,7 +37,7 @@
   --text-lh: 1;
   --text-ls: -0.02em;
 
-  --heading-size: clamp(48px, 3.43vw, 65px);
+  --heading-size: clamp(40px, 2.857vw, 54px);
   --heading-weight: 454;
   --heading-lh: 0.81;
   --heading-ls: -0.02em;
@@ -88,8 +88,8 @@
     --text-size:      clamp(11px, 3.5vw, 18px);
     /* Tight enough so "Визуальные системы для" / "новые горизонтальные" type
        lines fit on a single row at 360-390 px viewport widths. */
-    --heading-size:   clamp(26px, 8.4vw, 53px);
-    --h2-size:        clamp(18px, 5.5vw, 36px);
+    --heading-size:   clamp(22px, 7vw, 44px);
+    --h2-size:        clamp(22px, 7vw, 44px); /* matches --heading-size on mobile */
     /* Proportional vertical rhythm — keeps the same ratio as desktop */
     --space-xl: 80px;
     --space-lg: 48px;
@@ -165,7 +165,7 @@
     --text-size:    12px;
     /* H1 sized so "Визуальные системы для" (22 chars) fits on a single
        line at 360–390 px viewport. */
-    --heading-size: 31px;
+    --heading-size: 26px;
     --h2-size:      18px;
   }
   html, body { font-size: 12px !important; }

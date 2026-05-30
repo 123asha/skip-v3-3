@@ -17,10 +17,10 @@
   letter-spacing: var(--text-ls);
 }
 
-/* Mobile: don't pin the tabs row — it shouldn't follow the page scroll. */
+/* Mobile: hide tabs (Сделали / Брендинг / Диджитал) — not needed on small screen. */
 @media (max-width: 768px) {
   .tabsBar {
-    position: static;
+    display: none;
   }
 }
 

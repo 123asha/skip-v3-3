@@ -41,7 +41,7 @@ export function FormSnakeGame({
     let foodCharIdx    = 0;
     let playerControlled = false;
     let done   = false;
-    let paused = true;
+    let paused = false;   // autoplay by default — runs on its own (AI)
     let mouseOn = false;
     // Visual recoil — non-zero when snake just bumped a wall / the form
     let recoilTick = 0;
@@ -317,15 +317,18 @@ export function FormSnakeGame({
       }
     };
 
+    // Snake autoplays continuously; the mouse no longer pauses it, it just
+    // tracks hover (kept for any hover-only behaviour).
     const onMouseEnter = () => { mouseOn = true; paused = false; };
-    const onMouseLeave = () => { mouseOn = false; paused = true; };
+    const onMouseLeave = () => { mouseOn = false; };
 
     canvas.addEventListener('mouseenter', onMouseEnter);
     canvas.addEventListener('mouseleave', onMouseLeave);
     window.addEventListener('keydown', onKey);
 
     draw();
-    const id = setInterval(() => { tick(); draw(); }, 260);
+    // 30% faster than the previous 260 ms step
+    const id = setInterval(() => { tick(); draw(); }, 182);
 
     return () => {
       clearInterval(id);

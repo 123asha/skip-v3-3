@@ -41,7 +41,7 @@
   transform: translateX(-50%);
   top: var(--pad);
   font-family: var(--font-display);
-  font-size: var(--heading-size);
+  font-size: calc(var(--heading-size) * 1.2); /* +20% */
   font-weight: var(--heading-weight);
   line-height: var(--heading-lh);
   letter-spacing: -0.03em;
@@ -49,8 +49,8 @@
   max-width: 80%;
   text-align: center;
   z-index: 4;
+  /* Colour set inline per active slide (white on the first screen). */
   color: #fff;
-  mix-blend-mode: difference;
 }
 
 /* Panel */
@@ -95,8 +95,8 @@
 
 @media (max-width: 768px) {
   .headline {
-    top: 72px;
-    font-size: var(--heading-size);
+    top: 90px;
+    font-size: clamp(36px, 10vw, 56px);
     max-width: 95%;
     letter-spacing: -0.025em;
   }

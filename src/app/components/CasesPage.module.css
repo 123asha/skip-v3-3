@@ -55,6 +55,16 @@
   padding-bottom: 200px;
 }
 
+@media (max-width: 768px) {
+  .body { padding-bottom: var(--space-xl); }
+  .tabsBar {
+    padding-top: 25px;
+    padding-bottom: 19px;
+  }
+  /* H1 matches the hero headline size on all sub-pages */
+  .title { font-size: clamp(36px, 10vw, 56px); }
+}
+
 /* ── Tabs ── */
 .tabsBar {
   position: sticky;

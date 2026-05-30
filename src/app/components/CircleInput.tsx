@@ -11,9 +11,10 @@ interface CircleInputProps {
   disabled?: boolean;
   action?: React.ReactNode;
   error?: boolean;
+  maxLength?: number;
 }
 
-export default function CircleInput({ placeholder, value: externalValue, onChange, onFocus: onFocusProp, onBlur: onBlurProp, size = 120, disabled, action, error }: CircleInputProps) {
+export default function CircleInput({ placeholder, value: externalValue, onChange, onFocus: onFocusProp, onBlur: onBlurProp, size = 120, disabled, action, error, maxLength }: CircleInputProps) {
   const isControlled = onChange !== undefined;
   const [ownValue, setOwnValue] = useState('');
   const [focused, setFocused] = useState(false);
@@ -68,6 +69,7 @@ export default function CircleInput({ placeholder, value: externalValue, onChang
         className={s.hiddenInput}
         aria-label={placeholder}
         disabled={disabled}
+        maxLength={maxLength}
       />
     </div>
   );

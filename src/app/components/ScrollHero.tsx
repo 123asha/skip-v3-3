@@ -30,10 +30,10 @@ const BG_IMGS = [
 
 // VIDEO_PRELOADER: slides that are scroll-scrubbed videos instead of images.
 // Desktop only — mobile always uses the static BG_IMGS image (see !isMobile guard below).
-// Slide 0 = Flower, Slide 1 = Magic Moon, Slide 2 = third project.
+// Slide 0 = Senior*s Bar, Slide 1 = Flower, Slide 2 = third project.
 const SLIDE_VIDEO_SRC: Record<number, string> = {
-  0: '/flower2.mp4',  // Flower (slide 0)
-  1: '/magic-moon.mp4',   // Magic Moon (slide 1)
+  0: '/seniors-bar.mp4',  // Senior*s Bar (slide 0)
+  1: '/flower2.mp4',   // Flower (slide 1)
   2: '/s3.mp4',
 };
 

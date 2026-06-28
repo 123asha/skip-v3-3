@@ -15,17 +15,19 @@ interface Project {
   cats: string[];
   ar: AR;
   image: string;
+  video?: string;
   title: string;
   desc: string;
+  year: string;   // shown above the card
 }
 
 export const PROJECTS: Project[] = [
-  { id: 1, cats: ['branding', 'sites', 'interfaces'],       ...img('/case1-h.webp'), title: 'AliExpress',         desc: 'AE Platform: дизайн B2B-платформы для партнёров AliExpress' },
-  { id: 2, cats: ['sites', 'interfaces', 'instruments'],    ...img('/case2-v.webp'), title: 'AE Platform',        desc: 'Редизайн браузерного расширения для AE Platform' },
-  { id: 3, cats: ['branding', 'interfaces', 'instruments'], ...img('/case3-h.webp'), title: "Senior's Platform",  desc: 'Дизайн-система и интерфейсы' },
-  { id: 4, cats: ['branding', 'sites', 'interfaces'],       ...img('/case4-v.webp'), title: 'Futura Digital',     desc: 'Нейминг и регистрация, платформа бренда' },
-  { id: 5, cats: ['branding', 'sites', 'instruments'],      ...img('/case5-v.webp'), title: 'Юрий Мурадян',       desc: 'Персональный брендинг' },
-  { id: 6, cats: ['sites', 'interfaces', 'instruments'],    ...img('/case6-h.webp'), title: 'Digital Experience', desc: 'Исследования и автоматизация процессов' },
+  { id: 1, cats: ['branding', 'sites', 'interfaces'],       ...img('/case1-h.webp'), title: 'Magic Moon',     year: '2024', desc: 'Трекер целей от Юрия Мурадяна, в котором визуал поддерживает философию продукта', video: asset('/magic-moon.mp4') },
+  { id: 2, cats: ['branding', 'sites', 'instruments'],      ...img('/case2-v.webp'), title: 'Gate Legal',     year: '2024', desc: 'Помогли запуститься: от платформы бренда до сайта — за полтора месяца.' },
+  { id: 3, cats: ['branding', 'interfaces', 'instruments'], ...img('/case3-h.webp'), title: 'AEPlatform',     year: '2025', desc: 'Браузерное расширение для отображения affiliate-данных прямо на AliExpress' },
+  { id: 4, cats: ['branding', 'sites'],                     ...img('/case4-v.webp'), title: 'Skip Design',    year: '2025', desc: 'Новогодний спецпроект для команды и комьюнити' },
+  { id: 5, cats: ['branding', 'sites', 'interfaces'],       ...img('/case5-v.webp'), title: 'Крипто', year: '2026', desc: 'Подготовили бренд-систему для запуска крипто-стартапа' },
+  { id: 6, cats: ['sites', 'interfaces', 'instruments'],    ...img('/case6-h.webp'), title: 'Gate Legal',     year: '2024', desc: 'Конструктор баннеров для ускорения разработки креативов к ежедневным постам' },
 ];
 
 const TABS = [
@@ -72,6 +74,7 @@ function buildRows(projects: Project[]): Row[] {
   };
 
   let prevRightWasV = false;
+  let prevLeftWasV  = false;
 
   for (const { a, b, isHH } of shuffle(pairs)) {
     let cfg;
@@ -81,11 +84,18 @@ function buildRows(projects: Project[]): Row[] {
     let left = Math.random() < 0.5 ? a : b;
     let right = left === a ? b : a;
 
-    if (prevRightWasV && right.ar === V && left.ar !== V) {
-      [left, right] = [right, left];
+    if (!isHH) {
+      const vCard = left.ar === V ? left : right;
+      const hCard = left.ar === V ? right : left;
+      if (prevRightWasV && !prevLeftWasV) {
+        left = vCard; right = hCard;
+      } else if (prevLeftWasV && !prevRightWasV) {
+        left = hCard; right = vCard;
+      }
     }
 
     prevRightWasV = right.ar === V;
+    prevLeftWasV  = left.ar === V;
     rows.push({ key: `r${rows.length}`, items: [{ project: left, col: cfg.a }, { project: right, col: cfg.b }] });
   }
 
@@ -102,7 +112,9 @@ function ProjectCard({ project, onClick }: { project: Project; onClick?: () => v
       ar={project.ar}
       title={project.title}
       desc={project.desc}
+      services={project.year}
       image={project.image}
+      video={project.video}
       onClick={onClick}
     />
   );

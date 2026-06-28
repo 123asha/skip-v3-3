@@ -4,7 +4,7 @@
  * 115 % смещение даёт 15 % зазор между кадрами в середине перехода.
  */
 import { useEffect, useRef } from 'react';
-import { asset } from '../utils/asset';
+import { asset, videoAsset } from '../utils/asset';
 
 export type VideoConfig = { src: string; pos: string };
 
@@ -72,11 +72,11 @@ export default function PeopleVideoSlot({
     <div style={{ aspectRatio, background: 'var(--c-surface)', width: '100%', position: 'relative', overflow: 'hidden' }}>
       <video ref={videoARef} autoPlay muted loop playsInline
         style={{ ...shared, objectPosition: config.pos }}>
-        <source src={asset(config.src)} type="video/mp4" />
+        <source src={videoAsset(config.src)} type="video/mp4" />
       </video>
       <video ref={videoBRef} autoPlay muted loop playsInline
         style={{ ...shared, objectPosition: config.pos, transform: `translateY(${OFFSET})` }}>
-        <source src={asset(config.src)} type="video/mp4" />
+        <source src={videoAsset(config.src)} type="video/mp4" />
       </video>
     </div>
   );

@@ -283,14 +283,15 @@
   letter-spacing: var(--text-ls);
 }
 
-.toolsList { display: flex; flex-direction: column; gap: var(--space-sm); }
+.toolsList { display: flex; flex-direction: column; }
 
 .toolRow {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: var(--gap);
+  column-gap: var(--gap);
   align-items: start;
   padding-top: 12px;
+  padding-bottom: 12px;
   position: relative;
 }
 

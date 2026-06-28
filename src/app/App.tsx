@@ -1,10 +1,10 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useLayoutEffect, useState, useCallback } from 'react';
 import { useMobile } from './hooks/useMobile';
 import { gsap } from 'gsap';
 import Lenis from 'lenis';
 import svgPaths from '../imports/Index/svg-3bjnx36a2y';
 import { useReveal } from './utils/reveal';
-import { asset } from './utils/asset';
+import { asset, videoAsset } from './utils/asset';
 import { TEXT_STYLE as ts } from './utils/typography';
 import ScrollHero from './components/ScrollHero';
 import HeroBranches from './components/HeroBranches';
@@ -16,7 +16,7 @@ import ExpertizaPage from './components/ExpertizaPage';
 import MindMapBlock from './components/MindMapBlock';
 import PolicyPage from './components/PolicyPage';
 import Index2Page from './components/Index2Page';
-import CaseTemplatePage from './components/CaseTemplatePage';
+import CaseTemplatePage, { SENIORS_BAR } from './components/CaseTemplatePage';
 import GuidePage from './components/GuidePage';
 import MoscowTime from './components/MoscowTime';
 import BunnyHero from './components/BunnyHero';
@@ -25,6 +25,8 @@ import ContactForm from './components/ContactForm';
 import { ToolsSection } from './components/ToolsSection';
 import { MediaSection } from './components/MediaSection';
 import LabPage from './components/LabPage';
+import DesignSystemPage from './components/DesignSystemPage';
+import ServiceDetailPage from './components/ServiceDetailPage';
 import LinkFlip from './components/LinkFlip';
 import PeopleVideoSlot, { type VideoConfig } from './components/PeopleVideoSlot';
 import SoundIcon from './sound/SoundIcon';
@@ -122,32 +124,21 @@ function Preloader({ onReveal, onGone }: { onReveal: () => void; onGone: () => v
   const stageRef = useRef<HTMLDivElement>(null);
   const vidRef  = useRef<HTMLVideoElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
-  const hintRef = useRef<HTMLDivElement>(null);
-
-  // Magnetic cursor caption — "кликни, чтобы включить звук". Follows the
-  // pointer with eased lag (same mechanic as the snake/scroll hint), fades in
-  // on first move, fades out on the first click (sound enabled).
-  useEffect(() => {
-    const el = hintRef.current;
-    if (!el) return;
-    const xTo = gsap.quickTo(el, 'x', { duration: 0.5, ease: 'power3.out' });
-    const yTo = gsap.quickTo(el, 'y', { duration: 0.5, ease: 'power3.out' });
-    let shown = false, gone = false;
-    const onMove = (e: MouseEvent) => {
-      if (gone) return;
-      xTo(e.clientX + 16);
-      yTo(e.clientY + 14);
-      if (!shown) { shown = true; gsap.to(el, { opacity: 0.55, duration: 0.4, ease: 'power2.out' }); }
-    };
-    const dismiss = () => { if (gone) return; gone = true; gsap.to(el, { opacity: 0, duration: 0.3, ease: 'power2.in' }); };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('pointerdown', dismiss, { once: true });
-    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('pointerdown', dismiss); };
-  }, []);
 
   useEffect(() => {
     const bg = bgRef.current, vid = vidRef.current, stage = stageRef.current, text = textRef.current;
     if (!bg || !stage || !text) return;
+
+    // Prefetch the first hero slide video while the preloader is on screen
+    // so it's ready the moment the hero is revealed (no white flash).
+    const prefetch = document.createElement('video');
+    prefetch.src = import.meta.env.BASE_URL + 'seniors-bar.mp4';
+    prefetch.preload = 'auto';
+    prefetch.muted = true;
+    prefetch.style.display = 'none';
+    document.body.appendChild(prefetch);
+    prefetch.load();
+    const removePrefetch = () => { try { document.body.removeChild(prefetch); } catch {} };
 
     // The preloader holds until the video has played fully at natural speed.
     // It exits exactly when the video reaches its end.
@@ -160,7 +151,7 @@ function Preloader({ onReveal, onGone }: { onReveal: () => void; onGone: () => v
       // onReveal triggers the hero entrance (first screen rises from below);
       // the preloader rises up and out at the same time.
       onReveal();
-      gsap.to(bg, { yPercent: -100, duration: 0.85, ease: 'power3.inOut', onComplete: onGone });
+      gsap.to(bg, { yPercent: -100, duration: 0.85, ease: 'power3.inOut', onComplete: () => { removePrefetch(); onGone(); } });
     };
 
     // Autoplay is unreliable (browsers reject muted play() with AbortError),
@@ -172,20 +163,36 @@ function Preloader({ onReveal, onGone }: { onReveal: () => void; onGone: () => v
     if (vid) {
       vid.muted = true;
       vid.playsInline = true;
-      let startT = 0;
-      const drive = (t: number) => {
-        if (!startT) startT = t;
-        const dur = (vid.duration && isFinite(vid.duration)) ? vid.duration : 4.5;
-        const frac = Math.min(1, (t - startT) / (TARGET * 1000));
-        try { vid.currentTime = frac * dur; } catch { /* not seekable yet */ }
-        if (frac < 1) raf = requestAnimationFrame(drive);
-        else doExit();
-      };
-      const begin = () => { if (!raf) raf = requestAnimationFrame(drive); };
-      if (vid.readyState >= 2) begin();
-      else {
-        vid.addEventListener('loadeddata', begin, { once: true });
-        vid.addEventListener('canplay', begin, { once: true });
+
+      const isMobileDevice = typeof window !== 'undefined'
+        && (window.matchMedia?.('(max-width: 768px)').matches
+          || window.matchMedia?.('(pointer: coarse)').matches);
+
+      if (isMobileDevice) {
+        // Mobile (esp. iOS Safari): scrubbing currentTime doesn't reliably
+        // render frames, so just autoplay the muted, inline video. The curtain
+        // lifts at ~2/3 of TARGET (hardCap below is the safety net).
+        vid.play().catch(() => { /* autoplay blocked — curtain still lifts */ });
+        window.setTimeout(doExit, TARGET * 1000 * (2 / 3));
+      } else {
+        let startT = 0;
+        const drive = (t: number) => {
+          if (!startT) startT = t;
+          const dur = (vid.duration && isFinite(vid.duration)) ? vid.duration : 4.5;
+          const frac = Math.min(1, (t - startT) / (TARGET * 1000));
+          try { vid.currentTime = frac * dur; } catch { /* not seekable yet */ }
+          // Start raising the preloader once the video reaches 55 % — earlier
+          // trigger compensates for the React render-cycle delay so the hero bg
+          // rises in sync with the preloader curtain. (doExit is idempotent.)
+          if (frac >= 0.55) doExit();
+          if (frac < 1) raf = requestAnimationFrame(drive);
+        };
+        const begin = () => { if (!raf) raf = requestAnimationFrame(drive); };
+        if (vid.readyState >= 2) begin();
+        else {
+          vid.addEventListener('loadeddata', begin, { once: true });
+          vid.addEventListener('canplay', begin, { once: true });
+        }
       }
     }
     // Hard safety cap if the video never becomes seekable
@@ -204,7 +211,7 @@ function Preloader({ onReveal, onGone }: { onReveal: () => void; onGone: () => v
     // 2. Glyphs roll up into view, staggered
     tl.to(rolls, { yPercent: 0, duration: 0.55, ease: 'power3.out', stagger: 0.03 }, 0.3);
 
-    return () => { tl.kill(); window.clearTimeout(fallback); window.clearTimeout(hardCap); if (raf) cancelAnimationFrame(raf); gsap.killTweensOf(bg); };
+    return () => { tl.kill(); window.clearTimeout(fallback); window.clearTimeout(hardCap); if (raf) cancelAnimationFrame(raf); gsap.killTweensOf(bg); removePrefetch(); };
   }, []);
 
   return (
@@ -222,7 +229,7 @@ function Preloader({ onReveal, onGone }: { onReveal: () => void; onGone: () => v
         <div style={{ width: 'min(86vw, 360px)', aspectRatio: '900 / 506', overflow: 'hidden' }}>
           <video ref={vidRef} muted playsInline preload="auto"
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: 'var(--c-surface)' }}>
-            <source src={asset('/video.mp4')} type="video/mp4" />
+            <source src={videoAsset('/video.mp4')} type="video/mp4" />
           </video>
         </div>
 
@@ -247,23 +254,6 @@ function Preloader({ onReveal, onGone }: { onReveal: () => void; onGone: () => v
             ),
           )}
         </div>
-      </div>
-
-      {/* Magnetic cursor caption — main font, follows the pointer */}
-      <div
-        ref={hintRef}
-        style={{
-          position: 'fixed', top: 0, left: 0, zIndex: 10000,
-          pointerEvents: 'none', opacity: 0, whiteSpace: 'nowrap',
-          fontFamily: 'var(--font)',
-          fontSize: 'var(--text-size)',
-          fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
-          letterSpacing: 'var(--text-ls)',
-          lineHeight: 1,
-          color: 'var(--c-text)',
-        }}
-      >
-        включить звук
       </div>
     </div>
   );
@@ -409,8 +399,9 @@ export default function App() {
 // the app's internal router always sees paths starting with '/'.
 const _BASE = import.meta.env.BASE_URL.replace(/\/$/, ''); // e.g. '/skip-design' or ''
 function stripBase(p: string): string {
-  if (_BASE && p.startsWith(_BASE)) return p.slice(_BASE.length) || '/';
-  return p;
+  const stripped = (_BASE && p.startsWith(_BASE)) ? p.slice(_BASE.length) : p;
+  // Remove trailing slash (GitHub Pages 404 serves /cases/ → we need /cases)
+  return stripped.replace(/\/$/, '') || '/';
 }
 
 function AppInner() {
@@ -424,15 +415,20 @@ function AppInner() {
     }
     return stripBase(window.location.pathname);
   });
-  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/policy', '/index2', '/case-template', '/guide', '/lab'];
+  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/policy', '/index2', '/case-template', '/Seniorsbar', '/guide', '/lab', '/system', '/brand', '/visual', '/digital'];
   const page = pathname === '/cases' ? 'cases'
              : pathname === '/instruments' ? 'instruments'
              : (pathname === '/expertiza' || pathname === '/services') ? 'expertiza'
              : pathname === '/policy' ? 'policy'
              : pathname === '/index2' ? 'index2'
              : pathname === '/case-template' ? 'case-template'
+             : pathname === '/Seniorsbar' ? 'seniors'
              : pathname === '/guide' ? 'guide'
              : pathname === '/lab' ? 'lab'
+             : pathname === '/system' ? 'system'
+             : pathname === '/brand' ? 'svc-brand'
+             : pathname === '/visual' ? 'svc-visual'
+             : pathname === '/digital' ? 'svc-digital'
              : pathname === '/' ? 'home'
              : pathname === '/404' || !KNOWN_PATHS.includes(pathname) ? 'notfound'
              : 'home';
@@ -452,17 +448,22 @@ function AppInner() {
   // Preloader stays mounted through its rise-up exit; unmounts only when fully gone.
   const [preloaderMounted, setPreloaderMounted] = useState(() => stripBase(window.location.pathname) === '/');
   const [gridVisible, setGridVisible] = useState(false);
+  // Column count for the grid overlay — driven by the cases page zoom (5 by default).
+  const [overlayCols, setOverlayCols] = useState(5);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [formInView, setFormInView] = useState(false);
   // Width of the scrollbar reserved by sub-pages (.page has overflow-y:scroll).
   // The grid overlay is viewport-fixed, so on sub-pages it must add this on the
   // right to line up with content that lives inside the scrollbar gutter.
-  const scrollbarWRef = useRef(0);
-  useEffect(() => {
+  // State (not a ref) so the measured width triggers a re-render — otherwise the
+  // logo / grid overlay keep the stale 0 position until some other re-render
+  // (e.g. toggling the grid) corrects them. useLayoutEffect → no visible flash.
+  const [scrollbarW, setScrollbarW] = useState(0);
+  useLayoutEffect(() => {
     const probe = document.createElement('div');
     probe.style.cssText = 'position:absolute;visibility:hidden;overflow:scroll;width:50px;height:50px';
     document.body.appendChild(probe);
-    scrollbarWRef.current = probe.offsetWidth - probe.clientWidth;
+    setScrollbarW(probe.offsetWidth - probe.clientWidth);
     probe.remove();
   }, []);
   // Mobile: track when the hero video phase ends (scroll > 280px) so the button fades
@@ -483,6 +484,7 @@ function AppInner() {
   const heroClientLabelRef = useRef<HTMLParagraphElement>(null);
   const heroClientNamesRef = useRef<HTMLDivElement>(null);
   const toolsRowsRef = useRef<HTMLDivElement>(null);
+  const casesRevealRef = useRef<HTMLDivElement>(null);
 
   /* People-block: hover on a client name swaps the left/right videos with
      a slide-up transition (PeopleVideoSlot handles the animation). */
@@ -498,6 +500,9 @@ function AppInner() {
   useReveal(heroClientLabelRef, { fromY: 12, duration: 0.45 }, preloaderDone);
   useReveal(heroClientNamesRef, { selector: 'p', fromX: 0, fromY: 24, stagger: 0.09, duration: 0.55, ease: 'power3.out' }, preloaderDone);
   useReveal(toolsRowsRef, { selector: `.${s.toolRow}`, fromY: 14, stagger: 0.08, duration: 0.55 }, preloaderDone);
+  // Case cards just rise a little from below on scroll — NO opacity fade
+  // (fade:false), so they stay fully visible and only slide up.
+  useReveal(casesRevealRef, { selector: '[data-case-card]', fromY: 24, stagger: 0.06, duration: 0.55, fade: false }, preloaderDone);
 
   useEffect(() => {
     if ('scrollRestoration' in window.history) {
@@ -526,12 +531,15 @@ function AppInner() {
     return () => document.removeEventListener('scroll', onScroll, { capture: true });
   }, []);
 
-  // Bootstrap saved sound preference + ENABLE audio on first click anywhere.
+  // Bootstrap saved sound preference, then UNLOCK the AudioContext on the first
+  // user gesture (browsers require a gesture before audio can play). Sound is ON
+  // by default — we only unlock here, never force-enable, so a user who muted
+  // via the icon stays muted.
   useEffect(() => {
     sound.init();
-    const enableOnFirstClick = () => sound.enable();
-    window.addEventListener('pointerdown', enableOnFirstClick, { once: true, passive: true });
-    return () => window.removeEventListener('pointerdown', enableOnFirstClick);
+    const unlockOnFirstClick = () => sound.unlock();
+    window.addEventListener('pointerdown', unlockOnFirstClick, { once: true, passive: true });
+    return () => window.removeEventListener('pointerdown', unlockOnFirstClick);
   }, []);
 
   // Fade the sticky "+ новый проект" pill when the contact form is in view.
@@ -567,42 +575,8 @@ function AppInner() {
     return () => { cancelled = true; if (cleanup) cleanup(); };
   }, [page]);
 
-  // Global sound triggers (desktop only — touch devices skip).
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (window.matchMedia?.('(pointer: coarse)').matches) return;
-
-    // Case cards: sustained "epic" drone that reacts to mouse movement —
-    // louder + more vibrato the faster you move over the card.
-    let curCard: Element | null = null;
-    let lastX = 0, lastY = 0;
-    const onPointerMove = (e: PointerEvent) => {
-      const t = e.target as HTMLElement | null;
-      const card = t?.closest('[data-case-card]') ?? null;
-      if (card) {
-        if (card !== curCard) { curCard = card; sound.epicStart(); }
-        const speed = Math.min(1, Math.hypot(e.clientX - lastX, e.clientY - lastY) / 36);
-        sound.epicMove(speed);
-      } else if (curCard) {
-        curCard = null;
-        sound.epicStop();
-      }
-      lastX = e.clientX; lastY = e.clientY;
-    };
-    const onInput = (e: Event) => {
-      const t = e.target as HTMLElement | null;
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) {
-        sound.play('type');
-      }
-    };
-    window.addEventListener('pointermove', onPointerMove, { passive: true });
-    window.addEventListener('input', onInput, { passive: true });
-    return () => {
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('input', onInput);
-      sound.epicStop();
-    };
-  }, []);
+  // Sound is wired directly at the elements that use it: logo hover, client
+  // hover ("нам доверяют"), and the snake bumping the form. No global listeners.
 
   useEffect(() => {
     // Skip Lenis on mobile / coarse pointer devices entirely.
@@ -663,13 +637,33 @@ function AppInner() {
     };
   }, []);
 
-  // Designer mode (Cmd/Shift+G) auto-toggles sound — the bamboo feedback
-  // is part of the "design tools on" affordance. Outside designer mode,
-  // the user can still flip sound manually via the icon.
+  // Lock all page scrolling while the preloader is on screen (home, first load).
+  // Stops Lenis (desktop) and blocks native wheel / touch / scroll-keys so the
+  // page can't move behind the curtain. Everything is restored once the
+  // preloader has fully lifted away (preloaderMounted → false).
+  useEffect(() => {
+    if (!preloaderMounted) return;
+    (window as any).__lenis?.stop();
+    const blockEvent = (e: Event) => e.preventDefault();
+    const SCROLL_KEYS = new Set([' ', 'Spacebar', 'PageDown', 'PageUp', 'Home', 'End', 'ArrowDown', 'ArrowUp']);
+    const blockKey = (e: KeyboardEvent) => { if (SCROLL_KEYS.has(e.key)) e.preventDefault(); };
+    window.addEventListener('wheel', blockEvent, { passive: false });
+    window.addEventListener('touchmove', blockEvent, { passive: false });
+    window.addEventListener('keydown', blockKey);
+    return () => {
+      (window as any).__lenis?.start();
+      window.removeEventListener('wheel', blockEvent);
+      window.removeEventListener('touchmove', blockEvent);
+      window.removeEventListener('keydown', blockKey);
+    };
+  }, [preloaderMounted]);
+
+  // Designer mode (Cmd/Shift+G) makes sure sound is on (part of the "design
+  // tools on" affordance). It no longer force-disables on exit — sound is ON
+  // by default and otherwise controlled by the user via the icon.
   useEffect(() => {
     sound.unlock();
     if (gridVisible) sound.enable();
-    else sound.disable();
   }, [gridVisible]);
 
   useEffect(() => {
@@ -808,7 +802,7 @@ function AppInner() {
   useEffect(() => {
     const was = prevPath.current;
     prevPath.current = pathname;
-    if (pathname === '/' && (was === '/cases' || was === '/instruments' || was === '/expertiza' || was === '/services' || was === '/policy' || was === '/case-template' || was === '/guide' || was === '/lab')) {
+    if (pathname === '/' && (was === '/cases' || was === '/instruments' || was === '/expertiza' || was === '/services' || was === '/policy' || was === '/case-template' || was === '/Seniorsbar' || was === '/guide' || was === '/lab')) {
       requestAnimationFrame(() => {
         if (casesLinkRef.current) gsap.set(casesLinkRef.current, { opacity: 1 });
         if (toolsLinkRef.current) gsap.set(toolsLinkRef.current, { opacity: 1 });
@@ -836,14 +830,15 @@ function AppInner() {
           <div
             className={s.gridOverlay}
             aria-hidden="true"
-            style={
+            style={{
+              gridTemplateColumns: `repeat(${overlayCols}, 1fr)`,
               // Sub-pages scroll inside .page → account for its scrollbar gutter
-              page !== 'home' && page !== 'index2'
-                ? { paddingRight: `calc(var(--pad) + ${scrollbarWRef.current}px)` }
-                : undefined
-            }
+              ...(page !== 'home' && page !== 'index2'
+                ? { paddingRight: `calc(var(--pad) + ${scrollbarW}px)` }
+                : null),
+            }}
           >
-            {Array.from({ length: 5 }).map((_, i) => <div key={i} className={s.gridCol} />)}
+            {Array.from({ length: overlayCols }).map((_, i) => <div key={i} className={s.gridCol} />)}
           </div>
         </>
       )}
@@ -853,21 +848,21 @@ function AppInner() {
           <button className={s.navBack} onClick={handleBack}>← назад</button>
         ) : (
           <>
-            <span ref={labLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
-              <a href="/lab" className={s.navLink} onClick={handleLabClick}>
-                <LinkFlip>Skip Design</LinkFlip>
-              </a>
-            </span>
             <span ref={casesLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
-              <span className={s.navSep}>,</span>
               <a href="/cases" className={s.navLink} onClick={handleCasesClick}>
-                <LinkFlip>кейсы</LinkFlip>
+                <LinkFlip>Кейсы</LinkFlip>
               </a>
             </span>
             <span ref={expertizaLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
               <span className={s.navSep}>,</span>
               <a href="/services" className={s.navLink} onClick={handleExpertizaClick}>
                 <LinkFlip>услуги</LinkFlip>
+              </a>
+            </span>
+            <span ref={labLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <span className={s.navSep}>,</span>
+              <a href="/lab" className={s.navLink} onClick={handleLabClick}>
+                <LinkFlip>Skip Design</LinkFlip>
               </a>
             </span>
             <span ref={toolsLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'none' }}>
@@ -886,7 +881,15 @@ function AppInner() {
           if (lenis) lenis.scrollTo(0, { duration: 1.2 });
           else window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
-        style={{ cursor: 'pointer' }}
+        style={{
+          cursor: 'pointer',
+          // Sub-pages scroll inside .page (no document scrollbar), so the
+          // viewport-fixed logo sits ~scrollbar-width too far right vs the home
+          // page. Add the scrollbar width back so it lines up identically.
+          ...(page !== 'home' && page !== 'index2'
+            ? { right: `calc(var(--pad) - 10px + ${scrollbarW}px)` }
+            : null),
+        }}
         onMouseEnter={() => {
           sound.play('logo');
           const refs = [dotRef.current, sRef.current, kRef.current, pRef.current];
@@ -943,8 +946,9 @@ function AppInner() {
             pointerEvents: showPrivacy ? 'none' : 'auto',
             transition: 'opacity 0.3s ease',
             display: 'inline-block',
-            perspective: '500px',
+            perspective: 'none',
           }}
+          onMouseEnter={() => sound.play('hover')}
           onClick={() => {
             const el = document.querySelector('[class*="contactWrap"]') as HTMLElement;
             const lenis = (window as any).__lenis;
@@ -960,14 +964,14 @@ function AppInner() {
           <span className={s.newProjectFlipInner}>
             <span
               className={s.newProjectFace}
-              style={{ background: '#fff', padding: '9px 8px 11px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}
+              style={{ background: '#fff', padding: '9px 12px 11px 12px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}
             >
               <span className={s.newProjectPlusGhost} aria-hidden="true">+</span>
               новый проект
             </span>
             <span
               className={`${s.newProjectFace} ${s.newProjectFaceBottom}`}
-              style={{ background: '#fff', padding: '9px 8px 11px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}
+              style={{ background: '#fff', padding: '9px 12px 11px 12px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}
             >
               <span style={{ marginRight: 6 }}>+</span>
               новый проект
@@ -1023,7 +1027,7 @@ function AppInner() {
       }}>
         <SoundIcon />
         <span style={{ color: 'inherit' }}><MoscowTime /> (GMT+3)</span>
-        <a href="/en" style={{ color: 'inherit', textDecoration: 'none' }}>/en</a>
+        <span style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35, cursor: 'default' }}>/en</span>
       </div>}
 
       {/* hi@skip.design — desktop only (on mobile it would overlap the
@@ -1097,7 +1101,7 @@ function AppInner() {
         mixBlendMode: 'difference',
       }}>
         <a
-          href="https://t.me/skipbot"
+          href="https://t.me/skpdsgn"
           target="_blank"
           rel="noreferrer"
           aria-label="Telegram"
@@ -1114,7 +1118,7 @@ function AppInner() {
           </svg>
         </a>
         <a
-          href="https://www.linkedin.com/company/skip-design"
+          href="https://ru.linkedin.com/company/skipdesign"
           target="_blank"
           rel="noreferrer"
           aria-label="LinkedIn"
@@ -1160,13 +1164,13 @@ function AppInner() {
           <a
             href="/policy"
             onClick={e => { e.preventDefault(); navigateWithExit('/policy'); }}
-            style={{ color: 'inherit', textDecoration: 'none', opacity: 0.5, pointerEvents: 'auto', whiteSpace: 'nowrap' }}
+            style={{ color: 'inherit', textDecoration: 'none', opacity: 0.5, pointerEvents: 'auto' }}
           >
-            Политика конфиденциальности
+            Политика<br />конфиденциальности
           </a>
           {/* Right: social icons + time + /en */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', pointerEvents: 'auto' }}>
-            <a href="https://t.me/skipbot" target="_blank" rel="noreferrer" aria-label="Telegram"
+            <a href="https://t.me/skpdsgn" target="_blank" rel="noreferrer" aria-label="Telegram"
               style={{ width: 22, height: 22, borderRadius: '50%', background: '#fff',
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 color: '#000', textDecoration: 'none' }}>
@@ -1174,7 +1178,7 @@ function AppInner() {
                 <path d="M22 4 2.5 11.5l5.6 1.9 2.2 7 3.7-3.6 5.2 3.8L22 4Zm-5.3 4.6-8 7.2-2.5-.9 10.5-6.3Zm-6 9.2 1.2-3.6 6.4 4.7-3.4-1.5-4.2.4Z" fill="#000" />
               </svg>
             </a>
-            <a href="https://www.linkedin.com/company/skip-design" target="_blank" rel="noreferrer" aria-label="LinkedIn"
+            <a href="https://ru.linkedin.com/company/skipdesign" target="_blank" rel="noreferrer" aria-label="LinkedIn"
               style={{ width: 22, height: 22, borderRadius: '50%', background: '#fff',
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 color: '#000', textDecoration: 'none' }}>
@@ -1183,16 +1187,17 @@ function AppInner() {
               </svg>
             </a>
             <span><MoscowTime /> (GMT+3)</span>
-            <a href="/en" style={{ color: 'inherit', textDecoration: 'none' }}>/en</a>
+            <span style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35, cursor: 'default' }}>/en</span>
           </div>
         </div>
       )}
 
       {page === 'cases' && <CasesPage
         onBack={handleBack}
-        onCaseClick={() => navigateWithExit('/case-template')}
+        onCaseClick={(href) => navigateWithExit(href || '/case-template')}
         onNavigatePolicy={() => navigateWithExit('/policy')}
         onGridMode={setGridVisible}
+        onGridCols={setOverlayCols}
       />}
       {page === 'instruments' && <InstrumentsPage
         onNavigateCases={() => navigateWithExit('/cases')}
@@ -1210,7 +1215,12 @@ function AppInner() {
       {page === 'policy' && <PolicyPage />}
       {page === 'index2' && <Index2Page />}
       {page === 'case-template' && <CaseTemplatePage onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} />}
+      {page === 'seniors' && <CaseTemplatePage data={SENIORS_BAR} onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} />}
       {page === 'guide' && <GuidePage />}
+      {page === 'system' && <DesignSystemPage />}
+      {page === 'svc-brand'   && <ServiceDetailPage serviceIdx={0} onBack={() => navigateWithExit('/services')} />}
+      {page === 'svc-visual'  && <ServiceDetailPage serviceIdx={1} onBack={() => navigateWithExit('/services')} />}
+      {page === 'svc-digital' && <ServiceDetailPage serviceIdx={2} onBack={() => navigateWithExit('/services')} />}
       {page === 'notfound' && <NotFoundPage onGoHome={() => navigateWithExit('/')} />}
 
       <div
@@ -1326,10 +1336,10 @@ function AppInner() {
                 marginLeft: 'auto',
                 marginRight: 'auto',
                 textAlign: 'center',
-                maxWidth: '440px',
+                maxWidth: 'calc((100% - 4 * var(--gap)) / 5)',
               }}
             >
-              Skip&nbsp;Design&nbsp;— студия цифрового дизайна. Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться суть.
+              Skip&nbsp;Design&nbsp;— студия цифрового дизайна. Скипаем все, что мешает проявиться суть.
             </p>
             <div
               style={{
@@ -1367,9 +1377,13 @@ function AppInner() {
                 ))}
               </div>
             </div>
+            {/* Client video hidden temporarily — to be replaced with client
+                logos. Restore by removing the `false &&`. */}
+            {false && (
             <div style={{ gridColumn: '5 / 6', gridRow: '2', alignSelf: 'center' }}>
               <PeopleVideoSlot config={peopleVideos.right} aspectRatio="16/9" />
             </div>
+            )}
           </>
           )}
 
@@ -1377,7 +1391,7 @@ function AppInner() {
           {isMobile && (
             <div style={{ gridColumn: '1 / -1', marginTop: 'var(--space-xs)', display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)', textAlign: 'center', alignItems: 'center' }}>
               <p style={{ ...ts, margin: 0, maxWidth: 'calc(2 / 3 * (100vw - 2 * var(--pad)))' }}>
-                Skip&nbsp;Design&nbsp;— студия цифрового дизайна. Верим, что простота — не про упрощение, а смелость скипнуть лишнее.
+                Skip&nbsp;Design&nbsp;— студия цифрового дизайна. Скипаем все, что мешает проявиться суть.
               </p>
               <p ref={heroClientLabelRef} style={{ ...ts, margin: 0 }}>Нам доверяют проекты:</p>
               <div ref={heroClientNamesRef} style={{
@@ -1395,11 +1409,13 @@ function AppInner() {
           )}
         </div>
 
-        <div id="cases" style={{ marginTop: 'var(--space-xl)' }}>
+        <div id="cases" ref={casesRevealRef} style={{ marginTop: 'var(--space-xl)' }}>
           <ProjectGallery onCaseClick={() => navigateWithExit('/case-template')} />
         </div>
 
-        <ToolsSection />
+        {/* Фреймворки section removed — its items now live as text rows inside
+            «Материалы и инструменты» (MediaSection), per the unified list. */}
+        {/* <ToolsSection /> */}
 
         <MediaSection toolsRowsRef={toolsRowsRef} />
 
@@ -1434,7 +1450,7 @@ function AppInner() {
             color: '#000',
             textDecoration: 'none',
             display: 'inline-block',
-            perspective: '500px',
+            perspective: 'none',
             whiteSpace: 'nowrap',
           } : {
             position: 'sticky',
@@ -1460,10 +1476,10 @@ function AppInner() {
             color: '#000',
             textDecoration: 'none',
             display: 'inline-block',
-            perspective: '500px',
+            perspective: 'none',
             alignSelf: 'flex-start',
           }}
-          onMouseEnter={() => sound.play('logo')}
+          onMouseEnter={() => sound.play('hover')}
           onClick={() => {
             const el = document.querySelector('[class*="contactWrap"]') as HTMLElement;
             const lenis = (window as any).__lenis;
@@ -1474,14 +1490,14 @@ function AppInner() {
           <span className={s.newProjectFlipInner}>
             <span
               className={s.newProjectFace}
-              style={{ background: '#fff', padding: '9px 8px 11px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}
+              style={{ background: '#fff', padding: '9px 12px 11px 12px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}
             >
               <span className={s.newProjectPlusGhost} aria-hidden="true">+</span>
               новый проект
             </span>
             <span
               className={`${s.newProjectFace} ${s.newProjectFaceBottom}`}
-              style={{ background: '#fff', padding: '9px 8px 11px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}
+              style={{ background: '#fff', padding: '9px 12px 11px 12px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}
             >
               <span style={{ marginRight: 6 }}>+</span>
               новый проект

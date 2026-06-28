@@ -153,7 +153,7 @@ function ExCaseCard({ title, tag, ar }: { title: string; tag: string; ar: CaseCa
 
 const BRANDING_PROJECTS = [
   { name: "Senior's",                   image: asset('/1.png')   },
-  { name: 'Magic moon от Юры Мурадяна', image: asset('/1.1.png') },
+  { name: 'Magic moon от Юрия Мурадяна', image: asset('/1.1.png') },
   { name: 'Gate Legal',                 image: asset('/2.png')   },
 ];
 
@@ -276,7 +276,7 @@ export default function InstrumentsPage({ onNavigateCases, onNavigatePolicy, onG
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, rowGap: 60 }}>
             {PROJECTS.slice(0, 3).map(p => (
-              <CaseCard key={p.id} ar={p.ar as CaseCardAR} title={p.title} desc={p.desc} image={p.image} />
+              <CaseCard key={p.id} ar={p.ar as CaseCardAR} title={p.title} desc={p.desc} services={p.year} image={p.image} />
             ))}
           </div>
         </div>

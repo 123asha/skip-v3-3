@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "build:beget": "VITE_BASE=/ vite build --outDir dist-beget",
+    "dev": "vite --host"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

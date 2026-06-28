@@ -26,23 +26,23 @@ type ToneOpts = {
 
 const PRESETS: Record<string, ToneOpts> = {
   // Soft bamboo / wood block tap — high mid pitch, fast decay
-  tap:        { freq: 880, spread: 0.18, decay: 0.08, gain: 0.18, type: 'sine' },
+  tap:        { freq: 880, spread: 0.18, decay: 0.09, gain: 0.30, type: 'sine' },
   // Slightly lower & softer — used for hover-feedback (links, buttons)
-  hover:      { freq: 660, spread: 0.10, decay: 0.06, gain: 0.10, type: 'sine' },
+  hover:      { freq: 660, spread: 0.10, decay: 0.07, gain: 0.22, type: 'sine' },
   // Brighter ping for typing
-  type:       { freq: 1100, spread: 0.22, decay: 0.05, gain: 0.10, type: 'triangle' },
+  type:       { freq: 1100, spread: 0.22, decay: 0.06, gain: 0.16, type: 'triangle' },
   // Logo / nav — slightly warmer
-  logo:       { freq: 520, spread: 0.05, decay: 0.10, gain: 0.14, type: 'sine' },
+  logo:       { freq: 520, spread: 0.05, decay: 0.12, gain: 0.30, type: 'sine' },
   // Snake eats — quick double pop
-  snake:      { freq: 700, spread: 0.30, decay: 0.05, gain: 0.16, type: 'triangle' },
+  snake:      { freq: 700, spread: 0.30, decay: 0.06, gain: 0.24, type: 'triangle' },
 };
 
 type Listener = (on: boolean) => void;
 
 class SoundBus {
   private listeners = new Set<Listener>();
-  // Default OFF — opt-in via the sound icon or designer mode.
-  private _on = false;
+  // Default ON — the user can opt out via the sound icon (persisted as '0').
+  private _on = true;
 
   get on() { return this._on; }
   set on(v: boolean) {
@@ -64,10 +64,8 @@ export const SOUND_BUS = new SoundBus();
 class SoundEngine {
   private ctx: AudioContext | null = null;
   private lastByType: Record<string, number> = {};
-  // Sustained warm "festival" pad for case hover — reacts to mouse movement.
-  private epic: {
-    master: GainNode; oscs: OscillatorNode[]; lp: BiquadFilterNode;
-  } | null = null;
+  // Case hover: a bouncing rubber-ball "boink" fired as the pointer moves.
+  private epic: { lastBounce: number } | null = null;
 
   private getCtx(): AudioContext | null {
     if (typeof window === 'undefined') return null;
@@ -91,12 +89,12 @@ class SoundEngine {
     if (ctx.state === 'suspended') ctx.resume().catch(() => {});
   }
 
-  /** Read saved preference on app boot. Default OFF; only explicit "1"
-      from a previous visit (or designer mode) turns sound on. */
+  /** Read saved preference on app boot. Default ON; only an explicit "0"
+      from a previous visit (user muted via the icon) turns sound off. */
   init() {
     try {
       const saved = localStorage.getItem('sd_sound_on');
-      if (saved === '1') SOUND_BUS.on = true;
+      if (saved === '0') SOUND_BUS.on = false;
     } catch { /* ignore */ }
   }
 
@@ -139,75 +137,90 @@ class SoundEngine {
     setTimeout(() => this.play(kind, 0), 70);
   }
 
-  /** Start a long, sustained "epic" background drone (a low fifth — 2 notes)
-      while hovering a case card. Mouse movement then bends the pitch up and
-      slightly muffles it via epicMove() — the drone "warps" with motion. */
+  /** One rubber-ball "boink": a triangle tone that snaps up then bends down in
+      pitch (the ball deforming) with a short decay, rounded by a low-pass so
+      it's a bouncy boing rather than a click. Higher/livelier with more speed. */
+  private bounce(strength: number) {
+    if (!SOUND_BUS.on) return;
+    const ctx = this.getCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const s = Math.max(0, Math.min(1, strength));
+    const f0 = 170 + Math.random() * 50 + s * 230;
+
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(f0 * 1.9, now);                  // snaps up…
+    osc.frequency.exponentialRampToValueAtTime(f0, now + 0.06);   // …then bends down (rubbery boing)
+
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 1300 + s * 900;                          // rounded, not clicky
+    lp.Q.value = 1.0;
+
+    const g = ctx.createGain();
+    const peak = 0.16 + s * 0.18;
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(peak, now + 0.004);       // sharp attack
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.16 + Math.random() * 0.08); // quick decay
+
+    osc.connect(lp).connect(g).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.35);
+  }
+
+  /** Begin the case hover: the ball lands (one bounce). epicMove() then keeps
+      it skipping as the pointer moves. */
   epicStart() {
     if (!SOUND_BUS.on) return;
     const ctx = this.getCtx();
     if (!ctx || this.epic) return;
-    const now = ctx.currentTime;
-
-    const master = ctx.createGain();
-    master.gain.setValueAtTime(0.0001, now);
-    master.gain.exponentialRampToValueAtTime(0.05, now + 0.9); // slow epic swell
-
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.value = 1700; // dark/cinematic by default
-    lp.Q.value = 0.6;
-    master.connect(lp).connect(ctx.destination);
-
-    // Low open fifth — A2 + E3 — sustained, cinematic
-    const freqs = [110.0, 164.81];
-    const oscs: OscillatorNode[] = freqs.map((f, i) => {
-      const o = ctx.createOscillator();
-      o.type = i === 0 ? 'sawtooth' : 'sine'; // a little harmonic body on the root
-      o.frequency.value = f;
-      const g = ctx.createGain();
-      g.gain.value = i === 0 ? 0.22 : 0.6;
-      o.connect(g).connect(master);
-      o.start(now);
-      return o;
-    });
-
-    this.epic = { master, oscs, lp };
+    this.epic = { lastBounce: 0 };
+    this.bounce(0.5);
   }
 
-  /** Mouse movement warps the drone: pitch bends up + a touch of muffle,
-      proportional to pointer speed, then glides back when still. `intensity` 0–1. */
+  /** Pointer movement bounces the ball: boinks fire on a throttle that tightens
+      with speed, so faster movement = a quicker run of bounces. `intensity` 0–1. */
   epicMove(intensity: number) {
     const e = this.epic;
     if (!e) return;
-    const ctx = this.getCtx();
-    if (!ctx) return;
-    const now = ctx.currentTime;
     const v = Math.max(0, Math.min(1, intensity));
-
-    // Pitch bends up to +5 semitones (500 cents) with speed, then eases back.
-    e.oscs.forEach(o => {
-      o.detune.cancelScheduledValues(now);
-      o.detune.setTargetAtTime(v * 500, now, 0.08);
-      o.detune.setTargetAtTime(0, now + 0.18, 0.5);
-    });
-    // Slight muffle while moving — filter dips, then recovers.
-    e.lp.frequency.cancelScheduledValues(now);
-    e.lp.frequency.setTargetAtTime(1700 - v * 700, now, 0.08);
-    e.lp.frequency.setTargetAtTime(1700, now + 0.25, 0.6);
+    const t = performance.now();
+    const interval = 460 - v * 380; // ~80ms (fast) … 460ms (slow)
+    if (t - e.lastBounce >= interval) {
+      e.lastBounce = t;
+      this.bounce(v);
+    }
   }
 
-  /** Fade out + stop the bed. */
+  /** End the hover — bounce tails ring out on their own. */
   epicStop() {
-    const e = this.epic;
-    if (!e) return;
     this.epic = null;
+  }
+
+  /** Directional "whoosh" for zoom in (dir=1) or zoom out (dir=-1).
+      Pitch slides up for zoom-in, down for zoom-out — gives tactile sense of scale. */
+  playZoom(dir: 1 | -1) {
+    if (!SOUND_BUS.on) return;
     const ctx = this.getCtx();
     if (!ctx) return;
     const now = ctx.currentTime;
-    e.master.gain.cancelScheduledValues(now);
-    e.master.gain.setTargetAtTime(0.0001, now, 0.3);
-    const stopAt = now + 1.4;
-    e.oscs.forEach(o => { try { o.stop(stopAt); } catch { /* already stopped */ } });
+
+    const freqStart = dir === 1 ? 320 : 640;
+    const freqEnd   = dir === 1 ? 640 : 320;
+
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freqStart, now);
+    osc.frequency.exponentialRampToValueAtTime(freqEnd, now + 0.12);
+
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.18, now);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+
+    osc.connect(g).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.22);
   }
 
   /** Soft, "epic" ambient swell — an open fifth/octave chord with slow attack

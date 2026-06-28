@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import s from './CasesPage.module.css';
 import { TEXT_STYLE as ts, H2_STYLE } from '../utils/typography';
@@ -6,6 +6,7 @@ import ContactForm from './ContactForm';
 import { MagneticDivider } from './MagneticDivider';
 import { useReveal } from '../hooks/useReveal';
 import { useMobile } from '../hooks/useMobile';
+import LinkFlip from './LinkFlip';
 
 // ── Service data ──────────────────────────────────────────────────────────────
 
@@ -28,7 +29,7 @@ export const SERVICES: Service[] = [
   {
     number: '①',
     title: 'Бренд-\nстратегия',
-    ctaLabel: 'получить кп от стратега',
+    ctaLabel: 'обсудить со стратегом',
     items: [
       {
         id: 'brand-platform',
@@ -75,15 +76,15 @@ export const SERVICES: Service[] = [
   {
     number: '②',
     title: 'Визуальные\nсистемы',
-    ctaLabel: 'получить кп от арт-директора',
+    ctaLabel: 'обсудить с арт-директором',
     items: [
       {
         id: 'identity',
         label: 'фирменный стиль',
         heading: 'Фирменный стиль',
         paragraphs: [
-          'Проектируем визуальную систему: логотип, цвет, типографику, паттерны, фотостиль. Всё, что формирует узнаваемость бренда.',
-          'Разрабатываем не отдельные элементы, а систему — с логикой, правилами и примерами применения.',
+          'Фирменный стиль без системы превращается в набор случайных решений. Со временем бренд теряет цельность, а каждая новая задача требует придумывать всё заново.',
+          'Мы создаём визуальную систему бренда: определяем ключевую идею и правила, которые помогают команде принимать дизайн-решения последовательно и уверенно.',
         ],
         examples: [
           { label: 'логотип-конструктор', href: '#' },
@@ -95,8 +96,8 @@ export const SERVICES: Service[] = [
         label: 'библиотеки и гайды',
         heading: 'Библиотеки и гайды',
         paragraphs: [
-          'Создаём компонентные библиотеки в Figma и брендбуки, которыми команда пользуется каждый день.',
-          'Гайды пишем под реальные задачи: как сделать пост, презентацию, баннер — не теория, а рабочий инструмент.',
+          'Создаём библиотеки в Figma, брендбуки и инструкции, которыми команда действительно пользуется в работе.',
+          'Документируем принципы так, чтобы их понимали и люди, но и ИИ-инструменты.',
         ],
         examples: [
           { label: 'figma-библиотека', href: '#' },
@@ -107,8 +108,8 @@ export const SERVICES: Service[] = [
         label: 'инструменты',
         heading: 'Инструменты',
         paragraphs: [
-          'Разрабатываем шаблоны презентаций, постов, коммерческих предложений и других документов в фирменном стиле.',
-          'Конструкторы позволяют маркетологам самостоятельно собирать материалы, не нарушая бренд.',
+          'Помогаем внедрить систему в повседневные процессы. Разрабатываем шаблоны презентаций, постов, коммерческих предложений и других документов в фирменном стиле.',
+          'В результате новые материалы создаются быстрее, а качество остаётся стабильным.',
         ],
         examples: [
           { label: 'шаблоны презентаций', href: '#' },
@@ -121,15 +122,15 @@ export const SERVICES: Service[] = [
   {
     number: '③',
     title: 'Цифровой\nдизайн',
-    ctaLabel: 'получить кп от продакта',
+    ctaLabel: 'обсудить с командой',
     items: [
       {
         id: 'sites',
         label: 'лендинги и сайты',
         heading: 'Лендинги и сайты',
         paragraphs: [
-          'Проектируем и разрабатываем сайты: от лендингов до сложных продуктовых страниц.',
-          'Дизайн и разработка внутри одной команды — без потерь при передаче.',
+          'Неважно, это одностраничный лендинг или большой корпоративный сайт — для нас это один из главных носителей бренда и важная точка контакта с аудиторией.',
+          'Объединяем стратегию, дизайн и разработку в одном процессе, чтобы быстрее запускать проекты и сохранять качество на каждом этапе.',
         ],
         examples: [
           { label: 'лендинг для стартапа', href: '#' },
@@ -141,8 +142,8 @@ export const SERVICES: Service[] = [
         label: 'интерфейсы',
         heading: 'Интерфейсы',
         paragraphs: [
-          'Проектируем пользовательские интерфейсы для веб-приложений, мобильных продуктов и B2B-платформ.',
-          'От исследования и прототипа до готовой дизайн-системы с компонентами в Figma.',
+          'Поможем запустить цифровой продукт. Спроектируем b2b-платформы и админки.',
+          'Возьмём на себя повседневные задачи — структурно и по делу.',
         ],
         examples: [
           { label: 'b2b-платформа', href: '#' },
@@ -155,8 +156,8 @@ export const SERVICES: Service[] = [
         label: 'спецпроекты',
         heading: 'Спецпроекты',
         paragraphs: [
-          'Делаем нестандартные digital-форматы: промо-сайты, интерактивные истории, конфигураторы и игровые механики.',
-          'Каждый спецпроект — отдельная задача с собственной механикой и визуальным языком.',
+          'Разрабатываем нестандартные digital-форматы: промо-сайты, интерактивные истории и игровые механики.',
+          'Собираем под каждую задачу отдельную систему визуальных и интерактивных решений, которая помогает выделиться и решить конкретную бизнес-задачу. Особое внимание уделяем нарративу.',
         ],
         examples: [
           { label: 'промо-сайт', href: '#' },
@@ -171,6 +172,58 @@ export const SERVICES: Service[] = [
 
 // ts = TEXT_STYLE from shared typography (imported above)
 const h2Style: React.CSSProperties = { ...H2_STYLE, whiteSpace: 'pre-line' };
+
+/** Detail content (paragraphs · CTA) for an opened service item. On mount —
+    i.e. every time a new item is selected — the copy reveals word-by-word with
+    a GSAP stagger (each word rises + fades in), then the CTA link follows.
+    Used both inline in the selected desktop row and inside the mobile panel. */
+function ServiceDetail({ item, svc }: { item: ServiceItem; svc: Service }) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const ctx = gsap.context(() => {
+      const words = el.querySelectorAll<HTMLElement>('[data-word]');
+      const cta = el.querySelector<HTMLElement>('[data-cta]');
+      const tl = gsap.timeline();
+      tl.fromTo(
+        words,
+        { y: 10, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.3, ease: 'power3.out', stagger: 0.006 },
+      );
+      if (cta) {
+        tl.fromTo(cta, { y: 8, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: 'power3.out' }, '-=0.15');
+      }
+    }, el);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <div ref={rootRef} style={{ display: 'flex', flexDirection: 'column' }}>
+      {/* Examples column hidden for now — the text just stretches, max 440px. */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 440 }}>
+        {item.paragraphs.map((p, pi) => (
+          <p key={pi} style={ts}>
+            {p.split(' ').map((w, wi, arr) => (
+              <span key={wi}>
+                <span data-word style={{ display: 'inline-block', willChange: 'transform' }}>{w}</span>
+                {wi < arr.length - 1 ? ' ' : ''}
+              </span>
+            ))}
+          </p>
+        ))}
+      </div>
+      <a
+        href="#"
+        data-cta
+        style={{ display: 'block', marginTop: 20, marginBottom: 40, ...ts, textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}
+      >
+        {svc.ctaLabel}
+      </a>
+    </div>
+  );
+}
 
 // ── Anchor IDs — must match SERVICE_ANCHORS in ScrollHero ────────────────────
 export const SERVICE_IDS = ['brand', 'visual', 'tools'] as const;
@@ -191,6 +244,9 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredSvcIdx, setHoveredSvcIdx] = useState<number | null>(null);
+  // Mobile panel height — measured from the content so it animates to the
+  // exact height (no abrupt snap from transitioning to a fixed 2000px).
+  const [panelMaxH, setPanelMaxH] = useState(0);
 
   const anySelected   = !!selectedId;
   const selectedSvcIdx = selectedId
@@ -207,6 +263,13 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
     : (renderedItem
         ? SERVICES.findIndex(svc => svc.items.some(i => i.id === renderedItem!.id))
         : -1);
+
+  // Measure the mobile panel content so it animates to its exact height
+  // (smooth open/close instead of snapping to a fixed max-height).
+  useLayoutEffect(() => {
+    if (!isMobile) return;
+    setPanelMaxH(anySelected && contentRef.current ? contentRef.current.scrollHeight : 0);
+  }, [selectedId, isMobile]);
 
   // ── Animate content swap inside the outer panel on selection change ─────────
   useEffect(() => {
@@ -274,13 +337,11 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
   // ── Scroll to the very top of the services page when a service is opened ──
   // (so the user always sees all 3 services + the gray panel from the start).
   const handleItemClick = (id: string, _svcIdx: number) => {
-    const wasSelected = selectedId === id;
+    // Toggle selection. The detail now renders inline at the selected row, so
+    // no scroll jump is needed — the page scrolls normally.
     setSelectedId(prev => prev === id ? null : id);
-    if (wasSelected) return;
-    const page = pageRef.current;
-    if (!page) return;
-    page.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
 
   return (
     <div className={s.page} ref={pageRef}>
@@ -295,7 +356,7 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
         <div style={isMobile ? {
           display: 'flex',
           flexDirection: 'column',
-          gap: anySelected ? 16 : 0,
+          gap: 0,
         } : {}}>
 
           {/* Services list — always full width, never shrinks */}
@@ -341,7 +402,7 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'var(--c-text)', opacity: 0.12 }} />
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'flex-start' }}>
                       <div>
-                        <p style={{ ...h2Style, margin: 0 }}>{svc.title}</p>
+                        <p style={{ ...ts, margin: 0 }}>{svc.title}</p>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {itemButtons}
@@ -371,121 +432,54 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
                   }}
                 >
                   <MagneticDivider active={hoveredSvcIdx === svcIdx} />
+                  {/* Number col1, title col2, items col3, detail (when this svc is
+                      selected) inline at col4-6 — aligned to this row's top. */}
                   <p style={{ ...ts, gridColumn: '1' }}>{svc.number}</p>
-                  {/* When the detail panel is open, the title + items shift one
-                      column to the left so the panel (right ~40%) doesn't cover them. */}
-                  <p style={{ ...h2Style, gridColumn: anySelected ? '2' : '3', transition: 'none' }}>{svc.title}</p>
-                  <div style={{ gridColumn: anySelected ? '3' : '4', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <p style={{ ...ts, gridColumn: '2' }}>{svc.title}</p>
+                  <div style={{ gridColumn: '3', display: 'flex', flexDirection: 'column', gap: 4, position: 'relative', zIndex: 2 }}>
                     {itemButtons}
                   </div>
+                  {selectedSvcIdx === svcIdx && selectedItem && (
+                    <div
+                      key={selectedId}
+                      style={{
+                        gridColumn: '4 / 6',
+                        display: 'flex',
+                        flexDirection: 'column',
+                      }}
+                    >
+                      <ServiceDetail item={selectedItem} svc={svc} />
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
 
-          {/* Detail panel — desktop: 40 % wide sticky on the right;
-              mobile: full-width inline, slides in below the services list. */}
-          <div
-            ref={panelRef}
-            style={isMobile ? {
-              width: '100%',
-              maxHeight: anySelected ? 2000 : 0,
-              overflow: 'hidden',
-              background: 'var(--c-surface)',
-              transition: 'max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-            } : {
-              // Desktop: fixed overlay on the right — doesn't affect list layout.
-              position: 'fixed',
-              top: 0,
-              right: 0,
-              height: '100vh',
-              width: anySelected ? '40vw' : 0,
-              overflow: 'hidden',
-              background: 'var(--c-surface)',
-              zIndex: 60,
-              pointerEvents: anySelected ? 'auto' : 'none',
-              transition: 'width 0.45s cubic-bezier(0.4, 0, 0.2, 1)',
-            }}
-          >
+          {/* Detail panel — MOBILE ONLY: full-width, slides in below the list.
+              (Desktop renders the detail inline at the selected row, col 4-6.) */}
+          {isMobile && (
             <div
-              ref={contentRef}
-              style={isMobile ? {
-                padding: '20px',
+              ref={panelRef}
+              style={{
                 width: '100%',
-                boxSizing: 'border-box',
-              } : {
-                padding: '20px 20px 40px 20px',
-                width: '40vw',
-                maxWidth: '40vw',
-                height: '100%',
-                overflowY: 'auto',
-                boxSizing: 'border-box',
+                maxHeight: panelMaxH,
+                overflow: 'hidden',
+                background: 'var(--c-surface)',
+                transition: 'max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             >
-              {renderedItem && renderedSvcIdx >= 0 && (
-                <>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-                    gap: 20,
-                    alignItems: 'start',
-                  }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                      <p data-anim="" style={h2Style}>{renderedItem.heading}</p>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        {renderedItem.paragraphs.map((p, i) => (
-                          <p key={i} data-anim="" style={ts}>{p}</p>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {renderedItem.examples && renderedItem.examples.length > 0 && (
-                        <>
-                          <p data-anim="" style={ts}>Примеры</p>
-                          {renderedItem.examples.map((ex, idx) => (
-                            <a
-                              key={ex.href}
-                              data-anim=""
-                              href={ex.href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                ...ts,
-                                textDecoration: 'underline',
-                                textDecorationStyle: 'dotted',
-                                textUnderlineOffset: '3px',
-                              }}
-                            >
-                              [{idx + 1}] {ex.label}
-                            </a>
-                          ))}
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  <a
-                    data-anim=""
-                    href="#"
-                    style={{
-                      display: 'block',
-                      marginTop: 40,
-                      ...ts,
-                      textDecoration: 'underline',
-                      textDecorationStyle: 'dotted',
-                      textUnderlineOffset: '3px',
-                    }}
-                  >
-                    {SERVICES[renderedSvcIdx].ctaLabel}
-                  </a>
-                </>
-              )}
+              <div ref={contentRef} style={{ padding: '20px', width: '100%', boxSizing: 'border-box' }}>
+                {renderedItem && renderedSvcIdx >= 0 && (
+                  <ServiceDetail key={renderedItem.id} item={renderedItem} svc={SERVICES[renderedSvcIdx]} />
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* ── Как работаем ─────────────────────────────────────────────────── */}
+        {/* ── Как работаем ─── (temporarily hidden) ──────────────────────────── */}
+        {false && (
         <div style={{ marginTop: isMobile ? 80 : 200 }}>
           <h2 style={{ ...H2_STYLE, marginBottom: isMobile ? 24 : 40 }} data-reveal="">Как работаем</h2>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 'var(--gap)' }} data-reveal-stagger="">
@@ -520,6 +514,7 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
             ))}
           </div>
         </div>
+        )}
 
       </div>
 

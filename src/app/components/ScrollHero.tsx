@@ -5,7 +5,7 @@ import BunnyHero from './BunnyHero';
 import MoscowTime from './MoscowTime';
 import s from './ScrollHero.module.css';
 import { TEXT_STYLE } from '../utils/typography';
-import { asset } from '../utils/asset';
+import { asset, videoAsset } from '../utils/asset';
 import { useMobile } from '../hooks/useMobile';
 
 
@@ -23,15 +23,18 @@ const BOARD_IMGS = [
 
 // Gray block backgrounds — paired with BOARD_IMGS
 const BG_IMGS = [
-  asset('/1bg.webp'),
   asset('/2bg.webp'),
+  asset('/1bg.webp'),
   asset('/3bg.webp'),
 ];
 
 // VIDEO_PRELOADER: slides that are scroll-scrubbed videos instead of images.
-// (Slide 1 is an image for now — 2.mp4 temporarily disabled.)
+// Desktop only — mobile always uses the static BG_IMGS image (see !isMobile guard below).
+// Slide 0 = Flower, Slide 1 = Magic Moon, Slide 2 = third project.
 const SLIDE_VIDEO_SRC: Record<number, string> = {
-  0: '/s1.mp4',
+  0: '/flower2.mp4',  // Flower (slide 0)
+  1: '/magic-moon.mp4',   // Magic Moon (slide 1)
+  2: '/s3.mp4',
 };
 
 // Visual-systems case info — labels shown on the small rectangle.
@@ -126,7 +129,7 @@ function MobileHero({ onNavigateCases, onNavigateExpertiza, onNavigateLab }: { o
           zIndex: 0,
         }}
       >
-        <source src={asset('/video.mp4')} type="video/mp4" />
+        <source src={videoAsset('/video.mp4')} type="video/mp4" />
       </video>
       {/* Headline — sits 80 px from the top */}
       <p style={{
@@ -140,13 +143,12 @@ function MobileHero({ onNavigateCases, onNavigateExpertiza, onNavigateLab }: { o
         lineHeight: 'var(--heading-lh)',
         letterSpacing: '-0.03em',
         textAlign: 'center',
-        whiteSpace: 'nowrap',
+        whiteSpace: 'normal' as any,
         color: '#fff',
         mixBlendMode: 'difference',
         zIndex: 4,
         width: 'max-content',
         maxWidth: '90vw',
-        whiteSpace: 'normal' as any,
       }}>
         {HEADLINE_LINES.map((line, i) => (
           <span key={i} style={{ display: 'block' }}>{line}</span>
@@ -181,6 +183,80 @@ function MobileHero({ onNavigateCases, onNavigateExpertiza, onNavigateLab }: { o
 }
 
 // ───────────────────────────────────────────────────────────────────────────
+// ── Slide navigation bullet list ─────────────────────────────────────────────
+// Text body size. Arrow appears to the RIGHT of the active item (no layout shift —
+// absolute). On active change the text does a LinkFlip-style rotateX flip (same
+// feel as the clients list hover).
+function SlideNav({ items, activeIdx, onSelect }: { items: string[]; activeIdx: number; onSelect: (i: number) => void }) {
+  const innerRefs = useRef<(HTMLSpanElement | null)[]>([]);
+
+  useEffect(() => {
+    const el = innerRefs.current[activeIdx];
+    if (!el) return;
+    gsap.killTweensOf(el);
+    // Replicate LinkFlip bottom-face entrance: rotateX -90→0
+    // same ease/duration as LinkFlip.module.css hover transition
+    gsap.fromTo(el,
+      { rotateX: -90 },
+      { rotateX: 0, duration: 0.35, ease: 'cubic-bezier(0.4,0,0.2,1)' },
+    );
+  }, [activeIdx]);
+
+  return (
+    <div style={{
+      position: 'absolute',
+      left: 'var(--pad)',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 6,
+      zIndex: 8,
+      color: '#fff',
+      mixBlendMode: 'difference',
+      userSelect: 'none',
+    }}>
+      {items.map((name, i) => {
+        const isActive = activeIdx === i;
+        return (
+          <button
+            key={i}
+            onClick={(e) => { e.stopPropagation(); onSelect(i); }}
+            style={{
+              background: 'none', border: 'none', padding: 0,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              textAlign: 'left',
+              fontFamily: 'var(--font)',
+              fontSize: 'var(--text-size)',
+              fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+              lineHeight: 'var(--text-lh)',
+              letterSpacing: 'var(--text-ls)',
+              color: 'inherit',
+              opacity: isActive ? 1 : 0.4,
+              transition: 'opacity 0.3s ease',
+              perspective: '300px',
+            }}
+          >
+            {/* Word — LinkFlip-style flip on active change. No arrow. */}
+            <span
+              ref={el => { innerRefs.current[i] = el; }}
+              style={{
+                display: 'inline-block',
+                transformStyle: 'preserve-3d',
+                transformOrigin: 'center center',
+                backfaceVisibility: 'hidden',
+              }}
+            >{name}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 // Top-level wrapper — branches to mobile/desktop. Each branch is its own
 // component so hooks order is stable across breakpoint changes (otherwise
 // React would crash on resize across 768px).
@@ -238,6 +314,8 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
   // VIDEO_PRELOADER: some slides are videos scrubbed by scroll (slide 0 = s1.mp4,
   // slide 1 = 2.mp4). Slide 2 stays an image.
   const slideVidRefs = useRef<(HTMLVideoElement | null)[]>([null, null, null]);
+  // True while the intro reverse-play animation is running — scrub skips slide 0.
+  const reversePlayingRef = useRef(false);
   // Measured width of the widest plate label (symbol + word) → tight pill width.
   const pillWRef = useRef(160);
   // Satellite images inside gray block — 4 columns, each double-buffered
@@ -332,6 +410,18 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
     bgSlideRefs.current.forEach((el, i) => {
       if (el) gsap.set(el, { yPercent: i * 100, scale: 1 });
     });
+
+    // Slide 0 intro reverse: start at the last frame so the user never sees
+    // frame 0 before the reverse animation. Setting a huge number clamps to end.
+    const vid0 = slideVidRefs.current[0];
+    if (vid0) {
+      const setEnd = () => { vid0.currentTime = 1e6; };
+      if (vid0.readyState >= 1) {
+        setEnd();
+      } else {
+        vid0.addEventListener('loadedmetadata', setEnd, { once: true });
+      }
+    }
     // Init image parallax offsets to match slide yP (counter-translate)
     bgImgRefs.current.forEach((img, i) => {
       if (img) gsap.set(img, { yPercent: (-i * 100 * 0.15) / 1.3, scale: 1 });
@@ -393,16 +483,17 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
     // Layout order top→bottom: headline · panel · caption · section titles
     // Animation order:         section titles → caption → panel → headline
 
-    const tl = gsap.timeline({ delay: 0.05 });
+    const tl = gsap.timeline({ delay: 0 });
 
     // 0. VIDEO_PRELOADER: the first screen rises up from below as a layered
     //    parallax — the background slide travels the full height + a subtle
     //    zoom-out settle (deepest layer), the headline rides in as its own
     //    foreground layer with more travel (below, step 3).
     if (skipVideoPhase && bgWrapRef.current) {
+      // Match the preloader exit ease/duration so they feel like one motion.
       tl.fromTo(bgWrapRef.current,
-        { yPercent: 100, scale: 1.08 },
-        { yPercent: 0, scale: 1, duration: 0.95, ease: 'power3.out', transformOrigin: 'center center' },
+        { yPercent: 100, scale: 1.06 },
+        { yPercent: 0, scale: 1, duration: 0.85, ease: 'power3.inOut', transformOrigin: 'center center' },
         0);
     }
 
@@ -418,7 +509,30 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
       onComplete: () => {
         if (panelRef.current) panelRef.current.style.clipPath = '';
         entranceDoneRef.current = true;
-        applyRef.current?.(progressRef.current);
+
+        const vid0 = slideVidRefs.current[0];
+        if (!isMobile && vid0) {
+          // Block scrub IMMEDIATELY so the scroll handler can't reset currentTime=0
+          // while we seek to the end and wait for the browser to paint.
+          reversePlayingRef.current = true;
+          vid0.currentTime = 1e6; // clamps to duration
+
+          // Wait two rAFs so the browser decodes and paints the last frame
+          // BEFORE the bgWrap becomes visible.
+          const startReverse = () => {
+            applyRef.current?.(progressRef.current); // sets bgWrap opacity:1
+            gsap.to(vid0, {
+              currentTime: 0,
+              duration: 1.8,
+              ease: 'none',
+              onComplete: () => { reversePlayingRef.current = false; },
+            });
+          };
+          const raf2 = () => requestAnimationFrame(startReverse);
+          requestAnimationFrame(raf2);
+        } else {
+          applyRef.current?.(progressRef.current);
+        }
       },
     }, 0.14);
 
@@ -754,10 +868,22 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
         });
 
         // Video slides — scrub currentTime by scroll. Slide i scrubs 0→duration
-        // over its own active window: p_i = clamp(stickyT*totalSteps − i).
-        slideVidRefs.current.forEach((vEl, i) => {
+        // over its own active window: p_i = clamp(stickyT*totalSteps − i + earlyStart).
+        // earlyStart = 0.8 for slide 1+ so the video begins when the slide is
+        // ~20 % visible from the bottom (instead of waiting until it's centered).
+        // On mobile, scrubbing a paused <video> doesn't render frames (iOS shows
+        // a blank slide), so there we let it autoplay+loop instead and skip the
+        // scrub entirely. Same `isMobile` (≤768px) condition as the <video>'s
+        // `autoPlay`/`loop` below, so a slide is never left un-scrubbed AND
+        // un-played.
+        if (!isMobile) slideVidRefs.current.forEach((vEl, i) => {
           if (!vEl || !vEl.duration || !isFinite(vEl.duration)) return;
-          const p = Math.max(0, Math.min(1, stickyT * totalSteps - i));
+          // Skip slide 0 while the intro reverse-play animation is running
+          if (i === 0 && reversePlayingRef.current) return;
+          // Slides 1 and 2 start when ~40% visible (earlyStart = 0.6).
+          // Slide 0 has no offset — it's driven by the entrance animation.
+          const earlyStart = i > 0 ? 0.6 : 0;
+          const p = Math.max(0, Math.min(1, stickyT * totalSteps - i + earlyStart));
           const t = p * vEl.duration;
           if (Math.abs(vEl.currentTime - t) > 0.03) {
             if (!vEl.paused) vEl.pause();
@@ -915,12 +1041,16 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
       let node: Element | null = hit;
       while (node && node !== document.body) {
         const tag = node.tagName.toLowerCase();
-        if (tag === 'nav') { overUI = true; break; }
+        // Hide the plate over any chrome link area: nav, logo, links, footer.
+        if (tag === 'nav' || tag === 'a' || tag === 'button') { overUI = true; break; }
         const cls = typeof (node as HTMLElement).className === 'string' ? (node as HTMLElement).className : '';
-        if (cls.includes('footer') || cls.includes('Footer')) { overUI = true; break; }
+        if (/logo|footer/i.test(cls)) { overUI = true; break; }
         node = node.parentElement;
       }
       targetOpacity = overUI ? 0 : 1;
+      // The word always matches the current slide — it's driven purely by the
+      // scroll position (applyProgress → setActiveBgIdx). The pointer only moves
+      // the plate's position (below), never its text.
     };
     window.addEventListener('mousemove', onMove, { passive: true });
 
@@ -942,10 +1072,8 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
       const zoneH = vh * 0.5;
       const insideZone = Math.abs(dx) <= zoneW && Math.abs(dy) <= zoneH;
       const STRENGTH = 1.0; // 1:1 with the pointer
-      // Sit the plate just to the RIGHT of the cursor (left edge ≈ cursor + 16).
-      const pw = panelRef.current?.offsetWidth ?? 300;
-      const bias = pw / 2 + 16;
-      const targetX = insideZone ? (dx * STRENGTH + bias) * magnet : 0;
+      // Centre the plate on the cursor (no rightward bias).
+      const targetX = insideZone ? dx * STRENGTH * magnet : 0;
       const targetY = insideZone ? dy * STRENGTH * magnet : 0;
       offX += (targetX - offX) * 0.28;
       offY += (targetY - offY) * 0.28;
@@ -995,11 +1123,7 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
       >
 
         {/* Headline — line by line entrance */}
-        <p
-          ref={headlineRef}
-          className={s.headline}
-          style={{ color: activeBgIdx === 0 ? '#fff' : '#000', transition: 'color 0.35s ease' }}
-        >
+        <p ref={headlineRef} className={s.headline}>
           {HEADLINE_LINES.map((line, i) => (
             <span key={i} style={{ display: 'block', opacity: 0 }}>
               {line}
@@ -1010,12 +1134,11 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
 
 
 
-        {/* Background slides — full-bleed behind panel, scroll-driven.
-            White (var(--c-bg)) wrapper — slide containers overlap each
-            other vertically so the seams between them never reveal it. */}
+        {/* Background slides — full-bleed on desktop; 4:3 centred box on mobile. */}
         <div ref={bgWrapRef} style={{
           position: 'absolute', inset: '-30px',
-          opacity: 0, pointerEvents: 'none', zIndex: 2,
+          // On mobile show immediately (no entrance opacity animation needed).
+          opacity: isMobile ? 1 : 0, pointerEvents: 'none', zIndex: 2,
           overflow: 'hidden',
         }}>
           {BG_IMGS.map((src, i) => (
@@ -1029,15 +1152,16 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
                 overflow: 'hidden',
               }}
             >
-              {skipVideoPhase && SLIDE_VIDEO_SRC[i] ? (
-                // Video slide scrubbed by scroll (s1.mp4 / 2.mp4)
+              {skipVideoPhase && SLIDE_VIDEO_SRC[i] && !isMobile ? (
+                // Video slide — desktop only. Mobile uses the static image below
+                // to avoid Safari autoplay failures (white screen on first load).
                 <video
                   ref={el => { bgImgRefs.current[i] = el; slideVidRefs.current[i] = el; }}
-                  src={asset(SLIDE_VIDEO_SRC[i])}
+                  src={videoAsset(SLIDE_VIDEO_SRC[i])}
                   muted
                   playsInline
                   preload="auto"
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', display: 'block' }}
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />
               ) : (
                 <img
@@ -1047,6 +1171,7 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
                   alt=""
                 />
               )}
+              {/* (Top darkening removed per design — headline reads via inversion.) */}
             </div>
           ))}
         </div>
@@ -1090,7 +1215,7 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
                       muted
                       autoPlay
                     >
-                      <source src={asset('/video.mp4')} type="video/mp4" />
+                      <source src={videoAsset('/video.mp4')} type="video/mp4" />
                     </video>
                   </div>
                 </div>
@@ -1117,35 +1242,28 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
                         key={i}
                         style={{
                           position: 'absolute', inset: 0,
-                          background: '#f6f6f6',
+                          // No background — the word reads as big inverted H1-size
+                          // type straight over the slide (mix-blend-mode: difference).
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'center',
                           alignItems: 'flex-start',
                           padding: '10px',
-                          color: 'var(--c-text)',
+                          color: '#fff',
+                          overflow: 'visible',
                           backfaceVisibility: 'hidden',
                           // translateZ = half of SMALL_H (42px) so the prism fits the bar
                           transform: `rotateX(${i * -90}deg) translateZ(21px)`,
                         }}
                       >
-                        {/* Symbol + word only — no link */}
-                        <div data-plate style={{ display: 'inline-flex', alignItems: 'center', gap: 10, width: 'max-content' }}>
+                        {/* Only the ↵ symbol — words removed */}
+                        <div data-plate style={{ display: 'inline-flex', alignItems: 'center' }}>
                           <span style={{
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: 'var(--text-size)',
-                            lineHeight: 1,
-                            color: 'var(--c-text)',
-                          }}>{c.symbol}</span>
-                          <span style={{
-                            fontFamily: 'var(--font)',
-                            fontSize: 'var(--text-size)',
-                            fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
-                            lineHeight: 'var(--text-lh)',
-                            letterSpacing: 'var(--text-ls)',
-                            color: 'var(--c-text)',
-                            whiteSpace: 'nowrap',
-                          }}>{c.name}</span>
+                            fontFamily: 'var(--font-display)',
+                            fontSize: 'var(--h2-size)',
+                            lineHeight: 'var(--h2-lh)',
+                            color: 'inherit',
+                          }}>↵</span>
                         </div>
                       </div>
                     ))}
@@ -1160,6 +1278,24 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
         {/* Hidden caption ref — kept for opacity logic / refactor safety, but
             the text itself moved into the global Footer (`hi@skip.design`). */}
         <p ref={captionRef} style={{ display: 'none' }} aria-hidden="true" />
+
+        {/* ── Slide navigation — left center, desktop only ─────────────────── */}
+        {skipVideoPhase && !isMobile && (
+          <SlideNav
+            items={VS_CASES.map(c => c.name)}
+            activeIdx={activeBgIdx}
+            onSelect={(i) => {
+              const container = containerRef.current;
+              if (!container) return;
+              const n = BG_IMGS.length;
+              const sec0 = window.innerWidth <= 768 ? n * 500 : (n * PX_SLIDE);
+              const target = container.offsetTop + (i / (n - 1)) * sec0;
+              const lenis = (window as any).__lenis;
+              if (lenis) lenis.scrollTo(target, { duration: 0.9 });
+              else window.scrollTo({ top: target, behavior: 'smooth' });
+            }}
+          />
+        )}
 
         {/* Bottom-left: section titles — width = 1 column, no numbers */}
         <div style={{

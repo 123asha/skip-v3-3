@@ -52,14 +52,25 @@
 .body {
   /* 80px gap between h1 bottom and first content block */
   padding-top: calc(var(--pad) + var(--text-size) * var(--text-lh) + 20px + var(--heading-size) * var(--heading-lh) + 80px);
-  padding-bottom: 200px;
+  /* No extra gap here — the contact form below adds its own margin-top:
+     var(--space-xl), so the last-row → form gap matches the home page. */
+  padding-bottom: 0;
 }
 
 @media (max-width: 768px) {
-  .body { padding-bottom: var(--space-xl); }
+  .body { padding-bottom: 0; }
   .tabsBar {
-    padding-top: 25px;
-    padding-bottom: 19px;
+    /* Fixed on mobile so tabs sit at the same level as ← назад (fixed nav) */
+    position: fixed;
+    top: var(--pad);
+    right: var(--pad);
+    left: auto;
+    width: auto;
+    background: transparent;
+    padding: 0;
+    gap: 12px;
+    z-index: 200;
+    justify-content: flex-end;
   }
   /* H1 matches the hero headline size on all sub-pages */
   .title { font-size: clamp(36px, 10vw, 56px); }
@@ -77,15 +88,45 @@
   gap: 10px;
   padding: var(--pad) var(--pad);
 }
-.tabsBar .zoomBtns {
-  position: absolute;
+/* Grid density control — fixed in the bottom-left corner of the viewport. */
+.zoomBtns {
+  position: fixed;
   left: var(--pad);
-  top: 50%;
-  transform: translateY(-50%);
+  bottom: var(--pad);
+  z-index: 180;
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+.zoomRow {
+  display: flex;
+  gap: 16px;
   align-items: center;
 }
+.zoomHint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  color: var(--c-text);
+  opacity: 0.4;
+  white-space: nowrap;
+}
+.zoomBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--font);
+  font-size: var(--text-size);
+  font-weight: var(--text-weight);
+  line-height: var(--text-lh);
+  letter-spacing: var(--text-ls);
+  color: var(--c-text);
+  transition: opacity 0.2s;
+}
+.zoomBtn:hover { opacity: 0.55; }
+.zoomBtn:disabled { opacity: 0.2; cursor: default; }
 
 .tab {
   line-height: var(--text-lh);
@@ -139,6 +180,7 @@
   flex: 1;
   overflow: hidden;
   background: var(--c-surface);
+  position: relative;
 }
 
 .cardImage img {

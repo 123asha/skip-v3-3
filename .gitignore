@@ -1,7 +1,12 @@
 node_modules/
 dist/
+dist-beget/
 .DS_Store
 *.local
 .claude/
 .vite/
 package-lock.json
+
+# Telegram relay secrets — never commit (create on the server only)
+tg-config.php
+public/tg-config.php

@@ -11,6 +11,8 @@ interface RevealOptions {
   ease?: string;
   delay?: number;
   threshold?: number;
+  /** when false, only translate (no opacity fade) — elements stay fully visible */
+  fade?: boolean;
 }
 
 /**
@@ -26,11 +28,11 @@ export function useReveal(
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const { selector, fromX = 0, fromY = 18 } = options;
+    const { selector, fromX = 0, fromY = 18, fade = true } = options;
     const targets: Element[] | NodeListOf<Element> = selector
       ? el.querySelectorAll(selector)
       : [el];
-    gsap.set(targets, { opacity: 0, x: fromX, y: fromY });
+    gsap.set(targets, { ...(fade ? { opacity: 0 } : {}), x: fromX, y: fromY });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -49,6 +51,7 @@ export function useReveal(
       ease = 'power3.out',
       delay = 0,
       threshold = 0.25,
+      fade = true,
     } = options;
 
     const targets: Element[] | NodeListOf<Element> = selector
@@ -59,7 +62,7 @@ export function useReveal(
       ([entry]) => {
         if (!entry.isIntersecting) return;
         observer.disconnect();
-        gsap.to(targets, { opacity: 1, x: 0, y: 0, duration, stagger, ease, delay });
+        gsap.to(targets, { ...(fade ? { opacity: 1 } : {}), x: 0, y: 0, duration, stagger, ease, delay });
       },
       { threshold }
     );

@@ -1,8 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
-import { sound } from '../sound/Sound';
 
-export function MagneticDivider({ color = 'var(--c-border)', active = false, dotted = false }: { color?: string; active?: boolean; dotted?: boolean }) {
+export function MagneticDivider({ color = 'var(--c-border)', active = false, dotted = false, flat = false }: { color?: string; active?: boolean; dotted?: boolean; flat?: boolean }) {
   const svgRef  = useRef<SVGSVGElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
   const hitRef  = useRef<SVGPathElement>(null);
@@ -26,6 +25,12 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
       hit.setAttribute('d', d);
     };
 
+    // flat mode — render once, no event listeners, stays straight
+    if (flat) {
+      render();
+      return;
+    }
+
     gsap.ticker.add(render);
 
     const onMove = (e: PointerEvent) => {
@@ -35,7 +40,6 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
       if (!live.current && e.target === hit) {
         live.current = true;
         gsap.killTweensOf(p1.current);
-        sound.play('tap');
       }
 
       if (live.current) {
@@ -56,7 +60,7 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
       svg.removeEventListener('pointermove', onMove as EventListener);
       svg.removeEventListener('pointerleave', onLeave);
     };
-  }, []);
+  }, [flat]);
 
   return (
     <svg
@@ -68,7 +72,7 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
         width: '100%',
         height: 40,
         overflow: 'visible',
-        pointerEvents: 'all',
+        pointerEvents: flat ? 'none' : 'all',
         zIndex: 1,
       }}
       aria-hidden="true"

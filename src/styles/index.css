@@ -111,7 +111,7 @@
   /* overflow-x lives on body only — putting it on <html> shifts the scroll
      container away from documentElement and breaks window.scrollTo /
      scrollIntoView on iOS. */
-  body { font-size: max(11px, var(--text-size)); overflow-x: hidden; max-width: 100vw; }
+  body { font-size: max(11px, var(--text-size)); overflow-x: hidden; max-width: 100vw; touch-action: manipulation; }
   /* Do NOT reset font-size on individual tags — they inherit from html/body.
      Overriding here breaks typographic hierarchy (heading-sized elements become 12px). */
   input, textarea, select { font-size: max(11px, var(--text-size)); }
@@ -162,21 +162,21 @@
 /* ── Small mobile (≤ 490px) — exact pixel sizes, overrides 768px block ── */
 @media (max-width: 490px) {
   :root {
-    --text-size:    12px;
+    --text-size:    14px;
     /* H1 sized so "Визуальные системы для" (22 chars) fits on a single
        line at 360–390 px viewport. */
     --heading-size: 26px;
     --h2-size:      18px;
   }
-  html, body { font-size: 12px !important; }
-  /* No per-tag reset — elements inherit 12px from html/body.
+  html, body { font-size: 14px !important; }
+  /* No per-tag reset — elements inherit 14px from html/body.
      Heading-sized elements keep their own font-size via inline styles. */
-  input, textarea, select { font-size: 12px; }
+  input, textarea, select { font-size: 14px; }
 }
 
 /* ── Hard floor: body text never below 11 px on any viewport ────────────── */
 @media (max-width: 768px) {
-  html, body { font-size: max(11px, var(--text-size)) !important; }
+  html, body { font-size: max(14px, var(--text-size)) !important; }
 }
 
 html {
@@ -212,7 +212,7 @@ a {
   cursor: pointer;
   transition: transform 0.15s ease;
 }
-.link-l1:hover { transform: translateY(-2px); }
+.link-l1:hover { }
 
 /* L2 — gray, secondary */
 .link-l2 {

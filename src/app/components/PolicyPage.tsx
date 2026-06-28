@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import s from './CasesPage.module.css';
 import { BODY_LONG_STYLE } from '../utils/typography';
+import { useMobile } from '../hooks/useMobile';
 
 const LINK_RE = /(https?:\/\/[^\s\n]+|[\w.+-]+@[\w-]+\.[\w]*\w)/g;
 
@@ -85,6 +86,7 @@ const h2Style: React.CSSProperties = {
 
 export default function PolicyPage() {
   const pageRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMobile();
 
   useEffect(() => {
     const mainLenis = (window as any).__lenis;
@@ -106,21 +108,21 @@ export default function PolicyPage() {
   return (
     <div className={s.page} ref={pageRef}>
       <div className={s.body} style={{ paddingLeft: 20, paddingRight: 20, paddingBottom: 200, paddingTop: 'calc(var(--pad) + var(--text-size) * var(--text-lh) + 20px)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 20, alignItems: 'start' }}>
-          {/* Heading — cols 1–2, in-flow alongside the text */}
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, 1fr)', gap: 20, alignItems: 'start' }}>
+          {/* Heading — cols 1–2 on desktop, full width on mobile */}
           <h1
             className={s.title}
             style={{
               position: 'static',
               left: 'auto',
               top: 'auto',
-              gridColumn: '1 / 3',
+              gridColumn: isMobile ? 'auto' : '1 / 3',
             }}
           >
             Политика<br />конфиденциальности
           </h1>
-          {/* Text — cols 3–4, 2 columns wide */}
-          <div style={{ gridColumn: '3 / 5' }}>
+          {/* Text — cols 3–4 on desktop, full width on mobile */}
+          <div style={{ gridColumn: isMobile ? 'auto' : '3 / 5' }}>
             {paragraphs.map((p, i) => (
               <p
                 key={i}

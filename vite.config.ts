@@ -16,7 +16,10 @@ function figmaAssetResolver() {
 }
 
 export default defineConfig({
-  base: '/skip-design/',
+  // Default base is the GitHub Pages sub-path (used by the live preview).
+  // For the root-domain production build (skip.design) run with VITE_BASE=/
+  // (see the "build:beget" npm script) so assets resolve from the domain root.
+  base: process.env.VITE_BASE ?? '/skip-design/',
   plugins: [
     figmaAssetResolver(),
     // The React and Tailwind plugins are both required for Make, even if
@@ -32,4 +35,10 @@ export default defineConfig({
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
+
+  // Broaden browser support — transpile down so older Safari doesn't choke on
+  // newer syntax and white-screen at module load.
+  build: {
+    target: ['es2018', 'safari12'],
+  },
 })

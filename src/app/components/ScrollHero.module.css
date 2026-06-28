@@ -33,6 +33,9 @@
   width: 100%;
   background: var(--c-bg);
   overflow: hidden;
+  /* Contain the panel's mix-blend-mode to this layer so it blends only with the
+     slides — prevents Safari flashing white at the layer edges ("блики по бокам"). */
+  isolation: isolate;
 }
 
 .headline {
@@ -49,15 +52,21 @@
   max-width: 80%;
   text-align: center;
   z-index: 4;
-  /* Colour set inline per active slide (white on the first screen). */
   color: #fff;
+  mix-blend-mode: difference;
 }
 
 /* Panel */
 .panel {
   position: absolute;
   overflow: hidden;
-  background: var(--c-surface);
+  /* No fill — the slider word reads as big inverted type directly over the
+     slide (was var(--c-surface), which showed as a light rectangle). The blend
+     lives here (not on the prism faces) so it composites against the slide
+     behind the panel; on the faces it would be trapped in their own 3D/stacking
+     context and never reach the slide. */
+  background: transparent;
+  mix-blend-mode: difference;
 }
 
 .panelLayer {

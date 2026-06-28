@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMobile } from '../hooks/useMobile';
 import s from '../App.module.css';
+import { asset } from '../utils/asset';
 
 export const TOOL_TEXT: React.CSSProperties = {
   fontFamily: 'var(--font)',
@@ -11,30 +12,49 @@ export const TOOL_TEXT: React.CSSProperties = {
   color: 'var(--c-text)',
 };
 
-export const TOOL_CARDS: { label: string; caseTitle: string; ar: '16/9' | '1/1' }[] = [
-  { label: 'Конструктор миссии',   caseTitle: 'На вопрос «Почему мы этим занимаемся?» можно прийти четырьмя разными путями.', ar: '16/9' },
-  { label: 'Метод метафор',        caseTitle: 'Критерии для работы с сильными метафорами',                                     ar: '1/1'  },
-  { label: 'Конструктор баннеров', caseTitle: 'Плагин, делающий баннеры по бренд-киту компании',                              ar: '1/1'  },
-  { label: 'ИИ-ускоритель',        caseTitle: 'Автоматизируем рутину — плагины, шаблоны и ИИ-инструменты под ваши процессы', ar: '16/9' },
+export const TOOL_CARDS: { label: string; caseTitle: string; ar: '16/9' | '1/1'; href?: string; image?: string }[] = [
+  { label: 'Конструктор миссии',   caseTitle: 'На вопрос «Почему мы этим занимаемся?» можно прийти четырьмя разными путями.', ar: '16/9', href: 'https://vc.ru/marketing/2205037-konstruktor-missii-dlya-brenda', image: asset('/framework-1.webp') },
+  { label: 'Метод метафор',        caseTitle: 'Критерии для работы с сильными метафорами + промпт',                          ar: '1/1',  href: 'https://workspace.ru/blog/prompt-dlya-proverki-metafory-s-pomoschyu-ii/' },
+  { label: 'Конструктор баннеров', caseTitle: 'Плагин, делающий баннеры по бренд-киту компании Gate Legal',                  ar: '1/1',  image: asset('/framework-3.png') },
+  { label: 'Памятка',              caseTitle: 'Памятка по юридическим документам на сайтах, приложениях и в коммуникациях',  ar: '16/9', href: 'https://vc.ru/marketing/2784990-yuridicheskie-dokumenty-dlya-saytov-i-prilozheniy', image: asset('/framework-4.png') },
 ];
 
-export function ToolCard({ label, caseTitle, ar }: { label: string; caseTitle: string; ar: '16/9' | '1/1' }) {
+export function ToolCard({ label, caseTitle, ar, href, image }: { label: string; caseTitle: string; ar: '16/9' | '1/1'; href?: string; image?: string }) {
   const [hovered, setHovered] = useState(false);
-  // 2 lines + 10px top padding
+  // 2 lines + 10px top padding — height the description reveal expands to.
   const descH = 'calc(2 * var(--text-size) * var(--text-lh) + 10px)';
+
+  // Label is a dotted-underline link only when there's a real URL (opens in a
+  // new tab); without a URL it's plain text — no underline.
+  const labelStyle: React.CSSProperties = href
+    ? { ...TOOL_TEXT, marginTop: 10, textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px', cursor: 'pointer', display: 'block', color: 'inherit' }
+    : { ...TOOL_TEXT, marginTop: 10 };
 
   return (
     <div
-      style={{ cursor: 'pointer' }}
+      style={{ cursor: href ? 'pointer' : 'default' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Aspect-ratio wrapper — grey rect + description share the same total height */}
+      {/* Aspect-ratio wrapper — grey rect + description share the total height;
+          on hover the rect shrinks and the description expands below it. */}
       <div style={{ aspectRatio: ar, display: 'flex', flexDirection: 'column' }}>
-        {/* Grey rect — flex: 1, shrinks naturally as description expands */}
-        <div style={{ flex: 1, background: 'var(--c-surface)' }} />
+        {/* Rect — flex: 1, shrinks as the description expands. Clips the image;
+            on hover the image zooms in slightly (the block doesn't scale). */}
+        <div style={{ flex: 1, background: 'var(--c-surface)', overflow: 'hidden', position: 'relative' }}>
+          {image && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              backgroundImage: `url(${image})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              transform: hovered ? 'scale(1.06)' : 'scale(1)',
+              transition: 'transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1)',
+            }} />
+          )}
+        </div>
 
-        {/* Description — expands from bottom, pushing rect up */}
+        {/* Description — expands from the bottom, pushing the rect up */}
         <div style={{
           height: hovered ? descH : 0,
           overflow: 'hidden',
@@ -55,15 +75,12 @@ export function ToolCard({ label, caseTitle, ar }: { label: string; caseTitle: s
         </div>
       </div>
 
-      {/* Label — always 10px below, styled as link */}
-      <p style={{
-        ...TOOL_TEXT,
-        marginTop: 10,
-        textDecoration: 'underline',
-        textDecorationStyle: 'dotted',
-        textUnderlineOffset: '3px',
-        cursor: 'pointer',
-      }}>{label}</p>
+      {/* Label — dotted-underline link when there's a URL, else plain text */}
+      {href ? (
+        <a href={href} target="_blank" rel="noopener noreferrer" style={labelStyle}>{label}</a>
+      ) : (
+        <p style={labelStyle}>{label}</p>
+      )}
     </div>
   );
 }
@@ -84,25 +101,23 @@ export function ToolsSection() {
 
         {isMobile ? (
           // Mobile: horizontal swipe carousel.
-          // Outer div: scroll container stretched to full viewport width via
-          // negative margin so it escapes the section's --pad padding.
-          // Inner div: flex row with paddingLeft = --pad so the first card
-          // aligns exactly with the "Фреймворки" heading above.
+          // Bleeds only to the RIGHT (off-screen) for the swipe-peek, while the
+          // first card keeps the page's left margin so it lines up with the
+          // "Фреймворки" heading instead of sitting flush against the edge.
           <div
             style={{
               overflowX: 'auto',
               overflowY: 'hidden',
               scrollSnapType: 'x proximity',
               scrollbarWidth: 'none',
-              marginLeft: 'calc(-1 * var(--pad))',
-              width: 'calc(100% + 2 * var(--pad))',
+              marginRight: 'calc(-1 * var(--pad))',
+              width: 'calc(100% + var(--pad))',
             }}
           >
             <div
               style={{
                 display: 'flex',
                 gap: 'var(--gap)',
-                paddingLeft: 'var(--pad)',
                 paddingRight: 'var(--pad)',
               }}
             >

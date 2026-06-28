@@ -205,9 +205,9 @@ export function FormSnakeGame({
         }
         // Bigger visual recoil — head springs back from the wall noticeably
         recoilTick = 2.2;
-        // Was it the form (forbidden) — not a wall or self? Shake the form.
+        // Was it the form (forbidden) — not a wall or self? Shake it + knock.
         const hitForbidden = forbiddenSet.has(`${nh.x},${nh.y}`);
-        if (hitForbidden) shakeForm();
+        if (hitForbidden) { shakeForm(); sound.play('snake'); }
         return;
       }
       recoilTick = 0;
@@ -218,7 +218,6 @@ export function FormSnakeGame({
         if (snake.length > 1) snake.pop();
         if (snake.length > 1) snake.pop();
         spawnFood();
-        sound.play('snake');
       } else {
         snake.pop();
       }
@@ -327,8 +326,14 @@ export function FormSnakeGame({
     window.addEventListener('keydown', onKey);
 
     draw();
-    // 30% faster than the previous 260 ms step
-    const id = setInterval(() => { tick(); draw(); }, 182);
+    // 30% faster than the previous 260 ms step.
+    // Only advance while the canvas is on-screen — the snake "lives" only
+    // when it's in view; off-screen it freezes and resumes on scroll-back.
+    const id = setInterval(() => {
+      if (!canvasInView()) return;
+      tick();
+      draw();
+    }, 182);
 
     return () => {
       clearInterval(id);

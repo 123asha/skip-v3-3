@@ -329,6 +329,7 @@ const TILE_BALLS = 6;
 // TileBalls: render animated falling numbered balls per tile on hover
 function TileBalls({ index, tileIndex, hovered }: { index: number; tileIndex: number; hovered: boolean }) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const defsRef = useRef<SVGDefsElement | null>(null);
   const ballsRef = useRef<Array<{
     num: number;
     x: number;
@@ -348,6 +349,13 @@ function TileBalls({ index, tileIndex, hovered }: { index: number; tileIndex: nu
     const W = rect.width, H = rect.height;
 
     if (hovered && ballsRef.current.length === 0) {
+      // Create defs if needed for gradient
+      if (!defsRef.current) {
+        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        svg.appendChild(defs);
+        defsRef.current = defs;
+      }
+
       // Initialize balls at top, staggered
       for (let i = 0; i < TILE_BALLS; i++) {
         const seed = tileIndex * 97 + i;
@@ -357,11 +365,27 @@ function TileBalls({ index, tileIndex, hovered }: { index: number; tileIndex: nu
         const vx = (pseudoRandom(seed + 0.67) - 0.5) * 200;
         const vy = -100 - pseudoRandom(seed + 0.9) * 50;
 
+        // Sphere shading gradient
+        const gradId = `sphere-${tileIndex}-${i}`;
+        const grad = document.createElementNS('http://www.w3.org/2000/svg', 'radialGradient');
+        grad.setAttribute('id', gradId);
+        grad.setAttribute('cx', '30%');
+        grad.setAttribute('cy', '30%');
+        const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        stop1.setAttribute('offset', '0%');
+        stop1.setAttribute('stop-color', '#fff');
+        const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        stop2.setAttribute('offset', '100%');
+        stop2.setAttribute('stop-color', 'color-mix(in srgb, #fff 95.4%, #000)');
+        grad.appendChild(stop1);
+        grad.appendChild(stop2);
+        defsRef.current!.appendChild(grad);
+
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.setAttribute('cx', String(x));
         circle.setAttribute('cy', String(y));
         circle.setAttribute('r', String(r));
-        circle.setAttribute('fill', '#fff');
+        circle.setAttribute('fill', `url(#${gradId})`);
         circle.setAttribute('opacity', '1');
         svg.appendChild(circle);
 
@@ -387,6 +411,9 @@ function TileBalls({ index, tileIndex, hovered }: { index: number; tileIndex: nu
         b.textEl.remove();
       });
       ballsRef.current = [];
+      if (defsRef.current) {
+        defsRef.current.innerHTML = '';
+      }
     }
   }, [hovered, tileIndex]);
 

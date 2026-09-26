@@ -771,16 +771,6 @@ export default function Constellation({
       touchingWall[removeId] && delete touchingWall[removeId];
       animateAbsorb(removed, nodes[keepId]);
 
-      // The survivor grows a little with each ball it swallows, capped so it
-      // never gets more than half again its original size.
-      const keep = nodes[keepId];
-      const grown = Math.min(keep.r * 1.12, R * 1.5);
-      const scale = grown / keep.r;
-      keep.r = grown;
-      keep.fontSize *= scale;
-      keep.circleEl.setAttribute('r', String(keep.r));
-      keep.letterEl.setAttribute('font-size', String(keep.fontSize));
-
       mergedLog.push({ removedId: removeId, keepId, letter: removed.letter });
 
       const idx = wordOrder.indexOf(removeId);
@@ -797,12 +787,6 @@ export default function Constellation({
       [...mergedLog].reverse().forEach(({ removedId, keepId, letter }) => {
         const keep = nodes[keepId];
         if (!keep) return;
-        // Shrink the survivor back down — the merge (and the size it grew
-        // from swallowing this one) is undone
-        keep.r = R;
-        keep.fontSize = FONT;
-        keep.circleEl.setAttribute('r', String(keep.r));
-        keep.letterEl.setAttribute('font-size', String(keep.fontSize));
         // Pop back out right next to the ball that swallowed it, with a small
         // kick so the two don't just sit stacked on top of each other
         const angle = Math.random() * Math.PI * 2;

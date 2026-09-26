@@ -356,10 +356,10 @@ function TileBalls({ index, tileIndex, hovered }: { index: number; tileIndex: nu
         defsRef.current = defs;
       }
 
-      // Initialize balls at top, staggered
+      // Initialize balls at top, staggered — large balls like in a jar
       for (let i = 0; i < TILE_BALLS; i++) {
         const seed = tileIndex * 97 + i;
-        const r = 22 + pseudoRandom(seed + 0.25) * 13;
+        const r = 45 + pseudoRandom(seed + 0.25) * 20;
         const x = r + pseudoRandom(seed) * (W - 2 * r);
         const y = r + pseudoRandom(seed + 0.33) * (H * 0.3);
         const vx = (pseudoRandom(seed + 0.67) - 0.5) * 200;
@@ -395,8 +395,9 @@ function TileBalls({ index, tileIndex, hovered }: { index: number; tileIndex: nu
         textEl.setAttribute('text-anchor', 'middle');
         textEl.setAttribute('dominant-baseline', 'central');
         textEl.setAttribute('font-family', 'var(--font)');
-        textEl.setAttribute('font-weight', '600');
-        textEl.setAttribute('font-size', String(r * 0.55));
+        // Same weight and relative size as the hero's letters-on-spheres
+        textEl.setAttribute('font-weight', '500');
+        textEl.setAttribute('font-size', String(r * 0.9));
         textEl.setAttribute('fill', 'var(--c-text)');
         textEl.setAttribute('pointer-events', 'none');
         textEl.textContent = String(i + 1);
@@ -451,7 +452,41 @@ function TileBalls({ index, tileIndex, hovered }: { index: number; tileIndex: nu
           b.y = H - b.r;
           b.vy = -Math.abs(b.vy) * BOUNCE;
         }
+      });
 
+      // Ball-ball collisions — push apart along the contact normal and swap
+      // the along-normal component of velocity (damped), so they pile up
+      // like real balls in a jar instead of stacking on top of each other.
+      for (let i = 0; i < balls.length; i++) {
+        for (let j = i + 1; j < balls.length; j++) {
+          const a = balls[i], b = balls[j];
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const dist = Math.hypot(dx, dy) || 0.001;
+          const minDist = a.r + b.r;
+          if (dist < minDist) {
+            const nx = dx / dist, ny = dy / dist;
+            const overlap = minDist - dist;
+            // Push each ball apart proportionally to the other's mass (r²)
+            const totalR = a.r + b.r;
+            a.x -= nx * overlap * (b.r / totalR);
+            a.y -= ny * overlap * (b.r / totalR);
+            b.x += nx * overlap * (a.r / totalR);
+            b.y += ny * overlap * (a.r / totalR);
+
+            const rvx = b.vx - a.vx, rvy = b.vy - a.vy;
+            const rel = rvx * nx + rvy * ny;
+            if (rel < 0) {
+              const imp = -rel * BOUNCE;
+              a.vx -= nx * imp * (b.r / totalR);
+              a.vy -= ny * imp * (b.r / totalR);
+              b.vx += nx * imp * (a.r / totalR);
+              b.vy += ny * imp * (a.r / totalR);
+            }
+          }
+        }
+      }
+
+      balls.forEach(b => {
         b.el.setAttribute('cx', String(b.x));
         b.el.setAttribute('cy', String(b.y));
         b.textEl.setAttribute('x', String(b.x));
@@ -661,38 +696,10 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
   // ── Table depth — folded/unfolded one level at a time with ⊖ ⊕, same
   //    controls and ⌘+ / ⌘− shortcuts as the density zoom on the cases page.
   const [level, setLevel] = useState(EXPERTISE_DEFAULT_LEVEL);
-
-  // Scroll anchor to prevent screen jump when table height changes on fold/unfold.
-  // Finds the table row nearest the viewport center, keeps it visually in place
-  // during the 650ms reflow animation.
-  const holdLevel = (next: number) => {
-    const page = pageRef.current;
-    const rows = page ? Array.from(page.querySelectorAll<HTMLElement>('[data-exp-row]')) : [];
-    const mid = window.innerHeight / 2;
-    let anchor: HTMLElement | null = null, bestDist = Infinity;
-    for (const el of rows) {
-      const r = el.getBoundingClientRect();
-      if (r.bottom <= 0 || r.top >= window.innerHeight) continue;
-      const d = Math.abs(r.top + r.height / 2 - mid);
-      if (d < bestDist) { bestDist = d; anchor = el; }
-    }
-    const before = anchor?.getBoundingClientRect().top;
-    setLevel(next);
-    if (!anchor || before == null || !page) return;
-    const start = performance.now();
-    const tick = () => {
-      const now = anchor!.getBoundingClientRect().top;
-      const delta = now - before;
-      if (Math.abs(delta) > 0.5) page.scrollTop += delta;
-      if (performance.now() - start < 650) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  };
-
-  const unfold = () => holdLevel(Math.min(EXPERTISE_LEVELS - 1, level + 1));
+  const unfold = () => setLevel(l => Math.min(EXPERTISE_LEVELS - 1, l + 1));
   // Level 0 (the table folded into a band of three symbols) is skipped —
   // folding stops at one row per category
-  const fold   = () => holdLevel(Math.max(1, level - 1));
+  const fold   = () => setLevel(l => Math.max(1, l - 1));
   // Trackpad pinch folds / unfolds a level, same as ⊖ ⊕
   usePinchSteps(unfold, fold, !isMobile);
 

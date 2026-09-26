@@ -21,7 +21,7 @@ export type CaseCardAR = typeof CASE_AR_H | typeof CASE_AR_V;
 
 // Temporary: render every card preview as a plain grey rectangle (no image/video)
 // until the real card thumbnails are ready. Flip to false to restore images.
-const PLACEHOLDER_PREVIEWS = true;
+const PLACEHOLDER_PREVIEWS = false;
 
 // Some previews round, the rest square — picked from the title so a case
 // keeps its shape across reloads and pages. Exported so a gallery can balance

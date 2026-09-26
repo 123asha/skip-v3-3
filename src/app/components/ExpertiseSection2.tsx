@@ -295,7 +295,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
             const cellFade = { opacity: rowOpacity as any, transition: `opacity ${EXPAND}` };
             const rowPadding = '8px 0 12px';
             const rowInner = isMobile ? (
-              <div onClick={onRowClick} style={{ position: 'relative', background: rowBg, padding: rowPadding, cursor: rowCursor }}>
+              <div data-exp-row="" onClick={onRowClick} style={{ position: 'relative', background: rowBg, padding: rowPadding, cursor: rowCursor }}>
                 {divider}
                 {row.header ? (
                   <div style={{ display: 'flex', gap: 12, alignItems: 'baseline', ...cellFade }}>
@@ -311,6 +311,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
               </div>
             ) : (
               <div
+                data-exp-row=""
                 onClick={onRowClick}
                 style={{
                   position: 'relative',

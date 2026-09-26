@@ -634,10 +634,38 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
   // ── Table depth — folded/unfolded one level at a time with ⊖ ⊕, same
   //    controls and ⌘+ / ⌘− shortcuts as the density zoom on the cases page.
   const [level, setLevel] = useState(EXPERTISE_DEFAULT_LEVEL);
-  const unfold = () => setLevel(l => Math.min(EXPERTISE_LEVELS - 1, l + 1));
+
+  // Scroll anchor to prevent screen jump when table height changes on fold/unfold.
+  // Finds the table row nearest the viewport center, keeps it visually in place
+  // during the 650ms reflow animation.
+  const holdLevel = (next: number) => {
+    const page = pageRef.current;
+    const rows = page ? Array.from(page.querySelectorAll<HTMLElement>('[data-exp-row]')) : [];
+    const mid = window.innerHeight / 2;
+    let anchor: HTMLElement | null = null, bestDist = Infinity;
+    for (const el of rows) {
+      const r = el.getBoundingClientRect();
+      if (r.bottom <= 0 || r.top >= window.innerHeight) continue;
+      const d = Math.abs(r.top + r.height / 2 - mid);
+      if (d < bestDist) { bestDist = d; anchor = el; }
+    }
+    const before = anchor?.getBoundingClientRect().top;
+    setLevel(next);
+    if (!anchor || before == null || !page) return;
+    const start = performance.now();
+    const tick = () => {
+      const now = anchor!.getBoundingClientRect().top;
+      const delta = now - before;
+      if (Math.abs(delta) > 0.5) page.scrollTop += delta;
+      if (performance.now() - start < 650) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+
+  const unfold = () => holdLevel(Math.min(EXPERTISE_LEVELS - 1, level + 1));
   // Level 0 (the table folded into a band of three symbols) is skipped —
   // folding stops at one row per category
-  const fold   = () => setLevel(l => Math.max(1, l - 1));
+  const fold   = () => holdLevel(Math.max(1, level - 1));
   // Trackpad pinch folds / unfolds a level, same as ⊖ ⊕
   usePinchSteps(unfold, fold, !isMobile);
 

@@ -22,10 +22,7 @@
 .cardImage {
   width: 100%;
   overflow: hidden;
-  /* Placeholder mode: every preview is a flat grey shape (no photos yet), so
-     the square/circle reads clearly against the page — same grey as the
-     hero's balls-on-surface look. */
-  background: var(--c-surface);
+  background: transparent;
   /* Experiment: square previews, some of them round (see .cardRound) */
   aspect-ratio: 1 / 1 !important;
 }

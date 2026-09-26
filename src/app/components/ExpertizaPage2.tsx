@@ -1,3 +1,6 @@
+// Sandbox copy of ExpertizaPage served at /services-2 — for trying ideas out
+// without touching the live /services page. Keep edits here; merge back into
+// ExpertizaPage.tsx only once an experiment is approved.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import s from './CasesPage.module.css';
@@ -9,12 +12,13 @@ import { useReveal } from '../hooks/useReveal';
 import { useMobile } from '../hooks/useMobile';
 import LinkFlip from './LinkFlip';
 import { ExpertiseSection2, EXPERTISE_LEVELS, EXPERTISE_DEFAULT_LEVEL } from './ExpertiseSection2';
+import { videoAsset } from '../utils/asset';
 import { PARA_GAP } from './CaseTemplatePage';
 import { usePinchSteps } from '../hooks/usePinchSteps';
 
 // ── Service data ──────────────────────────────────────────────────────────────
 
-export type ServiceItem = {
+type ServiceItem = {
   id: string;
   label: string;
   heading: string;
@@ -22,14 +26,14 @@ export type ServiceItem = {
   examples?: { label: string; href: string }[];
 };
 
-export type Service = {
+type Service = {
   number: string;
   title: string;
   items: ServiceItem[];
   ctaLabel: string;
 };
 
-export const SERVICES: Service[] = [
+const SERVICES: Service[] = [
   {
     number: '①',
     title: 'Бренд-\nстратегия',
@@ -230,7 +234,7 @@ function ServiceDetail({ item, svc }: { item: ServiceItem; svc: Service }) {
 }
 
 // ── Anchor IDs — must match SERVICE_ANCHORS in ScrollHero ────────────────────
-export const SERVICE_IDS = ['brand', 'visual', 'tools'] as const;
+const SERVICE_IDS = ['brand', 'visual', 'tools'] as const;
 
 // ── Intro block ──────────────────────────────────────────────────────────────
 // Sits under the services table, on the site's 5-col grid: two text columns on
@@ -251,9 +255,101 @@ const MATCH_POINTS: { sym: string; text: string }[] = [
   { sym: '※', text: 'команде — не стыдно за результат, и хочется им поделиться.' },
 ];
 
+// ── Hero ─────────────────────────────────────────────────────────────────────
+// Video on the first three columns, the studio copy beside it in columns 4–5,
+// all top-aligned. The clip is scrubbed by the scroll on desktop.
+
+const HERO_VIDEO: string | null = '/pingpong.mp4';
+
+function HeroVideo() {
+  const vidRef = useRef<HTMLVideoElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMobile();
+  const P_GAP = PARA_GAP;
+
+  // Desktop: the clip plays as you scroll past it — the block's travel through
+  // the viewport maps onto the video's timeline. Mobile keeps plain autoplay,
+  // since iOS can't paint a paused, scrubbed video.
+  useEffect(() => {
+    if (isMobile) return;
+    const vid = vidRef.current;
+    const box = boxRef.current;
+    const page = box?.closest('[class*="_page_"]') as HTMLElement | null;
+    if (!vid || !box) return;
+
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const dur = vid.duration;
+      if (!dur || !isFinite(dur)) return;
+      const r = box.getBoundingClientRect();
+      // First frame while the block sits in place, last frame once it has
+      // scrolled its own height past the top of the screen.
+      const p = Math.max(0, Math.min(1, -r.top / (r.height || 1)));
+      const t = p * dur;
+      if (Math.abs(vid.currentTime - t) > 0.02) {
+        if (!vid.paused) vid.pause();
+        try { vid.currentTime = t; } catch { /* not seekable yet */ }
+      }
+    };
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(update);
+    };
+
+    const target: (HTMLElement | Window) = page ?? window;
+    target.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    if (vid.readyState >= 1) update();
+    else vid.addEventListener('loadedmetadata', update, { once: true });
+
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      target.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [isMobile]);
+
+  return (
+    <div
+      data-reveal=""
+      style={{
+        padding: '0 var(--pad)',
+        // Title is absolutely positioned, so the first in-flow block carries
+        // the whole title → content gap itself.
+        marginTop: 'calc(var(--pad) + var(--heading-size) * var(--heading-lh) + var(--space-title))',
+      }}
+    >
+      <div
+        ref={boxRef}
+        style={{
+          position: 'relative',
+          width: '100%',
+          aspectRatio: '16/9',
+          background: 'var(--c-surface)',
+          overflow: 'hidden',
+        }}
+      >
+        {HERO_VIDEO && (
+          <video
+            ref={vidRef}
+            src={videoAsset(HERO_VIDEO)}
+            autoPlay={isMobile}
+            loop={isMobile}
+            muted
+            playsInline
+            preload="auto"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Intro description ───────────────────────────────────────────────────────
-// First block under the title, on the site's 5-col grid: two text columns on
-// the right (cols 4–5), the left three left empty. Stacks on mobile.
+// Sits below the video, on the site's 5-col grid: two text columns on the
+// right (cols 4–5), the left three left empty. Stacks on mobile.
 
 function IntroBlock() {
   const isMobile = useMobile();
@@ -269,9 +365,7 @@ function IntroBlock() {
         columnGap: 'var(--gap)',
         rowGap: isMobile ? 24 : 0,
         alignItems: 'start',
-        // Title is absolutely positioned, so the first in-flow block carries
-        // the whole title → content gap itself.
-        marginTop: 'calc(var(--pad) + var(--heading-size) * var(--heading-lh) + var(--space-title))',
+        marginTop: 'var(--pad)',
       }}
     >
       {/* Col 4 — credo + principles */}
@@ -316,201 +410,9 @@ const TILE_MARKS = [
   { sym: '④', label: 'инструменты' },
 ];
 
-// Deterministic pseudo-random 0…1, seeded — same scatter every render/reload
-function pseudoRandom(seed: number): number {
-  const v = Math.sin(seed * 12.9898) * 43758.5453;
-  return v - Math.floor(v);
-}
-
-// How many balls fill a tile on hover, and their scattered spot + size —
-// numbered 1…N instead of the hero's letters.
-const TILE_BALLS = 6;
-
-// TileBalls: render animated falling numbered balls per tile on hover
-function TileBalls({ index, tileIndex, hovered }: { index: number; tileIndex: number; hovered: boolean }) {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const ballsRef = useRef<Array<{
-    num: number;
-    x: number;
-    y: number;
-    vx: number;
-    vy: number;
-    r: number;
-    el: SVGCircleElement;
-    textEl: SVGTextElement;
-  }>>([]);
-  const rafRef = useRef<number>();
-
-  useEffect(() => {
-    if (!svgRef.current) return;
-    const svg = svgRef.current;
-    const rect = svg.getBoundingClientRect();
-    const W = rect.width, H = rect.height;
-
-    if (hovered && ballsRef.current.length === 0) {
-      // Initialize balls at top, staggered
-      for (let i = 0; i < TILE_BALLS; i++) {
-        const seed = tileIndex * 97 + i;
-        const r = 22 + pseudoRandom(seed + 0.25) * 13;
-        const x = r + pseudoRandom(seed) * (W - 2 * r);
-        const y = r + pseudoRandom(seed + 0.33) * (H * 0.3);
-        const vx = (pseudoRandom(seed + 0.67) - 0.5) * 200;
-        const vy = -100 - pseudoRandom(seed + 0.9) * 50;
-
-        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.setAttribute('cx', String(x));
-        circle.setAttribute('cy', String(y));
-        circle.setAttribute('r', String(r));
-        circle.setAttribute('fill', '#fff');
-        circle.setAttribute('opacity', '1');
-        svg.appendChild(circle);
-
-        const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        textEl.setAttribute('x', String(x));
-        textEl.setAttribute('y', String(y));
-        textEl.setAttribute('text-anchor', 'middle');
-        textEl.setAttribute('dominant-baseline', 'central');
-        textEl.setAttribute('font-family', 'var(--font)');
-        textEl.setAttribute('font-weight', '600');
-        textEl.setAttribute('font-size', String(r * 0.55));
-        textEl.setAttribute('fill', 'var(--c-text)');
-        textEl.setAttribute('pointer-events', 'none');
-        textEl.textContent = String(i + 1);
-        svg.appendChild(textEl);
-
-        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, el: circle, textEl });
-      }
-    } else if (!hovered && ballsRef.current.length > 0) {
-      // Clear balls when not hovered
-      ballsRef.current.forEach(b => {
-        b.el.remove();
-        b.textEl.remove();
-      });
-      ballsRef.current = [];
-    }
-  }, [hovered, tileIndex]);
-
-  useEffect(() => {
-    if (!hovered || !svgRef.current) return;
-    const svg = svgRef.current;
-    const rect = svg.getBoundingClientRect();
-    const W = rect.width, H = rect.height;
-    const balls = ballsRef.current;
-
-    const tick = () => {
-      const GRAVITY = 600;
-      const FRICTION = 0.99;
-      const BOUNCE = 0.4;
-
-      balls.forEach(b => {
-        b.vy += GRAVITY * 0.016;
-        b.x += b.vx * 0.016;
-        b.y += b.vy * 0.016;
-        b.vx *= FRICTION;
-        b.vy *= FRICTION;
-
-        // Wall collisions
-        if (b.x - b.r < 0) {
-          b.x = b.r;
-          b.vx = Math.abs(b.vx) * BOUNCE;
-        }
-        if (b.x + b.r > W) {
-          b.x = W - b.r;
-          b.vx = -Math.abs(b.vx) * BOUNCE;
-        }
-
-        // Floor collision
-        if (b.y + b.r > H) {
-          b.y = H - b.r;
-          b.vy = -Math.abs(b.vy) * BOUNCE;
-        }
-
-        b.el.setAttribute('cx', String(b.x));
-        b.el.setAttribute('cy', String(b.y));
-        b.textEl.setAttribute('x', String(b.x));
-        b.textEl.setAttribute('y', String(b.y));
-      });
-
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [hovered]);
-
-  return (
-    <svg
-      ref={svgRef}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
-        zIndex: 0,
-      }}
-    />
-  );
-}
-
-function Tile({ index, text, gap }: { index: number; text: string; gap: number }) {
-  const isMobile = useMobile();
-  const [hovered, setHovered] = useState(false);
-
-  return (
-    <div
-      style={{ position: 'relative', aspectRatio: '4/5', background: 'var(--c-surface)', overflow: 'hidden' }}
-      onMouseEnter={isMobile ? undefined : () => setHovered(true)}
-      onMouseLeave={isMobile ? undefined : () => setHovered(false)}
-    >
-      {/* Animated falling balls on hover */}
-      {!isMobile && <TileBalls tileIndex={index} index={index} hovered={hovered} />}
-      <span
-        style={{ ...ts, position: 'absolute', top: 15, left: 15, display: 'flex', gap: 8, zIndex: 1 }}
-      >
-        <span aria-hidden="true">{TILE_MARKS[index].sym}</span>
-        <span>{TILE_MARKS[index].label}</span>
-      </span>
-      <p
-        style={{
-          ...ts,
-          position: 'absolute',
-          left: 15,
-          bottom: 15,
-          margin: 0,
-          width: isMobile ? 'calc(100% - 30px)' : `calc((4 * 100% - ${gap}px) / 5)`,
-          // Two lines everywhere, so a shorter caption still occupies the
-          // same block and all four line up.
-          minHeight: 'calc(2 * var(--text-size) * var(--text-lh))',
-        }}
-      >
-        {typo(text)}
-      </p>
-    </div>
-  );
-}
-
 function TileBlocks() {
   const isMobile = useMobile();
   const GAP = 20;
-  // The four tiles come up one after another from below as the row scrolls
-  // into view — quick, once
-  const rowRef = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const row = rowRef.current;
-    if (!row || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const tiles = Array.from(row.children) as HTMLElement[];
-    gsap.set(tiles, { opacity: 0, y: 40 });
-    const io = new IntersectionObserver(([e]) => {
-      if (!e.isIntersecting) return;
-      io.disconnect();
-      gsap.to(tiles, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out', stagger: 0.07, clearProps: 'transform,opacity' });
-    }, { threshold: 0.15 });
-    io.observe(row);
-    return () => io.disconnect();
-  }, []);
 
   return (
     <div className={app.section} data-reveal="">
@@ -525,7 +427,6 @@ function TileBlocks() {
       </div>
 
       <div
-        ref={rowRef}
         style={{
           display: 'grid',
           gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
@@ -533,7 +434,29 @@ function TileBlocks() {
         }}
       >
       {TILES.map((text, i) => (
-        <Tile key={i} index={i} text={text} gap={GAP} />
+        <div key={i} style={{ position: 'relative', aspectRatio: '4/5', background: 'var(--c-surface)' }}>
+          <span
+            style={{ ...ts, position: 'absolute', top: 15, left: 15, display: 'flex', gap: 8 }}
+          >
+            <span aria-hidden="true">{TILE_MARKS[i].sym}</span>
+            <span>{TILE_MARKS[i].label}</span>
+          </span>
+          <p
+            style={{
+              ...ts,
+              position: 'absolute',
+              left: 15,
+              bottom: 15,
+              margin: 0,
+              width: isMobile ? 'calc(100% - 30px)' : `calc((4 * 100% - ${GAP}px) / 5)`,
+              // Two lines everywhere, so a shorter caption still occupies the
+              // same block and all four line up.
+              minHeight: 'calc(2 * var(--text-size) * var(--text-lh))',
+            }}
+          >
+            {typo(text)}
+          </p>
+        </div>
       ))}
       </div>
     </div>
@@ -542,7 +465,7 @@ function TileBlocks() {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavigatePolicy?: () => void; onGridMode?: (on: boolean) => void }) {
+export default function ExpertizaPage2({ onNavigatePolicy, onGridMode }: { onNavigatePolicy?: () => void; onGridMode?: (on: boolean) => void }) {
   const pageRef    = useRef<HTMLDivElement>(null);
   const rowRefs    = useRef<(HTMLDivElement | null)[]>([]);
   const panelRef   = useRef<HTMLDivElement>(null);   // single outer sticky panel
@@ -631,7 +554,7 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
     return () => clearTimeout(timer);
   }, []);
 
-  // ── Table depth — folded/unfolded one level at a time with ⊖ ⊕, same
+  // ── Table depth — folded/unfolded one level at a time with ⊕ ⊖, same
   //    controls and ⌘+ / ⌘− shortcuts as the density zoom on the cases page.
   const [level, setLevel] = useState(EXPERTISE_DEFAULT_LEVEL);
   const unfold = () => setLevel(l => Math.min(EXPERTISE_LEVELS - 1, l + 1));
@@ -640,6 +563,23 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
   const fold   = () => setLevel(l => Math.max(1, l - 1));
   // Trackpad pinch folds / unfolds a level, same as ⊖ ⊕
   usePinchSteps(unfold, fold, !isMobile);
+
+  // Start of the grid's second column, where the cases page pins its hint
+  const [col2Left, setCol2Left] = useState(0);
+  useLayoutEffect(() => {
+    const measure = () => {
+      const page = pageRef.current;
+      if (!page) return;
+      const cs = getComputedStyle(document.documentElement);
+      const pad = parseFloat(cs.getPropertyValue('--pad'));
+      const gap = parseFloat(cs.getPropertyValue('--gap'));
+      const colW = (page.clientWidth - 2 * pad - 4 * gap) / 5;
+      setCol2Left(pad + colW + gap);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
 
   // ── Lenis + wheel isolation, and the ⌘+ / ⌘− shortcuts ──────────────────────
   useEffect(() => {
@@ -650,6 +590,7 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
     const stopBubble = (e: WheelEvent) => e.stopPropagation();
     el.addEventListener('wheel', stopBubble, { passive: true });
 
+    // Take over the browser-zoom shortcuts while this page is open
     const onKey = (e: KeyboardEvent) => {
       if (!e.metaKey && !e.ctrlKey) return;
       if (e.key === '-') { e.preventDefault(); fold(); }
@@ -677,10 +618,8 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
     <div className={s.page} ref={pageRef}>
       <h1 className={s.title} data-reveal="" data-reveal-y="4">Услуги</h1>
 
-      <IntroBlock />
-
-      {/* ⌘ ⊖ ⊕ — pinned bottom-left, same place and look as the density
-          hint on the cases page. Folds/unfolds the table below. */}
+      {/* ⌘ ⊕ ⊖ — pinned at the start of the second column on the nav line,
+          the same place and look as the density hint on the cases page */}
       {!isMobile && (
         <div style={{ position: 'fixed', left: 'var(--pad)', bottom: 'var(--pad)', zIndex: 170 }}>
           <span className={s.zoomHint} style={{ position: 'static' }}>
@@ -691,13 +630,9 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
         </div>
       )}
 
-      {/* Same table as the home page, but foldable one level at a time. */}
-      <ExpertiseSection2 level={level} showHeading={false} />
-
-      <TileBlocks />
-
-      <div id="contact">
-        <ContactForm variant="consult" onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
+      {/* Only the table here — folded and unfolded level by level */}
+      <div style={{ marginTop: 'calc(var(--pad) + var(--heading-size) * var(--heading-lh) + var(--space-title) - var(--space-xl))' }}>
+        <ExpertiseSection2 level={level} onLevel={setLevel} />
       </div>
     </div>
   );

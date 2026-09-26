@@ -5,7 +5,7 @@ import Lenis from 'lenis';
 import svgPaths from '../imports/Index/svg-3bjnx36a2y';
 import { useReveal } from './utils/reveal';
 import { asset, videoAsset } from './utils/asset';
-import { TEXT_STYLE as ts } from './utils/typography';
+import { TEXT_STYLE as ts, H2_STYLE } from './utils/typography';
 import ScrollHero from './components/ScrollHero';
 import HeroBranches from './components/HeroBranches';
 import ProjectGallery from './components/ProjectGallery';
@@ -13,6 +13,7 @@ import Footer from './components/Footer';
 import CasesPage from './components/CasesPage';
 import InstrumentsPage from './components/InstrumentsPage';
 import ExpertizaPage from './components/ExpertizaPage';
+import ExpertizaPage2 from './components/ExpertizaPage2';
 import MindMapBlock from './components/MindMapBlock';
 import PolicyPage from './components/PolicyPage';
 import Index2Page from './components/Index2Page';
@@ -24,6 +25,7 @@ import BunnyFollower from './components/BunnyFollower';
 import ContactForm from './components/ContactForm';
 import { ToolsSection } from './components/ToolsSection';
 import { MediaSection } from './components/MediaSection';
+import { ExpertiseSection } from './components/ExpertiseSection';
 import LabPage from './components/LabPage';
 import DesignSystemPage from './components/DesignSystemPage';
 import ServiceDetailPage from './components/ServiceDetailPage';
@@ -31,6 +33,7 @@ import LinkFlip from './components/LinkFlip';
 import PeopleVideoSlot, { type VideoConfig } from './components/PeopleVideoSlot';
 import SoundIcon from './sound/SoundIcon';
 import { sound } from './sound/Sound';
+import PillButton from './components/PillButton';
 import s from './App.module.css';
 
 // ── People-block: client → video configuration ───────────────────────────────
@@ -99,7 +102,7 @@ function ScrollHint() {
         zIndex: 9999,
         pointerEvents: 'none',
         opacity: 0,
-        fontSize: '11px',
+        fontSize: 'var(--text-size)',
         letterSpacing: '0.08em',
         color: 'var(--c-text)',
         userSelect: 'none',
@@ -404,6 +407,10 @@ function stripBase(p: string): string {
   return stripped.replace(/\/$/, '') || '/';
 }
 
+// Pages whose top area is a full-bleed cover/video — there the nav inverts
+// itself; everywhere else it is plain text on the light background.
+const INVERTED_NAV_PAGES = new Set(['home', 'index2', 'case-template', 'seniors']);
+
 function AppInner() {
   const [pathname, setPathname] = useState(() => {
     // GitHub Pages SPA: 404.html stores the intended path in sessionStorage.
@@ -415,10 +422,12 @@ function AppInner() {
     }
     return stripBase(window.location.pathname);
   });
-  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/policy', '/index2', '/case-template', '/Seniorsbar', '/guide', '/lab', '/system', '/brand', '/visual', '/digital'];
+  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/services-2', '/policy', '/index2', '/case-template', '/Seniorsbar', '/guide', '/lab', '/system', '/brand', '/visual', '/digital'];
   const page = pathname === '/cases' ? 'cases'
              : pathname === '/instruments' ? 'instruments'
              : (pathname === '/expertiza' || pathname === '/services') ? 'expertiza'
+             // Sandbox copy of the services page for trying ideas out
+             : pathname === '/services-2' ? 'expertiza2'
              : pathname === '/policy' ? 'policy'
              : pathname === '/index2' ? 'index2'
              : pathname === '/case-template' ? 'case-template'
@@ -444,14 +453,12 @@ function AppInner() {
     return () => window.removeEventListener('popstate', handlePop);
   }, []);
 
-  const [preloaderDone, setPreloaderDone] = useState(() => stripBase(window.location.pathname) !== '/');
-  // Preloader stays mounted through its rise-up exit; unmounts only when fully gone.
-  const [preloaderMounted, setPreloaderMounted] = useState(() => stripBase(window.location.pathname) === '/');
+  const [preloaderDone, setPreloaderDone] = useState(true);
+  const [preloaderMounted, setPreloaderMounted] = useState(false);
   const [gridVisible, setGridVisible] = useState(false);
   // Column count for the grid overlay — driven by the cases page zoom (5 by default).
   const [overlayCols, setOverlayCols] = useState(5);
   const [showPrivacy, setShowPrivacy] = useState(false);
-  const [formInView, setFormInView] = useState(false);
   // Width of the scrollbar reserved by sub-pages (.page has overflow-y:scroll).
   // The grid overlay is viewport-fixed, so on sub-pages it must add this on the
   // right to line up with content that lives inside the scrollbar gutter.
@@ -482,9 +489,11 @@ function AppInner() {
   /* People-block (above the studio section) — same reveal pattern as the
      studio's "Нам доверяют проекты" line by line. */
   const heroClientLabelRef = useRef<HTMLParagraphElement>(null);
-  const heroClientNamesRef = useRef<HTMLDivElement>(null);
+  const heroClientTrackRef = useRef<HTMLDivElement>(null);
+  const heroClientSetRef = useRef<HTMLDivElement>(null);
   const toolsRowsRef = useRef<HTMLDivElement>(null);
   const casesRevealRef = useRef<HTMLDivElement>(null);
+  const introHeadingRef = useRef<HTMLHeadingElement>(null);
 
   /* People-block: hover on a client name swaps the left/right videos with
      a slide-up transition (PeopleVideoSlot handles the animation). */
@@ -498,11 +507,36 @@ function AppInner() {
   useReveal(clientLabelRef, { fromY: 12, duration: 0.45 }, preloaderDone);
   useReveal(clientNamesRef, { selector: 'p', fromX: 28, fromY: 0, stagger: 0.09, duration: 0.5, ease: 'power2.out' }, preloaderDone);
   useReveal(heroClientLabelRef, { fromY: 12, duration: 0.45 }, preloaderDone);
-  useReveal(heroClientNamesRef, { selector: 'p', fromX: 0, fromY: 24, stagger: 0.09, duration: 0.55, ease: 'power3.out' }, preloaderDone);
+
+  // Trusted-by ticker — infinite vertical marquee. Content is rendered twice
+  // back-to-back so the loop can jump from x:-cycle back to x:0 without a
+  // visible seam. The loop distance must be EXACTLY one set's width plus the
+  // track's own column-gap (the gap between set 1 and set 2) — using
+  // track.scrollWidth/2 is only an approximation and produces a visible
+  // stutter/snap at the loop point, since it doesn't precisely equal that.
+  useEffect(() => {
+    const track = heroClientTrackRef.current;
+    const set0 = heroClientSetRef.current;
+    if (!track || !set0) return;
+    const PX_PER_SEC = 32;
+    let tween: gsap.core.Tween | null = null;
+    const start = () => {
+      tween?.kill();
+      const colGap = parseFloat(getComputedStyle(track).columnGap || '0');
+      const cycle = set0.offsetWidth + colGap;
+      if (!cycle) return;
+      gsap.set(track, { x: 0 });
+      tween = gsap.to(track, { x: -cycle, duration: cycle / PX_PER_SEC, ease: 'none', repeat: -1 });
+    };
+    start();
+    window.addEventListener('resize', start, { passive: true });
+    return () => { tween?.kill(); window.removeEventListener('resize', start); };
+  }, []);
   useReveal(toolsRowsRef, { selector: `.${s.toolRow}`, fromY: 14, stagger: 0.08, duration: 0.55 }, preloaderDone);
   // Case cards just rise a little from below on scroll — NO opacity fade
   // (fade:false), so they stay fully visible and only slide up.
   useReveal(casesRevealRef, { selector: '[data-case-card]', fromY: 24, stagger: 0.06, duration: 0.55, fade: false }, preloaderDone);
+  useReveal(introHeadingRef, { selector: 'span', fromY: 20, stagger: 0.12, duration: 0.6 }, preloaderDone);
 
   useEffect(() => {
     if ('scrollRestoration' in window.history) {
@@ -552,31 +586,9 @@ function AppInner() {
     return () => window.removeEventListener('scroll', onScroll);
   }, [isMobile, page]);
 
-  // Watches the contactWrap element on the home page only.
-  useEffect(() => {
-    if (page !== 'home') { setFormInView(false); return; }
-    // Wait a tick so the contact form is mounted.
-    let cancelled = false;
-    const wire = () => {
-      if (cancelled) return;
-      const form = document.querySelector('[class*="contactWrap"]');
-      if (!form) { window.requestAnimationFrame(wire); return; }
-      const obs = new IntersectionObserver(
-        ([entry]) => setFormInView(entry.isIntersecting),
-        // Positive bottom margin expands the root downward — the button
-        // starts fading while the form is still well below the viewport.
-        // Note: rootMargin only accepts px or %, not vh, so we convert.
-        { rootMargin: `0px 0px ${Math.round(window.innerHeight * 0.7)}px 0px`, threshold: 0 },
-      );
-      obs.observe(form);
-      return () => obs.disconnect();
-    };
-    const cleanup = wire();
-    return () => { cancelled = true; if (cleanup) cleanup(); };
-  }, [page]);
 
   // Sound is wired directly at the elements that use it: logo hover, client
-  // hover ("нам доверяют"), and the snake bumping the form. No global listeners.
+  // hover ("нам доверяют"). No global listeners.
 
   useEffect(() => {
     // Skip Lenis on mobile / coarse pointer devices entirely.
@@ -725,12 +737,16 @@ function AppInner() {
     });
   };
 
-  // Page exit then navigate
+  // Page exit then navigate. Nav (Кейсы/Услуги/О нас) now stays fixed and
+  // visible across every page, so it no longer fades with the page content.
   const navigateWithExit = useCallback((dest: string) => {
-    if (!mainRef.current) { navigate(dest); return; }
-    const allLinks = [casesLinkRef.current, toolsLinkRef.current, expertizaLinkRef.current, labLinkRef.current].filter(Boolean);
-    gsap.to(allLinks, { opacity: 0, duration: 0.2, ease: 'power2.in' });
-    gsap.to(mainRef.current, {
+    // On a sub-page it is that page that has to fade out, not the home
+    // wrapper underneath it — otherwise page-to-page jumps look abrupt while
+    // home → page is animated.
+    const subPage = document.querySelector('[class*="_page_"]') as HTMLElement | null;
+    const exitEl = subPage ?? mainRef.current;
+    if (!exitEl) { navigate(dest); return; }
+    gsap.to(exitEl, {
       opacity: 0,
       y: 20,
       duration: 0.35,
@@ -741,7 +757,6 @@ function AppInner() {
         // otherwise it stays at opacity 0 from the exit animation and the page looks blank.
         if (dest === '/' && mainRef.current) {
           gsap.set(mainRef.current, { opacity: 1, y: 0 });
-          gsap.to(allLinks, { opacity: 1, duration: 0.2 });
         }
       },
     });
@@ -770,9 +785,18 @@ function AppInner() {
     navigateWithExit(dest);
   };
 
+  // Current section stays black, the rest go grey — only where the nav is
+  // plain text (over a cover it inverts and every link stays white).
+  const navLinkStyle = (target: string): React.CSSProperties | undefined => {
+    if (INVERTED_NAV_PAGES.has(page)) return undefined;
+    // The /services-2 sandbox counts as the services section
+    const section = page === 'expertiza2' ? 'expertiza' : page;
+    return { color: section === target ? 'var(--c-text)' : 'var(--c-text-muted)' };
+  };
+
   const handleCasesClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (casesLinkRef.current) flyToTitle('Кейсы', casesLinkRef.current, '/cases');
+    if (casesLinkRef.current) flyToTitle('Проекты', casesLinkRef.current, '/cases');
     else navigate('/cases');
   };
 
@@ -817,12 +841,6 @@ function AppInner() {
 
   return (
     <>
-      {preloaderMounted && (
-        <Preloader
-          onReveal={() => setPreloaderDone(true)}
-          onGone={() => setPreloaderMounted(false)}
-        />
-      )}
 
       {gridVisible && (
         <>
@@ -843,34 +861,56 @@ function AppInner() {
         </>
       )}
 
-      <nav className={s.nav}>
-        {page !== 'home' && page !== 'index2' ? (
-          <button className={s.navBack} onClick={handleBack}>← назад</button>
-        ) : (
-          <>
+      {/* Inner pages lock the body scroll, so its scrollbar disappears and the
+          viewport gets wider — without this the fixed nav jumps right by the
+          scrollbar's width. Inner pages scroll inside .page instead, whose own
+          gutter is the same width. */}
+      {/* On a plain (non-inverted) page the current section stays black and
+          the other links go grey. */}
+      <nav
+        className={`${s.nav}${INVERTED_NAV_PAGES.has(page) ? '' : ` ${s.navPlain}`}`}
+        style={page !== 'home' && page !== 'index2' ? { right: `calc(var(--pad) + ${scrollbarW}px)` } : undefined}
+      >
+        <>
             <span ref={casesLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
-              <a href="/cases" className={s.navLink} onClick={handleCasesClick}>
-                <LinkFlip>Кейсы</LinkFlip>
+              <a href="/cases" className={s.navLink} style={navLinkStyle('cases')} onClick={handleCasesClick}>
+                <LinkFlip flat>Проекты</LinkFlip>
               </a>
             </span>
-            <span ref={expertizaLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
-              <span className={s.navSep}>,</span>
-              <a href="/services" className={s.navLink} onClick={handleExpertizaClick}>
-                <LinkFlip>услуги</LinkFlip>
+            <span ref={expertizaLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center', marginLeft: '17.14px' }}>
+              <a href="/services" className={s.navLink} style={navLinkStyle('expertiza')} onClick={handleExpertizaClick}>
+                <LinkFlip flat>Услуги</LinkFlip>
               </a>
             </span>
-            <span ref={labLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
-              <span className={s.navSep}>,</span>
-              <a href="/lab" className={s.navLink} onClick={handleLabClick}>
-                <LinkFlip>Skip Design</LinkFlip>
+            <span ref={labLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center', marginLeft: '17.14px' }}>
+              <a href="/lab" className={s.navLink} style={navLinkStyle('lab')} onClick={handleLabClick}>
+                <LinkFlip flat>Инсайты</LinkFlip>
+              </a>
+            </span>
+            {/* Fourth link, in place of the old floating button: the word
+                turns into "телеграм" on hover, which is where it leads. */}
+            <span style={{ display: 'inline-flex', alignItems: 'center', marginLeft: '17.14px' }}>
+              <a
+                href="https://t.me/skpdsgn"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={s.navLink}
+                // Always reads as the guide's black — it is an action, not a
+                // section. Over a cover the nav inverts itself, so there the
+                // colour has to be white for the blend to land on black.
+                style={{ color: INVERTED_NAV_PAGES.has(page) ? '#fff' : 'var(--c-text)' }}
+              >
+                <LinkFlip flat hoverLabel="Телеграм">Написать</LinkFlip>
+                {/* Leads off the site — the arrow says so. Outside the flip, so
+                    it stays put while the word turns over. */}
+                <span aria-hidden="true" style={{ marginLeft: 4, textDecoration: 'none', display: 'inline-block' }}>↗</span>
               </a>
             </span>
             <span ref={toolsLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'none' }}>
               <span className={s.navSep}>,</span>
               <a href="/instruments" className={s.navLink} onClick={handleInstrumentsClick}>Подход</a>
             </span>
-          </>
-        )}
+        </>
       </nav>
 
       <div
@@ -918,72 +958,13 @@ function AppInner() {
 
       <Footer />
 
-      {/* "Обсудить проект" — fixed-bottom only on /index2 (legacy).
-          On / (home) it lives inside the page flow as a sticky element, so
-          it disappears naturally once the contact form is reached. */}
-      {page === 'index2' && preloaderDone && (
-        <button
-          className={s.newProjectBtn}
-          style={{
-            position: 'fixed',
-            left: 'var(--pad)',
-            bottom: 'var(--pad)',
-            zIndex: 160,
-            mixBlendMode: 'difference',
-            background: 'transparent',
-            border: 'none',
-            borderRadius: 0,
-            padding: 0,
-            cursor: 'pointer',
-            fontFamily: 'var(--font)',
-            fontSize: 'var(--text-size)',
-            fontWeight: 'var(--text-weight)',
-            letterSpacing: 'var(--text-ls)',
-            lineHeight: 'var(--text-lh)',
-            color: '#000',
-            textDecoration: 'none',
-            opacity: showPrivacy ? 0 : 1,
-            pointerEvents: showPrivacy ? 'none' : 'auto',
-            transition: 'opacity 0.3s ease',
-            display: 'inline-block',
-            perspective: 'none',
-          }}
-          onMouseEnter={() => sound.play('hover')}
-          onClick={() => {
-            const el = document.querySelector('[class*="contactWrap"]') as HTMLElement;
-            const lenis = (window as any).__lenis;
-            if (el && lenis) lenis.scrollTo(el, { duration: 1.2, offset: -40 });
-            else if (el) el.scrollIntoView({ behavior: 'smooth' });
-          }}
-        >
-          {/* Flip-inner — rotates the whole pill on hover.
-              Both faces always contain "+ новый проект" so the wrapper is
-              wide enough for the bottom face. On the front face the "+" is
-              opacity:0 (invisible but occupies layout space), so no width
-              jump occurs during the cube rotation. */}
-          <span className={s.newProjectFlipInner}>
-            <span
-              className={s.newProjectFace}
-              style={{ background: '#fff', padding: '9px 12px 11px 12px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}
-            >
-              <span className={s.newProjectPlusGhost} aria-hidden="true">+</span>
-              новый проект
-            </span>
-            <span
-              className={`${s.newProjectFace} ${s.newProjectFaceBottom}`}
-              style={{ background: '#fff', padding: '9px 12px 11px 12px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}
-            >
-              <span style={{ marginRight: 6 }}>+</span>
-              новый проект
-            </span>
-          </span>
-        </button>
-      )}
-
-      {/* Privacy links — bottom-left, appear when scrolled to page bottom (desktop only) */}
+      {/* Privacy link — second column of the grid (the «написать нам» button
+          keeps the first one), revealed at the bottom of the page. */}
       {!isMobile && <div style={{
         position: 'fixed',
-        left: 'var(--pad)',
+        // Second column of the grid, but never under the «написать нам» pill
+        // (which is ~154px wide in the same corner) on narrower screens.
+        left: 'max(calc(var(--pad) + 154px + 20px), calc(var(--pad) + (100vw - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap)))',
         bottom: 'var(--pad)',
         zIndex: 165,
         display: 'flex',
@@ -1130,10 +1111,29 @@ function AppInner() {
             transition: 'opacity 0.2s ease',
           }}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ transform: 'translateY(-1px)' }}>
             <path d="M6.94 5a2 2 0 1 1-4-.001 2 2 0 0 1 4 .001ZM7 8.48H3V21h4V8.48Zm6.32 0H9.34V21h3.94v-6.57c0-3.66 4.77-4 4.77 0V21H22v-7.93c0-6.17-7.06-5.94-8.72-2.91l.04-1.68Z" fill="#000"/>
           </svg>
         </a>
+      </div>}
+
+      {/* Zoom controls — home page only, bottom-left (no function yet) */}
+      {page === 'home' && !isMobile && <div style={{
+        position: 'fixed',
+        left: 'var(--pad)',
+        bottom: 'var(--pad)',
+        zIndex: 200,
+        fontSize: 'var(--text-size)',
+        fontFamily: 'var(--font)',
+        fontWeight: 'var(--text-weight)',
+        letterSpacing: 'var(--text-ls)',
+        lineHeight: 'var(--text-lh)',
+        color: '#fff',
+        mixBlendMode: 'difference',
+        pointerEvents: 'none',
+        userSelect: 'none',
+      }}>
+        <span style={{ color: 'inherit' }}>⊖ ⊕</span>
       </div>}
 
       {/* ── Mobile footer bar — single unified block ──────────────────────────
@@ -1208,14 +1208,18 @@ function AppInner() {
         onNavigatePolicy={() => navigateWithExit('/policy')}
         onGridMode={setGridVisible}
       />}
+      {page === 'expertiza2' && <ExpertizaPage2
+        onNavigatePolicy={() => navigateWithExit('/policy')}
+        onGridMode={setGridVisible}
+      />}
       {page === 'lab' && <LabPage
         onNavigatePolicy={() => navigateWithExit('/policy')}
         onGridMode={setGridVisible}
       />}
       {page === 'policy' && <PolicyPage />}
       {page === 'index2' && <Index2Page />}
-      {page === 'case-template' && <CaseTemplatePage onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} />}
-      {page === 'seniors' && <CaseTemplatePage data={SENIORS_BAR} onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} />}
+      {page === 'case-template' && <CaseTemplatePage onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}
+      {page === 'seniors' && <CaseTemplatePage data={SENIORS_BAR} onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}
       {page === 'guide' && <GuidePage />}
       {page === 'system' && <DesignSystemPage />}
       {page === 'svc-brand'   && <ServiceDetailPage serviceIdx={0} onBack={() => navigateWithExit('/services')} />}
@@ -1256,7 +1260,7 @@ function AppInner() {
               <p className={s.studioDesc}>Skip Design — бутиковая студия цифрового дизайна. Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться сути.</p>
               <div className={s.studioPhilosophy}>
                 <div className={s.studioClients}>
-                  <p ref={clientLabelRef} className={s.studioClientsLabel}>Нам доверяют проекты:</p>
+                  <p ref={clientLabelRef} className={s.studioClientsLabel}>Нам доверяют</p>
                   <div ref={clientNamesRef} className={s.studioClientNames}>
                     {['AliExpress', 'Юрий Мурадян', 'Gate Legal', 'Senior*s Bar'].map(name => (
                       <p
@@ -1304,210 +1308,108 @@ function AppInner() {
         </div>
         )}
 
-        {/* People block — on desktop: 5-col (video · · text · · video)
-            on mobile: text-only (videos hidden — heavy autoplay assets that
-            slow initial touch-scroll and add little on a small screen). */}
-        <div
-          className={s.section}
-          style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, 1fr)',
-            gap: 'var(--gap)',
-            marginTop: 'var(--space-xl)',
-            alignItems: 'center',
-          }}
-        >
-          {/* Left video removed — desktop people block now: empty col 1,
-              centred text in col 3, right video in col 5. */}
-
-          {/* Desktop layout — description spans the top row across cols 2-4,
-              the second row holds the client list (col 3) + the image (col 5).
-              The grid row's align-items:center then vertically centres the
-              image on just the list, not the description. */}
-          {!isMobile && (
-          <>
-            <p
-              style={{
-                ...ts,
-                gridColumn: '1 / -1',
-                gridRow: '1',
-                margin: 0,
-                marginBottom: 40,
-                marginLeft: 'auto',
-                marginRight: 'auto',
-                textAlign: 'center',
-                maxWidth: 'calc((100% - 4 * var(--gap)) / 5)',
-              }}
-            >
-              Skip&nbsp;Design&nbsp;— студия цифрового дизайна. Скипаем все, что мешает проявиться суть.
-            </p>
-            <div
-              style={{
-                gridColumn: '3 / 4',
-                gridRow: '2',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 40,
-                textAlign: 'center',
-              }}
-            >
-              <p ref={heroClientLabelRef} style={{ ...ts, margin: 0 }}>Нам доверяют проекты:</p>
-              <div ref={heroClientNamesRef} style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 20,
-                fontFamily: 'var(--font-display)',
-                fontSize: 'var(--heading-size)',
-                fontWeight: 'var(--heading-weight)' as React.CSSProperties['fontWeight'],
-                lineHeight: 'var(--heading-lh)',
-                letterSpacing: 'var(--heading-ls)',
-                color: 'var(--c-text)',
-                textAlign: 'center',
-              }}>
-                {PEOPLE_CLIENTS.map(name => (
-                  <p
-                    key={name}
-                    style={{ margin: 0, fontSize: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                    onMouseEnter={() => { setHoveredClient(name); sound.play('hover'); }}
-                    onMouseLeave={() => setHoveredClient(null)}
-                  >
-                    <LinkFlip>{name}</LinkFlip>
-                  </p>
-                ))}
-              </div>
-            </div>
-            {/* Client video hidden temporarily — to be replaced with client
-                logos. Restore by removing the `false &&`. */}
-            {false && (
-            <div style={{ gridColumn: '5 / 6', gridRow: '2', alignSelf: 'center' }}>
-              <PeopleVideoSlot config={peopleVideos.right} aspectRatio="16/9" />
-            </div>
-            )}
-          </>
-          )}
-
-          {/* Mobile-only: studio description + clients below videos */}
-          {isMobile && (
-            <div style={{ gridColumn: '1 / -1', marginTop: 'var(--space-xs)', display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)', textAlign: 'center', alignItems: 'center' }}>
-              <p style={{ ...ts, margin: 0, maxWidth: 'calc(2 / 3 * (100vw - 2 * var(--pad)))' }}>
-                Skip&nbsp;Design&nbsp;— студия цифрового дизайна. Скипаем все, что мешает проявиться суть.
-              </p>
-              <p ref={heroClientLabelRef} style={{ ...ts, margin: 0 }}>Нам доверяют проекты:</p>
-              <div ref={heroClientNamesRef} style={{
-                display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center',
-                fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(36px, 10vw, 56px)',
-                fontWeight: 'var(--heading-weight)' as React.CSSProperties['fontWeight'],
-                lineHeight: 'var(--heading-lh)', letterSpacing: 'var(--heading-ls)',
-              }}>
-                {PEOPLE_CLIENTS.map(name => (
-                  <p key={name} style={{ margin: 0, fontSize: 'inherit' }}>{name}</p>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
         <div id="cases" ref={casesRevealRef} style={{ marginTop: 'var(--space-xl)' }}>
           <ProjectGallery onCaseClick={() => navigateWithExit('/case-template')} />
+        </div>
+
+        {/* Straight to the full list — same pill as «написать нам», in grey.
+            100px under the last row of cases; the section below keeps the
+            usual --space-xl gap of its own. */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
+          <PillButton onClick={() => navigateWithExit('/cases')}>больше проектов</PillButton>
         </div>
 
         {/* Фреймворки section removed — its items now live as text rows inside
             «Материалы и инструменты» (MediaSection), per the unified list. */}
         {/* <ToolsSection /> */}
 
-        <MediaSection toolsRowsRef={toolsRowsRef} />
+        {/* Home shows only the first two levels — the full services list lives
+            on the /services page. */}
+        <div>
+          <ExpertiseSection showItems={false} />
+        </div>
+
+        {/* Trusted-by clients — moved below Cases */}
+        <div
+          className={s.section}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: isMobile ? 'var(--space-xs)' : 40,
+            textAlign: 'center',
+          }}
+        >
+          <p ref={heroClientLabelRef} style={{ ...ts, margin: 0 }}>Нам доверяют</p>
+          <div
+            style={{
+              position: 'relative',
+              // 2 of the 5 grid columns wide, centred (the flex parent centres it).
+              width: isMobile ? '100%' : 'calc(2 / 5 * (100% - 4 * var(--gap)) + 1 * var(--gap))',
+              // Taller than one line-height so descenders (g, p, у) aren't
+              // clipped by the overflow that hides the off-screen names.
+              height: isMobile ? 'calc(clamp(36px, 10vw, 56px) * 1.4)' : 'calc(var(--heading-size) * 1.4)',
+              display: 'flex',
+              alignItems: 'center',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Edge masks — fade the ticker to white left and right */}
+            <div style={{
+              position: 'absolute', top: 0, bottom: 0, left: 0, zIndex: 2, pointerEvents: 'none',
+              width: isMobile ? 60 : 140,
+              background: 'linear-gradient(to right, var(--c-bg), rgba(255,255,255,0))',
+            }} />
+            <div style={{
+              position: 'absolute', top: 0, bottom: 0, right: 0, zIndex: 2, pointerEvents: 'none',
+              width: isMobile ? 60 : 140,
+              background: 'linear-gradient(to left, var(--c-bg), rgba(255,255,255,0))',
+            }} />
+
+            <div
+              ref={heroClientTrackRef}
+              style={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: isMobile ? 24 : 40,
+                fontFamily: 'var(--font-display)',
+                fontSize: isMobile ? 'clamp(36px, 10vw, 56px)' : 'var(--heading-size)',
+                fontWeight: 'var(--heading-weight)' as React.CSSProperties['fontWeight'],
+                lineHeight: 'var(--heading-lh)',
+                letterSpacing: 'var(--heading-ls)',
+                color: 'var(--c-text)',
+                textAlign: 'center',
+                willChange: 'transform',
+              }}
+            >
+              {[0, 1].map(dup => (
+                <div key={dup} ref={dup === 0 ? heroClientSetRef : undefined} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: isMobile ? 24 : 40 }}>
+                  {PEOPLE_CLIENTS.map(name => (
+                    <p
+                      key={name}
+                      style={{ margin: 0, fontSize: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                      onMouseEnter={() => { setHoveredClient(name); sound.play('hover'); }}
+                      onMouseLeave={() => setHoveredClient(null)}
+                    >
+                      <LinkFlip>{name}</LinkFlip>
+                    </p>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {/* "+ новый проект" — sticky pill above the contact form.
             Fades to 0 the moment the form enters the viewport (driven by
             an IntersectionObserver on .contactWrap). */}
-        <button
-          className={s.newProjectBtn}
-          style={isMobile ? {
-            // Mobile: fixed below the hero video rect (not sticky).
-            // bottom mirrors the h1 top offset so spacing is symmetrical.
-            position: 'fixed',
-            bottom: 'calc(36px + var(--pad) + 90px)',  // 36px footer + pad + ~h1 top
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 60,
-            mixBlendMode: 'difference',
-            background: 'transparent',
-            border: 'none',
-            borderRadius: 0,
-            padding: 0,
-            margin: 0,
-            cursor: mobileVideoOver ? 'default' : 'pointer',
-            opacity: mobileVideoOver ? 0 : 1,
-            pointerEvents: mobileVideoOver ? 'none' : 'auto',
-            transition: 'opacity 0.35s ease',
-            fontFamily: 'var(--font)',
-            fontSize: 'var(--text-size)',
-            fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
-            letterSpacing: 'var(--text-ls)',
-            lineHeight: 'var(--text-lh)',
-            color: '#000',
-            textDecoration: 'none',
-            display: 'inline-block',
-            perspective: 'none',
-            whiteSpace: 'nowrap',
-          } : {
-            position: 'sticky',
-            bottom: 'var(--pad)',
-            left: 'var(--pad)',
-            zIndex: 60,
-            mixBlendMode: 'difference',
-            background: 'transparent',
-            border: 'none',
-            borderRadius: 0,
-            padding: 0,
-            margin: 0,
-            marginTop: 'calc(-1 * var(--text-size) * var(--text-lh) - 20px)',
-            cursor: formInView ? 'default' : 'pointer',
-            opacity: formInView ? 0 : 1,
-            pointerEvents: formInView ? 'none' : 'auto',
-            transition: 'opacity 0.35s ease',
-            fontFamily: 'var(--font)',
-            fontSize: 'var(--text-size)',
-            fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
-            letterSpacing: 'var(--text-ls)',
-            lineHeight: 'var(--text-lh)',
-            color: '#000',
-            textDecoration: 'none',
-            display: 'inline-block',
-            perspective: 'none',
-            alignSelf: 'flex-start',
-          }}
-          onMouseEnter={() => sound.play('hover')}
-          onClick={() => {
-            const el = document.querySelector('[class*="contactWrap"]') as HTMLElement;
-            const lenis = (window as any).__lenis;
-            if (el && lenis) lenis.scrollTo(el, { duration: 1.2, offset: -40 });
-            else if (el) el.scrollIntoView({ behavior: 'smooth' });
-          }}
-        >
-          <span className={s.newProjectFlipInner}>
-            <span
-              className={s.newProjectFace}
-              style={{ background: '#fff', padding: '9px 12px 11px 12px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}
-            >
-              <span className={s.newProjectPlusGhost} aria-hidden="true">+</span>
-              новый проект
-            </span>
-            <span
-              className={`${s.newProjectFace} ${s.newProjectFaceBottom}`}
-              style={{ background: '#fff', padding: '9px 12px 11px 12px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}
-            >
-              <span style={{ marginRight: 6 }}>+</span>
-              новый проект
-            </span>
-          </span>
-        </button>
+
+        {/* The contact form stays inside the sticky wrapper, so the button
+            keeps its place all the way to the bottom of the page. */}
+        <ContactForm onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} />
 
         </div>{/* /newProjectStickyWrap */}
-
-        <ContactForm onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} />
 
         {/* MindMapBlock temporarily hidden — keep for later */}
         {/* <div className={s.section} style={{ marginTop: 200 }}>

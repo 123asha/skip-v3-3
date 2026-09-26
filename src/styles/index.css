@@ -8,14 +8,6 @@
   font-display: swap;
 }
 
-@font-face {
-  font-family: 'CoFo Sans Semi-Mono VF';
-  src: url('/fonts/CoFoSansSemi-Mono-VF-Trial.ttf') format('truetype');
-  font-weight: 1 999;
-  font-style: normal;
-  font-display: swap;
-}
-
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -23,29 +15,34 @@
 }
 
 :root {
-  --font: 'CoFo Sans Semi-Mono VF', 'CoFo Sans VF', -apple-system, sans-serif;
+  --font: 'CoFo Sans VF', -apple-system, sans-serif;
   --font-display: 'CoFo Sans VF', -apple-system, sans-serif;
-  --font-mono: 'CoFo Sans Semi-Mono VF', 'CoFo Sans VF', -apple-system, monospace;
+  --font-mono: 'CoFo Sans VF', -apple-system, sans-serif;
   --c-text: #231f20;
   --c-bg: #ffffff;
   --c-surface: #f6f6f6;
-  --c-accent: #8382fc;
-  --c-border: rgba(35, 31, 32, 0.12);
+  /* Opaque on purpose: a translucent line changes shade over the grey section
+     bands, so dividers on white and on --c-surface would not match. This is
+     rgba(35,31,32,0.12) flattened onto white. */
+  --c-border: #e5e4e4;
 
-  --text-size: clamp(12px, 1.143vw, 20px);
+  /* Exactly two type sizes site-wide, both fixed: only the grid columns react
+     to viewport width above 1200px (below that main.tsx zooms the whole page,
+     type included). Mobile overrides live in the media blocks further down. */
+  --text-size: 16px;
   --text-weight: 465;
-  --text-lh: 1;
+  --text-lh: 1.2;
   --text-ls: -0.02em;
 
-  --heading-size: clamp(40px, 2.857vw, 54px);
+  --heading-size: 40px;
   --heading-weight: 454;
-  --heading-lh: 0.81;
-  --heading-ls: -0.02em;
+  --heading-lh: 0.96;
+  --heading-ls: -0.021em;
 
-  --h2-size: clamp(16px, 2.1vw, 40px);
+  --h2-size: var(--heading-size);
   --h2-weight: 454;
-  --h2-lh: 0.81;
-  --h2-ls: -0.02em;
+  --h2-lh: var(--heading-lh);
+  --h2-ls: var(--heading-ls);
 
   --pad: 20px;
   --gap: 20px;
@@ -54,7 +51,13 @@
   /* ── Vertical spacing rhythm (desktop) ──────────────────────────────────
      Use these tokens everywhere instead of hardcoded margin/gap values.
      Scale collapses on mobile in the media query block below. */
-  --space-xl: 200px;  /* between major sections (e.g. Hero → Cases) */
+  /* Between major sections (Hero → Cases → Услуги …). Fluid: 13.75vw hits
+     220px at the 1600px design width and shrinks with the viewport, floored
+     at 120px and capped at 220px so it never runs away on ultra-wide. */
+  --space-xl: clamp(120px, 13.75vw, 220px);
+  /* Gap from a page title to the first content block on inner pages.
+     12.5vw hits 200px at the 1600px design width. */
+  --space-title: clamp(100px, 12.5vw, 200px);
   --space-lg: 120px;  /* large gap (row-gap in case grid)            */
   --space-md: 80px;   /* block gap (studio inner gap)                */
   --space-sm: 40px;   /* item-group gap                              */
@@ -62,6 +65,9 @@
 
   /* Secondary / muted text — used for all gray text and L2 links */
   --opacity-muted: 0.4;
+  /* Same grey as opacity 0.4 over white, but opaque — for places where the
+     shade must not shift with whatever sits underneath. */
+  --c-text-muted: #a7a5a6;
 }
 
 /* Muted text helper — matches L2 link opacity */
@@ -80,30 +86,46 @@
   --lab-row-gap:    80px;
 }
 
+/* ── Narrow desktop / tablet (≤ 980px) ──────────────────────────────────────
+   Below the fluid breakpoint the layout drops to 3 columns and the heading
+   steps down; body text keeps its size. */
+@media (max-width: 980px) {
+  :root {
+    --heading-size:   28px;
+    --cases-cols:     repeat(3, 1fr);
+    --content-cols:   repeat(3, 1fr);
+    --people-cols:    repeat(3, 1fr);
+    --lab-cases-cols: repeat(3, 1fr);
+  }
+}
+
+/* ── Very narrow (≤ 375px) — down to 2 columns ─────────────────────────────── */
+@media (max-width: 375px) {
+  :root {
+    --cases-cols:     repeat(2, 1fr);
+    --content-cols:   repeat(2, 1fr);
+    --people-cols:    repeat(2, 1fr);
+    --lab-cases-cols: repeat(2, 1fr);
+  }
+}
+
 /* ── Mobile (≤ 768px) ───────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   :root {
     --pad:            8px;
     --gap:            8px;
     --text-size:      clamp(11px, 3.5vw, 18px);
-    /* Tight enough so "Визуальные системы для" / "новые горизонтальные" type
-       lines fit on a single row at 360-390 px viewport widths. */
-    --heading-size:   clamp(22px, 7vw, 44px);
-    --h2-size:        clamp(22px, 7vw, 44px); /* matches --heading-size on mobile */
     /* Proportional vertical rhythm — keeps the same ratio as desktop */
     --space-xl: 80px;
     --space-lg: 48px;
     --space-md: 32px;
     --space-sm: 20px;
     --space-xs: 12px;
-    /* Override grid vars */
-    --cases-cols:     minmax(0, 1fr) minmax(0, 1fr);
+    /* Column counts come from the ≤980 / ≤375 blocks above — only the gaps
+       are mobile-specific here. */
     /* Proportional to desktop's 120 px (≈ 40 % shrink, in line with --space-md) */
     --cases-row-gap:  48px;
-    --content-cols:   minmax(0, 1fr) minmax(0, 1fr);
     --content-gap:    8px;
-    --people-cols:    minmax(0, 1fr) minmax(0, 1fr);
-    --lab-cases-cols: minmax(0, 1fr) minmax(0, 1fr);
     --lab-row-gap:    var(--space-sm);
   }
 
@@ -140,8 +162,7 @@
   [class*="_contactCard_"] { width: 100% !important; }
 
   /* Contact wrap: skip the 100vh min-height on mobile — it creates a huge
-     empty band above the card when the snake game isn't there. The card's
-     own height drives layout instead. */
+     empty band above the card. The card's own height drives layout instead. */
   [class*="_contactWrap_"] {
     min-height: auto !important;
     padding-top: var(--space-xl) !important;
@@ -163,10 +184,7 @@
 @media (max-width: 490px) {
   :root {
     --text-size:    14px;
-    /* H1 sized so "Визуальные системы для" (22 chars) fits on a single
-       line at 360–390 px viewport. */
-    --heading-size: 26px;
-    --h2-size:      18px;
+    /* Heading stays at the 28px set in the ≤980 block. */
   }
   html, body { font-size: 14px !important; }
   /* No per-tag reset — elements inherit 14px from html/body.
@@ -196,9 +214,7 @@ body {
 a {
   color: inherit;
   font-family: var(--font-mono);
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  text-underline-offset: 3px;
+  text-decoration: none;
 }
 
 /* ── Link levels ── */
@@ -206,9 +222,6 @@ a {
 /* L1 — dark, primary */
 .link-l1 {
   color: var(--c-text);
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  text-underline-offset: 3px;
   cursor: pointer;
   transition: transform 0.15s ease;
 }
@@ -218,9 +231,6 @@ a {
 .link-l2 {
   color: var(--c-text);
   opacity: var(--opacity-muted);
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  text-underline-offset: 3px;
   cursor: pointer;
   transition: opacity 0.2s;
 }

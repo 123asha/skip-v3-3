@@ -3,10 +3,12 @@ import { gsap } from 'gsap';
 import VisualSystemsBoard from './VisualSystemsBoard';
 import BunnyHero from './BunnyHero';
 import MoscowTime from './MoscowTime';
+import Constellation from './Constellation';
 import s from './ScrollHero.module.css';
 import { TEXT_STYLE } from '../utils/typography';
 import { asset, videoAsset } from '../utils/asset';
 import { useMobile } from '../hooks/useMobile';
+import { PLACEHOLDER_MEDIA, PLACEHOLDER_COLOR } from '../utils/placeholders';
 
 
 // Sidebar section items hidden for now — keep the export so dependents still
@@ -22,27 +24,44 @@ const BOARD_IMGS = [
 ];
 
 // Gray block backgrounds — paired with BOARD_IMGS
+// Slider reduced to a single slide (Flower) — other slides skipped per request.
 const BG_IMGS = [
-  asset('/2bg.webp'),
   asset('/1bg.webp'),
-  asset('/3bg.webp'),
 ];
+
+// Hero preview pool — one clip is drawn at random per page load, so a reload
+// shows a different case, and that clip is the one the scroll scrubs. Add or
+// remove entries here to change what can come up.
+const HERO_VIDEO_POOL = [
+  '/flower2.mp4',  // Flower
+  '/s1.mp4',
+];
+
+// Picked once per page load (module scope) — re-renders must not swap the clip
+// mid-scroll, only a fresh reload changes it.
+const HERO_VIDEO = HERO_VIDEO_POOL[Math.floor(Math.random() * HERO_VIDEO_POOL.length)];
+
+// The hero clip plays on its own instead of being scrubbed by the scroll, so
+// the first screen is alive before the page is touched. Flip to false to hand
+// the clip back to the scroll (it then sits on frame 0 until you scroll).
+const HERO_VIDEO_AUTOPLAY = false;
+
+// First screen carries the draggable SKP DSGN constellation instead of the
+// cover clip. Flip to false to hand the screen back to the video.
+const HERO_CONSTELLATION = true;
+// First screen's own shade — a touch deeper than the site's --c-surface
+const HERO_BG = '#eaeaea';
 
 // VIDEO_PRELOADER: slides that are scroll-scrubbed videos instead of images.
 // Desktop only — mobile always uses the static BG_IMGS image (see !isMobile guard below).
-// Slide 0 = Senior*s Bar, Slide 1 = Flower, Slide 2 = third project.
 const SLIDE_VIDEO_SRC: Record<number, string> = {
-  0: '/seniors-bar.mp4',  // Senior*s Bar (slide 0)
-  1: '/flower2.mp4',   // Flower (slide 1)
-  2: '/s3.mp4',
+  0: HERO_VIDEO,   // the single slide — random pick from the pool above
 };
 
 // Visual-systems case info — labels shown on the small rectangle.
 // symbol: ASCII char shown bottom-left of the card.
 const VS_CASES = [
-  { name: 'Стратегия', anchor: 'brand',  symbol: '∴' },
   { name: 'Брендинг',  anchor: 'visual', symbol: '◈' },
-  { name: 'Диджитал',  anchor: 'tools',  symbol: '⌘' },
 ];
 
 
@@ -110,27 +129,31 @@ function MobileHero({ onNavigateCases, onNavigateExpertiza, onNavigateLab }: { o
           Preserves its native aspect ratio (object-fit: contain) and is centred
           horizontally; no stretching/cropping. Poster fills the frame while
           the source downloads. */}
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        poster={BG_IMGS[0]}
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '100%',
-          height: 'auto',
-          maxHeight: '100%',
-          objectFit: 'contain',
-          zIndex: 0,
-        }}
-      >
-        <source src={videoAsset('/video.mp4')} type="video/mp4" />
-      </video>
+      {PLACEHOLDER_MEDIA ? (
+        <div style={{ position: 'absolute', inset: 0, background: PLACEHOLDER_COLOR, zIndex: 0 }} />
+      ) : (
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          poster={BG_IMGS[0]}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '100%',
+            height: 'auto',
+            maxHeight: '100%',
+            objectFit: 'contain',
+            zIndex: 0,
+          }}
+        >
+          <source src={videoAsset('/video.mp4')} type="video/mp4" />
+        </video>
+      )}
       {/* Headline — sits 80 px from the top */}
       <p style={{
         position: 'absolute',
@@ -174,7 +197,7 @@ function MobileHero({ onNavigateCases, onNavigateExpertiza, onNavigateLab }: { o
         <a href="#" onClick={e => { e.preventDefault(); onNavigateLab?.(); }}
           style={{ color: 'inherit', textDecoration: 'underline' }}>Skip Design</a>
         <a href="#" onClick={e => { e.preventDefault(); onNavigateCases?.(); }}
-          style={{ color: 'inherit', textDecoration: 'underline' }}>Кейсы</a>
+          style={{ color: 'inherit', textDecoration: 'underline' }}>Проекты</a>
         <a href="#" onClick={e => { e.preventDefault(); onNavigateExpertiza?.(); }}
           style={{ color: 'inherit', textDecoration: 'underline' }}>Услуги</a>
       </div>
@@ -183,80 +206,6 @@ function MobileHero({ onNavigateCases, onNavigateExpertiza, onNavigateLab }: { o
 }
 
 // ───────────────────────────────────────────────────────────────────────────
-// ── Slide navigation bullet list ─────────────────────────────────────────────
-// Text body size. Arrow appears to the RIGHT of the active item (no layout shift —
-// absolute). On active change the text does a LinkFlip-style rotateX flip (same
-// feel as the clients list hover).
-function SlideNav({ items, activeIdx, onSelect }: { items: string[]; activeIdx: number; onSelect: (i: number) => void }) {
-  const innerRefs = useRef<(HTMLSpanElement | null)[]>([]);
-
-  useEffect(() => {
-    const el = innerRefs.current[activeIdx];
-    if (!el) return;
-    gsap.killTweensOf(el);
-    // Replicate LinkFlip bottom-face entrance: rotateX -90→0
-    // same ease/duration as LinkFlip.module.css hover transition
-    gsap.fromTo(el,
-      { rotateX: -90 },
-      { rotateX: 0, duration: 0.35, ease: 'cubic-bezier(0.4,0,0.2,1)' },
-    );
-  }, [activeIdx]);
-
-  return (
-    <div style={{
-      position: 'absolute',
-      left: 'var(--pad)',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 6,
-      zIndex: 8,
-      color: '#fff',
-      mixBlendMode: 'difference',
-      userSelect: 'none',
-    }}>
-      {items.map((name, i) => {
-        const isActive = activeIdx === i;
-        return (
-          <button
-            key={i}
-            onClick={(e) => { e.stopPropagation(); onSelect(i); }}
-            style={{
-              background: 'none', border: 'none', padding: 0,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              textAlign: 'left',
-              fontFamily: 'var(--font)',
-              fontSize: 'var(--text-size)',
-              fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
-              lineHeight: 'var(--text-lh)',
-              letterSpacing: 'var(--text-ls)',
-              color: 'inherit',
-              opacity: isActive ? 1 : 0.4,
-              transition: 'opacity 0.3s ease',
-              perspective: '300px',
-            }}
-          >
-            {/* Word — LinkFlip-style flip on active change. No arrow. */}
-            <span
-              ref={el => { innerRefs.current[i] = el; }}
-              style={{
-                display: 'inline-block',
-                transformStyle: 'preserve-3d',
-                transformOrigin: 'center center',
-                backfaceVisibility: 'hidden',
-              }}
-            >{name}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 // Top-level wrapper — branches to mobile/desktop. Each branch is its own
 // component so hooks order is stable across breakpoint changes (otherwise
 // React would crash on resize across 768px).
@@ -264,7 +213,77 @@ type ScrollHeroProps = { mode: 'arcade' | 'bunny'; ready: boolean; skipVideoPhas
 
 // Single hero for all viewports — the same scroll-driven parallax + rectangle.
 // Mobile-specific sizing lives inside applyProgress (panel width adapts to vw).
+/** First screen with the constellation: one plain grey screen that simply
+ *  scrolls away — no pinning, no scroll-driven slides. Scrolling gives the
+ *  graph gravity, so its vertices sink and settle along the bottom. */
+// Hero copy is set in exactly the menu's type
+const MENU_TYPE: React.CSSProperties = {
+  fontFamily: 'var(--font)',
+  fontSize: 'var(--text-size)',
+  fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+  lineHeight: 'var(--text-lh)',
+  letterSpacing: 'var(--text-ls)',
+};
+
+// Manual kerning for pairs the display face sets too loose at this size
+function kernHeadline(line: string) {
+  return line.split(/(л(?=я))/).map((part, i) =>
+    part === 'л' ? <span key={i} style={{ letterSpacing: '-0.05em' }}>л</span> : part);
+}
+
+function ConstellationHero() {
+  return (
+    <div
+      id="hero"
+      style={{
+        position: 'relative',
+        height: '100svh',
+        width: '100%',
+        background: HERO_BG,
+        // The balls knock their letters out in the background colour, so the
+        // token is redefined here too and they follow the hero automatically.
+        ['--c-surface' as string]: HERO_BG,
+        overflow: 'hidden',
+      }}
+    >
+      {/* The playing field is the whole hero, so the copy floats over it and
+          must not swallow the pointer — every ball stays grabbable. */}
+      {/* Studio line — centred at the top, on the nav's line. Absolute (not
+          fixed): it scrolls away with the hero instead of staying pinned. */}
+      <div style={{
+        position: 'absolute',
+        left: '50%',
+        top: 'var(--pad)',
+        transform: 'translateX(-50%)',
+        zIndex: 2,
+        fontFamily: 'var(--font)',
+        fontSize: 'var(--text-size)',
+        fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+        letterSpacing: 'var(--text-ls)',
+        lineHeight: 'var(--text-lh)',
+        color: '#fff',
+        mixBlendMode: 'difference',
+        whiteSpace: 'nowrap',
+        pointerEvents: 'none',
+      }}>Skip Design. Дизайн, как правила игры</div>
+      {/* Headline a touch above the middle of the screen — the constellation
+          keeps a clear patch there for it */}
+      <p className={`${s.headline} ${s.heroIntroText}`} style={{ pointerEvents: 'none', animationDelay: '0.35s', top: '45%', transform: 'translate(-50%, -50%)', fontSize: 'calc(var(--heading-size) * 1.2)', lineHeight: 'calc(var(--heading-lh) * 0.97)' }}>
+        {HEADLINE_LINES.map((line, i) => (
+          <span key={i} style={{ display: 'block' }}>{kernHeadline(line)}</span>
+        ))}
+      </p>
+
+      {/* The playing field is the hero itself — the balls live behind the copy */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
+        <Constellation gravityOnScroll intro />
+      </div>
+    </div>
+  );
+}
+
 export default function ScrollHero(props: ScrollHeroProps) {
+  if (HERO_CONSTELLATION) return <ConstellationHero />;
   return <ScrollHeroDesktop {...props} />;
 }
 
@@ -401,7 +420,7 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
       entranceDoneRef.current = true;
       return;
     }
-    if (panelRef.current) gsap.set(panelRef.current, { clipPath: 'inset(100% 0 0 0)' });
+    if (panelRef.current) gsap.set(panelRef.current, { opacity: 0, filter: 'blur(24px)' });
     if (nums.length)   gsap.set(nums,   { opacity: 0, y: 24 });
     if (titles.length) gsap.set(titles, { opacity: 0, y: 24 });
     if (hlSpans?.length) gsap.set(hlSpans, { opacity: 0, y: 24 });
@@ -490,10 +509,10 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
     //    zoom-out settle (deepest layer), the headline rides in as its own
     //    foreground layer with more travel (below, step 3).
     if (skipVideoPhase && bgWrapRef.current) {
-      // Match the preloader exit ease/duration so they feel like one motion.
+      // Simple blur → sharp fade-in — no directional slide.
       tl.fromTo(bgWrapRef.current,
-        { yPercent: 100, scale: 1.06 },
-        { yPercent: 0, scale: 1, duration: 0.85, ease: 'power3.inOut', transformOrigin: 'center center' },
+        { opacity: 0, filter: 'blur(24px)' },
+        { opacity: 1, filter: 'blur(0px)', duration: 0.85, ease: 'power2.out' },
         0);
     }
 
@@ -501,17 +520,23 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
     tl.to(nums,   { opacity: 0.4, y: 0, duration: 0.5, stagger: 0.07, ease: 'power3.out' }, 0);
     tl.to(titles, { opacity: 0.4, y: 0, duration: 0.5, stagger: 0.07, ease: 'power3.out' }, 0);
 
-    // 2. Panel — center, sweeps up
+    // 2. Panel — simple blur → sharp fade-in
     tl.to(panelRef.current, {
-      clipPath: 'inset(0% 0 0 0)',
+      opacity: 1,
+      filter: 'blur(0px)',
       duration: 0.5,
-      ease: 'power4.out',
+      ease: 'power2.out',
       onComplete: () => {
-        if (panelRef.current) panelRef.current.style.clipPath = '';
+        if (panelRef.current) panelRef.current.style.filter = '';
         entranceDoneRef.current = true;
 
         const vid0 = slideVidRefs.current[0];
-        if (!isMobile && vid0) {
+        if (HERO_VIDEO_AUTOPLAY) {
+          // The clip runs on its own — reveal it mid-playback instead of
+          // seeking it to the end for the reverse-play intro.
+          applyRef.current?.(progressRef.current);
+          vid0?.play().catch(() => {});
+        } else if (!isMobile && vid0) {
           // Block scrub IMMEDIATELY so the scroll handler can't reset currentTime=0
           // while we seek to the end and wait for the browser to paint.
           reversePlayingRef.current = true;
@@ -834,9 +859,11 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
         // 100 % of the viewport per slide-step. Both adjacent slides are
         // visible during the transition (previous exits at the top while
         // the next enters from the bottom — moving together with the scroll).
-        // With n = 3 slides, total travel range is `n - 1` slide-steps so
+        // With n slides, total travel range is `n - 1` slide-steps so
         // slide 0 starts at centre and slide n-1 lands at centre by stickyT = 1.
-        const n = bgSlideRefs.current.length || 1;
+        // Uses BG_IMGS.length (the real slide count), not the refs array —
+        // bgSlideRefs is pre-sized for 3 and stays that size even with fewer slides.
+        const n = BG_IMGS.length || 1;
         const totalSteps = Math.max(1, n - 1);
 
         // First-slide entrance: slide 0 rises from below (100 % down) in
@@ -849,7 +876,11 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
 
         bgSlideRefs.current.forEach((el, i) => {
           if (!el) return;
-          const yP = (i - stickyT * totalSteps) * 100 + (i === 0 ? slide0EntryOffset : 0);
+          // Single-slide case: nothing to tape-transition to — the slide
+          // just settles at centre after its entrance and stays there.
+          const yP = n <= 1
+            ? (i === 0 ? slide0EntryOffset : 0)
+            : (i - stickyT * totalSteps) * 100 + (i === 0 ? slide0EntryOffset : 0);
           gsap.set(el, { yPercent: yP, opacity: 1, scale: 1 });
 
           // Parallax: the image inside each slide counter-translates a bit
@@ -876,7 +907,7 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
         // scrub entirely. Same `isMobile` (≤768px) condition as the <video>'s
         // `autoPlay`/`loop` below, so a slide is never left un-scrubbed AND
         // un-played.
-        if (!isMobile) slideVidRefs.current.forEach((vEl, i) => {
+        if (!isMobile && !HERO_VIDEO_AUTOPLAY) slideVidRefs.current.forEach((vEl, i) => {
           if (!vEl || !vEl.duration || !isFinite(vEl.duration)) return;
           // Skip slide 0 while the intro reverse-play animation is running
           if (i === 0 && reversePlayingRef.current) return;
@@ -1115,20 +1146,38 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
       <div
         ref={stickyRef}
         className={s.sticky}
-        style={{ cursor: 'pointer' }}
+        style={{ cursor: HERO_CONSTELLATION ? 'default' : 'pointer' }}
         onClick={() => {
-          // The whole slide is clickable → /services page.
+          // The whole slide is clickable → /services page. Not while the
+          // constellation lives here: every grab would count as a click.
+          if (HERO_CONSTELLATION) return;
           if (progressRef.current >= 1.0) onNavigateExpertiza?.();
         }}
       >
 
-        {/* Headline — line by line entrance */}
+        {/* Headline — line by line entrance, with the tagline under it */}
         <p ref={headlineRef} className={s.headline}>
           {HEADLINE_LINES.map((line, i) => (
             <span key={i} style={{ display: 'block', opacity: 0 }}>
               {line}
             </span>
           ))}
+          {/* Body-size line, 10px under the headline — plain body type, no link
+              decoration (dotted underlines are for links, not running text). */}
+          <span
+            style={{
+              display: 'block',
+              opacity: 0,
+              marginTop: 10,
+              fontFamily: 'var(--font)',
+              fontSize: 'var(--text-size)',
+              fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+              lineHeight: 'var(--text-lh)',
+              letterSpacing: 'var(--text-ls)',
+            }}
+          >
+            Skip Design: дизайн, как правила игры
+          </span>
         </p>
 
 
@@ -1138,7 +1187,11 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
         <div ref={bgWrapRef} style={{
           position: 'absolute', inset: '-30px',
           // On mobile show immediately (no entrance opacity animation needed).
-          opacity: isMobile ? 1 : 0, pointerEvents: 'none', zIndex: 2,
+          opacity: isMobile ? 1 : 0,
+          // The constellation is grabbable, so the slide layer has to take
+          // pointer events; with the video it stays transparent to them.
+          pointerEvents: HERO_CONSTELLATION ? 'auto' : 'none',
+          zIndex: 2,
           overflow: 'hidden',
         }}>
           {BG_IMGS.map((src, i) => (
@@ -1152,12 +1205,27 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
                 overflow: 'hidden',
               }}
             >
-              {skipVideoPhase && SLIDE_VIDEO_SRC[i] && !isMobile ? (
+              {HERO_CONSTELLATION ? (
+                // The draggable SKP DSGN balls stand in for the cover clip:
+                // a band 60vh tall across nearly the full width, centred in
+                // the screen. (The slide itself is inset by -30px, hence the
+                // matching padding — the band has to sit on the real edges.)
+                <div style={{
+                  position: 'absolute', inset: 0, padding: 30,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <div style={{ width: '100%', height: '60vh', background: 'var(--c-surface)' }}>
+                    <Constellation />
+                  </div>
+                </div>
+              ) : skipVideoPhase && SLIDE_VIDEO_SRC[i] && !isMobile ? (
                 // Video slide — desktop only. Mobile uses the static image below
                 // to avoid Safari autoplay failures (white screen on first load).
                 <video
                   ref={el => { bgImgRefs.current[i] = el; slideVidRefs.current[i] = el; }}
                   src={videoAsset(SLIDE_VIDEO_SRC[i])}
+                  autoPlay={HERO_VIDEO_AUTOPLAY}
+                  loop={HERO_VIDEO_AUTOPLAY}
                   muted
                   playsInline
                   preload="auto"
@@ -1172,6 +1240,12 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
                 />
               )}
               {/* (Top darkening removed per design — headline reads via inversion.) */}
+              {/* Placeholder overlay — sits on top so the real media (kept
+                  mounted for its scroll-scrub refs/animations) stays hidden
+                  underneath without touching that logic. */}
+              {PLACEHOLDER_MEDIA && (
+                <div style={{ position: 'absolute', inset: 0, background: PLACEHOLDER_COLOR, pointerEvents: 'none' }} />
+              )}
             </div>
           ))}
         </div>
@@ -1193,6 +1267,10 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
             zIndex: 5,
             pointerEvents: 'none',
             cursor: 'default',
+            // With the constellation on the first screen the old cover card is
+            // both redundant and in the way: once the hero is scrolled it takes
+            // pointer events and covers the middle, where the balls are.
+            display: HERO_CONSTELLATION ? 'none' : undefined,
           }}>
           <div ref={panelInnerRef} style={{ position: 'absolute', inset: 0 }}>
             {mode === 'bunny' ? (
@@ -1279,23 +1357,8 @@ function ScrollHeroDesktop({ mode, ready, skipVideoPhase, onNavigateExpertiza, o
             the text itself moved into the global Footer (`hi@skip.design`). */}
         <p ref={captionRef} style={{ display: 'none' }} aria-hidden="true" />
 
-        {/* ── Slide navigation — left center, desktop only ─────────────────── */}
-        {skipVideoPhase && !isMobile && (
-          <SlideNav
-            items={VS_CASES.map(c => c.name)}
-            activeIdx={activeBgIdx}
-            onSelect={(i) => {
-              const container = containerRef.current;
-              if (!container) return;
-              const n = BG_IMGS.length;
-              const sec0 = window.innerWidth <= 768 ? n * 500 : (n * PX_SLIDE);
-              const target = container.offsetTop + (i / (n - 1)) * sec0;
-              const lenis = (window as any).__lenis;
-              if (lenis) lenis.scrollTo(target, { duration: 0.9 });
-              else window.scrollTo({ top: target, behavior: 'smooth' });
-            }}
-          />
-        )}
+        {/* Slide navigation (Стратегия/Брендинг/Диджитал) skipped per request —
+            only the Flower slide remains, so there's nothing to switch between. */}
 
         {/* Bottom-left: section titles — width = 1 column, no numbers */}
         <div style={{

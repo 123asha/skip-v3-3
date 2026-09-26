@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import s from './CasesPage.module.css';
-import { TEXT_STYLE as textStyle, BODY_LONG_STYLE as bodyLongStyle } from '../utils/typography';
+import { TEXT_STYLE as textStyle, BODY_LONG_STYLE as bodyLongStyle, typo } from '../utils/typography';
 
 const headingStyle: React.CSSProperties = {
   fontFamily: 'var(--font-display)',
@@ -34,8 +34,7 @@ const colors = [
   { name: '--c-text',       value: '#231f20',                  desc: 'Основной текст' },
   { name: '--c-bg',         value: '#ffffff',                  desc: 'Фон страниц' },
   { name: '--c-surface',    value: '#f6f6f6',                  desc: 'Поверхности, карточки' },
-  { name: '--c-accent',     value: '#8382fc',                  desc: 'Акцент' },
-  { name: '--c-border',     value: 'rgba(35, 31, 32, 0.12)',   desc: 'Границы, разделители' },
+  { name: '--c-border',     value: '#e5e4e4',                  desc: 'Границы, разделители' },
   { name: '--opacity-muted', value: '0.4',                     desc: 'Серый/приглушённый текст — ссылки L2, подписи, вторичные элементы' },
 ];
 
@@ -90,10 +89,10 @@ export default function GuidePage() {
             <p style={textStyle}>Body / Text</p>
             <p style={{ ...textStyle, gridColumn: '2 / 4' }}>Весь маленький текст: абзацы, описания, маленькие заголовки, ссылки, теги, табы, инпуты, подписи к слайдеру</p>
             <div style={{ gridColumn: '4 / 6', display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <p style={textStyle}>font-family: CoFo Sans Semi-Mono VF — переменная --font</p>
+              <p style={textStyle}>font-family: CoFo Sans VF — переменная --font</p>
               <p style={textStyle}>font-size: clamp(12px, 1.143vw, 20px) — переменная --text-size</p>
               <p style={textStyle}>font-weight: 465 — переменная --text-weight</p>
-              <p style={textStyle}>line-height: 1 — переменная --text-lh</p>
+              <p style={textStyle}>line-height: 1.2 — переменная --text-lh</p>
               <p style={textStyle}>letter-spacing: -0.02em — переменная --text-ls</p>
             </div>
           </div>
@@ -102,7 +101,7 @@ export default function GuidePage() {
             <p style={textStyle}>Body Long</p>
             <p style={{ ...bodyLongStyle, gridColumn: '2 / 4' }}>Длинные описания, лонгриды, политики конфиденциальности и любые места, где текст читается абзацами. Увеличенный межстрочный интервал улучшает читаемость.</p>
             <div style={{ gridColumn: '4 / 6', display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <p style={textStyle}>font-family: CoFo Sans Semi-Mono VF — как у Body</p>
+              <p style={textStyle}>font-family: CoFo Sans VF — как у Body</p>
               <p style={textStyle}>font-size: var(--text-size) — как у Body</p>
               <p style={textStyle}>line-height: 1.6 — расширенный (Body: 1)</p>
               <p style={textStyle}>Импорт: BODY_LONG_STYLE из utils/typography</p>
@@ -121,7 +120,7 @@ export default function GuidePage() {
                 <div style={{ width: 32, height: 32, background: c.value, border: '1px solid var(--c-border)' }} />
                 <p style={textStyle}>{c.value}</p>
               </div>
-              <p style={{ ...textStyle, gridColumn: '4 / 6' }}>{c.desc}</p>
+              <p style={{ ...textStyle, gridColumn: '4 / 6' }}>{typo(c.desc)}</p>
             </div>
           ))}
         </Section>
@@ -158,7 +157,7 @@ export default function GuidePage() {
             <div key={sp.name} style={row}>
               <p style={textStyle}>{sp.name}</p>
               <p style={{ ...textStyle, gridColumn: '2 / 4' }}>{sp.value}</p>
-              <p style={{ ...textStyle, gridColumn: '4 / 6' }}>{sp.desc}</p>
+              <p style={{ ...textStyle, gridColumn: '4 / 6' }}>{typo(sp.desc)}</p>
             </div>
           ))}
         </Section>
@@ -202,7 +201,7 @@ export default function GuidePage() {
           </div>
           <div style={row}>
             <p style={textStyle}>Aspect-ratio карточек</p>
-            <p style={{ ...textStyle, gridColumn: '2 / 4' }}>H: 16/9 — для горизонтальных. V: 3/4 — для вертикальных</p>
+            <p style={{ ...textStyle, gridColumn: '2 / 4' }}>H: 16/9 — для горизонтальных. V: 4/5 — для вертикальных</p>
             <p style={{ ...textStyle, gridColumn: '4 / 6' }}>В сетке кейсов чередуются H+V парами с двумя раскладками: с зазором (1/3 + 4/6) и плотная (2/4 + 4/6)</p>
           </div>
           <div style={row}>

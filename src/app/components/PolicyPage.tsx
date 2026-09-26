@@ -1,6 +1,7 @@
+import React from 'react';
 import { useEffect, useRef } from 'react';
 import s from './CasesPage.module.css';
-import { BODY_LONG_STYLE } from '../utils/typography';
+import { BODY_LONG_STYLE, typo } from '../utils/typography';
 import { useMobile } from '../hooks/useMobile';
 
 const LINK_RE = /(https?:\/\/[^\s\n]+|[\w.+-]+@[\w-]+\.[\w]*\w)/g;
@@ -14,12 +15,18 @@ function renderWithLinks(text: string, baseStyle: React.CSSProperties) {
     if (/^https?:\/\//.test(part)) {
       const trail = part.match(TRAILING_PUNCT)?.[0] ?? '';
       const url = trail ? part.slice(0, -trail.length) : part;
-      return <>{<a key={i} href={url} target="_blank" rel="noopener noreferrer" style={linkStyle}>{url}</a>}{trail}</>;
+      // The fragment needs the key — the <a> inside it isn't the list item
+      return (
+        <React.Fragment key={i}>
+          <a href={url} target="_blank" rel="noopener noreferrer" style={linkStyle}>{url}</a>
+          {trail}
+        </React.Fragment>
+      );
     }
     if (/^[\w.+-]+@[\w-]+\.[\w]*\w$/.test(part)) {
       return <a key={i} href={`mailto:${part}`} style={linkStyle}>{part}</a>;
     }
-    return part;
+    return <React.Fragment key={i}>{part}</React.Fragment>;
   });
 }
 
@@ -133,7 +140,7 @@ export default function PolicyPage() {
                   whiteSpace: 'pre-wrap',
                 }}
               >
-                {renderWithLinks(p.text, p.heading ? h2Style : textStyle)}
+                {renderWithLinks(typo(p.text), p.heading ? h2Style : textStyle)}
               </p>
             ))}
           </div>

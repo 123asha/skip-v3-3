@@ -11,7 +11,12 @@ import s from './LinkFlip.module.css';
  * so the project's existing dotted underline keeps working without any
  * extra styling here.
  */
-export default function LinkFlip({ children, flat }: { children: ReactNode; flat?: boolean }) {
+export default function LinkFlip({ children, flat, hoverLabel }: {
+  children: ReactNode;
+  flat?: boolean;
+  /** Text the bottom face carries — the word swaps as the cube turns */
+  hoverLabel?: ReactNode;
+}) {
   // `flat` removes the perspective so the text isn't visually scaled/shifted
   // (keeps it exactly on the grid) — for left-aligned lists where the
   // perspective foreshortening would push the left edge off the column.
@@ -19,7 +24,7 @@ export default function LinkFlip({ children, flat }: { children: ReactNode; flat
     <span className={s.wrap} style={flat ? { perspective: 'none' } : undefined}>
       <span className={s.inner}>
         <span className={s.front}>{children}</span>
-        <span className={s.bottom} aria-hidden="true">{children}</span>
+        <span className={s.bottom} aria-hidden="true">{hoverLabel ?? children}</span>
       </span>
     </span>
   );

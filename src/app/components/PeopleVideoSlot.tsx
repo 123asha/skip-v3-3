@@ -5,6 +5,7 @@
  */
 import { useEffect, useRef } from 'react';
 import { asset, videoAsset } from '../utils/asset';
+import { PLACEHOLDER_MEDIA, PLACEHOLDER_COLOR } from '../utils/placeholders';
 
 export type VideoConfig = { src: string; pos: string };
 
@@ -69,13 +70,13 @@ export default function PeopleVideoSlot({
   };
 
   return (
-    <div style={{ aspectRatio, background: 'var(--c-surface)', width: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ aspectRatio, background: PLACEHOLDER_MEDIA ? PLACEHOLDER_COLOR : 'var(--c-surface)', width: '100%', position: 'relative', overflow: 'hidden' }}>
       <video ref={videoARef} autoPlay muted loop playsInline
-        style={{ ...shared, objectPosition: config.pos }}>
+        style={{ ...shared, objectPosition: config.pos, opacity: PLACEHOLDER_MEDIA ? 0 : 1 }}>
         <source src={videoAsset(config.src)} type="video/mp4" />
       </video>
       <video ref={videoBRef} autoPlay muted loop playsInline
-        style={{ ...shared, objectPosition: config.pos, transform: `translateY(${OFFSET})` }}>
+        style={{ ...shared, objectPosition: config.pos, transform: `translateY(${OFFSET})`, opacity: PLACEHOLDER_MEDIA ? 0 : 1 }}>
         <source src={videoAsset(config.src)} type="video/mp4" />
       </video>
     </div>

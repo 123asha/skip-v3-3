@@ -12,7 +12,8 @@
 import { useEffect, RefObject } from 'react';
 import { gsap } from 'gsap';
 
-const Y      = 22;       // px — vertical travel
+const Y      = 22;       // px — vertical travel (override per element with
+                         //      data-reveal-y, e.g. page titles use a shorter one)
 const DUR    = 0.52;     // seconds
 const EASE   = 'power3.out';
 const THRESH = 0.12;     // fraction visible before trigger fires
@@ -32,7 +33,10 @@ export function useReveal(containerRef: RefObject<HTMLElement | null>) {
     const all = [...singles, ...children];
     if (!all.length) return;
 
-    gsap.set(all, { opacity: 0, y: Y });
+    all.forEach(el => {
+      const y = parseFloat(el.dataset.revealY ?? '') || Y;
+      gsap.set(el, { opacity: 0, y });
+    });
 
     // ── Observer ──────────────────────────────────────────────────────────
     const obs = new IntersectionObserver(

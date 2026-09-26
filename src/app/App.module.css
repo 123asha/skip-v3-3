@@ -103,7 +103,7 @@
 /* ── Nav ── */
 .nav {
   position: fixed;
-  left: var(--pad);
+  right: var(--pad);
   top: var(--pad);
   z-index: 200;
   display: flex;
@@ -114,7 +114,7 @@
 
 .navSep {
   color: #fff;
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: var(--text-size);
   line-height: var(--text-lh);
   letter-spacing: 0;
@@ -123,14 +123,26 @@
   padding-right: 4px;
 }
 
+/* Over a cover or the hero video the nav inverts itself (difference blend).
+   On the plain light pages that blend also skips subpixel antialiasing, which
+   makes the links read heavier than the body copy they should match — so those
+   pages get plain text colour instead. */
+.navPlain { mix-blend-mode: normal; }
+.navPlain .navLink,
+.navPlain .navSep { color: var(--c-text); }
+
 .navLink {
   color: #fff;
-  font-family: var(--font-mono);
+  /* Same type as body copy — size and weight set explicitly so the menu can't
+     drift with whatever it happens to inherit. */
+  font-family: var(--font);
+  font-size: var(--text-size);
+  font-weight: var(--text-weight);
+  line-height: var(--text-lh);
+  letter-spacing: var(--text-ls);
   text-decoration: underline;
   text-decoration-style: dotted;
   text-underline-offset: 3px;
-  line-height: var(--text-lh);
-  letter-spacing: var(--text-ls);
 }
 
 .navExpertiza {
@@ -149,19 +161,24 @@
 }
 
 .navBack {
+  position: fixed;
+  right: var(--pad);
+  top: var(--pad);
+  z-index: 200;
   color: #fff;
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
   font-size: var(--text-size);
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-weight: var(--text-weight);
   letter-spacing: var(--text-ls);
   line-height: var(--text-lh);
   text-decoration: underline;
   text-decoration-style: dotted;
   text-underline-offset: 3px;
+  mix-blend-mode: difference;
 }
 
 /* ── Mobile nav: left-aligned, vertically centred with the logo ── */
@@ -169,17 +186,13 @@
   .nav {
     top: 6px;
     height: 52px;
-    font-size: 14px;
-  }
-  .navLink, .navSep {
-    font-size: 14px;
   }
 }
 
 /* ── Logo ── */
 .logo {
   position: fixed;
-  right: calc(var(--pad) - 10px);
+  left: calc(var(--pad) - 10px);
   top: 6px;
   z-index: 200;
   width: 72.5px;
@@ -329,19 +342,12 @@
 .contactWrap {
   margin-top: var(--space-xl);
   margin-bottom: 0;
-  padding: 0 var(--pad);
+  /* The grey footer runs edge to edge and down to the bottom of the page */
+  padding: 0;
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  /* Colorless full-bleed background with a fine gray dot grid — snake lives on it */
-  /* Dots arranged on a 56px grid — same size as the snake cells / circles.
-     Each snake circle (56px diameter) fits exactly inside a 56px square cell.
-     Four dots at each cell's corners outline the snake's grid. */
-  background-image: radial-gradient(circle, rgba(35, 31, 32, 0.28) 0.9px, transparent 0.9px);
-  background-size: 56px 56px;
-  background-position: 0 0;
 }
 
 .contactSkip {
@@ -362,57 +368,11 @@
   opacity: 1;
 }
 
-.contactGameWrap {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-.contactGameDone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 16px;
-  padding: 24px 0;
-  /* Width = 1 column, horizontally centered inside the cols-4/5 game wrap */
-  width: calc((100% - var(--gap)) / 2);
-  margin: 0 auto;
-  font-family: var(--font);
-  font-size: var(--text-size);
-  line-height: var(--text-lh);
-  letter-spacing: var(--text-ls);
-}
-
-.contactGameDone a,
-.contactGameDone button {
-  opacity: 0.5;
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  text-underline-offset: 3px;
-  transition: opacity 0.2s;
-  cursor: pointer;
-  font-family: var(--font);
-  font-size: var(--text-size);
-  line-height: var(--text-lh);
-  letter-spacing: var(--text-ls);
-  background: none;
-  border: none;
-  padding: 0;
-  color: inherit;
-}
-
-.contactGameDone a:hover,
-.contactGameDone button:hover {
-  opacity: 1;
-}
-
 .contactCard {
   background: var(--c-surface);
-  /* Width of 2 cols + 1 gap inside the 5-col system — centered via the flex parent */
-  width: calc(2 / 5 * (100% - 4 * var(--gap)) + 1 * var(--gap));
-  /* Square — height equals width */
-  aspect-ratio: 1 / 1;
+  /* Full width of the grid container */
+  width: 100%;
+  min-height: 600px;
   position: relative;
   z-index: 2;
   overflow: hidden;
@@ -423,31 +383,16 @@
 }
 
 @media (max-width: 768px) {
-  .contactCard { width: 100%; }
-  /* Without snake game, no need for full-viewport-height wrap on mobile */
   .contactWrap { min-height: auto; }
 }
 
-
-/* Snake / game canvas — fills the entire wrap behind the form */
-.contactGameBg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: auto;
-}
-.contactGameBg canvas {
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-}
-
-/* Form content — centered column on top of the snake background */
+/* Form content — centered column */
 .contactFormArea {
   position: relative;
   width: 100%;
   flex: 1;
-  padding: 20px 48px;
+  /* Side padding matches the rest of the site; extra room at the bottom */
+  padding: 20px var(--pad) 80px;
   background: var(--c-surface);
   z-index: 1;
   display: flex;
@@ -465,21 +410,6 @@
   transform: translateX(-50%);
   z-index: 2;
   pointer-events: auto;
-  text-align: center;
-}
-
-/* Centered content stack — sits on top of the snake; opaque-ish to mask the snake under it */
-.contactCenter {
-  position: relative;
-  z-index: 1;
-  margin: 0 auto;
-  max-width: calc((100% - 4 * var(--gap)) * 3 / 5);
-  min-width: 280px;
-  background: var(--c-accent);
-  padding: 40px 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   text-align: center;
 }
 
@@ -607,6 +537,15 @@
 @keyframes submitCircleIn {
   from { opacity: 0; transform: scale(0.5); }
   to   { opacity: 1; transform: scale(1); }
+}
+
+/* Expertise table — a service row easing in when its sub-group is expanded */
+@keyframes expertiseRowIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.expertiseRowIn {
+  animation: expertiseRowIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .contactCheckbox {

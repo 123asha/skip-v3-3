@@ -1,7 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import s from './CasesPage.module.css';
-import { TEXT_STYLE as ts, H2_STYLE as h2s } from '../utils/typography';
+import { TEXT_STYLE as ts, H2_STYLE as h2s, typo } from '../utils/typography';
 import { MagneticDivider } from './MagneticDivider';
 import CaseCard, { CASE_AR_H as H, CASE_AR_V as V } from './CaseCard';
 import { SERVICES } from './ExpertizaPage';
@@ -257,7 +257,7 @@ export default function ServiceDetailPage({ serviceIdx = 0, onBack }: { serviceI
             <p style={{ ...ts, opacity: 0.35, margin: 0 }}>{step.n}</p>
             <div style={{ gridColumn: '4/6', display: 'flex', flexDirection: 'column', gap: 8 }}>
               <p style={{ ...ts, margin: 0, fontWeight: 500 }}>{step.title}</p>
-              <p style={{ ...ts, opacity: 0.6, margin: 0, maxWidth: 400 }}>{step.text}</p>
+              <p style={{ ...ts, opacity: 0.6, margin: 0, maxWidth: 400 }}>{typo(step.text)}</p>
             </div>
           </div>
         ))}

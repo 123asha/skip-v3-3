@@ -96,7 +96,7 @@ export default function SectionSeam({ amplitude = 24 }: { amplitude?: number }) 
           ref={pathRef}
           d={`M0 0 L${width || 1000} 0`}
           fill="none"
-          stroke="var(--c-border, rgba(35,31,32,0.12))"
+          stroke="var(--c-border)"
           strokeWidth="1"
         />
       </svg>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import s from './CasesPage.module.css';
-import { TEXT_STYLE as textStyle } from '../utils/typography';
+import { TEXT_STYLE as textStyle, typo } from '../utils/typography';
 import ContactForm from './ContactForm';
 import { ToolsSection } from './ToolsSection';
 import CaseCard, { CASE_AR_H, CASE_AR_V, type CaseCardAR } from './CaseCard';
@@ -104,7 +104,7 @@ function AccordionSection({ heading, items }: { heading: string; items: typeof p
           {/* Col 3: item title */}
           <p style={textStyle}>{item.title}</p>
           {/* Cols 4-5: full description (always visible — "развернутое описание сразу") */}
-          <p style={{ ...textStyle, gridColumn: '4 / 6', opacity: 0.7 }}>{item.text}</p>
+          <p style={{ ...textStyle, gridColumn: '4 / 6', opacity: 0.7 }}>{typo(item.text)}</p>
         </div>
       ))}
     </div>
@@ -136,7 +136,7 @@ function Section({ heading, items }: { heading: string; items: { n: string; titl
           {/* Col 3: item title */}
           <p style={textStyle}>{item.title}</p>
           {/* Cols 4-5: full description */}
-          <p style={{ ...textStyle, gridColumn: '4 / 6', opacity: 0.7 }}>{item.text}</p>
+          <p style={{ ...textStyle, gridColumn: '4 / 6', opacity: 0.7 }}>{typo(item.text)}</p>
         </div>
       ))}
     </div>
@@ -159,12 +159,9 @@ const BRANDING_PROJECTS = [
 
 function BrandingCycleCard() {
   const [hovered, setHovered] = useState(false);
-  const [idx,     setIdx]     = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const idx = 0;
   const layerARef   = useRef<HTMLDivElement>(null);
   const layerBRef   = useRef<HTMLDivElement>(null);
-  const activeRef   = useRef<'a' | 'b'>('a');
-  const idxRef      = useRef(0);
 
   useEffect(() => {
     if (layerARef.current) layerARef.current.style.backgroundImage = `url(${BRANDING_PROJECTS[0].image})`;
@@ -174,28 +171,9 @@ function BrandingCycleCard() {
     }
   }, []);
 
-  const advance = () => {
-    const nextIdx  = (idxRef.current + 1) % BRANDING_PROJECTS.length;
-    const outgoing = activeRef.current === 'a' ? layerARef.current : layerBRef.current;
-    const incoming = activeRef.current === 'a' ? layerBRef.current : layerARef.current;
-    if (!outgoing || !incoming) return;
-    incoming.style.backgroundImage = `url(${BRANDING_PROJECTS[nextIdx].image})`;
-    gsap.set(incoming, { y: '100%' });
-    gsap.to(outgoing, { y: '-100%', duration: 0.55, ease: 'power3.inOut' });
-    gsap.to(incoming, { y: '0%',   duration: 0.55, ease: 'power3.inOut' });
-    activeRef.current = activeRef.current === 'a' ? 'b' : 'a';
-    idxRef.current    = nextIdx;
-    setIdx(nextIdx);
-  };
 
-  useEffect(() => {
-    if (hovered) {
-      intervalRef.current = setInterval(advance, 2000);
-    } else {
-      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
-    }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [hovered]);
+  // Hovering no longer flips through the projects' pictures — the preview
+  // stays on its first image, like every other case card on the site.
 
   return (
     <div
@@ -268,7 +246,7 @@ export default function InstrumentsPage({ onNavigateCases, onNavigatePolicy, onG
         {/* ── Кейсы — те же, что в основном разделе кейсов (показываем первые 3) ── */}
         <div style={{ marginTop: 200, marginBottom: 200 }}>
           <div style={{ marginBottom: 40, display: 'flex', alignItems: 'baseline', gap: 16 }}>
-            <h2 style={{ ...headingStyle, margin: 0 }}>Кейсы</h2>
+            <h2 style={{ ...headingStyle, margin: 0 }}>Проекты</h2>
             <button
               onClick={onNavigateCases}
               style={{ ...textStyle, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}

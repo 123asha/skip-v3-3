@@ -12,9 +12,11 @@ interface CircleInputProps {
   action?: React.ReactNode;
   error?: boolean;
   maxLength?: number;
+  /** Circle that always stays first (e.g. "@") — not part of the value */
+  prefix?: string;
 }
 
-export default function CircleInput({ placeholder, value: externalValue, onChange, onFocus: onFocusProp, onBlur: onBlurProp, size = 120, disabled, action, error, maxLength }: CircleInputProps) {
+export default function CircleInput({ placeholder, value: externalValue, onChange, onFocus: onFocusProp, onBlur: onBlurProp, size = 120, disabled, action, error, maxLength, prefix }: CircleInputProps) {
   const isControlled = onChange !== undefined;
   const [ownValue, setOwnValue] = useState('');
   const [focused, setFocused] = useState(false);
@@ -39,9 +41,26 @@ export default function CircleInput({ placeholder, value: externalValue, onChang
         transition: 'opacity 0.2s',
         pointerEvents: disabled ? 'none' : undefined,
       } as React.CSSProperties}
+      // preventDefault keeps the browser from moving focus to <body> on
+      // mousedown — without it a click on the circles never reaches the input
+      // and the submit arrow (which waits for focus) never appears.
+      onMouseDown={e => { e.preventDefault(); inputRef.current?.focus(); }}
       onClick={() => inputRef.current?.focus()}
     >
-      {isEditing ? (
+      {/* Fixed first circle — stays put, typing starts after it */}
+      {prefix && <div className={`${s.circle} ${s.prefix}`}>{prefix}</div>}
+
+      {/* Placeholder stays mounted and collapses away, so the row of circles
+          shrinks smoothly instead of snapping when the field is focused. */}
+      {Array.from(placeholder).map((ch, i) => (
+        <div
+          key={`p-${i}`}
+          className={`${s.circle} ${s.placeholder} ${isEditing ? s.collapsed : ''}`}
+          style={{ transitionDelay: isEditing ? `${i * 0.022}s` : `${(placeholder.length - 1 - i) * 0.02}s` }}
+        >{ch}</div>
+      ))}
+
+      {isEditing && (
         <>
           {chars.map((ch, i) => (
             <div key={`${ch}-${i}`} className={`${s.circle} ${s.typed}`}>{ch}</div>
@@ -54,10 +73,6 @@ export default function CircleInput({ placeholder, value: externalValue, onChang
             </div>
           )}
         </>
-      ) : (
-        Array.from(placeholder).map((ch, i) => (
-          <div key={i} className={`${s.circle} ${s.placeholder}`}>{ch}</div>
-        ))
       )}
       <input
         ref={inputRef}

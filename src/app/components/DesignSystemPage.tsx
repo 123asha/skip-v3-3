@@ -158,7 +158,7 @@ export default function DesignSystemPage() {
             { label: 'default — тянется за курсором', props: {} },
             { label: 'flat — статичная линия', props: { flat: true } },
             { label: 'dotted', props: { dotted: true } },
-            { label: 'active — акцентный цвет', props: { active: true, color: 'var(--c-accent)' } },
+            { label: 'active', props: { active: true, color: 'var(--c-text)' } },
           ] as const).map(({ label, props }) => (
             <div key={label}>
               <p style={{ ...ts, opacity: 0.3, fontSize: '11px', marginBottom: 6 }}>{label}</p>
@@ -355,7 +355,7 @@ export default function DesignSystemPage() {
       <SectionTitle n="05 /" title="Форма связи" />
       <Chip>компонент · src/app/components/ContactForm.tsx</Chip>
       <p style={{ ...ts, opacity: 0.4, marginBottom: 32 }}>
-        Вариант <code>consult</code> — запрос на консультацию. Вариант <code>default</code> — стандартная форма. После отправки запускается мини-игра (FormGames).
+        Вариант <code>consult</code> — запрос на консультацию. Вариант <code>default</code> — стандартная форма.
       </p>
       <DemoBox>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 'var(--gap)', alignItems: 'start' }}>

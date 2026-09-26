@@ -1,6 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { useMobile } from '../hooks/useMobile';
+import { typo } from '../utils/typography';
 import s from './CaseCard.module.css';
 
 /**
@@ -15,12 +16,19 @@ import s from './CaseCard.module.css';
  * between the image rectangle and the description there is a 10px gap.
  */
 export const CASE_AR_H = '16/9' as const;
-export const CASE_AR_V = '5/6'  as const;
+export const CASE_AR_V = '4/5'  as const;
 export type CaseCardAR = typeof CASE_AR_H | typeof CASE_AR_V;
 
 // Temporary: render every card preview as a plain grey rectangle (no image/video)
 // until the real card thumbnails are ready. Flip to false to restore images.
 const PLACEHOLDER_PREVIEWS = true;
+
+// Some previews round, the rest square — picked from the title so a case
+// keeps its shape across reloads and pages. Exported so a gallery can balance
+// how many round cards land in the same row before it hands out the props.
+export function isCaseRound(title: string): boolean {
+  return [...title].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 0) % 2 === 0;
+}
 
 export interface CaseCardProps {
   ar: CaseCardAR;
@@ -33,6 +41,18 @@ export interface CaseCardProps {
   video?: string;         // optional hover video (desktop only — mobile shows image)
   onClick?: () => void;
   linkLabel?: string;     // defaults to "Перейти"
+  hideMeta?: boolean;     // dense grids (>4 cols): drop the title + description
+  hideImage?: boolean;    // densest grid: no preview at all, the card is text only
+  /** Override the preview's proportions (e.g. a full-width card that would be
+   *  far too tall at the usual 4/3) */
+  aspect?: string;
+  /** Clip scrubbed by the scroll instead of a still — the card's travel
+   *  through the viewport maps onto the clip's timeline, so it opens up as the
+   *  page moves. Desktop only; touch gets plain autoplay. */
+  scrubVideo?: string;
+  /** Force round or square instead of the title-hash default — used where a
+   *  page needs to control exactly how many/which cards are round */
+  round?: boolean;
 }
 
 // Black "what was done" caption that sits 10px above the card image.
@@ -43,12 +63,14 @@ const servicesStyle: React.CSSProperties = {
   lineHeight: 'var(--text-lh)',
   letterSpacing: 'var(--text-ls)',
   color: 'var(--c-text)',
-  margin: 0,
+  marginTop: 0,
+  marginLeft: 0,
+  marginRight: 0,
   marginBottom: 10,
 };
 
 export default function CaseCard({
-  ar, title, desc, services, servicesSize, metaSize, image: rawImage, video: rawVideo, onClick, linkLabel = 'Перейти',
+  ar, title, desc, services, servicesSize, metaSize, image: rawImage, video: rawVideo, onClick, linkLabel = 'Перейти', hideMeta = false, hideImage = false, aspect, scrubVideo, round,
 }: CaseCardProps) {
   // Per-card caption style — size overridable so it scales with the grid zoom.
   const svcStyle: React.CSSProperties = servicesSize != null
@@ -65,41 +87,155 @@ export default function CaseCard({
   const titleRef    = useRef<HTMLParagraphElement>(null);
   const descRef     = useRef<HTMLParagraphElement>(null);
   const servicesRef = useRef<HTMLParagraphElement>(null);
+  const previewRef  = useRef<HTMLDivElement>(null);
 
   const isHorizontal = ar === CASE_AR_H;
-  // Image height / width at rest (horizontal cards are a touch taller, 4/3).
-  const restRatioHW = isHorizontal ? 3 / 4 : 6 / 5;
+  // For now every preview is round, wherever cases are listed
+  // The flagship (a card given its own proportions, e.g. the full-width one)
+  // always keeps those instead of round/square.
+  const isRound = !aspect && (round ?? isCaseRound(title));
 
-  // Fixed height = title row (+ 10px gap) + image + year row (+ 10px gap).
-  // Desc uses grid-template-rows 0fr→1fr so no height measurement needed.
-  const [cardH, setCardH] = useState<number | null>(null);
-  useLayoutEffect(() => {
-    const measure = () => {
-      const w = cardRef.current?.offsetWidth ?? 0;
-      if (!w) return;
-      const imgH   = w * restRatioHW;
-      const titleH = titleRef.current?.offsetHeight ?? 0;
-      const yearH  = servicesRef.current ? servicesRef.current.offsetHeight + 10 : 0;
-      setCardH(Math.round(titleH + 10 + imgH + yearH));
-    };
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, [services, servicesSize, metaSize, restRatioHW]);
+  // Hover no longer does anything to the round preview itself
+  const hoveredRef = useRef(false);
+  hoveredRef.current = false;
 
-  // Description reveals word-by-word on hover (GSAP, same feel as the services
-  // detail); hidden again when the pointer leaves.
+
+
+  // ── Inertia on scroll ─────────────────────────────────────────────────────
+  // The frame scrolls with the page, but the picture inside lags a little
+  // behind it and stretches with the speed, then springs back into place
+  // when the scroll settles — as if it had weight behind the window.
+  // While the card is on screen it samples its own position every frame, so
+  // it keeps working in both directions whatever the scroller or its events.
   useEffect(() => {
+    if (hideImage) return;
+    const box = previewRef.current;
+    if (!box) return;
+    const layers = () => box.querySelectorAll<HTMLElement>('img, video');
+    let lastTop = box.getBoundingClientRect().top;
+    let off = 0, vel = 0, raf = 0, visible = false, lastTf = '';
+    // Each card lags by its own amount, so a row of previews drifts apart
+    // instead of moving as one strip — closer to a loose shuffle than a
+    // single synced sheet.
+    const PACE = 0.7 + Math.random() * 0.6;
+    const tick = () => {
+      raf = 0;
+      const top = box.getBoundingClientRect().top;
+      const dy = top - lastTop;               // screen px this frame
+      lastTop = top;
+      vel += (dy - vel) * 0.4;
+      const MAX = box.offsetHeight * 0.06;    // stays inside the overscan
+      const target = Math.max(-MAX, Math.min(MAX, -vel * 1.6 * PACE));
+      off += (target - off) * (0.1 * PACE);
+      const settled = Math.abs(off) < 0.05 && Math.abs(vel) < 0.05;
+      if (settled) { off = 0; vel = 0; }
+      const stretch = 1 + Math.min(Math.abs(vel) * 0.0045, 0.055);
+      // Whole-pixel shift keeps the picture crisp; skip the write (and the
+      // repaint) when nothing changed since the last frame
+      const tf = settled ? '' : `translateY(${Math.round(off)}px) scaleY(${stretch.toFixed(3)})`;
+      if (tf !== lastTf) { lastTf = tf; layers().forEach(l => { l.style.transform = tf; }); }
+      if (visible || !settled) raf = requestAnimationFrame(tick);
+    };
+    const io = new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      if (visible && !raf) { lastTop = box.getBoundingClientRect().top; raf = requestAnimationFrame(tick); }
+    });
+    io.observe(box);
+    return () => { io.disconnect(); if (raf) cancelAnimationFrame(raf); };
+  }, [hideImage]);
+
+  // ── Scroll-scrubbed preview ───────────────────────────────────────────────
+  // The clip's timeline is tied to where the card sits in the viewport: it
+  // starts as the card enters from the bottom and finishes once it has left
+  // through the top. Mobile just autoplays — iOS can't paint a seeked video.
+  const scrubRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    if (!scrubVideo || PLACEHOLDER_PREVIEWS || isMobile) return;
+    const vid = scrubRef.current;
+    const box = cardRef.current;
+    if (!vid || !box) return;
+
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const dur = vid.duration;
+      if (!dur || !isFinite(dur)) return;
+      const r = box.getBoundingClientRect();
+      const travel = window.innerHeight + r.height;
+      const p = Math.max(0, Math.min(1, (window.innerHeight - r.top) / travel));
+      const t = p * dur;
+      if (Math.abs(vid.currentTime - t) > 0.02) {
+        if (!vid.paused) vid.pause();
+        try { vid.currentTime = t; } catch { /* not seekable yet */ }
+      }
+    };
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
+
+    window.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    window.addEventListener('resize', onScroll);
+    const lenis = (window as any).__lenis;
+    lenis?.on?.('scroll', onScroll);
+    if (vid.readyState >= 1) update();
+    else vid.addEventListener('loadedmetadata', update, { once: true });
+
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onScroll);
+      lenis?.off?.('scroll', onScroll);
+    };
+  }, [scrubVideo, isMobile]);
+
+  // No fixed card height: the image always keeps its aspect ratio and the
+  // description row always reserves its space (only its text fades in on
+  // hover), so the image never shrinks and the card never changes height.
+
+  // Description reveals line by line, each line rising from below. Words are
+  // grouped by their laid-out offsetTop, so a whole line moves as one — no
+  // left-to-right sweep inside it. In: top line first. Out: bottom line first,
+  // so the text leaves the way it arrived, in reverse.
+  const LINE_REVEAL = { duration: 0.4, ease: 'power3.out' };
+  const LINE_STAGGER = 0.08;   // seconds between consecutive lines
+  const LINE_Y = 12;           // px — how far below a line rests when hidden
+
+  // Resting state — set once (and after the copy or layout changes) so every
+  // tween can run as a plain `to()`. Interrupting a hover then picks up from
+  // wherever the words are instead of snapping back to the start.
+  useLayoutEffect(() => {
     const el = descRef.current;
     if (!el) return;
     const words = el.querySelectorAll<HTMLElement>('[data-word]');
     if (!words.length) return;
+    gsap.set(words, { y: LINE_Y, opacity: 0 });
+  }, [desc]);
+
+  useEffect(() => {
+    const el = descRef.current;
+    if (!el) return;
+    const words = Array.from(el.querySelectorAll<HTMLElement>('[data-word]'));
+    if (!words.length) return;
     gsap.killTweensOf(words);
-    if (hovered) {
-      gsap.fromTo(words, { y: -10, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: 'power3.out', stagger: 0.02 });
-    } else {
-      gsap.to(words, { y: -10, opacity: 0, duration: 0.2, ease: 'power2.in' });
-    }
+
+    // Group words into visual lines (offsetTop ignores our transforms)
+    const byLine = new Map<number, HTMLElement[]>();
+    words.forEach(w => {
+      const top = Math.round(w.offsetTop);
+      const line = byLine.get(top);
+      if (line) line.push(w);
+      else byLine.set(top, [w]);
+    });
+    const lines = [...byLine.entries()].sort((a, b) => a[0] - b[0]).map(([, ws]) => ws);
+
+    lines.forEach((line, i) => {
+      const delay = (hovered ? i : lines.length - 1 - i) * LINE_STAGGER;
+      gsap.to(line, {
+        y: hovered ? 0 : LINE_Y,
+        opacity: hovered ? 1 : 0,
+        ...LINE_REVEAL,
+        delay,
+        overwrite: 'auto',
+      });
+    });
   }, [hovered]);
 
   // ── Mobile: image, then a caption ROW below it — name left, description right
@@ -113,88 +249,99 @@ export default function CaseCard({
           {image && <img src={image} alt={title} loading="lazy" />}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 'var(--gap)', alignItems: 'flex-start', paddingTop: 10 }}>
+          <p className={s.cardMetaText} style={{ margin: 0, textAlign: 'left', ...metaStyle }}>{typo(desc)}</p>
           <p className={`${s.cardMetaText} ${s.cardLink}`} style={{ margin: 0, ...metaStyle }}>{title}</p>
-          <p className={s.cardMetaText} style={{ margin: 0, textAlign: 'left', ...metaStyle }}>{desc}</p>
         </div>
       </div>
     );
   }
 
-  // ── Desktop: title top, image middle (flex:1), year (grey) bottom.
-  //    Desc reveals beside title via grid-template-rows — no height measurement.
+  // ── Desktop: year on top, image (fixed aspect ratio), then title + desc.
+  //    The image never resizes — the desc row keeps its space at all times.
   return (
     <div
       ref={cardRef}
       className={s.card}
-      style={{ height: cardH ?? undefined, display: 'flex', flexDirection: 'column', overflow: 'visible' }}
+      style={{ display: 'flex', flexDirection: 'column', overflow: 'visible' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={onClick}
     >
-      {/* Title — at top */}
-      <p ref={titleRef} className={`${s.cardMetaText} ${s.cardLink}`} style={{ margin: 0, paddingBottom: 10, flexShrink: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', ...metaStyle }}>{title}</p>
+      {/* Year — at top */}
+      {/* The flagship (a card given its own proportions) is just the big
+          picture — no year, no title, no description */}
+      {services && !aspect && <p ref={servicesRef} className={s.cardMetaText} style={{ margin: 0, paddingBottom: hideImage ? 4 : 10, flexShrink: 0, opacity: 'var(--opacity-muted)' as any, ...metaStyle }}>{services}</p>}
 
-      {/* Image — flex:1 */}
-      <div
-        className={s.cardImage}
-        style={cardH == null
-          ? { aspectRatio: isHorizontal ? '4/3' : '5/6', width: '100%' }
-          : { flex: 1, minHeight: 0, width: '100%', overflow: 'hidden' }}
-      >
-        {video && !isMobile && (
-          <video
-            src={video}
-            muted
-            playsInline
-            loop
-            ref={el => {
-              if (!el) return;
-              if (hovered) { el.currentTime = 0; el.play().catch(() => {}); }
-              else { el.pause(); el.currentTime = 0; }
-            }}
-            style={{
-              position: 'absolute', inset: 0,
-              width: '100%', height: '100%',
-              objectFit: 'cover',
-              opacity: hovered ? 1 : 0,
-              transition: 'opacity 0.4s ease',
-              pointerEvents: 'none',
-            }}
-          />
-        )}
-        {image && (
-          <img
-            src={image}
-            alt={title}
-            loading="lazy"
-            style={{
-              objectPosition: 'top',
-              transform: hovered ? 'scale(1.06)' : 'scale(1)',
-              transition: 'transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1)',
-            }}
-          />
-        )}
-      </div>
-
-      {/* Year + description — bottom row, baseline-aligned */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: 'var(--gap)', alignItems: 'flex-end', paddingTop: 10, flexShrink: 0 }}>
-        {services
-          ? <p ref={servicesRef} className={s.cardMetaText} style={{ margin: 0, opacity: 'var(--opacity-muted)' as any, ...metaStyle }}>{services}</p>
-          : <span ref={servicesRef} />
-        }
-        <div style={{ display: 'grid', gridTemplateRows: hovered ? '1fr' : '0fr', transition: 'grid-template-rows 0.35s ease', minWidth: 0 }}>
-          <div style={{ overflow: 'hidden' }}>
-            <p ref={descRef} className={s.cardMetaText} style={{ margin: 0, ...metaStyle }}>
-              {desc.split(' ').map((w, i, arr) => (
-                <span key={i}>
-                  <span data-word style={{ display: 'inline-block', opacity: 0, willChange: 'transform' }}>{w}</span>
-                  {i < arr.length - 1 ? ' ' : ''}
-                </span>
-              ))}
-            </p>
-          </div>
+      {/* Image — always its own aspect ratio, never squeezed by the desc.
+          Dropped entirely on the densest grid: the card is text only. */}
+      {!hideImage && (
+        <div
+          ref={previewRef}
+          className={`${s.cardImage}${isRound ? ` ${s.cardRound}` : ''}${aspect ? ` ${s.cardWide}` : ''}`}
+          style={{ aspectRatio: aspect ?? (isHorizontal ? '4/3' : '4/5'), width: '100%', flexShrink: 0 }}
+        >
+          {scrubVideo && !PLACEHOLDER_PREVIEWS && (
+            <video
+              ref={scrubRef}
+              src={scrubVideo}
+              muted
+              playsInline
+              preload="auto"
+              autoPlay={isMobile}
+              loop={isMobile}
+              // Above the still: the scroll-scrubbed clip is the preview here.
+              // Sized the same 12%-oversize as the still image below it (see
+              // .cardImage img in the CSS module) so it fully covers that
+              // image — same edges, nothing of the still peeking round it.
+              style={{ position: 'absolute', left: '-6%', top: '-6%', width: '112%', height: '112%', objectFit: 'cover', zIndex: 1 }}
+            />
+          )}
+          {/* No hover video: the preview never swaps to another picture */}
+          {image && (
+            <img
+              src={image}
+              alt={title}
+              loading="lazy"
+              style={{
+                objectPosition: 'center',
+              }}
+            />
+          )}
         </div>
-      </div>
+
+      )}
+
+      {/* Title + description — bottom row, top-aligned so the title lines up
+          with the description's first line regardless of how many lines the
+          description wraps to.
+          Title column has a floor (minmax) so short-but-not-tiny names like
+          "AliExpress" / "Senior*s bar" don't get ellipsis-truncated on the
+          narrower cards in the scattered grid. */}
+      {/* The title always shows; on dense grids (hideMeta) only the
+          description column is dropped, since the card gets too narrow.
+          Without a preview the card is a plain entry — no hover copy, and the
+          year sits right above the title. */}
+      {!aspect && <div style={{ display: 'grid', gridTemplateColumns: hideMeta || hideImage ? '1fr' : 'minmax(90px, 1fr) minmax(0, 3fr)', gap: 'var(--gap)', alignItems: 'flex-start', paddingTop: hideImage ? 0 : 10, flexShrink: 0 }}>
+        <p ref={titleRef} className={`${s.cardMetaText} ${s.cardLink}`} style={{ margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', ...metaStyle }}>{title}</p>
+        {/* Space is always reserved — only the words fade/slide in on hover
+            (see the GSAP effect above), so nothing around this shifts. */}
+        {/* No clipping wrapper — the lines simply fade in as they rise, so
+            nothing reads as cut off by an invisible box. */}
+        {!hideMeta && !hideImage && (
+          <div style={{ minWidth: 0 }}>
+            <div>
+              <p ref={descRef} className={s.cardMetaText} style={{ margin: 0, ...metaStyle }}>
+                {typo(desc).split(' ').map((w, i, arr) => (
+                  <span key={i}>
+                    <span data-word style={{ display: 'inline-block', opacity: 0, willChange: 'transform' }}>{w}</span>
+                    {i < arr.length - 1 ? ' ' : ''}
+                  </span>
+                ))}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>}
     </div>
   );
 }

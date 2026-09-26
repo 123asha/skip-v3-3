@@ -1,9 +1,8 @@
 .page {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
+  width: auto;
+  height: auto;
   background: var(--c-bg);
   z-index: 160;
   overflow-y: scroll;
@@ -20,7 +19,7 @@
   top: 0;
   bottom: 0;
   width: 1px;
-  background: var(--c-border, rgba(35,31,32,0.12));
+  background: var(--c-border);
   z-index: 170;
 }
 
@@ -40,53 +39,106 @@
 
 .title {
   position: absolute;
-  left: calc(var(--pad) - 3px);
-  top: calc(var(--pad) + var(--text-size) * var(--text-lh) + 20px);
+  left: 50%;
+  transform: translateX(-50%);
+  top: var(--pad);
   font-family: var(--font-display);
   font-size: var(--heading-size);
   font-weight: var(--heading-weight);
   line-height: var(--heading-lh);
   letter-spacing: var(--heading-ls);
+  text-align: center;
+  width: max-content;
+  max-width: 80%;
 }
 
 .body {
-  /* 80px gap between h1 bottom and first content block */
-  padding-top: calc(var(--pad) + var(--text-size) * var(--text-lh) + 20px + var(--heading-size) * var(--heading-lh) + 80px);
+  /* Title bottom → first content block: --space-title (200px at 1600) */
+  padding-top: calc(var(--pad) + var(--heading-size) * var(--heading-lh) + var(--space-title));
   /* No extra gap here — the contact form below adds its own margin-top:
      var(--space-xl), so the last-row → form gap matches the home page. */
   padding-bottom: 0;
 }
 
-@media (max-width: 768px) {
-  .body { padding-bottom: 0; }
-  .tabsBar {
-    /* Fixed on mobile so tabs sit at the same level as ← назад (fixed nav) */
-    position: fixed;
-    top: var(--pad);
-    right: var(--pad);
-    left: auto;
-    width: auto;
-    background: transparent;
-    padding: 0;
-    gap: 12px;
-    z-index: 200;
-    justify-content: flex-end;
-  }
-  /* H1 matches the hero headline size on all sub-pages */
-  .title { font-size: clamp(36px, 10vw, 56px); }
-}
-
 /* ── Tabs ── */
 .tabsBar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: var(--c-bg);
+  /* Fixed at the top of the screen, on the nav's baseline. Above the
+     sub-page layer (.page is at 160) so it isn't covered by it. */
+  position: fixed;
+  top: calc(var(--pad) - 3px);
+  left: 0;
+  right: 0;
+  z-index: 168;
+  /* No fill on the bar itself — only the tabs row is opaque, so cards scroll
+     visibly under the sub-tag chips instead of behind a white block. */
+  background: none;
+  /* Two stacked rows: categories, then the sub-tags of the open one */
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--pad);
+}
+
+/* One row of the bar — its own centred group of buttons */
+.tabsRow {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
-  padding: var(--pad) var(--pad);
+  /* No top padding — the chips sit on the nav's line; same gap to the row
+     below as the horizontal gap between chips (5px) */
+  padding: 0 0 5px;
+}
+
+/* The second row always keeps its space — the chips fade and rise into it,
+   so nothing is ever clipped by an animating height. */
+.subRowWrap {
+  display: block;
+}
+
+/* Second row — no divider, no fill of its own; the tags carry an outline */
+.subRow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  /* The tabs row's own bottom padding is the 20px gap between the rows */
+  padding: 0;
+  transition:
+    opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Sub-tag chip */
+.chip {
+  font-family: var(--font);
+  font-size: var(--text-size);
+  font-weight: var(--text-weight);
+  line-height: var(--text-lh);
+  letter-spacing: var(--text-ls);
+  /* One extra pixel at the bottom — optical centring for this face */
+  padding: 3px 10px 4px;
+  border: 1px solid var(--c-border);
+  /* Fully rounded */
+  border-radius: 999px;
+  /* Own white fill, so the bar itself can stay transparent and content
+     scrolls visibly between the chips */
+  background: var(--c-bg);
+  cursor: pointer;
+  color: var(--c-text-muted);
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.chipOn,
+.chip:hover {
+  color: var(--c-text);
+  border-color: var(--c-text);
+}
+
+
+.tabsBarInner {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 /* Grid density control — fixed in the bottom-left corner of the viewport. */
 .zoomBtns {
@@ -105,13 +157,39 @@
   align-items: center;
 }
 .zoomHint {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1;
-  color: var(--c-text);
-  opacity: 0.4;
+  /* Bottom-left corner of the screen, where the «написать нам» button used
+     to sit. */
+  position: fixed;
+  left: var(--pad);
+  bottom: var(--pad);
+  z-index: 170;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font);
+  font-size: var(--text-size);
+  line-height: var(--text-lh);
+  letter-spacing: var(--text-ls);
+  color: var(--c-text-muted);
   white-space: nowrap;
 }
+
+/* One flat grey for the whole hint; the two keys go black on hover */
+.zoomHintLabel { color: inherit; }
+
+.zoomKey {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
+.zoomKey:hover { color: var(--c-text); }
 .zoomBtn {
   background: none;
   border: none;
@@ -128,21 +206,61 @@
 .zoomBtn:hover { opacity: 0.55; }
 .zoomBtn:disabled { opacity: 0.2; cursor: default; }
 
+/* Draggable "seesaw" zoom slider — replaces the old +/- buttons. */
+.zoomTrack {
+  position: relative;
+  width: 96px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  touch-action: none;
+}
+.zoomTrack::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--c-text);
+  opacity: 0.2;
+  transform: translateY(-50%);
+}
+.zoomTick {
+  position: relative;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--c-text);
+  opacity: 0.3;
+}
+.zoomThumb {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--c-text);
+  transform: translate(-50%, -50%);
+  transition: left 0.15s ease;
+  pointer-events: none;
+}
+
 .tab {
   line-height: var(--text-lh);
   letter-spacing: var(--text-ls);
-  transition: opacity 0.2s;
+  transition: color 0.2s;
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
   font-size: var(--text-size);
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-weight: var(--text-weight);
   color: var(--c-text);
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  text-underline-offset: 3px;
+  text-decoration: none;
 }
 
 /* ── Cases grid ── */
@@ -211,4 +329,19 @@
   text-decoration-style: dotted;
   text-underline-offset: 3px;
   flex-shrink: 0;
+}
+
+/* ── Mobile overrides (kept last so they win) ── */
+@media (max-width: 768px) {
+  .body { padding-bottom: 0; }
+  .tabsBar {
+    /* Under the fixed header, not on top of it — the nav owns the first line */
+    top: 56px;
+    left: 0;
+    right: 0;
+    padding: 0 var(--pad);
+    z-index: 150;
+  }
+  .tabsRow { flex-wrap: wrap; justify-content: center; row-gap: 5px; }
+  .subRow  { flex-wrap: wrap; justify-content: center; row-gap: 5px; }
 }

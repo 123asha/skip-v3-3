@@ -1,0 +1,322 @@
+import { useState } from 'react';
+import { MagneticDivider } from './MagneticDivider';
+import { useMobile } from '../hooks/useMobile';
+import { H2_STYLE, typo } from '../utils/typography';
+import { PARA_GAP } from './CaseTemplatePage';
+import s from '../App.module.css';
+
+interface ServiceItem { text: string; label?: string; hideNumber?: boolean; desc?: string }
+
+// Descriptions carried over from the /services page where an equivalent item
+// exists there; the rest are placeholders until real copy lands.
+const PLACEHOLDER_DESC = 'Короткое описание услуги: что входит в работу, как мы её ведём и что получает команда на выходе. Текст-рыба — заменим на финальный.';
+
+// Shared by "Лендинги и промо" and "Корпоративные сайты" until each gets its own.
+const SITES_DESC = 'Неважно, это одностраничный лендинг или большой корпоративный сайт — для нас это один из главных носителей бренда и важная точка контакта с аудиторией.\n\nОбъединяем стратегию, дизайн и разработку в одном процессе, чтобы быстрее запускать проекты и сохранять качество на каждом этапе.';
+
+const SERVICES: { category: string; groupLabel?: string; items: ServiceItem[] }[] = [
+  {
+    category: 'Брендинг',
+    groupLabel: '✻',
+    items: [
+      {
+        text: 'Платформа бренда', label: 'Стратегия',
+        desc: 'Бренд без платформы — набор случайных решений: продажи говорят одно, маркетинг делает другое, в продукте — третье. В итоге бренд выглядит и звучит как пять разных человек вместо одного.\n\nМы собираем воедино все смыслы и формулируем суть: кто вы, почему это важно и чем отличаетесь от других. Платформа бренда помогает последовательно и здраво принимать решения: от нейминга до изменений в продукте.',
+      },
+      {
+        text: 'Исследования', hideNumber: true,
+        desc: 'Бренд не сферический конь в вакууме: вокруг всегда есть контекст, в котором компания находится и развивается. Люди, рынок, тренды в индустрии — всё это влияет на восприятие.\n\nМы проводим исследование рынка, конкурентов и аудитории. Это помогает бренду определить точки дифференциации, занять сильную позицию и быть понятным людям.',
+      },
+      {
+        text: 'Нейминг и регистрация', hideNumber: true,
+        desc: 'В название можно влюбиться на брейншторме, а после — выяснить, что оно конфликтует со стратегией или его невозможно зарегистрировать.\n\nМы генерируем варианты, отсеиваем лонги до шорт-листов, проверяем лингвистику и восприятие. Дальше юрист проверяет по базам и ведёт регистрацию товарного знака до свидетельства.',
+      },
+      {
+        text: 'Фирменный стиль', label: 'Дизайн',
+        desc: 'Фирменный стиль без системы превращается в набор случайных решений. Со временем бренд теряет цельность, а каждая новая задача требует придумывать всё заново.\n\nМы создаём визуальную систему бренда: определяем ключевую идею и правила, которые помогают команде принимать дизайн-решения последовательно и уверенно.',
+      },
+      { text: 'Логотипы', hideNumber: true, desc: PLACEHOLDER_DESC },
+      {
+        text: 'Шаблоны и инструменты', label: 'Автоматизация',
+        desc: 'Помогаем внедрить систему в повседневные процессы. Разрабатываем шаблоны презентаций, постов, коммерческих предложений и других документов в фирменном стиле.\n\nВ результате новые материалы создаются быстрее, а качество остаётся стабильным.',
+      },
+    ],
+  },
+  {
+    category: 'Веб',
+    groupLabel: '◊',
+    items: [
+      { text: 'Информационная архитектура', label: 'Архитектура', desc: PLACEHOLDER_DESC },
+      { text: 'Лендинги и промо', label: 'Дизайн', desc: SITES_DESC },
+      {
+        text: 'Спецпроекты', hideNumber: true,
+        desc: 'Разрабатываем нестандартные digital-форматы: промо-сайты, интерактивные истории и игровые механики.\n\nСобираем под каждую задачу отдельную систему визуальных и интерактивных решений, которая помогает выделиться и решить конкретную бизнес-задачу. Особое внимание уделяем нарративу.',
+      },
+      { text: 'Корпоративные сайты', hideNumber: true, desc: SITES_DESC },
+      { text: 'Разработка и поддержка', label: 'Нокод, вайбкод', desc: PLACEHOLDER_DESC },
+    ],
+  },
+  {
+    category: 'Продукт',
+    groupLabel: '⌘',
+    items: [
+      { text: 'Продуктовое видение', label: 'Стратегия', desc: PLACEHOLDER_DESC },
+      { text: 'Дорожная карта', hideNumber: true, desc: PLACEHOLDER_DESC },
+      {
+        text: 'Приложения и платформы', label: 'UX/UI',
+        desc: 'Поможем запустить цифровой продукт. Спроектируем b2b-платформы и админки. Возьмём на себя повседневные задачи — структурно и по делу.',
+      },
+      {
+        text: 'Дизайн-библиотеки и поддержка', hideNumber: true,
+        desc: 'Создаём библиотеки в Figma, брендбуки и инструкции, которыми команда действительно пользуется в работе. Документируем принципы так, чтобы их понимали и люди, и ИИ-инструменты.',
+      },
+    ],
+  },
+];
+
+/** showItems=false starts collapsed — only the first two levels (category and
+ *  its sub-group names) are visible, and clicking a sub-group name expands its
+ *  services list. showItems=true shows the full table with nothing to expand.
+ *  showHeading=false drops the intro h2 above the table. */
+export function ExpertiseSection({ showItems = true, showHeading = true }: { showItems?: boolean; showHeading?: boolean } = {}) {
+  const isMobile = useMobile();
+
+  // One easing/duration for every expand-collapse in this table.
+  const EXPAND = '0.7s cubic-bezier(0.22, 1, 0.36, 1)';
+
+  // Both levels are accordions: one sub-group open at a time, one description
+  // open at a time. Collapsing a group also closes whatever it had open.
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const [openItem, setOpenItem] = useState<string | null>(null);
+  // Row under the cursor — drives the ⤴ affordance in the column before the text
+  const [hoverRow, setHoverRow] = useState<string | null>(null);
+
+  const toggleGroup = (key: string) => {
+    setOpenGroup(prev => (prev === key ? null : key));
+    setOpenItem(null);
+  };
+  const toggleItem = (key: string) => setOpenItem(prev => (prev === key ? null : key));
+
+  const numberStyle: React.CSSProperties = {
+    margin: 0,
+    fontFamily: 'var(--font)',
+    fontSize: 'var(--text-size)',
+    lineHeight: 'var(--text-lh)',
+    letterSpacing: 'var(--text-ls)',
+    color: 'var(--c-text)',
+  };
+
+  const categoryStyle: React.CSSProperties = {
+    margin: 0,
+    fontFamily: 'var(--font)',
+    fontSize: 'var(--text-size)',
+    lineHeight: 'var(--text-lh)',
+    letterSpacing: 'var(--text-ls)',
+    color: 'var(--c-text)',
+  };
+
+  const itemStyle: React.CSSProperties = {
+    margin: 0,
+    fontFamily: 'var(--font)',
+    fontSize: 'var(--text-size)',
+    lineHeight: 'var(--text-lh)',
+    letterSpacing: 'var(--text-ls)',
+    color: 'var(--c-text)',
+  };
+
+  return (
+    <div className={s.section} style={{ marginTop: 'var(--space-xl)' }}>
+      {showHeading && (
+        <h2 style={{
+          ...H2_STYLE,
+          margin: 0,
+          marginBottom: isMobile ? 40 : 60,
+          maxWidth: isMobile ? '100%' : '50vw',
+        }}>
+          Готовим бренд к&nbsp;росту. Собираем системы. Передаем правила, по&nbsp;которым они работают.
+        </h2>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {SERVICES.map((service, i) => {
+          // Sub-group key: a new group starts at every labelled item; items
+          // without a label belong to the previous labelled item's group.
+          // A labelled item also emits a label-only row above itself, so the
+          // sub-group's name sits on its own line and its services list starts
+          // on the next line down, in the same column.
+          type Row = {
+            header: boolean; isLabel?: boolean; text: string | null;
+            itemIndex: string | number | null; groupKey: string;
+            itemKey?: string; desc?: string;
+          };
+          // Every row is always rendered — service rows just collapse to zero
+          // height when their group is closed, so opening/closing animates
+          // instead of snapping rows in and out of the DOM.
+          let currentGroup = 0;
+          const rows: Row[] = [
+            { header: true, text: null, itemIndex: null, groupKey: `${i}-header` },
+          ];
+          service.items.forEach((item, idx) => {
+            if (item.label) {
+              currentGroup = idx;
+              rows.push({ header: false, isLabel: true, text: null, itemIndex: item.label, groupKey: `${i}-${currentGroup}` });
+            }
+            rows.push({
+              header: false, text: item.text, itemIndex: '',
+              groupKey: `${i}-${currentGroup}`, itemKey: `${i}-item-${idx}`, desc: item.desc,
+            });
+          });
+          return (
+          <div key={i}>
+          {rows.map((row, j) => {
+            // Divider (magnetic SVG line, same as the services page — avoids
+            // the CSS-border jitter under the page's zoom scaling) sits at the
+            // TOP of a row. Only sub-group rows carry one: category headers
+            // don't, and the services inside an open group are grouped by that
+            // silence rather than split by lines.
+            const showDivider = !row.header && !row.itemKey && j >= 2;
+            // Last item (3rd level) of a sub-group — its own text cell (col 4
+            // only) gets extra room below, so the gap before the boundary reads
+            // the same whether that boundary is the next group's divider or,
+            // for the closing group of a category, the next category header.
+            // A one-item group counts too: its single item is also its last.
+            const nextRow = rows[j + 1];
+            const isLastItemBeforeDivider = !!row.itemKey && (
+              !nextRow ||                                             // category ends here
+              (!nextRow.header && !nextRow.itemKey && j + 1 >= 2)     // next sub-group starts
+            );
+            const rowBg = row.header ? 'var(--c-surface)' : 'transparent';
+            // A service row is visible in "full" mode, or when its sub-group is
+            // the open one. It collapses to 0 height rather than unmounting.
+            const isRowVisible = !row.itemKey || showItems || openGroup === row.groupKey;
+            // Clicking a sub-group label expands its services list (collapsed
+            // mode only); clicking a service expands its description in col 5.
+            const isCollapsibleLabel = row.isLabel && !showItems;
+            const isExpandableItem = !!row.itemKey && !!row.desc;
+            const onRowClick = isCollapsibleLabel
+              ? () => toggleGroup(row.groupKey)
+              : isExpandableItem
+                ? () => toggleItem(row.itemKey!)
+                : undefined;
+            const isItemOpen = !!row.itemKey && openItem === row.itemKey;
+            const rowCursor = onRowClick ? 'pointer' : undefined;
+            // With a group open, the whole category it belongs to stays black
+            // — header, its sub-group labels and their services. Only the other
+            // categories go gray.
+            const openCategoryIndex = openGroup !== null ? Number(openGroup.split('-')[0]) : null;
+            const isRowHighlighted = openGroup !== null && openCategoryIndex === i;
+            const rowOpacity = openGroup !== null && !isRowHighlighted ? 'var(--opacity-muted)' : 1;
+            // Description panel — expands on click, in the 5th column. It
+            // starts one line below the service title (same offset pattern the
+            // sub-group labels use) and keeps a spacing-token gap underneath.
+            const descPanel = row.desc ? (
+              <div style={{ display: 'grid', gridTemplateRows: isItemOpen ? '1fr' : '0fr', transition: `grid-template-rows ${EXPAND}` }}>
+                <div style={{ overflow: 'hidden' }}>
+                  {/* Blank lines in `desc` become paragraph breaks */}
+                  <div style={{
+                    marginTop: 'calc(var(--text-size) * var(--text-lh) + 20px)',
+                    paddingBottom: 32,
+                  }}>
+                    {row.desc.split('\n\n').map((para, k) => (
+                      <p key={k} style={{ ...itemStyle, marginTop: k === 0 ? 0 : PARA_GAP }}>
+                        {typo(para)}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : null;
+            // Magnetic SVG line at the row's top edge — bends toward the cursor
+            // on desktop ("скакалка"), flat/static on touch.
+            const divider = showDivider ? (
+              <MagneticDivider flat={isMobile} />
+            ) : null;
+            // Hover affordance for a clickable row — placed by the caller, one
+            // column to the left of whatever words the row carries.
+            const arrow = (
+              <span
+                aria-hidden="true"
+                style={{
+                  ...itemStyle,
+                  opacity: hoverRow === `${i}-${j}` ? 1 : 0,
+                  transition: 'opacity 0.2s ease',
+                  pointerEvents: 'none',
+                  flexShrink: 0,
+                }}
+              >⤴</span>
+            );
+            // Dimming lives on the text cells, never on the row box — the
+            // divider lines must keep their colour when a group opens.
+            const cellFade = { opacity: rowOpacity as any, transition: `opacity ${EXPAND}` };
+            const rowPadding = '8px 0 12px';
+            const rowInner = isMobile ? (
+              <div onClick={onRowClick} style={{ position: 'relative', background: rowBg, padding: rowPadding, cursor: rowCursor }}>
+                {divider}
+                {row.header ? (
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'baseline', ...cellFade }}>
+                    <p style={{ ...numberStyle, paddingLeft: '22.86px' }}>{service.groupLabel ?? i + 1}</p>
+                    <p style={categoryStyle}>{service.category}</p>
+                  </div>
+                ) : (
+                  <div style={cellFade}>
+                    <p style={itemStyle}>{typo(row.text)}</p>
+                    {descPanel}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                onClick={onRowClick}
+                style={{
+                  position: 'relative',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(5, 1fr)',
+                  columnGap: 'var(--gap)',
+                  alignItems: 'start',
+                  padding: rowPadding,
+                  background: rowBg,
+                  cursor: rowCursor,
+                }}
+                onMouseEnter={onRowClick && !isMobile ? () => setHoverRow(`${i}-${j}`) : undefined}
+                onMouseLeave={onRowClick && !isMobile ? () => setHoverRow(null) : undefined}
+              >
+                {divider}
+                <p style={{ ...numberStyle, paddingLeft: row.header ? '22.86px' : 0, ...cellFade }}>{row.header ? service.groupLabel ?? i + 1 : ''}</p>
+                {/* The ⤴ always sits one step to the left of the words it belongs
+                    to: sub-group labels live in col 3, so theirs stays in col 2;
+                    services live in col 4, so theirs goes to the end of col 3. */}
+                {row.header ? (
+                  <p style={{ ...categoryStyle, gridColumn: '2 / 3', ...cellFade }}>{service.category}</p>
+                ) : (
+                  <div style={{ gridColumn: '2 / 3', display: 'flex', justifyContent: 'flex-end' }}>
+                    {row.isLabel && onRowClick && arrow}
+                  </div>
+                )}
+                <div style={{ gridColumn: '3 / 4', display: 'flex', alignItems: 'start', justifyContent: 'space-between', gap: 10 }}>
+                  <p style={{ ...numberStyle, ...cellFade }}>{row.itemIndex ?? ''}</p>
+                  {!!row.itemKey && onRowClick && arrow}
+                </div>
+                <p style={{ ...itemStyle, gridColumn: '4 / 5', paddingBottom: isLastItemBeforeDivider ? 20 : 0, ...cellFade }}>{row.header ? '' : typo(row.text)}</p>
+                <div style={{ gridColumn: '5 / 6', ...cellFade }}>{descPanel}</div>
+              </div>
+            );
+            // Collapsible service rows animate their own height; header and
+            // label rows are always present so they render as-is.
+            return row.itemKey && !showItems ? (
+              <div
+                key={j}
+                style={{ display: 'grid', gridTemplateRows: isRowVisible ? '1fr' : '0fr', transition: `grid-template-rows ${EXPAND}` }}
+              >
+                <div style={{ overflow: 'hidden' }}>{rowInner}</div>
+              </div>
+            ) : (
+              <div key={j}>{rowInner}</div>
+            );
+          })}
+          </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

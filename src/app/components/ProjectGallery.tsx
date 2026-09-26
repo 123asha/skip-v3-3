@@ -1,9 +1,9 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import { useMobile } from '../hooks/useMobile';
 import s from './ProjectGallery.module.css';
-import CaseCard, { CASE_AR_H as H, CASE_AR_V as V, type CaseCardAR as AR } from './CaseCard';
+import CaseCard, { CASE_AR_H as H, CASE_AR_V as V, type CaseCardAR as AR, isCaseRound } from './CaseCard';
 import { MagneticDivider } from './MagneticDivider';
-import { asset, arSuffix } from '../utils/asset';
+import { asset, arSuffix, videoAsset } from '../utils/asset';
 
 /** Returns { image, ar } — aspect ratio is inferred from the -h / -v filename suffix. */
 function img(path: string): { image: string; ar: AR } {
@@ -22,20 +22,13 @@ interface Project {
 }
 
 export const PROJECTS: Project[] = [
-  { id: 1, cats: ['branding', 'sites', 'interfaces'],       ...img('/case1-h.webp'), title: 'Magic Moon',     year: '2024', desc: 'Трекер целей от Юрия Мурадяна, в котором визуал поддерживает философию продукта', video: asset('/magic-moon.mp4') },
+  { id: 1, cats: ['branding', 'sites', 'interfaces'],       ...img('/case1-h.webp'), title: 'Magic Moon',     year: '2024', desc: 'Трекер целей от Юрия Мурадяна, в котором визуал поддерживает философию продукта' },
   { id: 2, cats: ['branding', 'sites', 'instruments'],      ...img('/case2-v.webp'), title: 'Gate Legal',     year: '2024', desc: 'Помогли запуститься: от платформы бренда до сайта — за полтора месяца.' },
   { id: 3, cats: ['branding', 'interfaces', 'instruments'], ...img('/case3-h.webp'), title: 'AEPlatform',     year: '2025', desc: 'Браузерное расширение для отображения affiliate-данных прямо на AliExpress' },
   { id: 4, cats: ['branding', 'sites'],                     ...img('/case4-v.webp'), title: 'Skip Design',    year: '2025', desc: 'Новогодний спецпроект для команды и комьюнити' },
   { id: 5, cats: ['branding', 'sites', 'interfaces'],       ...img('/case5-v.webp'), title: 'Крипто', year: '2026', desc: 'Подготовили бренд-систему для запуска крипто-стартапа' },
   { id: 6, cats: ['sites', 'interfaces', 'instruments'],    ...img('/case6-h.webp'), title: 'Gate Legal',     year: '2024', desc: 'Конструктор баннеров для ускорения разработки креативов к ежедневным постам' },
 ];
-
-const TABS = [
-  { key: 'branding', label: 'Брендинг' },
-  { key: 'digital',  label: 'Диджитал' },
-];
-
-const DIGITAL_CATS = ['sites', 'interfaces', 'instruments'];
 
 // ── Row configs: each card = 2 cols in 5-col grid ────────────────────────────
 const CFG_GAP = { a: '1 / 3', b: '4 / 6' };  // left card col 1-2, right col 4-5
@@ -106,10 +99,12 @@ function buildRows(projects: Project[]): Row[] {
   return rows;
 }
 
-function ProjectCard({ project, onClick }: { project: Project; onClick?: () => void }) {
+function ProjectCard({ project, onClick, aspect, scrubVideo }: { project: Project; onClick?: () => void; aspect?: string; scrubVideo?: string }) {
   return (
     <CaseCard
       ar={project.ar}
+      aspect={aspect}
+      scrubVideo={scrubVideo}
       title={project.title}
       desc={project.desc}
       services={project.year}
@@ -120,47 +115,50 @@ function ProjectCard({ project, onClick }: { project: Project; onClick?: () => v
   );
 }
 
+// ── Home layout: two cases, one across the full width, two more ──────────────
+// Five cards in a fixed rhythm. The wide one is the only card that overrides
+// its proportions — at the usual 4/3 a full-width preview would run past the
+// screen.
+const WIDE_ASPECT = '16/9';
+// The wide card carries the flower, opening up as the page scrolls past it
+const WIDE_VIDEO = '/flower2.mp4';
+
+interface Slot { project: Project; col: string; row: number; aspect?: string; scrubVideo?: string }
+
+function buildHomeLayout(projects: Project[]): Slot[] {
+  const pick = shuffle(projects);
+  // The wide slot reads best with a horizontal shot
+  const wideIdx = pick.findIndex(p => p.ar === H);
+  const wide = pick.splice(wideIdx < 0 ? 0 : wideIdx, 1)[0];
+  // Fixed shape rhythm around the wide video: square, circle · circle, square
+  const order: boolean[] = [false, false, true, false]; // wanted roundness, a…d
+  order.forEach((wantRound, i) => {
+    if (isCaseRound(pick[i].title) === wantRound) return;
+    const j = pick.findIndex((p, k) => k > i && isCaseRound(p.title) === wantRound);
+    if (j !== -1) [pick[i], pick[j]] = [pick[j], pick[i]];
+  });
+  const [a, b, c, d] = pick;
+  return [
+    { project: a, col: '1 / 3', row: 1 },
+    { project: b, col: '3 / 5', row: 1 },   // right next to the first, no empty column between
+    { project: wide, col: '1 / 6', row: 2, aspect: WIDE_ASPECT, scrubVideo: videoAsset(WIDE_VIDEO) },
+    // Third row mirrors the first: the pair side by side, shifted right,
+    // with the first column left empty
+    { project: c, col: '2 / 4', row: 3 },
+    { project: d, col: '4 / 6', row: 3 },
+  ];
+}
+
 export default function ProjectGallery({ onCaseClick }: { onCaseClick?: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<string | null>(null);
-  const [rows, setRows] = useState<Row[]>(() => buildRows(PROJECTS));
+  const [slots] = useState<Slot[]>(() => buildHomeLayout(PROJECTS));
   const isMobile = useMobile();
-
-  const handleTab = useCallback((key: string) => {
-    const next = key === activeTab ? null : key;
-    setActiveTab(next);
-    const filtered = next === 'digital'
-      ? PROJECTS.filter(p => p.cats.some(c => DIGITAL_CATS.includes(c)))
-      : next
-        ? PROJECTS.filter(p => p.cats.includes(next))
-        : PROJECTS;
-    setRows(buildRows(filtered));
-
-    // Скролл к началу блока кейсов после фильтрации
-    const el = containerRef.current;
-    if (el) {
-      const y = el.getBoundingClientRect().top + window.scrollY;
-      const lenis = (window as any).__lenis;
-      if (lenis) lenis.scrollTo(y, { duration: 0.8 });
-      else window.scrollTo({ top: y, behavior: 'smooth' });
-    }
-  }, [activeTab]);
 
   return (
     <div ref={containerRef} className={s.root}>
       <div className={s.tabsBar}>
         <div className={s.tabsGroup}>
-          <span className={s.tabsLabel}>Сделали:</span>
-          {TABS.map(tab => (
-            <button
-              key={tab.key}
-              className={s.tab}
-              style={{ opacity: activeTab === tab.key ? 1 : activeTab ? 0.35 : 0.6 }}
-              onClick={() => handleTab(tab.key)}
-            >
-              {tab.label}
-            </button>
-          ))}
+          <span className={s.tabsLabel}>Недавние проекты</span>
         </div>
       </div>
 
@@ -172,24 +170,23 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: () => vo
           columnGap: 'var(--gap)',
           rowGap: 'var(--cases-row-gap)',
           padding: '0 var(--pad)',
-          alignItems: 'center',
+          // Cards in a row line up by their top edge, not their middles
+          alignItems: 'start',
         }}
       >
-        {rows.map((row, rowIdx) =>
-          row.items.map(item => (
-            <div
-              key={item.project.id}
-              data-case-card=""
-              style={{
-                gridColumn: isMobile ? 'auto' : item.col,
-                gridRow: isMobile ? 'auto' : rowIdx + 1,
-                minWidth: 0,
-              }}
-            >
-              <ProjectCard project={item.project} onClick={onCaseClick} />
-            </div>
-          ))
-        )}
+        {slots.map(slot => (
+          <div
+            key={slot.project.id}
+            data-case-card=""
+            style={{
+              gridColumn: isMobile ? 'auto' : slot.col,
+              gridRow: isMobile ? 'auto' : slot.row,
+              minWidth: 0,
+            }}
+          >
+            <ProjectCard project={slot.project} aspect={slot.aspect} scrubVideo={slot.scrubVideo} onClick={onCaseClick} />
+          </div>
+        ))}
       </div>
     </div>
   );

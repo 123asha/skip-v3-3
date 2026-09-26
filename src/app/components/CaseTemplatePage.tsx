@@ -80,10 +80,10 @@ function MetaRow({
       {col1 && <p style={{ ...textStyle, gridColumn: '1', margin: 0 }}>{col1}</p>}
       {/* The case name lives here — the cover carries no centred title */}
       {col2 && (col2IsTitle
-        ? <h1 style={{ ...textStyle, gridColumn: '2', margin: 0 }}>{col2}</h1>
-        : <p style={{ ...textStyle, gridColumn: '2', margin: 0 }}>{col2}</p>)}
+        ? <h1 style={{ ...textStyle, gridColumn: '2', margin: 0, mixBlendMode: 'difference' }}>{col2}</h1>
+        : <p style={{ ...textStyle, gridColumn: '2', margin: 0, mixBlendMode: 'difference' }}>{col2}</p>)}
       {/* Year — always centred on the page, whatever else the row carries */}
-      {num && <p style={{ ...textStyle, opacity: 'var(--opacity-muted)', position: 'absolute', left: '50%', top: 0, margin: 0, transform: 'translateX(-50%)', whiteSpace: 'nowrap' }}>{num}</p>}
+      {num && <p style={{ ...textStyle, opacity: 'var(--opacity-muted)', position: 'absolute', left: '50%', top: 0, margin: 0, transform: 'translateX(-50%)', whiteSpace: 'nowrap', mixBlendMode: 'difference' }}>{num}</p>}
       {/* Exactly one column wide — no loose max-width that straddles the grid */}
       <div style={{ gridColumn: '4 / 5' }}>
         {text.split('\n\n').map((para, k) => (
@@ -444,11 +444,11 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
       </div>
 
       <div style={{
-        padding: '0 var(--pad)',
+        padding: 'var(--pad)',
         // Push the body past the first screen — with the meta row's own height
         // on top of this, nothing of the copy column or the image stack peeks
-        // out from under the cover.
-        marginTop: isMobile ? 'calc(100svh - 70vh)' : 'calc(100svh - 84vh)',
+        // out from under the cover. Reduced to bring title/description higher.
+        marginTop: isMobile ? 'calc(100svh - 60vh)' : 'calc(100svh - 75vh)',
       }}>
 
         {/* ── Body ─────────────────────────────────────────────────────────
@@ -781,14 +781,14 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
         onClick={() => nextCase.href && onNavigateCase?.(nextCase.href)}
         style={{ marginTop: 'var(--space-xl)', cursor: onNavigateCase ? 'pointer' : undefined }}
       >
-        <div style={{ padding: '0 var(--pad)', marginBottom: 10 }}>
+        <div style={{ padding: 'var(--pad)', marginBottom: 10 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
             {nextCase.tags.map(t => (
               <span key={t} className={s.chip}>{t}</span>
             ))}
           </div>
         </div>
-        <div style={{ padding: '0 var(--pad)' }}>
+        <div style={{ padding: 'var(--pad)' }}>
           <MetaRow col2={nextCase.title} num={nextCase.year} text={nextCase.intro} />
         </div>
       </div>

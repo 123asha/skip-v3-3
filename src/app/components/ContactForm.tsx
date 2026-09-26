@@ -180,7 +180,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
             </p>
           ) : activeTab === 'join' ? (
             <p className={s.contactTitle} style={{ marginTop: 20, textAlign: 'center' }}>
-              Отправьте CV арт-директору
+              Отправьте CV<br />креативному директору
             </p>
           ) : (
             <p className={s.contactTitle} style={{ marginTop: 20, textAlign: 'center' }}>

@@ -87,104 +87,12 @@ export default function CaseCard({
   const titleRef    = useRef<HTMLParagraphElement>(null);
   const descRef     = useRef<HTMLParagraphElement>(null);
   const servicesRef = useRef<HTMLParagraphElement>(null);
-  const previewRef  = useRef<HTMLDivElement>(null);
 
   const isHorizontal = ar === CASE_AR_H;
   // For now every preview is round, wherever cases are listed
   // The flagship (a card given its own proportions, e.g. the full-width one)
   // always keeps those instead of round/square.
   const isRound = !aspect && (round ?? isCaseRound(title));
-
-  // Hover no longer does anything to the round preview itself
-  const hoveredRef = useRef(false);
-  hoveredRef.current = false;
-
-
-
-  // ── Inertia on scroll ─────────────────────────────────────────────────────
-  // The frame scrolls with the page, but the picture inside lags a little
-  // behind it and stretches with the speed, then springs back into place
-  // when the scroll settles — as if it had weight behind the window.
-  // While the card is on screen it samples its own position every frame, so
-  // it keeps working in both directions whatever the scroller or its events.
-  useEffect(() => {
-    if (hideImage) return;
-    const box = previewRef.current;
-    if (!box) return;
-    const layers = () => box.querySelectorAll<HTMLElement>('img, video');
-    let lastTop = box.getBoundingClientRect().top;
-    let off = 0, vel = 0, raf = 0, visible = false, lastTf = '';
-    // Each card lags by its own amount, so a row of previews drifts apart
-    // instead of moving as one strip — closer to a loose shuffle than a
-    // single synced sheet.
-    const PACE = 0.7 + Math.random() * 0.6;
-    const tick = () => {
-      raf = 0;
-      const top = box.getBoundingClientRect().top;
-      const dy = top - lastTop;               // screen px this frame
-      lastTop = top;
-      vel += (dy - vel) * 0.4;
-      const MAX = box.offsetHeight * 0.06;    // stays inside the overscan
-      const target = Math.max(-MAX, Math.min(MAX, -vel * 1.6 * PACE));
-      off += (target - off) * (0.1 * PACE);
-      const settled = Math.abs(off) < 0.05 && Math.abs(vel) < 0.05;
-      if (settled) { off = 0; vel = 0; }
-      const stretch = 1 + Math.min(Math.abs(vel) * 0.0045, 0.055);
-      // Whole-pixel shift keeps the picture crisp; skip the write (and the
-      // repaint) when nothing changed since the last frame
-      const tf = settled ? '' : `translateY(${Math.round(off)}px) scaleY(${stretch.toFixed(3)})`;
-      if (tf !== lastTf) { lastTf = tf; layers().forEach(l => { l.style.transform = tf; }); }
-      if (visible || !settled) raf = requestAnimationFrame(tick);
-    };
-    const io = new IntersectionObserver(([e]) => {
-      visible = e.isIntersecting;
-      if (visible && !raf) { lastTop = box.getBoundingClientRect().top; raf = requestAnimationFrame(tick); }
-    });
-    io.observe(box);
-    return () => { io.disconnect(); if (raf) cancelAnimationFrame(raf); };
-  }, [hideImage]);
-
-  // ── Scroll-scrubbed preview ───────────────────────────────────────────────
-  // The clip's timeline is tied to where the card sits in the viewport: it
-  // starts as the card enters from the bottom and finishes once it has left
-  // through the top. Mobile just autoplays — iOS can't paint a seeked video.
-  const scrubRef = useRef<HTMLVideoElement>(null);
-  useEffect(() => {
-    if (!scrubVideo || PLACEHOLDER_PREVIEWS || isMobile) return;
-    const vid = scrubRef.current;
-    const box = cardRef.current;
-    if (!vid || !box) return;
-
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      const dur = vid.duration;
-      if (!dur || !isFinite(dur)) return;
-      const r = box.getBoundingClientRect();
-      const travel = window.innerHeight + r.height;
-      const p = Math.max(0, Math.min(1, (window.innerHeight - r.top) / travel));
-      const t = p * dur;
-      if (Math.abs(vid.currentTime - t) > 0.02) {
-        if (!vid.paused) vid.pause();
-        try { vid.currentTime = t; } catch { /* not seekable yet */ }
-      }
-    };
-    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
-
-    window.addEventListener('scroll', onScroll, { passive: true, capture: true });
-    window.addEventListener('resize', onScroll);
-    const lenis = (window as any).__lenis;
-    lenis?.on?.('scroll', onScroll);
-    if (vid.readyState >= 1) update();
-    else vid.addEventListener('loadedmetadata', update, { once: true });
-
-    return () => {
-      if (frame) cancelAnimationFrame(frame);
-      window.removeEventListener('scroll', onScroll, true);
-      window.removeEventListener('resize', onScroll);
-      lenis?.off?.('scroll', onScroll);
-    };
-  }, [scrubVideo, isMobile]);
 
   // No fixed card height: the image always keeps its aspect ratio and the
   // description row always reserves its space (only its text fades in on
@@ -276,20 +184,18 @@ export default function CaseCard({
           Dropped entirely on the densest grid: the card is text only. */}
       {!hideImage && (
         <div
-          ref={previewRef}
           className={`${s.cardImage}${isRound ? ` ${s.cardRound}` : ''}${aspect ? ` ${s.cardWide}` : ''}`}
           style={{ aspectRatio: aspect ?? (isHorizontal ? '4/3' : '4/5'), width: '100%', flexShrink: 0 }}
         >
           {scrubVideo && !PLACEHOLDER_PREVIEWS && (
             <video
-              ref={scrubRef}
               src={scrubVideo}
               muted
               playsInline
               preload="auto"
-              autoPlay={isMobile}
-              loop={isMobile}
-              // Above the still: the scroll-scrubbed clip is the preview here.
+              autoPlay
+              loop
+              // Above the still: the looping clip is the preview here.
               // Sized the same 12%-oversize as the still image below it (see
               // .cardImage img in the CSS module) so it fully covers that
               // image — same edges, nothing of the still peeking round it.

@@ -8,6 +8,11 @@
   top: 0;
   z-index: 50;
   background: transparent;
+  /* Inverts against whatever scrolls under it, like the nav — white text
+     blended by difference reads dark on the page and light on pictures.
+     Set on the bar itself: it's the stacking context that sits over them. */
+  color: #fff;
+  mix-blend-mode: difference;
   display: flex;
   justify-content: center;
   align-items: center;

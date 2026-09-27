@@ -525,9 +525,13 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
     // Knock on real impacts only, a beat apart per ball, so a settling heap
     // doesn't rattle — same tap as the hero's balls and the buttons
     const lastKnock = new Map<object, number>();
+    // The balls appear overlapping, and the first frames of pushing them
+    // apart aren't impacts — stay quiet until they've actually fallen a bit
+    const spawnedAt = performance.now();
     const knockFor = (b: object, speed: number) => {
       if (speed < 180) return;
       const now = performance.now();
+      if (now - spawnedAt < 250) return;
       if (now - (lastKnock.get(b) ?? 0) < 90) return;
       lastKnock.set(b, now);
       playKnock(Math.min(1, speed / 900));

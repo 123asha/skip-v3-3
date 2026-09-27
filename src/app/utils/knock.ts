@@ -1,51 +1,28 @@
-/** Bamboo knock, synthesised — no audio files. Pitched up from the
- *  original dull thud so the hero's balls ring a little brighter. */
+import { SOUND_BUS } from '../sound/Sound';
+
+/** Ball-hit sound — the same tone as the site's button hover (sound.play
+ *  'hover'): a sine around 660Hz with a small random spread, sliding down in
+ *  pitch over a 70ms decay. Soft touches play a little quieter than hard
+ *  hits. Silent when the site's sound icon is switched off. */
 export function knock(ctx: AudioContext, strength: number) {
+  if (!SOUND_BUS.on) return;
   const now = ctx.currentTime;
-  const dur = 0.12;
-  const peak = 0.12 + Math.min(strength, 1) * 0.4;
-
-  const bufferSize = Math.floor(ctx.sampleRate * dur);
-  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) {
-    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
-  }
-  const noise = ctx.createBufferSource();
-  noise.buffer = buffer;
-
-  const bandpass = ctx.createBiquadFilter();
-  bandpass.type = 'bandpass';
-  bandpass.frequency.value = 560 + Math.random() * 120;
-  bandpass.Q.value = 0.9;
-
-  const lowpass = ctx.createBiquadFilter();
-  lowpass.type = 'lowpass';
-  lowpass.frequency.value = 2600;
-
-  const noiseGain = ctx.createGain();
-  noiseGain.gain.setValueAtTime(0, now);
-  noiseGain.gain.linearRampToValueAtTime(Math.min(peak, 0.55), now + 0.004);
-  noiseGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
-
-  noise.connect(bandpass).connect(lowpass).connect(noiseGain).connect(ctx.destination);
-  noise.start(now);
-  noise.stop(now + dur);
+  const freq = 660 * (1 + (Math.random() * 2 - 1) * 0.1);
+  const decay = 0.07;
+  const gain = 0.22 * Math.min(1, 0.4 + Math.max(0, strength) * 0.8);
 
   const osc = ctx.createOscillator();
   osc.type = 'sine';
-  const baseFreq = 360 + Math.random() * 60;
-  osc.frequency.setValueAtTime(baseFreq, now);
-  osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.75, now + 0.06);
+  osc.frequency.setValueAtTime(freq, now);
+  osc.frequency.exponentialRampToValueAtTime(freq * 0.7, now + decay);
 
-  const oscGain = ctx.createGain();
-  oscGain.gain.setValueAtTime(0, now);
-  oscGain.gain.linearRampToValueAtTime(Math.min(peak * 0.45, 0.25), now + 0.004);
-  oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(gain, now);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + decay);
 
-  osc.connect(oscGain).connect(ctx.destination);
+  osc.connect(g).connect(ctx.destination);
   osc.start(now);
-  osc.stop(now + 0.1);
+  osc.stop(now + decay + 0.02);
 }
 
 let shared: AudioContext | null = null;

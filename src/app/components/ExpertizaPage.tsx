@@ -326,10 +326,9 @@ function pseudoRandom(seed: number): number {
 // letters, otherwise built exactly like the hero's constellation balls: same
 // radial shading, same letter-printed-on-a-sphere displacement filter.
 const TILE_BALLS = 6;
-// One fixed radius for every ball, like the hero (a single R per instance,
-// not per-ball) — this is what lets one shared sphere filter work for all of them.
+// The largest ball's radius — the one shared sphere filter is sized for it;
+// the smaller balls some tiles use sit well inside that region.
 const BALL_R = 132;
-const BALL_FONT = BALL_R * 1.4875;
 const NS = 'http://www.w3.org/2000/svg';
 
 // TileBalls: render animated falling numbered balls per tile on hover, built
@@ -344,7 +343,13 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
     y: number;
     vx: number;
     vy: number;
+    r: number;
     group: SVGGElement;
+    /** система: the column this ball is held to, so the stacks stay plumb */
+    lockX?: number;
+    /** инструменты: where an unseen updraft holds this ball in mid-air */
+    floatX?: number;
+    floatY?: number;
   }>>([]);
   const rafRef = useRef<number>();
 
@@ -417,10 +422,34 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
     const R = BALL_R;
 
     if (hovered && ballsRef.current.length === 0) {
-      for (let i = 0; i < TILE_BALLS; i++) {
+      // Same drop in every tile — only what's dropped, and where it ends up,
+      // differs per step:
+      //   стратегия   — six equal balls in a heap
+      //   дизайн      — a composition: one big ball, three small
+      //   система     — six balls stacking into an exact 2 × 3 grid
+      //   инструменты — a small heap, one ball held up by an unseen updraft
+      type Spec = { r: number; lockX?: number; float?: boolean };
+      let specs: Spec[];
+      if (tileIndex === 1) {
+        specs = [{ r: R }, { r: R * 0.45 }, { r: R * 0.45 }, { r: R * 0.45 }];
+      } else if (tileIndex === 2) {
+        const rg = Math.min(W / 4, H / 6) * 0.96;
+        specs = Array.from({ length: 6 }, (_, i) => ({ r: rg, lockX: i % 2 === 0 ? W / 4 : (3 * W) / 4 }));
+      } else if (tileIndex === 3) {
+        const rt = Math.min(R * 0.45, W * 0.16);
+        specs = [...Array.from({ length: 4 }, () => ({ r: rt })), { r: rt, float: true }];
+      } else {
+        specs = Array.from({ length: TILE_BALLS }, () => ({ r: R }));
+      }
+      for (let i = 0; i < specs.length; i++) {
+        const { r, lockX, float } = specs[i];
         const seed = tileIndex * 97 + i;
-        const x = R + pseudoRandom(seed) * (W - 2 * R);
-        const y = R + pseudoRandom(seed + 0.33) * (H * 0.3);
+        const x = lockX ?? (float ? W * 0.62 : r + pseudoRandom(seed) * Math.max(0, W - 2 * r));
+        // система: stacked in reading order from the bottom up, so the grid
+        // counts 1 2 / 3 4 / 5 6 upward once it lands
+        const y = lockX !== undefined
+          ? r + H * 0.3 - Math.floor(i / 2) * 2.05 * r
+          : r + pseudoRandom(seed + 0.33) * (H * 0.3);
         const vx = (pseudoRandom(seed + 0.67) - 0.5) * 200;
         const vy = -100 - pseudoRandom(seed + 0.9) * 50;
 
@@ -429,8 +458,8 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         const shade = document.createElementNS(NS, 'radialGradient');
         shade.setAttribute('id', shadeId);
         shade.setAttribute('gradientUnits', 'userSpaceOnUse');
-        shade.setAttribute('cx', '0'); shade.setAttribute('cy', String(-R * 0.35));
-        shade.setAttribute('r', String(R * 1.45));
+        shade.setAttribute('cx', '0'); shade.setAttribute('cy', String(-r * 0.35));
+        shade.setAttribute('r', String(r * 1.45));
         for (const [o, col] of [['0', '#ffffff'], ['0.62', '#ffffff'], ['1', 'color-mix(in srgb, #ffffff 95.4%, #000)']]) {
           const st = document.createElementNS(NS, 'stop');
           st.setAttribute('offset', o); st.setAttribute('stop-color', col);
@@ -440,13 +469,13 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
 
         const circle = document.createElementNS(NS, 'circle');
         circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0');
-        circle.setAttribute('r', String(R));
+        circle.setAttribute('r', String(r));
         circle.setAttribute('fill', `url(#${shadeId})`);
 
         const text = document.createElementNS(NS, 'text');
         text.setAttribute('x', '0'); text.setAttribute('y', '0');
         text.setAttribute('dy', '0.35em');
-        text.setAttribute('font-size', String(BALL_FONT));
+        text.setAttribute('font-size', String(r * 1.4875));
         text.setAttribute('text-anchor', 'middle');
         // Knocked out of the ball in the tile's own surface colour — same
         // trick as the hero's lettering
@@ -466,7 +495,7 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         group.append(circle, face);
         svg.appendChild(group);
 
-        ballsRef.current.push({ num: i + 1, x, y, vx, vy, group });
+        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group, lockX, floatX: float ? x : undefined, floatY: float ? H * 0.28 : undefined });
       }
     } else if (!hovered && ballsRef.current.length > 0) {
       ballsRef.current.forEach(b => {
@@ -483,7 +512,6 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
     const rect = svg.getBoundingClientRect();
     const W = rect.width, H = rect.height;
     const balls = ballsRef.current;
-    const R = BALL_R;
 
     const tick = () => {
       const GRAVITY = 600;
@@ -492,43 +520,55 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
 
       balls.forEach(b => {
         b.vy += GRAVITY * 0.016;
+        // The unseen updraft: cancels gravity and springs the ball toward its
+        // hover spot, with a slow bob so it reads as held up by air
+        if (b.floatY !== undefined) {
+          const ty = b.floatY + Math.sin(performance.now() / 450) * 7;
+          b.vy += (-GRAVITY - 40 * (b.y - ty) - 6 * b.vy) * 0.016;
+          b.vx += (-18 * (b.x - b.floatX!) - 5 * b.vx) * 0.016;
+        }
         b.x += b.vx * 0.016;
         b.y += b.vy * 0.016;
         b.vx *= FRICTION;
         b.vy *= FRICTION;
 
-        if (b.x - R < 0) { b.x = R; b.vx = Math.abs(b.vx) * BOUNCE; }
-        if (b.x + R > W) { b.x = W - R; b.vx = -Math.abs(b.vx) * BOUNCE; }
-        if (b.y + R > H) { b.y = H - R; b.vy = -Math.abs(b.vy) * BOUNCE; }
+        if (b.x - b.r < 0) { b.x = b.r; b.vx = Math.abs(b.vx) * BOUNCE; }
+        if (b.x + b.r > W) { b.x = W - b.r; b.vx = -Math.abs(b.vx) * BOUNCE; }
+        if (b.y + b.r > H) { b.y = H - b.r; b.vy = -Math.abs(b.vy) * BOUNCE; }
       });
 
-      // Ball-ball collisions — equal radii, so push apart evenly and swap
-      // the along-normal velocity component, so they pile up like real
-      // balls in a jar instead of stacking on top of each other.
+      // Ball-ball collisions — pushed apart by weight (radius) and swapping
+      // the along-normal velocity component, so they pile up like real balls
+      // in a jar instead of stacking on top of each other.
       for (let i = 0; i < balls.length; i++) {
         for (let j = i + 1; j < balls.length; j++) {
           const a = balls[i], b = balls[j];
           const dx = b.x - a.x, dy = b.y - a.y;
           const dist = Math.hypot(dx, dy) || 0.001;
-          const minDist = R * 2;
+          const minDist = a.r + b.r;
           if (dist < minDist) {
             const nx = dx / dist, ny = dy / dist;
-            const overlap = (minDist - dist) / 2;
-            a.x -= nx * overlap; a.y -= ny * overlap;
-            b.x += nx * overlap; b.y += ny * overlap;
+            // Equal balls split it half and half, exactly as before; a small
+            // ball gives way to a big one
+            const wa = b.r / minDist, wb = a.r / minDist;
+            const overlap = minDist - dist;
+            a.x -= nx * overlap * wa; a.y -= ny * overlap * wa;
+            b.x += nx * overlap * wb; b.y += ny * overlap * wb;
 
             const rvx = b.vx - a.vx, rvy = b.vy - a.vy;
             const rel = rvx * nx + rvy * ny;
             if (rel < 0) {
-              const imp = -rel * BOUNCE * 0.5;
-              a.vx -= nx * imp; a.vy -= ny * imp;
-              b.vx += nx * imp; b.vy += ny * imp;
+              const imp = -rel * BOUNCE;
+              a.vx -= nx * imp * wa; a.vy -= ny * imp * wa;
+              b.vx += nx * imp * wb; b.vy += ny * imp * wb;
             }
           }
         }
       }
 
+      // система: every ball stays plumb in its column
       balls.forEach(b => {
+        if (b.lockX !== undefined) { b.x = b.lockX; b.vx = 0; }
         b.group.setAttribute('transform', `translate(${b.x},${b.y})`);
       });
 

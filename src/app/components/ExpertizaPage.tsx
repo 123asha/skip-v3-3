@@ -344,6 +344,7 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
     y: number;
     vx: number;
     vy: number;
+    r: number;
     group: SVGGElement;
   }>>([]);
   const rafRef = useRef<number>();
@@ -417,10 +418,19 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
     const R = BALL_R;
 
     if (hovered && ballsRef.current.length === 0) {
+      // The "дизайн" tile mixes it up — different sizes, some balls squished
+      // into ovals — everywhere else every ball is a plain uniform sphere.
+      const varied = tileIndex === 1;
       for (let i = 0; i < TILE_BALLS; i++) {
         const seed = tileIndex * 97 + i;
-        const x = R + pseudoRandom(seed) * (W - 2 * R);
-        const y = R + pseudoRandom(seed + 0.33) * (H * 0.3);
+        const r = varied ? R * (0.55 + pseudoRandom(seed + 2) * 0.85) : R;
+        // Oval squish on the horizontal axis only, so the shape never grows
+        // past its own circle's footprint — collision can keep using `r`.
+        const sx = varied && pseudoRandom(seed + 2.5) < 0.5
+          ? 0.55 + pseudoRandom(seed + 2.7) * 0.25
+          : 1;
+        const x = r + pseudoRandom(seed) * (W - 2 * r);
+        const y = r + pseudoRandom(seed + 0.33) * (H * 0.3);
         const vx = (pseudoRandom(seed + 0.67) - 0.5) * 200;
         const vy = -100 - pseudoRandom(seed + 0.9) * 50;
 
@@ -429,8 +439,8 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         const shade = document.createElementNS(NS, 'radialGradient');
         shade.setAttribute('id', shadeId);
         shade.setAttribute('gradientUnits', 'userSpaceOnUse');
-        shade.setAttribute('cx', '0'); shade.setAttribute('cy', String(-R * 0.35));
-        shade.setAttribute('r', String(R * 1.45));
+        shade.setAttribute('cx', '0'); shade.setAttribute('cy', String(-r * 0.35));
+        shade.setAttribute('r', String(r * 1.45));
         for (const [o, col] of [['0', '#ffffff'], ['0.62', '#ffffff'], ['1', 'color-mix(in srgb, #ffffff 95.4%, #000)']]) {
           const st = document.createElementNS(NS, 'stop');
           st.setAttribute('offset', o); st.setAttribute('stop-color', col);
@@ -440,13 +450,13 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
 
         const circle = document.createElementNS(NS, 'circle');
         circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0');
-        circle.setAttribute('r', String(R));
+        circle.setAttribute('r', String(r));
         circle.setAttribute('fill', `url(#${shadeId})`);
 
         const text = document.createElementNS(NS, 'text');
         text.setAttribute('x', '0'); text.setAttribute('y', '0');
         text.setAttribute('dy', '0.35em');
-        text.setAttribute('font-size', String(BALL_FONT));
+        text.setAttribute('font-size', String(r * 1.4875));
         text.setAttribute('text-anchor', 'middle');
         // Knocked out of the ball in the tile's own surface colour — same
         // trick as the hero's lettering
@@ -461,12 +471,18 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         face.setAttribute('filter', `url(#${filterIdRef.current})`);
         face.appendChild(text);
 
+        // The squish sits on its own inner group — the shading and warp
+        // filter above stay perfectly circular, only the visible shape narrows.
+        const shape = document.createElementNS(NS, 'g');
+        if (sx !== 1) shape.setAttribute('transform', `scale(${sx},1)`);
+        shape.append(circle, face);
+
         const group = document.createElementNS(NS, 'g');
         group.setAttribute('transform', `translate(${x},${y})`);
-        group.append(circle, face);
+        group.appendChild(shape);
         svg.appendChild(group);
 
-        ballsRef.current.push({ num: i + 1, x, y, vx, vy, group });
+        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group });
       }
     } else if (!hovered && ballsRef.current.length > 0) {
       ballsRef.current.forEach(b => {
@@ -483,7 +499,6 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
     const rect = svg.getBoundingClientRect();
     const W = rect.width, H = rect.height;
     const balls = ballsRef.current;
-    const R = BALL_R;
 
     const tick = () => {
       const GRAVITY = 600;
@@ -497,32 +512,33 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         b.vx *= FRICTION;
         b.vy *= FRICTION;
 
-        if (b.x - R < 0) { b.x = R; b.vx = Math.abs(b.vx) * BOUNCE; }
-        if (b.x + R > W) { b.x = W - R; b.vx = -Math.abs(b.vx) * BOUNCE; }
-        if (b.y + R > H) { b.y = H - R; b.vy = -Math.abs(b.vy) * BOUNCE; }
+        if (b.x - b.r < 0) { b.x = b.r; b.vx = Math.abs(b.vx) * BOUNCE; }
+        if (b.x + b.r > W) { b.x = W - b.r; b.vx = -Math.abs(b.vx) * BOUNCE; }
+        if (b.y + b.r > H) { b.y = H - b.r; b.vy = -Math.abs(b.vy) * BOUNCE; }
       });
 
-      // Ball-ball collisions — equal radii, so push apart evenly and swap
-      // the along-normal velocity component, so they pile up like real
-      // balls in a jar instead of stacking on top of each other.
+      // Ball-ball collisions — mass-proportional (by radius) push-apart and
+      // velocity exchange, so they pile up like real balls in a jar instead
+      // of stacking on top of each other, even when sizes differ.
       for (let i = 0; i < balls.length; i++) {
         for (let j = i + 1; j < balls.length; j++) {
           const a = balls[i], b = balls[j];
           const dx = b.x - a.x, dy = b.y - a.y;
           const dist = Math.hypot(dx, dy) || 0.001;
-          const minDist = R * 2;
+          const minDist = a.r + b.r;
           if (dist < minDist) {
             const nx = dx / dist, ny = dy / dist;
-            const overlap = (minDist - dist) / 2;
-            a.x -= nx * overlap; a.y -= ny * overlap;
-            b.x += nx * overlap; b.y += ny * overlap;
+            const overlap = minDist - dist;
+            const totalR = a.r + b.r;
+            a.x -= nx * overlap * (b.r / totalR); a.y -= ny * overlap * (b.r / totalR);
+            b.x += nx * overlap * (a.r / totalR); b.y += ny * overlap * (a.r / totalR);
 
             const rvx = b.vx - a.vx, rvy = b.vy - a.vy;
             const rel = rvx * nx + rvy * ny;
             if (rel < 0) {
               const imp = -rel * BOUNCE * 0.5;
-              a.vx -= nx * imp; a.vy -= ny * imp;
-              b.vx += nx * imp; b.vy += ny * imp;
+              a.vx -= nx * imp * (b.r / totalR); a.vy -= ny * imp * (b.r / totalR);
+              b.vx += nx * imp * (a.r / totalR); b.vy += ny * imp * (a.r / totalR);
             }
           }
         }

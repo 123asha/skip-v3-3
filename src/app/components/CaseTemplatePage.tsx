@@ -47,7 +47,7 @@ function Img({ ar, src, style, round }: { ar: string; src?: string; style?: Reac
 // with marginLeft = 1/3 viewport.
 function MetaRow({
   col1, col2, num, text, col2IsTitle,
-}: { col1?: string; col2?: string; num?: string; text: string; col2IsTitle?: boolean }) {
+}: { col1?: React.ReactNode; col2?: string; num?: string; text: string; col2IsTitle?: boolean }) {
   const mob = useMobile();
   if (mob) {
     return (
@@ -80,14 +80,14 @@ function MetaRow({
       {col1 && <p style={{ ...textStyle, gridColumn: '1', margin: 0 }}>{col1}</p>}
       {/* The case name lives here — the cover carries no centred title */}
       {col2 && (col2IsTitle
-        ? <h1 style={{ ...textStyle, gridColumn: '2', margin: 0, mixBlendMode: 'difference' }}>{col2}</h1>
-        : <p style={{ ...textStyle, gridColumn: '2', margin: 0, mixBlendMode: 'difference' }}>{col2}</p>)}
+        ? <h1 style={{ ...textStyle, gridColumn: '2', margin: 0, color: 'inherit' }}>{col2}</h1>
+        : <p style={{ ...textStyle, gridColumn: '2', margin: 0, color: 'inherit' }}>{col2}</p>)}
       {/* Year — always centred on the page, whatever else the row carries */}
-      {num && <p style={{ ...textStyle, opacity: 'var(--opacity-muted)', position: 'absolute', left: '50%', top: 0, margin: 0, transform: 'translateX(-50%)', whiteSpace: 'nowrap', mixBlendMode: 'difference' }}>{num}</p>}
+      {num && <p style={{ ...textStyle, opacity: 'var(--opacity-muted)', position: 'absolute', left: '50%', top: 0, margin: 0, transform: 'translateX(-50%)', whiteSpace: 'nowrap', color: 'inherit' }}>{num}</p>}
       {/* Exactly one column wide — no loose max-width that straddles the grid */}
       <div style={{ gridColumn: '4 / 5' }}>
         {text.split('\n\n').map((para, k) => (
-          <p key={k} style={{ ...textStyle, margin: 0, marginTop: k === 0 ? 0 : PARA_GAP }}>{typo(para)}</p>
+          <p key={k} style={{ ...textStyle, margin: 0, marginTop: k === 0 ? 0 : PARA_GAP, color: 'inherit' }}>{typo(para)}</p>
         ))}
       </div>
     </div>
@@ -438,6 +438,12 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
           zIndex: 5,
           padding: '0 var(--pad)',
           marginTop: -typesH,
+          // Inverts against whatever scrolls under it, like the nav: white
+          // text blended by difference reads dark on the page and light over
+          // pictures. Set here on the sticky row itself — a blend on the text
+          // inside would be isolated by it and have nothing to invert against.
+          color: '#fff',
+          mixBlendMode: 'difference',
         }}
       >
         <MetaRow col2={data.title} col2IsTitle num={data.year} text={data.intro} />
@@ -781,15 +787,19 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
         onClick={() => nextCase.href && onNavigateCase?.(nextCase.href)}
         style={{ marginTop: 'var(--space-xl)', cursor: onNavigateCase ? 'pointer' : undefined }}
       >
-        <div style={{ padding: 'var(--pad)', marginBottom: 10 }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-            {nextCase.tags.map(t => (
-              <span key={t} className={s.chip}>{t}</span>
-            ))}
-          </div>
-        </div>
+        {/* Category chips sit in the first column of the same line as the
+            name, year and intro — like the meta row at the top of a case */}
         <div style={{ padding: 'var(--pad)' }}>
-          <MetaRow col2={nextCase.title} num={nextCase.year} text={nextCase.intro} />
+          <MetaRow
+            col1={
+              <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 5 }}>
+                {nextCase.tags.map(t => <span key={t} className={s.chip}>{t}</span>)}
+              </span>
+            }
+            col2={nextCase.title}
+            num={nextCase.year}
+            text={nextCase.intro}
+          />
         </div>
       </div>
       {/* Keeps the strip above at the cover's height when scrolled to the end */}

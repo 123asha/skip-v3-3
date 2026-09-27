@@ -638,27 +638,29 @@ function Tile({ index, text, gap }: { index: number; text: string; gap: number }
 function TileBlocks() {
   const isMobile = useMobile();
   const GAP = 20;
-  // The four tiles come up one after another from below as the row scrolls
-  // into view — quick, once
+  // The four tiles come up from below one after another, first to last, the
+  // moment the row starts to scroll into view — quick, once. The section
+  // itself doesn't fade in as a whole, or the tiles would sit behind that
+  // reveal and appear late.
   const rowRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const row = rowRef.current;
     if (!row || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const tiles = Array.from(row.children) as HTMLElement[];
-    gsap.set(tiles, { opacity: 0, y: 40 });
+    gsap.set(tiles, { opacity: 0, y: 60 });
     const io = new IntersectionObserver(([e]) => {
       if (!e.isIntersecting) return;
       io.disconnect();
-      gsap.to(tiles, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out', stagger: 0.07, clearProps: 'transform,opacity' });
-    }, { threshold: 0.15 });
+      gsap.to(tiles, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out', stagger: 0.09, clearProps: 'transform,opacity' });
+    }, { threshold: 0, rootMargin: '0px 0px -6% 0px' });
     io.observe(row);
     return () => io.disconnect();
   }, []);
 
   return (
-    <div className={app.section} data-reveal="">
+    <div className={app.section}>
       {/* Section title — third column of the page grid, heading style */}
-      <div style={{
+      <div data-reveal="" style={{
         display: 'grid',
         gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, 1fr)',
         columnGap: 'var(--gap)',

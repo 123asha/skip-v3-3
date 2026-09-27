@@ -5,6 +5,7 @@ import { MagneticDivider } from './MagneticDivider';
 import { typo } from '../utils/typography';
 import PillButton from './PillButton';
 import { useMobile } from '../hooks/useMobile';
+import { useRowReveal } from '../hooks/useRowReveal';
 
 // Placeholder body shown when a row is expanded — two short paragraphs (one per
 // column), roughly three lines each. Replace per-item via the optional `body`
@@ -90,6 +91,8 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
   showZoom?: boolean;
 }) {
   const [hovered, setHovered] = useState<number | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
+  useRowReveal(listRef, '[data-tool-row]');
   // Several rows can stay open at once — opening one no longer closes the rest
   const [expanded, setExpanded] = useState<number[]>([]);
   const toggleRow = (i: number) =>
@@ -270,7 +273,10 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
 
   return (
     <div
-      ref={toolsRowsRef ?? undefined}
+      ref={el => {
+        listRef.current = el;
+        if (toolsRowsRef) (toolsRowsRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+      }}
       className={s.toolsList}
       onMouseLeave={isMobile ? undefined : () => setHovered(null)}
     >
@@ -316,6 +322,7 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
         return (
           <div
             key={i}
+            data-tool-row=""
             className={s.toolRow}
             style={isMobile
               ? { cursor: 'pointer', position: 'relative', display: 'block', paddingTop: 16, touchAction: 'manipulation' }

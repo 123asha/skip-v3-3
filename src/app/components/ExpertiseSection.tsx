@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { MagneticDivider } from './MagneticDivider';
 import { useMobile } from '../hooks/useMobile';
+import { useRowReveal } from '../hooks/useRowReveal';
 import { H2_STYLE, typo } from '../utils/typography';
 import { PARA_GAP } from './CaseTemplatePage';
 import s from '../App.module.css';
@@ -124,8 +125,11 @@ export function ExpertiseSection({ showItems = true, showHeading = true }: { sho
     color: 'var(--c-text)',
   };
 
+  const rootRef = useRef<HTMLDivElement>(null);
+  useRowReveal(rootRef, '[data-exp-row]');
+
   return (
-    <div className={s.section} style={{ marginTop: 'var(--space-xl)' }}>
+    <div ref={rootRef} className={s.section} style={{ marginTop: 'var(--space-xl)' }}>
       {showHeading && (
         <h2 style={{
           ...H2_STYLE,
@@ -250,7 +254,7 @@ export function ExpertiseSection({ showItems = true, showHeading = true }: { sho
             const cellFade = { opacity: rowOpacity as any, transition: `opacity ${EXPAND}` };
             const rowPadding = '8px 0 12px';
             const rowInner = isMobile ? (
-              <div onClick={onRowClick} style={{ position: 'relative', background: rowBg, padding: rowPadding, cursor: rowCursor }}>
+              <div data-exp-row="" onClick={onRowClick} style={{ position: 'relative', background: rowBg, padding: rowPadding, cursor: rowCursor }}>
                 {divider}
                 {row.header ? (
                   <div style={{ display: 'flex', gap: 12, alignItems: 'baseline', ...cellFade }}>
@@ -266,6 +270,7 @@ export function ExpertiseSection({ showItems = true, showHeading = true }: { sho
               </div>
             ) : (
               <div
+                data-exp-row=""
                 onClick={onRowClick}
                 style={{
                   position: 'relative',

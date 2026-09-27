@@ -322,21 +322,40 @@ function pseudoRandom(seed: number): number {
   return v - Math.floor(v);
 }
 
-// Balls that fill a tile on hover — numbered 1…N instead of the hero's
+// How many balls fill a tile on hover — numbered 1…N instead of the hero's
 // letters, otherwise built exactly like the hero's constellation balls: same
 // radial shading, same letter-printed-on-a-sphere displacement filter.
-// Ball radius as a share of the tile's width — sized so all six actually fit
-// in the "jar" and settle to the bottom. A fixed pixel size overflowed wider
-// tiles: the pile stacked up out of the top and the balls seemed to hang there.
-const BALL_R_FRAC = 0.24;
+const TILE_BALLS = 6;
+// One fixed radius for every ball, like the hero (a single R per instance,
+// not per-ball) — this is what lets one shared sphere filter work for all of them.
+const BALL_R = 132;
+const BALL_FONT = BALL_R * 1.4875;
 const NS = 'http://www.w3.org/2000/svg';
 
-// The sphere-warp displacement filter, sized for radius R — same algorithm as
-// the hero: a point at distance ρ from centre shows the flat letter at arc
-// length asin(ρ)/(π/2), so the middle swells and the rim wraps away.
-function buildSphereFilter(svg: SVGSVGElement, filterId: string, R: number) {
-  svg.querySelector(`#${filterId}`)?.remove();
-  {
+// TileBalls: render animated falling numbered balls per tile on hover, built
+// the same way as Constellation's balls (shading gradient + sphere-warp filter).
+function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean }) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const filterIdRef = useRef(`tile-sphere-${tileIndex}-${Math.random().toString(36).slice(2)}`);
+  const filterReadyRef = useRef(false);
+  const ballsRef = useRef<Array<{
+    num: number;
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    group: SVGGElement;
+  }>>([]);
+  const rafRef = useRef<number>();
+
+  // Build the sphere-warp displacement filter once, sized for BALL_R — same
+  // algorithm as the hero: a point at distance ρ from centre shows the flat
+  // letter at arc length asin(ρ)/(π/2), so the middle swells and the rim wraps away.
+  useEffect(() => {
+    if (!svgRef.current || filterReadyRef.current) return;
+    const svg = svgRef.current;
+    const filterId = filterIdRef.current;
+    const R = BALL_R;
     const defs = svg.querySelector('defs')!;
     const filter = document.createElementNS(NS, 'filter');
     filter.setAttribute('id', filterId);
@@ -387,109 +406,31 @@ function buildSphereFilter(svg: SVGSVGElement, filterId: string, R: number) {
 
     filter.append(feImg, feMap);
     defs.appendChild(filter);
-  }
-}
-
-// TileBalls: render animated falling numbered balls per tile on hover, built
-// the same way as Constellation's balls (shading gradient + sphere-warp filter).
-function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean }) {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const filterIdRef = useRef(`tile-sphere-${tileIndex}-${Math.random().toString(36).slice(2)}`);
-  // Radius the filter was last built for — rebuilt when the tile resizes
-  const filterRRef = useRef(0);
-  const ballsRef = useRef<Array<{
-    num: number;
-    x: number;
-    y: number;
-    vx: number;
-    vy: number;
-    r: number;
-    group: SVGGElement;
-    /** Grid tile: the column this ball is held to, so the stacks stay plumb */
-    lockX?: number;
-    /** Tools tile: the height an unseen updraft holds this ball at */
-    floatY?: number;
-    /** Tools tile: the spot the updraft rises from */
-    floatX?: number;
-    /** When this ball is let go (ms) — they cascade in a beat apart */
-    release: number;
-    /** Squash from the last impact, springing back to round */
-    sq: number;
-  }>>([]);
-  const rafRef = useRef<number>();
+    filterReadyRef.current = true;
+  }, []);
 
   useEffect(() => {
-    if (!svgRef.current) return;
+    if (!svgRef.current || !filterReadyRef.current) return;
     const svg = svgRef.current;
     const rect = svg.getBoundingClientRect();
     const W = rect.width, H = rect.height;
+    const R = BALL_R;
 
     if (hovered && ballsRef.current.length === 0) {
-      // Each step of the process fills its tile its own way:
-      //   стратегия   — six equal balls tossed into a heap
-      //   дизайн      — a composition: one big ball, three small
-      //   система     — equal balls landing in an exact 2 × 3 grid
-      //   инструменты — a heap, with one ball held up by an unseen updraft
-      type Spec = { r: number; x: number; y: number; vx: number; lockX?: number; floatY?: number };
-      // A loose cluster of balls sitting just above the tile's top edge, in
-      // as many columns as fit — they all drop at once, no queue up top
-      const cluster = (n: number, r: number, seedBase: number, above = 0): Spec[] => {
-        const cols = Math.max(1, Math.floor(W / (2.1 * r)));
-        const cellW = W / cols;
-        return Array.from({ length: n }, (_, i) => {
-          const seed = seedBase + i;
-          const col = i % cols, row = Math.floor(i / cols);
-          const slack = Math.max(0, cellW - 2 * r);
-          return {
-            r,
-            x: cellW * (col + 0.5) + (pseudoRandom(seed) - 0.5) * slack,
-            y: -above - r - row * 2.1 * r - pseudoRandom(seed + 1.3) * 0.5 * r,
-            vx: (pseudoRandom(seed + 0.67) - 0.5) * 220,
-          };
-        });
-      };
-      let R: number;
-      let specs: Spec[];
-      if (tileIndex === 1) {
-        R = W * BALL_R_FRAC;
-        const big = R * 1.75, small = R * 0.65;
-        specs = [
-          { r: big, x: big + pseudoRandom(197) * (W - 2 * big), y: -big, vx: (pseudoRandom(197.67) - 0.5) * 120 },
-          ...cluster(3, small, 198, 2 * big),
-        ];
-      } else if (tileIndex === 2) {
-        R = Math.min(W / 4, H / 6) * 0.96;
-        // Two plumb columns, bottom row first
-        specs = Array.from({ length: 6 }, (_, i) => {
-          const x = i % 2 === 0 ? W / 4 : (3 * W) / 4;
-          return { r: R, x, y: -R - Math.floor(i / 2) * 2.05 * R, vx: 0, lockX: x };
-        });
-      } else if (tileIndex === 3) {
-        R = W * 0.16;
-        const heap = cluster(4, R, 397);
-        const top = Math.min(...heap.map(b => b.y));
-        specs = [...heap, { r: R, x: W * 0.62, y: top - 2.2 * R, vx: 0, floatY: H * 0.28 }];
-      } else {
-        R = W * 0.2;
-        specs = cluster(6, R, 97 * 3);
-      }
-
-      if (Math.abs(filterRRef.current - R) > 0.5) {
-        buildSphereFilter(svg, filterIdRef.current, R);
-        filterRRef.current = R;
-      }
-      for (let i = 0; i < specs.length; i++) {
-        const { r, x, y, vx, lockX, floatY } = specs[i];
-        // Already moving when they come into view — thrown in, not released
-        const vy = 150;
+      for (let i = 0; i < TILE_BALLS; i++) {
+        const seed = tileIndex * 97 + i;
+        const x = R + pseudoRandom(seed) * (W - 2 * R);
+        const y = R + pseudoRandom(seed + 0.33) * (H * 0.3);
+        const vx = (pseudoRandom(seed + 0.67) - 0.5) * 200;
+        const vy = -100 - pseudoRandom(seed + 0.9) * 50;
 
         // Barely-there shading lit from above — same formula as the hero
         const shadeId = `${filterIdRef.current}-shade-${i}`;
         const shade = document.createElementNS(NS, 'radialGradient');
         shade.setAttribute('id', shadeId);
         shade.setAttribute('gradientUnits', 'userSpaceOnUse');
-        shade.setAttribute('cx', '0'); shade.setAttribute('cy', String(-r * 0.35));
-        shade.setAttribute('r', String(r * 1.45));
+        shade.setAttribute('cx', '0'); shade.setAttribute('cy', String(-R * 0.35));
+        shade.setAttribute('r', String(R * 1.45));
         for (const [o, col] of [['0', '#ffffff'], ['0.62', '#ffffff'], ['1', 'color-mix(in srgb, #ffffff 95.4%, #000)']]) {
           const st = document.createElementNS(NS, 'stop');
           st.setAttribute('offset', o); st.setAttribute('stop-color', col);
@@ -499,13 +440,13 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
 
         const circle = document.createElementNS(NS, 'circle');
         circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0');
-        circle.setAttribute('r', String(r));
+        circle.setAttribute('r', String(R));
         circle.setAttribute('fill', `url(#${shadeId})`);
 
         const text = document.createElementNS(NS, 'text');
         text.setAttribute('x', '0'); text.setAttribute('y', '0');
         text.setAttribute('dy', '0.35em');
-        text.setAttribute('font-size', String(r * 1.4875));
+        text.setAttribute('font-size', String(BALL_FONT));
         text.setAttribute('text-anchor', 'middle');
         // Knocked out of the ball in the tile's own surface colour — same
         // trick as the hero's lettering
@@ -525,7 +466,7 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         group.append(circle, face);
         svg.appendChild(group);
 
-        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group, lockX, floatY, floatX: floatY !== undefined ? x : undefined, release: performance.now() + i * 70, sq: 0 });
+        ballsRef.current.push({ num: i + 1, x, y, vx, vy, group });
       }
     } else if (!hovered && ballsRef.current.length > 0) {
       ballsRef.current.forEach(b => {
@@ -542,94 +483,53 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
     const rect = svg.getBoundingClientRect();
     const W = rect.width, H = rect.height;
     const balls = ballsRef.current;
+    const R = BALL_R;
 
-    const walls = (b: typeof balls[number], BOUNCE: number) => {
-      if (b.x - b.r < 0) { b.x = b.r; b.vx = Math.abs(b.vx) * BOUNCE; }
-      if (b.x + b.r > W) { b.x = W - b.r; b.vx = -Math.abs(b.vx) * BOUNCE; }
-      if (b.y + b.r > H) {
-        // Squashes on landing in proportion to how hard it hit
-        if (b.vy > 200) b.sq = Math.max(b.sq, Math.min(0.2, b.vy / 5000));
-        // A resting ball doesn't keep micro-bouncing — only real landings rebound
-        b.y = H - b.r; b.vy = b.vy > 120 ? -b.vy * BOUNCE : 0;
-      }
-    };
-
-    // Real frame time, so the fall runs at the same speed on 60Hz and 120Hz
-    // screens (capped, so a stalled tab doesn't teleport the balls)
-    let last = performance.now();
     const tick = () => {
-      const now = performance.now();
-      const dt = Math.min(0.033, (now - last) / 1000);
-      last = now;
-      const GRAVITY = 2600;
-      const FRICTION = Math.pow(0.995, dt * 60);
-      const BOUNCE = 0.45;
+      const GRAVITY = 600;
+      const FRICTION = 0.99;
+      const BOUNCE = 0.4;
 
       balls.forEach(b => {
-        // Not let go yet — hangs just above the edge, out of sight
-        if (now < b.release) return;
-        b.vy += GRAVITY * dt;
-        // The unseen updraft: cancels gravity and springs the ball toward
-        // its hover height, with a slow bob so it reads as held by air
-        if (b.floatY !== undefined) {
-          const ty = b.floatY + Math.sin(performance.now() / 450) * 7;
-          b.vy += (-GRAVITY - 40 * (b.y - ty) - 6 * b.vy) * dt;
-          // …and the air column holds it over the same spot sideways too
-          if (b.lockX === undefined) b.vx += (-18 * (b.x - b.floatX!) - 5 * b.vx) * dt;
-        }
-        b.x += b.vx * dt;
-        b.y += b.vy * dt;
+        b.vy += GRAVITY * 0.016;
+        b.x += b.vx * 0.016;
+        b.y += b.vy * 0.016;
         b.vx *= FRICTION;
         b.vy *= FRICTION;
-        walls(b, BOUNCE);
+
+        if (b.x - R < 0) { b.x = R; b.vx = Math.abs(b.vx) * BOUNCE; }
+        if (b.x + R > W) { b.x = W - R; b.vx = -Math.abs(b.vx) * BOUNCE; }
+        if (b.y + R > H) { b.y = H - R; b.vy = -Math.abs(b.vy) * BOUNCE; }
       });
 
-      // Ball-ball collisions — mass-proportional (by radius) push-apart and
-      // velocity exchange, so they pile up like real balls in a jar instead
-      // of stacking on top of each other, even when sizes differ. Several
-      // passes per frame so a settled pile stays firm instead of sinking.
-      for (let pass = 0; pass < 4; pass++) {
+      // Ball-ball collisions — equal radii, so push apart evenly and swap
+      // the along-normal velocity component, so they pile up like real
+      // balls in a jar instead of stacking on top of each other.
       for (let i = 0; i < balls.length; i++) {
         for (let j = i + 1; j < balls.length; j++) {
           const a = balls[i], b = balls[j];
-          if (now < a.release || now < b.release) continue;
           const dx = b.x - a.x, dy = b.y - a.y;
           const dist = Math.hypot(dx, dy) || 0.001;
-          const minDist = a.r + b.r;
+          const minDist = R * 2;
           if (dist < minDist) {
             const nx = dx / dist, ny = dy / dist;
-            const overlap = minDist - dist;
-            const totalR = a.r + b.r;
-            a.x -= nx * overlap * (b.r / totalR); a.y -= ny * overlap * (b.r / totalR);
-            b.x += nx * overlap * (a.r / totalR); b.y += ny * overlap * (a.r / totalR);
+            const overlap = (minDist - dist) / 2;
+            a.x -= nx * overlap; a.y -= ny * overlap;
+            b.x += nx * overlap; b.y += ny * overlap;
 
             const rvx = b.vx - a.vx, rvy = b.vy - a.vy;
             const rel = rvx * nx + rvy * ny;
             if (rel < 0) {
-              // A hard knock squashes both a little, like the hero's balls
-              if (-rel > 250) {
-                const k = Math.min(0.14, -rel / 6000);
-                a.sq = Math.max(a.sq, k); b.sq = Math.max(b.sq, k);
-              }
-              // Cancels the approach speed fully (plus a little rebound),
-              // so balls come to rest on each other instead of sinking in
-              const imp = -rel * (1 + (-rel > 120 ? BOUNCE : 0));
-              a.vx -= nx * imp * (b.r / totalR); a.vy -= ny * imp * (b.r / totalR);
-              b.vx += nx * imp * (a.r / totalR); b.vy += ny * imp * (a.r / totalR);
+              const imp = -rel * BOUNCE * 0.5;
+              a.vx -= nx * imp; a.vy -= ny * imp;
+              b.vx += nx * imp; b.vy += ny * imp;
             }
           }
         }
       }
-      balls.forEach(b => walls(b, BOUNCE));
-      }
-      // Grid tile: every ball stays plumb in its column
-      balls.forEach(b => { if (b.lockX !== undefined) { b.x = b.lockX; b.vx = 0; } });
 
       balls.forEach(b => {
-        b.sq *= Math.pow(0.82, dt * 60);
-        b.group.setAttribute('transform', b.sq > 0.004
-          ? `translate(${b.x},${b.y}) scale(${1 + b.sq},${1 - b.sq})`
-          : `translate(${b.x},${b.y})`);
+        b.group.setAttribute('transform', `translate(${b.x},${b.y})`);
       });
 
       rafRef.current = requestAnimationFrame(tick);

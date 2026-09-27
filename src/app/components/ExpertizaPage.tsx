@@ -322,99 +322,158 @@ function pseudoRandom(seed: number): number {
   return v - Math.floor(v);
 }
 
-// How many balls fill a tile on hover, and their scattered spot + size —
-// numbered 1…N instead of the hero's letters.
+// How many balls fill a tile on hover — numbered 1…N instead of the hero's
+// letters, otherwise built exactly like the hero's constellation balls: same
+// radial shading, same letter-printed-on-a-sphere displacement filter.
 const TILE_BALLS = 6;
+// One fixed radius for every ball, like the hero (a single R per instance,
+// not per-ball) — this is what lets one shared sphere filter work for all of them.
+const BALL_R = 132;
+const BALL_FONT = BALL_R * 1.4875;
+const NS = 'http://www.w3.org/2000/svg';
 
-// TileBalls: render animated falling numbered balls per tile on hover
-function TileBalls({ index, tileIndex, hovered }: { index: number; tileIndex: number; hovered: boolean }) {
+// TileBalls: render animated falling numbered balls per tile on hover, built
+// the same way as Constellation's balls (shading gradient + sphere-warp filter).
+function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean }) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const defsRef = useRef<SVGDefsElement | null>(null);
+  const filterIdRef = useRef(`tile-sphere-${tileIndex}-${Math.random().toString(36).slice(2)}`);
+  const filterReadyRef = useRef(false);
   const ballsRef = useRef<Array<{
     num: number;
     x: number;
     y: number;
     vx: number;
     vy: number;
-    r: number;
-    el: SVGCircleElement;
-    textEl: SVGTextElement;
+    group: SVGGElement;
   }>>([]);
   const rafRef = useRef<number>();
 
+  // Build the sphere-warp displacement filter once, sized for BALL_R — same
+  // algorithm as the hero: a point at distance ρ from centre shows the flat
+  // letter at arc length asin(ρ)/(π/2), so the middle swells and the rim wraps away.
   useEffect(() => {
-    if (!svgRef.current) return;
+    if (!svgRef.current || filterReadyRef.current) return;
+    const svg = svgRef.current;
+    const filterId = filterIdRef.current;
+    const R = BALL_R;
+    const defs = svg.querySelector('defs')!;
+    const filter = document.createElementNS(NS, 'filter');
+    filter.setAttribute('id', filterId);
+    filter.setAttribute('filterUnits', 'userSpaceOnUse');
+    filter.setAttribute('primitiveUnits', 'userSpaceOnUse');
+    filter.setAttribute('colorInterpolationFilters', 'sRGB');
+    filter.setAttribute('x', String(-R));
+    filter.setAttribute('y', String(-R));
+    filter.setAttribute('width', String(2 * R));
+    filter.setAttribute('height', String(2 * R));
+
+    const N = 128;
+    const c = document.createElement('canvas'); c.width = N; c.height = N;
+    const ctx = c.getContext('2d')!;
+    const img = ctx.createImageData(N, N);
+    const offs = new Float32Array(N * N * 2);
+    let max = 0.001;
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const u = (x + 0.5) / N * 2 - 1, v = (y + 0.5) / N * 2 - 1;
+      const rho = Math.hypot(u, v);
+      let k = 0;
+      if (rho > 0 && rho < 1) k = (Math.asin(rho) / (Math.PI / 2)) / rho - 1;
+      const j = (y * N + x) * 2;
+      offs[j] = u * k * R; offs[j + 1] = v * k * R;
+      max = Math.max(max, Math.abs(offs[j]), Math.abs(offs[j + 1]));
+    }
+    for (let n = 0; n < N * N; n++) {
+      img.data[n * 4] = 128 + Math.round(offs[n * 2] / max * 127);
+      img.data[n * 4 + 1] = 128 + Math.round(offs[n * 2 + 1] / max * 127);
+      img.data[n * 4 + 2] = 128; img.data[n * 4 + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+
+    const feImg = document.createElementNS(NS, 'feImage');
+    feImg.setAttribute('preserveAspectRatio', 'none');
+    feImg.setAttribute('result', 'map');
+    feImg.setAttribute('x', String(-R)); feImg.setAttribute('y', String(-R));
+    feImg.setAttribute('width', String(2 * R)); feImg.setAttribute('height', String(2 * R));
+    feImg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', c.toDataURL());
+    feImg.setAttribute('href', c.toDataURL());
+
+    const feMap = document.createElementNS(NS, 'feDisplacementMap');
+    feMap.setAttribute('in', 'SourceGraphic');
+    feMap.setAttribute('in2', 'map');
+    feMap.setAttribute('xChannelSelector', 'R');
+    feMap.setAttribute('yChannelSelector', 'G');
+    feMap.setAttribute('scale', String(max * 255 / 127));
+
+    filter.append(feImg, feMap);
+    defs.appendChild(filter);
+    filterReadyRef.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!svgRef.current || !filterReadyRef.current) return;
     const svg = svgRef.current;
     const rect = svg.getBoundingClientRect();
     const W = rect.width, H = rect.height;
+    const R = BALL_R;
 
     if (hovered && ballsRef.current.length === 0) {
-      // Create defs if needed for gradient
-      if (!defsRef.current) {
-        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-        svg.appendChild(defs);
-        defsRef.current = defs;
-      }
-
-      // Initialize balls at top, staggered — large balls like in a jar
       for (let i = 0; i < TILE_BALLS; i++) {
         const seed = tileIndex * 97 + i;
-        const r = 45 + pseudoRandom(seed + 0.25) * 20;
-        const x = r + pseudoRandom(seed) * (W - 2 * r);
-        const y = r + pseudoRandom(seed + 0.33) * (H * 0.3);
+        const x = R + pseudoRandom(seed) * (W - 2 * R);
+        const y = R + pseudoRandom(seed + 0.33) * (H * 0.3);
         const vx = (pseudoRandom(seed + 0.67) - 0.5) * 200;
         const vy = -100 - pseudoRandom(seed + 0.9) * 50;
 
-        // Sphere shading gradient
-        const gradId = `sphere-${tileIndex}-${i}`;
-        const grad = document.createElementNS('http://www.w3.org/2000/svg', 'radialGradient');
-        grad.setAttribute('id', gradId);
-        grad.setAttribute('cx', '30%');
-        grad.setAttribute('cy', '30%');
-        const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-        stop1.setAttribute('offset', '0%');
-        stop1.setAttribute('stop-color', '#fff');
-        const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-        stop2.setAttribute('offset', '100%');
-        stop2.setAttribute('stop-color', 'color-mix(in srgb, #fff 95.4%, #000)');
-        grad.appendChild(stop1);
-        grad.appendChild(stop2);
-        defsRef.current!.appendChild(grad);
+        // Barely-there shading lit from above — same formula as the hero
+        const shadeId = `${filterIdRef.current}-shade-${i}`;
+        const shade = document.createElementNS(NS, 'radialGradient');
+        shade.setAttribute('id', shadeId);
+        shade.setAttribute('gradientUnits', 'userSpaceOnUse');
+        shade.setAttribute('cx', '0'); shade.setAttribute('cy', String(-R * 0.35));
+        shade.setAttribute('r', String(R * 1.45));
+        for (const [o, col] of [['0', '#ffffff'], ['0.62', '#ffffff'], ['1', 'color-mix(in srgb, #ffffff 95.4%, #000)']]) {
+          const st = document.createElementNS(NS, 'stop');
+          st.setAttribute('offset', o); st.setAttribute('stop-color', col);
+          shade.appendChild(st);
+        }
+        svg.querySelector('defs')!.appendChild(shade);
 
-        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.setAttribute('cx', String(x));
-        circle.setAttribute('cy', String(y));
-        circle.setAttribute('r', String(r));
-        circle.setAttribute('fill', `url(#${gradId})`);
-        circle.setAttribute('opacity', '1');
-        svg.appendChild(circle);
+        const circle = document.createElementNS(NS, 'circle');
+        circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0');
+        circle.setAttribute('r', String(R));
+        circle.setAttribute('fill', `url(#${shadeId})`);
 
-        const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        textEl.setAttribute('x', String(x));
-        textEl.setAttribute('y', String(y));
-        textEl.setAttribute('text-anchor', 'middle');
-        textEl.setAttribute('dominant-baseline', 'central');
-        textEl.setAttribute('font-family', 'var(--font)');
-        // Same weight and relative size as the hero's letters-on-spheres
-        textEl.setAttribute('font-weight', '500');
-        textEl.setAttribute('font-size', String(r * 0.9));
-        textEl.setAttribute('fill', 'var(--c-text)');
-        textEl.setAttribute('pointer-events', 'none');
-        textEl.textContent = String(i + 1);
-        svg.appendChild(textEl);
+        const text = document.createElementNS(NS, 'text');
+        text.setAttribute('x', '0'); text.setAttribute('y', '0');
+        text.setAttribute('dy', '0.35em');
+        text.setAttribute('font-size', String(BALL_FONT));
+        text.setAttribute('text-anchor', 'middle');
+        // Knocked out of the ball in the tile's own surface colour — same
+        // trick as the hero's lettering
+        text.setAttribute('fill', 'var(--c-surface)');
+        text.style.fontFamily = 'var(--font)';
+        text.style.fontWeight = '500';
+        text.style.userSelect = 'none';
+        text.style.pointerEvents = 'none';
+        text.textContent = String(i + 1);
 
-        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, el: circle, textEl });
+        const face = document.createElementNS(NS, 'g');
+        face.setAttribute('filter', `url(#${filterIdRef.current})`);
+        face.appendChild(text);
+
+        const group = document.createElementNS(NS, 'g');
+        group.setAttribute('transform', `translate(${x},${y})`);
+        group.append(circle, face);
+        svg.appendChild(group);
+
+        ballsRef.current.push({ num: i + 1, x, y, vx, vy, group });
       }
     } else if (!hovered && ballsRef.current.length > 0) {
-      // Clear balls when not hovered
       ballsRef.current.forEach(b => {
-        b.el.remove();
-        b.textEl.remove();
+        b.group.remove();
+        svg.querySelector(`#${filterIdRef.current}-shade-${b.num - 1}`)?.remove();
       });
       ballsRef.current = [];
-      if (defsRef.current) {
-        defsRef.current.innerHTML = '';
-      }
     }
   }, [hovered, tileIndex]);
 
@@ -424,6 +483,7 @@ function TileBalls({ index, tileIndex, hovered }: { index: number; tileIndex: nu
     const rect = svg.getBoundingClientRect();
     const W = rect.width, H = rect.height;
     const balls = ballsRef.current;
+    const R = BALL_R;
 
     const tick = () => {
       const GRAVITY = 600;
@@ -437,60 +497,39 @@ function TileBalls({ index, tileIndex, hovered }: { index: number; tileIndex: nu
         b.vx *= FRICTION;
         b.vy *= FRICTION;
 
-        // Wall collisions
-        if (b.x - b.r < 0) {
-          b.x = b.r;
-          b.vx = Math.abs(b.vx) * BOUNCE;
-        }
-        if (b.x + b.r > W) {
-          b.x = W - b.r;
-          b.vx = -Math.abs(b.vx) * BOUNCE;
-        }
-
-        // Floor collision
-        if (b.y + b.r > H) {
-          b.y = H - b.r;
-          b.vy = -Math.abs(b.vy) * BOUNCE;
-        }
+        if (b.x - R < 0) { b.x = R; b.vx = Math.abs(b.vx) * BOUNCE; }
+        if (b.x + R > W) { b.x = W - R; b.vx = -Math.abs(b.vx) * BOUNCE; }
+        if (b.y + R > H) { b.y = H - R; b.vy = -Math.abs(b.vy) * BOUNCE; }
       });
 
-      // Ball-ball collisions — push apart along the contact normal and swap
-      // the along-normal component of velocity (damped), so they pile up
-      // like real balls in a jar instead of stacking on top of each other.
+      // Ball-ball collisions — equal radii, so push apart evenly and swap
+      // the along-normal velocity component, so they pile up like real
+      // balls in a jar instead of stacking on top of each other.
       for (let i = 0; i < balls.length; i++) {
         for (let j = i + 1; j < balls.length; j++) {
           const a = balls[i], b = balls[j];
           const dx = b.x - a.x, dy = b.y - a.y;
           const dist = Math.hypot(dx, dy) || 0.001;
-          const minDist = a.r + b.r;
+          const minDist = R * 2;
           if (dist < minDist) {
             const nx = dx / dist, ny = dy / dist;
-            const overlap = minDist - dist;
-            // Push each ball apart proportionally to the other's mass (r²)
-            const totalR = a.r + b.r;
-            a.x -= nx * overlap * (b.r / totalR);
-            a.y -= ny * overlap * (b.r / totalR);
-            b.x += nx * overlap * (a.r / totalR);
-            b.y += ny * overlap * (a.r / totalR);
+            const overlap = (minDist - dist) / 2;
+            a.x -= nx * overlap; a.y -= ny * overlap;
+            b.x += nx * overlap; b.y += ny * overlap;
 
             const rvx = b.vx - a.vx, rvy = b.vy - a.vy;
             const rel = rvx * nx + rvy * ny;
             if (rel < 0) {
-              const imp = -rel * BOUNCE;
-              a.vx -= nx * imp * (b.r / totalR);
-              a.vy -= ny * imp * (b.r / totalR);
-              b.vx += nx * imp * (a.r / totalR);
-              b.vy += ny * imp * (a.r / totalR);
+              const imp = -rel * BOUNCE * 0.5;
+              a.vx -= nx * imp; a.vy -= ny * imp;
+              b.vx += nx * imp; b.vy += ny * imp;
             }
           }
         }
       }
 
       balls.forEach(b => {
-        b.el.setAttribute('cx', String(b.x));
-        b.el.setAttribute('cy', String(b.y));
-        b.textEl.setAttribute('x', String(b.x));
-        b.textEl.setAttribute('y', String(b.y));
+        b.group.setAttribute('transform', `translate(${b.x},${b.y})`);
       });
 
       rafRef.current = requestAnimationFrame(tick);
@@ -513,7 +552,9 @@ function TileBalls({ index, tileIndex, hovered }: { index: number; tileIndex: nu
         pointerEvents: 'none',
         zIndex: 0,
       }}
-    />
+    >
+      <defs />
+    </svg>
   );
 }
 
@@ -528,7 +569,7 @@ function Tile({ index, text, gap }: { index: number; text: string; gap: number }
       onMouseLeave={isMobile ? undefined : () => setHovered(false)}
     >
       {/* Animated falling balls on hover */}
-      {!isMobile && <TileBalls tileIndex={index} index={index} hovered={hovered} />}
+      {!isMobile && <TileBalls tileIndex={index} hovered={hovered} />}
       <span
         style={{ ...ts, position: 'absolute', top: 15, left: 15, display: 'flex', gap: 8, zIndex: 1 }}
       >

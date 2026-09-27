@@ -902,7 +902,13 @@ export default function Constellation({
           // being dragged still collides, so pushing it into the row works.
           // Only once the drag is over — while pushing, every ball must stay
           // solid or the row collapses through itself against the wall.
+          // Time-boxed the same way as `crossing`: without a limit, a pair
+          // whose spring force is too weak to actually swap them back could
+          // phase through each other forever, leaving one parked overlapping
+          // (visually perched above) the other with collision never
+          // re-engaging to push them apart.
           const swapped = gravity > 0 && dragId === null
+            && performance.now() - fallStart < CROSS_WINDOW * 3
             && (i.slotX - j.slotX) * (i.x - j.x) < 0;
           if (crossing || swapped) continue;
 
@@ -917,7 +923,13 @@ export default function Constellation({
           // (and in the resting constellation) pushes go up and down instead,
           // so the order never gets shoved apart.
           const inPlace = Math.abs(i.slotX - i.x) < 24 && Math.abs(j.slotX - j.x) < 24;
-          const bias = gravity > 0 && !inPlace ? 0 : VERTICAL_BIAS;
+          // Vertical bias only protects the landed reading row from being
+          // shoved out of order. At rest at the top (gravity 0, no row to
+          // protect) it used to apply here too, which could leave a ball
+          // parked directly above its neighbour forever — vertical push
+          // alone never resolves a purely horizontal overlap. Home state
+          // now separates along the true contact normal instead.
+          const bias = gravity > 0 && inPlace ? VERTICAL_BIAS : 0;
           const sideY = rawNy === 0 ? (Math.random() < 0.5 ? -1 : 1) : Math.sign(rawNy);
           let nx = rawNx * (1 - bias);
           let ny = rawNy * (1 - bias) + sideY * bias;

@@ -82,6 +82,9 @@ interface Node {
   bodyEl: SVGGElement;
   r: number; fontSize: number;
   el: SVGGElement; circleEl: SVGCircleElement;
+  /** Resting detection for the landed heap: where the ball has been sitting
+   *  and for how many frames it has barely moved from there */
+  anchorX: number; anchorY: number; restFrames: number;
 }
 interface Edge { a: string; b: string; restLength: number; el: SVGLineElement }
 
@@ -232,6 +235,7 @@ export default function Constellation({
     // How long balls are steered toward their columns after the drop starts
     const SETTLE_WINDOW = 1100; // ms
     let lastScrollY = 0;
+    let travelUp = 0, travelDown = 0;
     let returning = false;
     const readScroll = () => {
       wake();
@@ -244,8 +248,12 @@ export default function Constellation({
       // very top and then scrambling to catch up. Heading down clears it.
       const dy = y - lastScrollY;
       lastScrollY = y;
-      if (dy < 0 && y < window.innerHeight * 0.5) returning = true;   // hero more than half on screen
-      else if (dy > 0) returning = false;
+      // Direction only counts once the page has really moved that way — a
+      // trackpad settling the scroll nudges it a pixel up and down, and each
+      // flip used to lift the landed balls and drop them again (a tremble)
+      if (dy < 0) { travelUp -= dy; travelDown = 0; } else if (dy > 0) { travelDown += dy; travelUp = 0; }
+      if (travelUp > 24 && y < window.innerHeight * 0.5) returning = true;   // hero more than half on screen
+      else if (travelDown > 24) returning = false;
       if (y <= 0) returning = false;
       scrolled = returning ? 0 : Math.min(1, y / (window.innerHeight * 0.03));
       homePull = returning ? 1 : Math.max(0, 1 - y / (window.innerHeight * 0.02));
@@ -322,7 +330,7 @@ export default function Constellation({
       body.append(circle, face);
       g.appendChild(body);
       nodesLayer!.appendChild(g);
-      nodes[id] = { id, letter, x, y, vx, vy, slotX: x, homeX: x, homeY: y, dispVx: 0, dispVy: 0, squeezeV: 0, squeezeH: 0, rollX: 0, rollY: 0, lastX: x, lastY: y, letterEl: text, shadeEl: shade, bodyEl: body, r: R, fontSize: FONT, el: g, circleEl: circle };
+      nodes[id] = { id, letter, x, y, vx, vy, slotX: x, homeX: x, homeY: y, dispVx: 0, dispVy: 0, squeezeV: 0, squeezeH: 0, rollX: 0, rollY: 0, lastX: x, lastY: y, letterEl: text, shadeEl: shade, bodyEl: body, r: R, fontSize: FONT, el: g, circleEl: circle, anchorX: x, anchorY: y, restFrames: 0 };
       return nodes[id];
     }
 
@@ -996,7 +1004,10 @@ export default function Constellation({
             // brace against. Below the settle bar the closing motion is just
             // cancelled, no reflection.
             const gentle = Math.abs(relDot) < settleSpeed();
-            const impulse = relDot * (gentle ? 1 : BALL_BOUNCE);
+            // Each ball takes half: together that cancels the closing speed
+            // exactly. (A full share each reflected it — an elastic bounce on
+            // every resting contact, so a landed heap never stopped shivering.)
+            const impulse = relDot * (gentle ? 0.5 : BALL_BOUNCE);
             if (!iDragged) { i.vx += impulse * nx; i.vy += impulse * ny; }
             if (!jDragged) { j.vx -= impulse * nx; j.vy -= impulse * ny; }
             if (!gentle) {
@@ -1101,6 +1112,20 @@ export default function Constellation({
       Object.values(nodes).forEach(n => {
         n.x = Math.min(Math.max(n.x, n.r), WIDTH - n.r);
         n.y = Math.min(Math.max(n.y, n.r), HEIGHT - n.r);
+      });
+
+      // A landed heap passes its weight back and forth between neighbours by
+      // fractions of a pixel forever, which reads as a constant shiver. A ball
+      // that has hardly moved for ~0.6s is put to rest right where it sits;
+      // any real knock (it gets shoved several pixels in a frame) wakes it.
+      Object.keys(nodes).forEach(id => {
+        const n = nodes[id];
+        if (!gravity || id === dragId) { n.restFrames = 0; n.anchorX = n.x; n.anchorY = n.y; return; }
+        if (Math.hypot(n.x - n.anchorX, n.y - n.anchorY) > 3) {
+          n.restFrames = 0; n.anchorX = n.x; n.anchorY = n.y;
+        } else if (++n.restFrames > 36) {
+          n.x = n.anchorX; n.y = n.anchorY; n.vx = 0; n.vy = 0;
+        }
       });
     }
 

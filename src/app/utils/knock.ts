@@ -1,5 +1,5 @@
-/** Dull bamboo knock, synthesised — no audio files. Shared by the hero
- *  constellation and the case cards so they sound like one material. */
+/** Bamboo knock, synthesised — no audio files. Pitched up from the
+ *  original dull thud so the hero's balls ring a little brighter. */
 export function knock(ctx: AudioContext, strength: number) {
   const now = ctx.currentTime;
   const dur = 0.12;
@@ -16,12 +16,12 @@ export function knock(ctx: AudioContext, strength: number) {
 
   const bandpass = ctx.createBiquadFilter();
   bandpass.type = 'bandpass';
-  bandpass.frequency.value = 260 + Math.random() * 90;
-  bandpass.Q.value = 0.6;
+  bandpass.frequency.value = 560 + Math.random() * 120;
+  bandpass.Q.value = 0.9;
 
   const lowpass = ctx.createBiquadFilter();
   lowpass.type = 'lowpass';
-  lowpass.frequency.value = 900;
+  lowpass.frequency.value = 2600;
 
   const noiseGain = ctx.createGain();
   noiseGain.gain.setValueAtTime(0, now);
@@ -34,9 +34,9 @@ export function knock(ctx: AudioContext, strength: number) {
 
   const osc = ctx.createOscillator();
   osc.type = 'sine';
-  const baseFreq = 170 + Math.random() * 40;
+  const baseFreq = 360 + Math.random() * 60;
   osc.frequency.setValueAtTime(baseFreq, now);
-  osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.65, now + 0.06);
+  osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.75, now + 0.06);
 
   const oscGain = ctx.createGain();
   oscGain.gain.setValueAtTime(0, now);

@@ -1,13 +1,13 @@
 import { SOUND_BUS } from '../sound/Sound';
 
 /** Ball-hit sound — the same tone as the site's button hover (sound.play
- *  'hover'): a sine around 660Hz with a small random spread, sliding down in
+ *  'hover'): a sine around 594Hz (10% under the hover tap) with a small random spread, sliding down in
  *  pitch over a 70ms decay. Soft touches play a little quieter than hard
  *  hits. Silent when the site's sound icon is switched off. */
 export function knock(ctx: AudioContext, strength: number) {
   if (!SOUND_BUS.on) return;
   const now = ctx.currentTime;
-  const freq = 660 * (1 + (Math.random() * 2 - 1) * 0.1);
+  const freq = 594 * (1 + (Math.random() * 2 - 1) * 0.1);
   const decay = 0.07;
   const gain = 0.22 * Math.min(1, 0.4 + Math.max(0, strength) * 0.8);
 

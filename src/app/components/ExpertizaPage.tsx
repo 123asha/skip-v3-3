@@ -355,6 +355,8 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
     text: SVGTextElement;
     /** How far the ball has rolled, radians */
     spin: number;
+    /** Where it was drawn last frame — spin follows the real travel */
+    drawnX: number;
   }>>([]);
   const rafRef = useRef<number>();
 
@@ -502,7 +504,7 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         group.append(circle, face);
         svg.appendChild(group);
 
-        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group, lockX, floatX: float ? x : undefined, floatY: float ? H / 2 : undefined, text, spin: 0 });
+        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group, lockX, floatX: float ? x : undefined, floatY: float ? H / 2 : undefined, text, spin: 0, drawnX: x });
       }
     } else if (!hovered && ballsRef.current.length > 0) {
       ballsRef.current.forEach(b => {
@@ -549,14 +551,18 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         b.vx *= FRICTION;
         b.vy *= FRICTION;
 
-        if (b.x - b.r < 0) { b.x = b.r; b.vx = Math.abs(b.vx) * BOUNCE; }
-        if (b.x + b.r > W) { b.x = W - b.r; b.vx = -Math.abs(b.vx) * BOUNCE; }
-        if (b.y + b.r > H) { knockFor(b, b.vy); b.y = H - b.r; b.vy = -Math.abs(b.vy) * BOUNCE; }
+        // Soft touches don't rebound — a resting ball would otherwise keep
+        // micro-bouncing off the floor and walls and read as a tremble
+        if (b.x - b.r < 0) { b.x = b.r; b.vx = Math.abs(b.vx) > 60 ? Math.abs(b.vx) * BOUNCE : 0; }
+        if (b.x + b.r > W) { b.x = W - b.r; b.vx = Math.abs(b.vx) > 60 ? -Math.abs(b.vx) * BOUNCE : 0; }
+        if (b.y + b.r > H) { knockFor(b, b.vy); b.y = H - b.r; b.vy = b.vy > 60 ? -b.vy * BOUNCE : 0; }
       });
 
       // Ball-ball collisions — pushed apart by weight (radius) and swapping
       // the along-normal velocity component, so they pile up like real balls
-      // in a jar instead of stacking on top of each other.
+      // in a jar instead of stacking on top of each other. A few passes a
+      // frame, so a settled pile stays firm instead of shuffling.
+      for (let pass = 0; pass < 3; pass++)
       for (let i = 0; i < balls.length; i++) {
         for (let j = i + 1; j < balls.length; j++) {
           const a = balls[i], b = balls[j];
@@ -575,8 +581,11 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
             const rvx = b.vx - a.vx, rvy = b.vy - a.vy;
             const rel = rvx * nx + rvy * ny;
             if (rel < 0) {
-              knockFor(a, -rel);
-              const imp = -rel * BOUNCE;
+              if (pass === 0) knockFor(a, -rel);
+              // A real knock keeps its soft, springy give; a slow press
+              // (balls resting on each other) is stopped outright, or gravity
+              // keeps pushing them together and the pile trembles
+              const imp = -rel > 60 ? -rel * BOUNCE : -rel;
               a.vx -= nx * imp * wa; a.vy -= ny * imp * wa;
               b.vx += nx * imp * wb; b.vy += ny * imp * wb;
             }
@@ -587,10 +596,14 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
       // система: every ball stays plumb in its column
       balls.forEach(b => {
         if (b.lockX !== undefined) { b.x = b.lockX; b.vx = 0; }
+        if (Math.abs(b.vx) < 4) b.vx = 0;
         b.group.setAttribute('transform', `translate(${b.x},${b.y})`);
         // A sphere turns by the distance it travels over its radius — the
         // numeral rolls round with it instead of sliding along flat
-        b.spin += (b.vx * 0.016) / b.r;
+        // (the distance it actually moved, not its speed — a ball pressed
+        // against a wall is trying to go somewhere but isn't turning)
+        b.spin += (b.x - b.drawnX) / b.r;
+        b.drawnX = b.x;
         b.text.setAttribute('transform', `rotate(${(b.spin * 180) / Math.PI})`);
       });
 

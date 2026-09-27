@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MagneticDivider } from './MagneticDivider';
 import { useMobile } from '../hooks/useMobile';
+import { useRowReveal } from '../hooks/useRowReveal';
 import { H2_STYLE, typo } from '../utils/typography';
 import { PARA_GAP } from './CaseTemplatePage';
 import s from '../App.module.css';
@@ -142,8 +143,11 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
     color: 'var(--c-text)',
   };
 
+  const rootRef = useRef<HTMLDivElement>(null);
+  useRowReveal(rootRef, '[data-exp-row]');
+
   return (
-    <div className={s.section} style={{ marginTop: 'var(--space-xl)' }}>
+    <div ref={rootRef} className={s.section} style={{ marginTop: 'var(--space-xl)' }}>
       {showHeading && (
         <h2 style={{
           ...H2_STYLE,

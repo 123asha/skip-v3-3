@@ -351,6 +351,10 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
     /** инструменты: where an unseen updraft holds this ball in mid-air */
     floatX?: number;
     floatY?: number;
+    /** The numeral, turned as the ball rolls */
+    text: SVGTextElement;
+    /** How far the ball has rolled, radians */
+    spin: number;
   }>>([]);
   const rafRef = useRef<number>();
 
@@ -498,7 +502,7 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         group.append(circle, face);
         svg.appendChild(group);
 
-        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group, lockX, floatX: float ? x : undefined, floatY: float ? H / 2 : undefined });
+        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group, lockX, floatX: float ? x : undefined, floatY: float ? H / 2 : undefined, text, spin: 0 });
       }
     } else if (!hovered && ballsRef.current.length > 0) {
       ballsRef.current.forEach(b => {
@@ -584,6 +588,10 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
       balls.forEach(b => {
         if (b.lockX !== undefined) { b.x = b.lockX; b.vx = 0; }
         b.group.setAttribute('transform', `translate(${b.x},${b.y})`);
+        // A sphere turns by the distance it travels over its radius — the
+        // numeral rolls round with it instead of sliding along flat
+        b.spin += (b.vx * 0.016) / b.r;
+        b.text.setAttribute('transform', `rotate(${(b.spin * 180) / Math.PI})`);
       });
 
       rafRef.current = requestAnimationFrame(tick);

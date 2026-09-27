@@ -257,6 +257,7 @@ export default function Constellation({
       const isHome = homePull >= 1;
       if (isHome && !wasHome) { respawnMerged(); randomizeHomeTargets(); }
       wasHome = isHome;
+      syncCollapse();
     };
     // Scroll listeners are wired up at the very end of setup (see below) —
     // readScroll reaches into recomputeSlots/wordOrder, both declared
@@ -439,8 +440,24 @@ export default function Constellation({
     // proportional to the ball size so it still reads as a clear word break
     // whatever the field's width.
     const WORD_BREAK_GAP = R * 1.4;
+    // How many scroll-collapse merges are in effect (see syncCollapse)
+    let collapsed = 0;
     const recomputeSlots = () => {
       const n = Math.max(1, wordOrder.length);
+      // While the row is collapsing, it's packed and centred instead of
+      // pinned to both edges — each absorb is then always between touching
+      // neighbours, and whatever is left ends up in the middle.
+      if (collapsed > 0) {
+        const xs: number[] = [];
+        let x = 0;
+        wordOrder.forEach((id, i) => {
+          if (i > 0) x += 2 * R + (WORD_GROUP[id] !== WORD_GROUP[wordOrder[i - 1]] ? WORD_BREAK_GAP : 0);
+          xs.push(x);
+        });
+        const shift = WIDTH / 2 - x / 2;
+        wordOrder.forEach((id, i) => { if (nodes[id]) nodes[id].slotX = xs[i] + shift; });
+        return;
+      }
       // How many consecutive pairs actually straddle the two words — normally
       // exactly one, but a merge can erase every ball on one side of it
       // (S · K · P are the protected floor, all in "SKIP"), in which case
@@ -799,18 +816,68 @@ export default function Constellation({
         );
       });
       mergedLog.length = 0;
-      // A merge hands the swallowed ball's links to the survivor; left like
-      // that, the survivor is tied by foreign springs across the field and
-      // keeps getting tugged out of its slot. Restore the original ring.
+      collapsed = 0;
+      rebuildEdges();
+      // Whatever order they came back in, the row must read left to right
+      // exactly as the word does
+      wordOrder = WORD_ORDER.filter(id => nodes[id]);
+      recomputeSlots();
+    }
+
+    // A merge hands the swallowed ball's links to the survivor; left like
+    // that, the survivor is tied by foreign springs across the field and
+    // keeps getting tugged out of its slot. Restore the original ring,
+    // minus whichever balls are currently gone.
+    function rebuildEdges() {
       edges.forEach(e => e.el.remove());
       edges.length = 0;
       INITIAL_EDGES.forEach(([a, b]) => {
         if (nodes[a] && nodes[b]) createEdge(a, b, INITIAL_REST[a + '|' + b]);
       });
-      // Whatever order they came back in, the row must read left to right
-      // exactly as the word does
-      wordOrder = WORD_ORDER.filter(id => nodes[id]);
-      recomputeSlots();
+    }
+
+    // ── Scroll collapse ──────────────────────────────────────────────────────
+    // Once the landed row has scrolled up past the middle of the screen, the
+    // letters swallow their neighbours one by one — no growth, just the cell
+    // fusion — until only S · K · P are left, centred. Scrolling back up
+    // spits them out again in reverse. [survivor, swallowed], in order.
+    const COLLAPSE_STEPS: [string, string][] = [
+      ['G', 'N'], ['K', 'I1'], ['I2', 'G'], ['S2', 'I2'], ['E', 'S2'], ['D', 'E'], ['P', 'D'],
+    ];
+    let collapseTarget = 0;
+    let lastCollapseAt = 0;
+    function syncCollapse() {
+      let target = 0;
+      if (gravity > 0 && !returning) {
+        // Hero's bottom edge: from the middle of the screen (nothing merged)
+        // up to a fifth of the way down (everything merged)
+        const bottom = svg!.getBoundingClientRect().bottom / window.innerHeight;
+        const p = Math.min(1, Math.max(0, (0.5 - bottom) / (0.5 - 0.2)));
+        target = Math.round(p * COLLAPSE_STEPS.length);
+      }
+      collapseTarget = target;
+      // One step at a time, a beat apart — a fast scroll still plays every
+      // absorb in turn instead of all of them in the same instant
+      const now = performance.now();
+      if (collapsed !== target && now - lastCollapseAt < 110) return;
+      if (collapsed !== target) lastCollapseAt = now;
+      if (collapsed < target) {
+        const [keepId, removeId] = COLLAPSE_STEPS[collapsed];
+        if (!nodes[keepId] || !nodes[removeId]) return;
+        collapsed++;
+        mergeInto(keepId, removeId);
+        rebuildEdges();
+      } else if (collapsed > target) {
+        const last = mergedLog.pop();
+        if (!last) { collapsed = 0; return; }
+        const keep = nodes[last.keepId];
+        collapsed--;
+        createNode(last.removedId, last.letter,
+          keep ? keep.x + keep.r * 0.3 : WIDTH / 2, keep ? keep.y : 0);
+        rebuildEdges();
+        wordOrder = WORD_ORDER.filter(id => nodes[id]);
+        recomputeSlots();
+      }
     }
 
     function checkMerge(id: string) {
@@ -1004,6 +1071,8 @@ export default function Constellation({
     }
 
     function step() {
+      // Catch up on the scroll collapse a step per frame after a fast scroll
+      if (gravityOnScroll) syncCollapse();
       applySprings();
 
       // Squeeze fades on its own once nothing presses anymore; contacts top
@@ -1093,6 +1162,7 @@ export default function Constellation({
       });
 
       const allSettled = dragId === null
+        && collapsed === collapseTarget
         && Object.keys(nodes).every(id => nodes[id].vx === 0 && nodes[id].vy === 0
           && nodes[id].rollX === 0 && nodes[id].rollY === 0);
       if (allSettled) {

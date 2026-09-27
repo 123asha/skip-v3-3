@@ -662,7 +662,13 @@ export default function Constellation({
       checkMerge(dragId);
     };
 
-    const endDrag = () => { dragId = null; };
+    // Letting go of a ball in the landed heap replays the settle that ran
+    // when it fell: columns pull again and balls may slip past each other,
+    // so the word sorts itself back into the heap it landed as
+    const endDrag = () => {
+      if (dragId !== null && gravity > 0) { fallStart = performance.now(); wake(); }
+      dragId = null;
+    };
 
     // ── Merging balls ────────────────────────────────────────────────────────
     // Drag any ball onto any other, close enough, and they become one: edges

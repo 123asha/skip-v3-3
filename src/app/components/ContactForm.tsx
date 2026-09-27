@@ -201,7 +201,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', width: '100%' }}>
                 <CircleInput
-                  prefix="@" placeholder="телеграм" size={isMobile ? 44 : 76} maxLength={32}
+                  prefix="@" placeholder="телеграм" size={isMobile ? 40 : 60} maxLength={32}
                   value={telegram} onChange={v => { handleTelegramChange(v); if (telegramError) setTelegramError(false); if (status === 'error') setStatus('idle'); }}
                   onFocus={() => setActiveFocus('telegram')}
                   onBlur={() => setActiveFocus(null)}

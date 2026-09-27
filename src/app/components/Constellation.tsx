@@ -875,6 +875,9 @@ export default function Constellation({
     window.addEventListener('keydown', onFirstGesture, { once: true, capture: true });
 
     function applySprings() {
+      // Once the heap has landed the threads are only drawn, not pulled — a
+      // ball moved to a new spot stays there instead of being reeled back
+      if (gravity > 0 && performance.now() - fallStart > SETTLE_WINDOW) return;
       edges.forEach(e => {
         const a = nodes[e.a], b = nodes[e.b];
         const dx = b.x - a.x;

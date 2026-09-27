@@ -493,7 +493,8 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         text.style.fontWeight = '500';
         text.style.userSelect = 'none';
         text.style.pointerEvents = 'none';
-        text.textContent = String(i + 1);
+        // Only the strategy step is numbered — the other tiles are plain spheres
+        if (tileIndex === 0) text.textContent = String(i + 1);
 
         const face = document.createElementNS(NS, 'g');
         face.setAttribute('filter', `url(#${filterIdRef.current})`);

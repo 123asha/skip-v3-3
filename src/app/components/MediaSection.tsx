@@ -27,11 +27,14 @@ const FULL_PLACEHOLDER = [
   'Короткий финальный абзац рыбы.',
 ];
 
-const tools: { name: string; desc: string; year?: string; source?: string; href?: string; body?: [string, string]; full?: string[] }[] = [
+// `date` — publication date, DD.MM.YYYY. The ones below are placeholders
+// until the real dates are filled in.
+const tools: { name: string; desc: string; year?: string; date?: string; source?: string; href?: string; body?: [string, string]; full?: string[] }[] = [
   {
     name: 'Фреймворк',
     desc: 'Конструктор миссии',
     year: '2026',
+    date: '12.03.2026',
     source: 'VC',
     href: 'https://vc.ru/marketing/2205037-konstruktor-missii-dlya-brenda',
     body: [
@@ -43,6 +46,7 @@ const tools: { name: string; desc: string; year?: string; source?: string; href?
     name: 'Статья',
     desc: 'Критерии для проверки идей',
     year: '2026',
+    date: '02.04.2026',
     source: 'Workspace',
     href: 'https://workspace.ru/blog/prompt-dlya-proverki-metafory-s-pomoschyu-ii/',
     body: [
@@ -54,6 +58,7 @@ const tools: { name: string; desc: string; year?: string; source?: string; href?
     name: 'Статья',
     desc: 'Как ИИ генерирует метафоры',
     year: '2026',
+    date: '21.04.2026',
     source: 'Workspace',
     href: 'https://workspace.ru/blog/kak-ii-generiruet-metafory/',
     body: [
@@ -65,6 +70,7 @@ const tools: { name: string; desc: string; year?: string; source?: string; href?
     name: 'Памятка',
     desc: 'Памятка по юридическим документам',
     year: '2026',
+    date: '15.05.2026',
     source: 'VC',
     href: 'https://vc.ru/marketing/2784990-yuridicheskie-dokumenty-dlya-saytov-i-prilozheniy',
     body: [
@@ -76,6 +82,7 @@ const tools: { name: string; desc: string; year?: string; source?: string; href?
     name: 'Статья',
     desc: 'Почему не все бренды могут использовать ИИ',
     year: '2026',
+    date: '03.06.2026',
     source: 'Workspace',
     href: 'https://workspace.ru/blog/pochemu-odni-brendy-mogut-ispolzovat-ii-drugie-net/',
     body: [
@@ -126,10 +133,11 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
         { duration: 650, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
     });
   }, [full]);
+  // ⊕ stops at every row expanded — the «Вся мысль» level is switched off
+  // for now (its view stays below; setFull(0) here brings it back)
   const unfold = () => {
     if (full !== null) return;
-    if (expanded.length === tools.length) { snapFlip(); setFull(0); }
-    else setExpanded(tools.map((_, i) => i));
+    setExpanded(tools.map((_, i) => i));
   };
   const fold = () => {
     if (full !== null) { snapFlip(); setFull(null); setExpanded(tools.map((_, i) => i)); }
@@ -226,7 +234,7 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
         {zoomUI}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', columnGap: 'var(--gap)', paddingBottom: 12 }}>
           <p style={{ ...headerStyle, gridColumn: '1 / 3', display: 'flex', gap: 10 }}>
-            <span style={{ width: '4ch' }}>Год</span><span>Название</span>
+            <span style={{ width: '10ch' }}>Дата</span><span>Название</span>
           </p>
           <p style={{ ...headerStyle, gridColumn: '3 / 5' }}>Вся мысль</p>
         </div>
@@ -252,7 +260,7 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
                 opacity: (open ? 1 : 'var(--opacity-muted)') as any,
                 transition: 'opacity 0.3s ease',
               }}>
-                <span data-flip={`y${i}`} style={{ width: '4ch', flexShrink: 0, display: 'inline-block' }}>{row.year}</span>
+                <span data-flip={`y${i}`} style={{ width: '10ch', flexShrink: 0, display: 'inline-block', opacity: 'var(--opacity-muted)' as any }}>{row.date ?? row.year}</span>
                 <span data-flip={`t${i}`} style={{ display: 'inline-block' }}>{typo(row.desc)}</span>
               </p>
               <div style={{ gridColumn: '3 / 5', display: 'grid', gridTemplateRows: open ? '1fr' : '0fr', transition: 'grid-template-rows 0.6s cubic-bezier(0.22, 1, 0.36, 1)' }}>
@@ -304,7 +312,7 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
       )}
       {!isMobile && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', columnGap: 'var(--gap)', paddingBottom: 12 }}>
-          <p style={headerStyle}>Год</p>
+          <p style={headerStyle}>Дата</p>
           <p style={headerStyle}>Название</p>
           <p style={{ ...headerStyle, gridColumn: '3 / 6' }}>{expanded.length ? 'Средне' : 'Коротко'}</p>
         </div>
@@ -359,7 +367,7 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
             ) : (
               // Desktop: year (col 1) | title+arrow (col 2) | type (col 4)
               <>
-                <p className={s.toolRowText} style={{ gridColumn: '1', margin: 0, ...fade }}><span data-flip={`y${i}`} style={{ display: 'inline-block' }}>{tool.year}</span></p>
+                <p className={s.toolRowText} style={{ gridColumn: '1', margin: 0, ...fade }}><span data-flip={`y${i}`} style={{ display: 'inline-block', opacity: 'var(--opacity-muted)' as any }}>{tool.date ?? tool.year}</span></p>
                 {/* Type, with the hover glyph pinned to the column's right edge */}
                 <div style={{ gridColumn: '2', display: 'flex', alignItems: 'baseline', ...fade }}>
                   <p className={s.toolRowText} style={{ margin: 0 }}><span data-flip={`t${i}`} style={{ display: 'inline-block' }}>{typo(tool.desc)}</span></p>

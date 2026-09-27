@@ -253,8 +253,8 @@ const MATCH_POINTS: { sym: string; text: string }[] = [
 ];
 
 // ── Intro description ───────────────────────────────────────────────────────
-// First block under the title, on the site's 5-col grid: two text columns on
-// the right (cols 4–5), the left three left empty. Stacks on mobile.
+// Sits under the services table, on the site's 5-col grid: two text columns
+// on the right (cols 4–5), the left three left empty. Stacks on mobile.
 
 function IntroBlock() {
   const isMobile = useMobile();
@@ -270,9 +270,7 @@ function IntroBlock() {
         columnGap: 'var(--gap)',
         rowGap: isMobile ? 24 : 0,
         alignItems: 'start',
-        // Title is absolutely positioned, so the first in-flow block carries
-        // the whole title → content gap itself.
-        marginTop: 'calc(var(--pad) + var(--heading-size) * var(--heading-lh) + var(--space-title))',
+        marginTop: 'var(--space-xl)',
       }}
     >
       {/* Col 4 — credo + principles */}
@@ -862,8 +860,6 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
     <div className={s.page} ref={pageRef}>
       <h1 className={s.title} data-reveal="" data-reveal-y="4">Услуги</h1>
 
-      <IntroBlock />
-
       {/* ⌘ ⊖ ⊕ — pinned bottom-left, same place and look as the density
           hint on the cases page. Folds/unfolds the table below. */}
       {!isMobile && (
@@ -876,8 +872,15 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
         </div>
       )}
 
-      {/* Same table as the home page, but foldable one level at a time. */}
-      <ExpertiseSection2 level={level} showHeading={false} />
+      {/* Same table as the home page, but foldable one level at a time. It's
+          the first block under the title now, so it carries the title →
+          content gap (the title is absolutely positioned) in place of its own
+          section spacing. */}
+      <div style={{ marginTop: 'calc(var(--pad) + var(--heading-size) * var(--heading-lh) + var(--space-title) - var(--space-xl))' }}>
+        <ExpertiseSection2 level={level} showHeading={false} />
+      </div>
+
+      <IntroBlock />
 
       <TileBlocks />
 

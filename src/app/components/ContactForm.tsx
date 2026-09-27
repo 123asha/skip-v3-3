@@ -189,8 +189,11 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
             </p>
           )}
 
-          {/* Inputs — Telegram only, centred in the form rectangle */}
-          <div className={s.contactFields} style={{ marginTop: 'auto', marginBottom: 'auto', width: '100%' }}>
+          {/* Input + consent travel together as one block, centred in the
+              form rectangle — the consent reads as the input's own fine
+              print instead of drifting down to the footer line */}
+          <div style={{ marginTop: 'auto', marginBottom: 'auto', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 }}>
+          <div className={s.contactFields} style={{ width: '100%' }}>
             {status === 'sent' ? (
               <p className={s.contactTitle} style={{ textAlign: 'center', margin: 0 }}>
                 Спасибо! Скоро напишем вам в Telegram.
@@ -222,15 +225,16 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
             )}
           </div>
 
-          {/* Checkbox — block is centred, but the text inside is left-aligned */}
+          {/* Consent — a narrow block right under the input; the box sits
+              centred on the first line of text, not hanging above it */}
           <div
             className={s.contactCheckbox}
             style={isMobile
-              ? { marginTop: 40, gap: 10, justifyContent: 'flex-start', alignItems: 'flex-start', width: '100%', boxSizing: 'border-box' }
-              : { marginTop: 40, gap: 10, justifyContent: 'center', alignItems: 'flex-start', maxWidth: 520, marginLeft: 'auto', marginRight: 'auto' }}
+              ? { gap: 10, justifyContent: 'flex-start', alignItems: 'flex-start', width: '100%', boxSizing: 'border-box' }
+              : { gap: 10, justifyContent: 'center', alignItems: 'flex-start' }}
             onClick={() => setChecked(!checked)}
           >
-            <div className={`${s.checkbox} ${checked ? s.checked : ''}`} style={{ marginTop: 2, ...(consentError ? { outline: '1.5px solid #c0392b', outlineOffset: 2 } : {}) }}>
+            <div className={`${s.checkbox} ${checked ? s.checked : ''}`} style={{ marginTop: 'calc((var(--text-size) * var(--text-lh) - 16px) / 2)', ...(consentError ? { outline: '1.5px solid #c0392b', outlineOffset: 2 } : {}) }}>
               {checked && (
                 <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
                   <path d="M1 4L3.5 6.5L9 1" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -238,12 +242,13 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
               )}
             </div>
             <span className={s.checkboxLabel} style={{ textAlign: 'left' }}>
-              Даю согласие на обработку персональных данных в&nbsp;соответствии с&nbsp;
+              Даю согласие на обработку персональных данных{isMobile ? ' ' : <br />}в&nbsp;соответствии с&nbsp;
               <button
                 style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'inherit', letterSpacing: 'inherit', lineHeight: 'inherit', color: 'inherit', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}
                 onClick={e => { e.stopPropagation(); onNavigatePolicy?.(); }}
               >Политикой конфиденциальности</button>
             </span>
+          </div>
           </div>
         </div>
       </div>

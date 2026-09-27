@@ -391,8 +391,9 @@
   position: relative;
   width: 100%;
   flex: 1;
-  /* Side padding matches the rest of the site; extra room at the bottom */
-  padding: 20px var(--pad) 80px;
+  /* Side padding matches the rest of the site; the bottom keeps the form
+     clear of the fixed footer line (email, time) with room to spare */
+  padding: 20px var(--pad) 140px;
   background: var(--c-surface);
   z-index: 1;
   display: flex;

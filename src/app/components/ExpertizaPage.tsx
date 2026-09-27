@@ -421,24 +421,18 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         buildSphereFilter(svg, filterIdRef.current, R);
         filterRRef.current = R;
       }
-      // The "дизайн" tile mixes it up — different sizes, some balls squished
-      // into ovals — everywhere else every ball is a plain uniform sphere.
-      const varied = tileIndex === 1;
+      // The "дизайн" tile shows a composition instead of a heap: one big
+      // ball and three small ones, the big one landing first. Every other
+      // tile is six uniform spheres.
+      const sizes = tileIndex === 1
+        ? [1.75, 0.65, 0.65, 0.65]
+        : Array(TILE_BALLS).fill(1);
       // Drop-in height above the tile's top edge, stacked so they fall in
       // one after another rather than all at once
       let dropY = 0;
-      for (let i = 0; i < TILE_BALLS; i++) {
+      for (let i = 0; i < sizes.length; i++) {
         const seed = tileIndex * 97 + i;
-        const r = varied ? R * (0.6 + pseudoRandom(seed + 2) * 0.65) : R;
-        // Oval squish on one axis, so the shape never grows past its own
-        // circle's footprint — collision can keep using `r`. A random tilt
-        // per ball (like the tilt of a rugby ball at rest) keeps every oval
-        // from lying at the exact same angle, so the pile reads as tumbled
-        // into place rather than a stamped repeat.
-        const sx = varied && pseudoRandom(seed + 2.5) < 0.5
-          ? 0.55 + pseudoRandom(seed + 2.7) * 0.25
-          : 1;
-        const tilt = sx !== 1 ? pseudoRandom(seed + 3.1) * 360 : 0;
+        const r = R * sizes[i];
         const x = r + pseudoRandom(seed) * Math.max(0, W - 2 * r);
         dropY -= r * 1.3;
         const y = dropY;
@@ -482,17 +476,9 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         face.setAttribute('filter', `url(#${filterIdRef.current})`);
         face.appendChild(text);
 
-        // The squish sits on its own inner group — the shading and warp
-        // filter above stay perfectly circular, only the visible shape narrows.
-        // Tilted to a random angle first, so the squashed axis points a
-        // different way for every oval instead of always lying flat.
-        const shape = document.createElementNS(NS, 'g');
-        if (sx !== 1) shape.setAttribute('transform', `rotate(${tilt}) scale(${sx},1)`);
-        shape.append(circle, face);
-
         const group = document.createElementNS(NS, 'g');
         group.setAttribute('transform', `translate(${x},${y})`);
-        group.appendChild(shape);
+        group.append(circle, face);
         svg.appendChild(group);
 
         ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group });
@@ -520,7 +506,7 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
     };
 
     const tick = () => {
-      const GRAVITY = 1400;
+      const GRAVITY = 2400;
       const FRICTION = 0.995;
       const BOUNCE = 0.35;
 

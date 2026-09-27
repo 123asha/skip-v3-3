@@ -326,37 +326,18 @@ function pseudoRandom(seed: number): number {
 // letters, otherwise built exactly like the hero's constellation balls: same
 // radial shading, same letter-printed-on-a-sphere displacement filter.
 const TILE_BALLS = 6;
-// One fixed radius for every ball, like the hero (a single R per instance,
-// not per-ball) — this is what lets one shared sphere filter work for all of them.
-const BALL_R = 132;
-const BALL_FONT = BALL_R * 1.4875;
+// Ball radius as a share of the tile's width — sized so all six actually fit
+// in the "jar" and settle to the bottom. A fixed pixel size overflowed wider
+// tiles: the pile stacked up out of the top and the balls seemed to hang there.
+const BALL_R_FRAC = 0.24;
 const NS = 'http://www.w3.org/2000/svg';
 
-// TileBalls: render animated falling numbered balls per tile on hover, built
-// the same way as Constellation's balls (shading gradient + sphere-warp filter).
-function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean }) {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const filterIdRef = useRef(`tile-sphere-${tileIndex}-${Math.random().toString(36).slice(2)}`);
-  const filterReadyRef = useRef(false);
-  const ballsRef = useRef<Array<{
-    num: number;
-    x: number;
-    y: number;
-    vx: number;
-    vy: number;
-    r: number;
-    group: SVGGElement;
-  }>>([]);
-  const rafRef = useRef<number>();
-
-  // Build the sphere-warp displacement filter once, sized for BALL_R — same
-  // algorithm as the hero: a point at distance ρ from centre shows the flat
-  // letter at arc length asin(ρ)/(π/2), so the middle swells and the rim wraps away.
-  useEffect(() => {
-    if (!svgRef.current || filterReadyRef.current) return;
-    const svg = svgRef.current;
-    const filterId = filterIdRef.current;
-    const R = BALL_R;
+// The sphere-warp displacement filter, sized for radius R — same algorithm as
+// the hero: a point at distance ρ from centre shows the flat letter at arc
+// length asin(ρ)/(π/2), so the middle swells and the rim wraps away.
+function buildSphereFilter(svg: SVGSVGElement, filterId: string, R: number) {
+  svg.querySelector(`#${filterId}`)?.remove();
+  {
     const defs = svg.querySelector('defs')!;
     const filter = document.createElementNS(NS, 'filter');
     filter.setAttribute('id', filterId);
@@ -407,32 +388,62 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
 
     filter.append(feImg, feMap);
     defs.appendChild(filter);
-    filterReadyRef.current = true;
-  }, []);
+  }
+}
+
+// TileBalls: render animated falling numbered balls per tile on hover, built
+// the same way as Constellation's balls (shading gradient + sphere-warp filter).
+function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean }) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const filterIdRef = useRef(`tile-sphere-${tileIndex}-${Math.random().toString(36).slice(2)}`);
+  // Radius the filter was last built for — rebuilt when the tile resizes
+  const filterRRef = useRef(0);
+  const ballsRef = useRef<Array<{
+    num: number;
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    r: number;
+    group: SVGGElement;
+  }>>([]);
+  const rafRef = useRef<number>();
 
   useEffect(() => {
-    if (!svgRef.current || !filterReadyRef.current) return;
+    if (!svgRef.current) return;
     const svg = svgRef.current;
     const rect = svg.getBoundingClientRect();
-    const W = rect.width, H = rect.height;
-    const R = BALL_R;
+    const W = rect.width;
+    const R = W * BALL_R_FRAC;
 
     if (hovered && ballsRef.current.length === 0) {
+      if (Math.abs(filterRRef.current - R) > 0.5) {
+        buildSphereFilter(svg, filterIdRef.current, R);
+        filterRRef.current = R;
+      }
       // The "дизайн" tile mixes it up — different sizes, some balls squished
       // into ovals — everywhere else every ball is a plain uniform sphere.
       const varied = tileIndex === 1;
+      // Drop-in height above the tile's top edge, stacked so they fall in
+      // one after another rather than all at once
+      let dropY = 0;
       for (let i = 0; i < TILE_BALLS; i++) {
         const seed = tileIndex * 97 + i;
-        const r = varied ? R * (0.55 + pseudoRandom(seed + 2) * 0.85) : R;
-        // Oval squish on the horizontal axis only, so the shape never grows
-        // past its own circle's footprint — collision can keep using `r`.
+        const r = varied ? R * (0.6 + pseudoRandom(seed + 2) * 0.65) : R;
+        // Oval squish on one axis, so the shape never grows past its own
+        // circle's footprint — collision can keep using `r`. A random tilt
+        // per ball (like the tilt of a rugby ball at rest) keeps every oval
+        // from lying at the exact same angle, so the pile reads as tumbled
+        // into place rather than a stamped repeat.
         const sx = varied && pseudoRandom(seed + 2.5) < 0.5
           ? 0.55 + pseudoRandom(seed + 2.7) * 0.25
           : 1;
-        const x = r + pseudoRandom(seed) * (W - 2 * r);
-        const y = r + pseudoRandom(seed + 0.33) * (H * 0.3);
-        const vx = (pseudoRandom(seed + 0.67) - 0.5) * 200;
-        const vy = -100 - pseudoRandom(seed + 0.9) * 50;
+        const tilt = sx !== 1 ? pseudoRandom(seed + 3.1) * 360 : 0;
+        const x = r + pseudoRandom(seed) * Math.max(0, W - 2 * r);
+        dropY -= r * 1.3;
+        const y = dropY;
+        const vx = (pseudoRandom(seed + 0.67) - 0.5) * 120;
+        const vy = 0;
 
         // Barely-there shading lit from above — same formula as the hero
         const shadeId = `${filterIdRef.current}-shade-${i}`;
@@ -473,8 +484,10 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
 
         // The squish sits on its own inner group — the shading and warp
         // filter above stay perfectly circular, only the visible shape narrows.
+        // Tilted to a random angle first, so the squashed axis points a
+        // different way for every oval instead of always lying flat.
         const shape = document.createElementNS(NS, 'g');
-        if (sx !== 1) shape.setAttribute('transform', `scale(${sx},1)`);
+        if (sx !== 1) shape.setAttribute('transform', `rotate(${tilt}) scale(${sx},1)`);
         shape.append(circle, face);
 
         const group = document.createElementNS(NS, 'g');
@@ -500,10 +513,16 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
     const W = rect.width, H = rect.height;
     const balls = ballsRef.current;
 
+    const walls = (b: typeof balls[number], BOUNCE: number) => {
+      if (b.x - b.r < 0) { b.x = b.r; b.vx = Math.abs(b.vx) * BOUNCE; }
+      if (b.x + b.r > W) { b.x = W - b.r; b.vx = -Math.abs(b.vx) * BOUNCE; }
+      if (b.y + b.r > H) { b.y = H - b.r; b.vy = -Math.abs(b.vy) * BOUNCE; }
+    };
+
     const tick = () => {
-      const GRAVITY = 600;
-      const FRICTION = 0.99;
-      const BOUNCE = 0.4;
+      const GRAVITY = 1400;
+      const FRICTION = 0.995;
+      const BOUNCE = 0.35;
 
       balls.forEach(b => {
         b.vy += GRAVITY * 0.016;
@@ -511,15 +530,14 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         b.y += b.vy * 0.016;
         b.vx *= FRICTION;
         b.vy *= FRICTION;
-
-        if (b.x - b.r < 0) { b.x = b.r; b.vx = Math.abs(b.vx) * BOUNCE; }
-        if (b.x + b.r > W) { b.x = W - b.r; b.vx = -Math.abs(b.vx) * BOUNCE; }
-        if (b.y + b.r > H) { b.y = H - b.r; b.vy = -Math.abs(b.vy) * BOUNCE; }
+        walls(b, BOUNCE);
       });
 
       // Ball-ball collisions — mass-proportional (by radius) push-apart and
       // velocity exchange, so they pile up like real balls in a jar instead
-      // of stacking on top of each other, even when sizes differ.
+      // of stacking on top of each other, even when sizes differ. Several
+      // passes per frame so a settled pile stays firm instead of sinking.
+      for (let pass = 0; pass < 4; pass++) {
       for (let i = 0; i < balls.length; i++) {
         for (let j = i + 1; j < balls.length; j++) {
           const a = balls[i], b = balls[j];
@@ -536,12 +554,16 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
             const rvx = b.vx - a.vx, rvy = b.vy - a.vy;
             const rel = rvx * nx + rvy * ny;
             if (rel < 0) {
-              const imp = -rel * BOUNCE * 0.5;
+              // Cancels the approach speed fully (plus a little rebound),
+              // so balls come to rest on each other instead of sinking in
+              const imp = -rel * (1 + BOUNCE);
               a.vx -= nx * imp * (b.r / totalR); a.vy -= ny * imp * (b.r / totalR);
               b.vx += nx * imp * (a.r / totalR); b.vy += ny * imp * (a.r / totalR);
             }
           }
         }
+      }
+      balls.forEach(b => walls(b, BOUNCE));
       }
 
       balls.forEach(b => {

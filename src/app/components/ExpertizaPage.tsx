@@ -11,6 +11,7 @@ import LinkFlip from './LinkFlip';
 import { ExpertiseSection2, EXPERTISE_LEVELS, EXPERTISE_DEFAULT_LEVEL } from './ExpertiseSection2';
 import { PARA_GAP } from './CaseTemplatePage';
 import { usePinchSteps } from '../hooks/usePinchSteps';
+import { playKnock } from '../utils/knock';
 
 // ── Service data ──────────────────────────────────────────────────────────────
 
@@ -427,24 +428,26 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
       //   стратегия   — six equal balls in a heap
       //   дизайн      — a composition: one big ball, three small
       //   система     — six balls stacking into an exact 2 × 3 grid
-      //   инструменты — a small heap, one ball held up by an unseen updraft
+      //   инструменты — one big ball that drops in and is caught mid-air in
+      //                 the middle of the tile by an unseen updraft
+      // Balls are sized to fill the tile, like the strategy heap.
       type Spec = { r: number; lockX?: number; float?: boolean };
       let specs: Spec[];
       if (tileIndex === 1) {
-        specs = [{ r: R }, { r: R * 0.45 }, { r: R * 0.45 }, { r: R * 0.45 }];
+        specs = [{ r: R }, { r: R * 0.6 }, { r: R * 0.6 }, { r: R * 0.6 }];
       } else if (tileIndex === 2) {
-        const rg = Math.min(W / 4, H / 6) * 0.96;
+        // Two balls span the full width, like the strategy heap's size
+        const rg = W / 4;
         specs = Array.from({ length: 6 }, (_, i) => ({ r: rg, lockX: i % 2 === 0 ? W / 4 : (3 * W) / 4 }));
       } else if (tileIndex === 3) {
-        const rt = Math.min(R * 0.45, W * 0.16);
-        specs = [...Array.from({ length: 4 }, () => ({ r: rt })), { r: rt, float: true }];
+        specs = [{ r: Math.min(R, W * 0.42), float: true }];
       } else {
         specs = Array.from({ length: TILE_BALLS }, () => ({ r: R }));
       }
       for (let i = 0; i < specs.length; i++) {
         const { r, lockX, float } = specs[i];
         const seed = tileIndex * 97 + i;
-        const x = lockX ?? (float ? W * 0.62 : r + pseudoRandom(seed) * Math.max(0, W - 2 * r));
+        const x = lockX ?? (float ? W / 2 : r + pseudoRandom(seed) * Math.max(0, W - 2 * r));
         // система: stacked in reading order from the bottom up, so the grid
         // counts 1 2 / 3 4 / 5 6 upward once it lands
         const y = lockX !== undefined
@@ -495,7 +498,7 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         group.append(circle, face);
         svg.appendChild(group);
 
-        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group, lockX, floatX: float ? x : undefined, floatY: float ? H * 0.28 : undefined });
+        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group, lockX, floatX: float ? x : undefined, floatY: float ? H / 2 : undefined });
       }
     } else if (!hovered && ballsRef.current.length > 0) {
       ballsRef.current.forEach(b => {
@@ -512,6 +515,16 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
     const rect = svg.getBoundingClientRect();
     const W = rect.width, H = rect.height;
     const balls = ballsRef.current;
+    // Knock on real impacts only, a beat apart per ball, so a settling heap
+    // doesn't rattle — same tap as the hero's balls and the buttons
+    const lastKnock = new Map<object, number>();
+    const knockFor = (b: object, speed: number) => {
+      if (speed < 180) return;
+      const now = performance.now();
+      if (now - (lastKnock.get(b) ?? 0) < 90) return;
+      lastKnock.set(b, now);
+      playKnock(Math.min(1, speed / 900));
+    };
 
     const tick = () => {
       const GRAVITY = 600;
@@ -534,7 +547,7 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
 
         if (b.x - b.r < 0) { b.x = b.r; b.vx = Math.abs(b.vx) * BOUNCE; }
         if (b.x + b.r > W) { b.x = W - b.r; b.vx = -Math.abs(b.vx) * BOUNCE; }
-        if (b.y + b.r > H) { b.y = H - b.r; b.vy = -Math.abs(b.vy) * BOUNCE; }
+        if (b.y + b.r > H) { knockFor(b, b.vy); b.y = H - b.r; b.vy = -Math.abs(b.vy) * BOUNCE; }
       });
 
       // Ball-ball collisions — pushed apart by weight (radius) and swapping
@@ -558,6 +571,7 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
             const rvx = b.vx - a.vx, rvy = b.vy - a.vy;
             const rel = rvx * nx + rvy * ny;
             if (rel < 0) {
+              knockFor(a, -rel);
               const imp = -rel * BOUNCE;
               a.vx -= nx * imp * wa; a.vy -= ny * imp * wa;
               b.vx += nx * imp * wb; b.vy += ny * imp * wb;

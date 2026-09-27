@@ -23,11 +23,11 @@ const R_MAX = 86.5;
 const R_MIN = 26;
 const NS = 'http://www.w3.org/2000/svg';
 
-// Physics — brisk, but every pull that moves a ball into place carries its
-// own damping, so the balls arrive and stop instead of swinging about.
+// Physics — damped on purpose: the motion stays brisk, but the balls settle
+// instead of bouncing and swinging for a second after every move.
 const FRICTION = 0.88;
 const BOUNCE_DAMPING = 0.1;
-const BALL_BOUNCE = 0.18;
+const BALL_BOUNCE = 0.25;
 const SPRING_K = 0.006;
 const STOP_THRESHOLD = 0.03;
 
@@ -88,9 +88,9 @@ interface Edge { a: string; b: string; restLength: number; el: SVGLineElement }
 // How hard the balls fall once the page starts scrolling, px per frame².
 // Strong on purpose: the first screen scrolls away fast, so the graph has to
 // visibly drop within the first flick of the wheel.
-const GRAVITY = 3.6;
+const GRAVITY = 3.2;
 // Pull back to the resting layout, applied as the page returns to the top
-const HOME_K = 0.045;
+const HOME_K = 0.032;
 // Sideways pull into the word while falling, so the balls land in reading order
 const SETTLE_K = 0.07;
 // Where each ball belongs in the line: S K I P  D E S I G N
@@ -214,6 +214,7 @@ export default function Constellation({
     const wake = () => {
       if (!sleeping) return;
       sleeping = false;
+      lastStepAt = 0;
       raf = requestAnimationFrame(step);
     };
 
@@ -1013,7 +1014,7 @@ export default function Constellation({
       }
     }
 
-    function step() {
+    function simulate() {
       applySprings();
 
       // Squeeze fades on its own once nothing presses anymore; contacts top
@@ -1036,12 +1037,7 @@ export default function Constellation({
           // friction decays it, so the whole ball never fully sleeps and the
           // squash/stretch reads as a permanent faint shimmer.
           const dxSlot = n.slotX - n.x;
-          if (Math.abs(dxSlot) > 2) {
-            n.vx += dxSlot * SETTLE_K * scrolled;
-            // Damped like the home spring, so a ball slides into its slot and
-            // stops instead of swinging past it and back
-            n.vx *= 1 - 0.2 * scrolled;
-          }
+          if (Math.abs(dxSlot) > 2) n.vx += dxSlot * SETTLE_K * scrolled;
           else if (Math.abs(n.vx) < settleSpeed()) n.vx = 0;
         }
         if (homePull > 0) {
@@ -1106,6 +1102,17 @@ export default function Constellation({
         n.x = Math.min(Math.max(n.x, n.r), WIDTH - n.r);
         n.y = Math.min(Math.max(n.y, n.r), floorFor(n) - n.r);
       });
+    }
+
+    // The physics is tuned per 60Hz frame. When a frame runs long (a busy
+    // page, a slow GPU drawing the big lettered balls), extra ticks catch up,
+    // so the balls move at the same speed instead of slowing down with it.
+    let lastStepAt = 0;
+    function step() {
+      const now = performance.now();
+      const ticks = lastStepAt ? Math.min(3, Math.max(1, Math.round((now - lastStepAt) / 16.667))) : 1;
+      lastStepAt = now;
+      for (let t = 0; t < ticks; t++) simulate();
 
       const allSettled = dragId === null
         && Object.keys(nodes).every(id => nodes[id].vx === 0 && nodes[id].vy === 0

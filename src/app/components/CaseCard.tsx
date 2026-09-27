@@ -87,6 +87,7 @@ export default function CaseCard({
   const titleRef    = useRef<HTMLParagraphElement>(null);
   const descRef     = useRef<HTMLParagraphElement>(null);
   const servicesRef = useRef<HTMLParagraphElement>(null);
+  const catsRef     = useRef<HTMLParagraphElement>(null);
 
   const isHorizontal = ar === CASE_AR_H;
   // For now every preview is round, wherever cases are listed
@@ -134,6 +135,17 @@ export default function CaseCard({
     });
     const lines = [...byLine.entries()].sort((a, b) => a[0] - b[0]).map(([, ws]) => ws);
 
+    // The grey categories make way: up and out as the first line rises in,
+    // back down once the description has gone
+    const cats = catsRef.current;
+    if (cats) {
+      gsap.killTweensOf(cats);
+      const muted = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--opacity-muted')) || 0.4;
+      gsap.to(cats, hovered
+        ? { y: -LINE_Y, opacity: 0, ...LINE_REVEAL, duration: 0.3 }
+        : { y: 0, opacity: muted, ...LINE_REVEAL, delay: lines.length * LINE_STAGGER });
+    }
+
     lines.forEach((line, i) => {
       const delay = (hovered ? i : lines.length - 1 - i) * LINE_STAGGER;
       gsap.to(line, {
@@ -178,7 +190,9 @@ export default function CaseCard({
       {/* Year — at top */}
       {/* The flagship (a card given its own proportions) is just the big
           picture — no year, no title, no description */}
-      {services && !aspect && <p ref={servicesRef} className={s.cardMetaText} style={{ margin: 0, paddingBottom: hideImage ? 4 : 10, flexShrink: 0, opacity: 'var(--opacity-muted)' as any, ...metaStyle }}>{services}</p>}
+      {/* On a full preview the categories live in the description's spot
+          instead (below); up here only when that spot isn't shown */}
+      {services && !aspect && (hideMeta || hideImage) && <p ref={servicesRef} className={s.cardMetaText} style={{ margin: 0, paddingBottom: hideImage ? 4 : 10, flexShrink: 0, opacity: 'var(--opacity-muted)' as any, ...metaStyle }}>{services}</p>}
 
       {/* Image — always its own aspect ratio, never squeezed by the desc.
           Dropped entirely on the densest grid: the card is text only. */}
@@ -235,7 +249,12 @@ export default function CaseCard({
             nothing reads as cut off by an invisible box. */}
         {!hideMeta && !hideImage && (
           <div style={{ minWidth: 0 }}>
-            <div>
+            <div style={{ position: 'relative' }}>
+              {/* At rest the description's spot shows the categories, grey;
+                  on hover the description rises in and pushes them up and out */}
+              {services && (
+                <p ref={catsRef} className={s.cardMetaText} style={{ margin: 0, position: 'absolute', left: 0, top: 0, opacity: 'var(--opacity-muted)' as any, pointerEvents: 'none', ...metaStyle }}>{services}</p>
+              )}
               <p ref={descRef} className={s.cardMetaText} style={{ margin: 0, ...metaStyle }}>
                 {typo(desc).split(' ').map((w, i, arr) => (
                   <span key={i}>

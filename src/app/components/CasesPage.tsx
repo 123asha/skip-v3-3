@@ -11,6 +11,7 @@ function img(path: string): { image: string; ar: AR } {
   return { image: asset(path), ar: arSuffix(path) === 'v' ? V : H };
 }
 import { useReveal } from '../hooks/useReveal';
+import { caseCategories } from '../utils/caseCategories';
 
 interface Props {
   onBack: () => void;
@@ -256,9 +257,9 @@ function mobileColSpan(idx: number): string {
 }
 
 // ── ProjectCard ───────────────────────────────────────────────────────────────
-function ProjectCard({ ar, year, title, desc, image, video, onClick, servicesSize, metaSize, hideMeta, hideImage, round }: Project & { onClick?: () => void; servicesSize?: string | number; metaSize?: string | number; hideMeta?: boolean; hideImage?: boolean; round?: boolean }) {
+function ProjectCard({ ar, cats, title, desc, image, video, onClick, servicesSize, metaSize, hideMeta, hideImage, round }: Project & { onClick?: () => void; servicesSize?: string | number; metaSize?: string | number; hideMeta?: boolean; hideImage?: boolean; round?: boolean }) {
   return (
-    <CaseCard ar={ar} title={title} desc={desc} services={year} servicesSize={servicesSize} metaSize={metaSize} hideMeta={hideMeta} hideImage={hideImage} image={image} video={video} onClick={onClick} round={round} />
+    <CaseCard ar={ar} title={title} desc={desc} services={caseCategories(cats)} servicesSize={servicesSize} metaSize={metaSize} hideMeta={hideMeta} hideImage={hideImage} image={image} video={video} onClick={onClick} round={round} />
   );
 }
 

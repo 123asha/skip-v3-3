@@ -4,6 +4,7 @@ import s from './ProjectGallery.module.css';
 import CaseCard, { CASE_AR_H as H, CASE_AR_V as V, type CaseCardAR as AR, isCaseRound } from './CaseCard';
 import { MagneticDivider } from './MagneticDivider';
 import { asset, arSuffix, videoAsset } from '../utils/asset';
+import { caseCategories } from '../utils/caseCategories';
 
 /** Returns { image, ar } — aspect ratio is inferred from the -h / -v filename suffix. */
 function img(path: string): { image: string; ar: AR } {
@@ -107,7 +108,7 @@ function ProjectCard({ project, onClick, aspect, scrubVideo }: { project: Projec
       scrubVideo={scrubVideo}
       title={project.title}
       desc={project.desc}
-      services={project.year}
+      services={caseCategories(project.cats)}
       image={project.image}
       video={project.video}
       onClick={onClick}

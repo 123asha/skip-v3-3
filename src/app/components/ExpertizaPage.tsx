@@ -434,8 +434,8 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
       //   стратегия   — six equal balls in a heap
       //   дизайн      — a composition: one big ball, three small
       //   система     — six balls stacking into an exact 2 × 3 grid
-      //   инструменты — one big ball that drops in and is caught mid-air in
-      //                 the middle of the tile by an unseen updraft
+      //   инструменты — one big ball that drops in and is caught mid-air a
+      //                 little above the middle of the tile by an unseen updraft
       // Balls are sized to fill the tile, like the strategy heap.
       type Spec = { r: number; lockX?: number; float?: boolean };
       let specs: Spec[];
@@ -505,7 +505,7 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         group.append(circle, face);
         svg.appendChild(group);
 
-        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group, lockX, floatX: float ? x : undefined, floatY: float ? H / 2 : undefined, text, spin: 0, drawnX: x });
+        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group, lockX, floatX: float ? x : undefined, floatY: float ? H * 0.42 : undefined, text, spin: 0, drawnX: x });
       }
     } else if (!hovered && ballsRef.current.length > 0) {
       ballsRef.current.forEach(b => {

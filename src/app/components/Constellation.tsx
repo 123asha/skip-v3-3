@@ -229,6 +229,8 @@ export default function Constellation({
     // When the drop began — balls may slip past each other only while it lasts
     let fallStart = 0;
     const CROSS_WINDOW = 700;   // ms
+    // How long balls are steered toward their columns after the drop starts
+    const SETTLE_WINDOW = 1100; // ms
     let lastScrollY = 0;
     let returning = false;
     const readScroll = () => {
@@ -254,7 +256,12 @@ export default function Constellation({
       // way up. The word only ever reads whole; merging is just a toy for the
       // moment the graph sits still. Ball size stays fixed throughout — only
       // the layout (slots) changes between the two states.
-      if (gravity > 0 && !wasFalling) { fallStart = performance.now(); respawnMerged(); }
+      if (gravity > 0 && !wasFalling) {
+        fallStart = performance.now();
+        WORD_ORDER.forEach(id => { slotJitter[id] = (Math.random() - 0.5) * R * 0.8; });
+        respawnMerged();
+        recomputeSlots();
+      }
       const isHome = homePull >= 1;
       if (isHome && !wasHome) { respawnMerged(); randomizeHomeTargets(); }
       wasHome = isHome;
@@ -440,32 +447,11 @@ export default function Constellation({
     // proportional to the ball size so it still reads as a clear word break
     // whatever the field's width.
     const WORD_BREAK_GAP = R * 1.4;
-    // Landed word too wide for one line at this ball size: DESIGN lies on the
-    // floor and SKIP rests on top of it, each ball in a valley between two
-    let twoRows = false;
-    // Where a ball's bottom comes to rest: the floor — or, for the top line of
-    // the two-line landing, the height of the valleys between the balls below
-    const floorFor = (n: Node, landed = gravity > 0) =>
-      twoRows && landed && WORD_GROUP[n.id] === 0 ? HEIGHT - Math.sqrt(3) * R : HEIGHT;
+    // Where each ball's column sits is nudged a little at random every fall,
+    // so the heap lands differently each time
+    const slotJitter: Record<string, number> = {};
     const recomputeSlots = () => {
       const n = Math.max(1, wordOrder.length);
-      {
-        const PAD = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pad')) || 0;
-        const top = wordOrder.filter(id => WORD_GROUP[id] === 0);
-        const bottom = wordOrder.filter(id => WORD_GROUP[id] === 1);
-        const oneRow = (n - 1) * 2 * R + (top.length && bottom.length ? WORD_BREAK_GAP : 0);
-        twoRows = top.length > 0 && bottom.length > 0 && oneRow > WIDTH - 2 * PAD - 2 * R;
-        if (twoRows) {
-          const c = WIDTH / 2;
-          const m = top.length, b = bottom.length;
-          bottom.forEach((id, k) => { if (nodes[id]) nodes[id].slotX = c + (k - (b - 1) / 2) * 2 * R; });
-          // Same parity → the rows would line up ball over ball; shift the top
-          // row half a pitch so it sits in the valleys instead
-          const shift = (b - m) % 2 === 0 ? -R : 0;
-          top.forEach((id, k) => { if (nodes[id]) nodes[id].slotX = c + (k - (m - 1) / 2) * 2 * R + shift; });
-          return;
-        }
-      }
       // How many consecutive pairs actually straddle the two words — normally
       // exactly one, but a merge can erase every ball on one side of it
       // (S · K · P are the protected floor, all in "SKIP"), in which case
@@ -923,9 +909,6 @@ export default function Constellation({
           // neighbours — that is how letters starting on the wrong side swap
           // places. The window closes right after, so the landed row is solid
           // and the balls push each other apart instead of overlapping.
-          // In the two-line landing the rows overlap sideways, so left/right
-          // order (the `swapped` check below) only means something within one word
-          const sameLine = !twoRows || WORD_GROUP[idsNow[a]] === WORD_GROUP[idsNow[b]];
           const crossing = gravity > 0
             && performance.now() - fallStart < CROSS_WINDOW
             && (Math.abs(i.slotX - i.x) > 8 || Math.abs(j.slotX - j.x) > 8);
@@ -940,7 +923,7 @@ export default function Constellation({
           // phase through each other forever, leaving one parked overlapping
           // (visually perched above) the other with collision never
           // re-engaging to push them apart.
-          const swapped = sameLine && gravity > 0 && dragId === null
+          const swapped = gravity > 0 && dragId === null
             && performance.now() - fallStart < CROSS_WINDOW * 3
             && (i.slotX - j.slotX) * (i.x - j.x) < 0;
           if (crossing || swapped) continue;
@@ -949,7 +932,19 @@ export default function Constellation({
           // resting on another rolls off into the valley instead of being
           // propped up on its crown, which real balls can't do.
           const rawNx = dx / dist, rawNy = dy / dist;
-          const nx = rawNx, ny = rawNy;
+          let nx = rawNx, ny = rawNy;
+          // Two balls wedged side by side at the same height (both on the
+          // floor, say) only ever get pushed sideways, so a row too wide for
+          // the field would just stay squashed into itself. Once they're
+          // pressed well together, one climbs onto the other instead: the one
+          // already a touch higher, or failing that the one further from its
+          // column. That's how the landed heap gets its second layer.
+          if (gravity > 0 && Math.abs(rawNy) < 0.35 && minDist - dist > minDist * 0.08) {
+            const jRises = Math.abs(dy) > 1 ? dy < 0 : Math.abs(j.slotX - j.x) > Math.abs(i.slotX - i.x);
+            ny = jRises ? -0.7 : 0.7;
+            nx = rawNx * 0.7;
+            const l = Math.hypot(nx, ny); nx /= l; ny /= l;
+          }
 
           const overlap = minDist - dist;
           const iDragged = idsNow[a] === dragId;
@@ -1036,9 +1031,14 @@ export default function Constellation({
           // zero: the nudge keeps topping the velocity back up just as
           // friction decays it, so the whole ball never fully sleeps and the
           // squash/stretch reads as a permanent faint shimmer.
-          const dxSlot = n.slotX - n.x;
-          if (Math.abs(dxSlot) > 2) n.vx += dxSlot * SETTLE_K * scrolled;
-          else if (Math.abs(n.vx) < settleSpeed()) n.vx = 0;
+          // Only while the drop is under way: after that the heap settles by
+          // plain physics, so a ball resting on others rolls into the valley
+          // between them rather than being held up on a slope by its column.
+          const dxSlot = n.slotX + (slotJitter[id] ?? 0) - n.x;
+          if (performance.now() - fallStart < SETTLE_WINDOW) {
+            if (Math.abs(dxSlot) > 2) n.vx += dxSlot * SETTLE_K * scrolled;
+            else if (Math.abs(n.vx) < settleSpeed()) n.vx = 0;
+          }
         }
         if (homePull > 0) {
           // Spring home — takes over as gravity fades on the way back up.
@@ -1079,10 +1079,10 @@ export default function Constellation({
           hitWall(Math.abs(n.vy));
           n.y = n.r;
           n.vy = Math.abs(n.vy) < settleSpeed() ? 0 : Math.abs(n.vy) * BOUNCE_DAMPING;
-        } else if (n.y + n.r > floorFor(n)) {
+        } else if (n.y + n.r > HEIGHT) {
           onWall = true;
           hitWall(Math.abs(n.vy));
-          n.y = floorFor(n) - n.r;
+          n.y = HEIGHT - n.r;
           // Settle instead of bouncing once the impact is no stronger than the
           // pull itself — otherwise gravity keeps the stack jittering (and
           // knocking) for as long as the page is scrolled.
@@ -1100,7 +1100,7 @@ export default function Constellation({
       // Collisions can shove a ball past the edge — keep everyone in the field
       Object.values(nodes).forEach(n => {
         n.x = Math.min(Math.max(n.x, n.r), WIDTH - n.r);
-        n.y = Math.min(Math.max(n.y, n.r), floorFor(n) - n.r);
+        n.y = Math.min(Math.max(n.y, n.r), HEIGHT - n.r);
       });
     }
 
@@ -1154,7 +1154,7 @@ export default function Constellation({
     if (intro && !introPlayed.current
         && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       introPlayed.current = true;
-      Object.values(nodes).forEach(n => { n.x = n.slotX; n.y = floorFor(n, true) - n.r; n.vx = 0; n.vy = 0; });
+      Object.values(nodes).forEach(n => { n.x = n.slotX; n.y = HEIGHT - n.r; n.vx = 0; n.vy = 0; });
       render();
     }
 

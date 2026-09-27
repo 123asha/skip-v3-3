@@ -23,11 +23,11 @@ const R_MAX = 86.5;
 const R_MIN = 26;
 const NS = 'http://www.w3.org/2000/svg';
 
-// Physics — damped on purpose: the motion stays brisk, but the balls settle
-// instead of bouncing and swinging for a second after every move.
+// Physics — brisk, but every pull that moves a ball into place carries its
+// own damping, so the balls arrive and stop instead of swinging about.
 const FRICTION = 0.88;
 const BOUNCE_DAMPING = 0.1;
-const BALL_BOUNCE = 0.25;
+const BALL_BOUNCE = 0.18;
 const SPRING_K = 0.006;
 const STOP_THRESHOLD = 0.03;
 
@@ -88,13 +88,11 @@ interface Edge { a: string; b: string; restLength: number; el: SVGLineElement }
 // How hard the balls fall once the page starts scrolling, px per frame².
 // Strong on purpose: the first screen scrolls away fast, so the graph has to
 // visibly drop within the first flick of the wheel.
-const GRAVITY = 3.2;
+const GRAVITY = 3.6;
 // Pull back to the resting layout, applied as the page returns to the top
-const HOME_K = 0.032;
+const HOME_K = 0.045;
 // Sideways pull into the word while falling, so the balls land in reading order
 const SETTLE_K = 0.07;
-// How much of a contact is resolved vertically instead of sideways (0…1)
-const VERTICAL_BIAS = 0.85;
 // Where each ball belongs in the line: S K I P  D E S I G N
 const WORD_ORDER = ['S1', 'K', 'I1', 'P', 'D', 'E', 'S2', 'I2', 'G', 'N'];
 // Which word each ball belongs to — the landed row gets a wider gap at the
@@ -159,7 +157,9 @@ export default function Constellation({
     // slack. Too big and the row jams, balls get squeezed out of line and
     // never come to rest.
     const SIDE_PAD = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pad')) || 0;
-    const R = Math.max(R_MIN, Math.min(R_MAX, (WIDTH / WORD_ORDER.length) * 0.484, (WIDTH - 2 * SIDE_PAD) / 21.84));
+    // Balls at 1.5x the size that fits the full word on one row
+    const BALL_SCALE = 1.5;
+    const R = BALL_SCALE * Math.max(R_MIN, Math.min(R_MAX, (WIDTH / WORD_ORDER.length) * 0.484, (WIDTH - 2 * SIDE_PAD) / 21.84));
     // The sphere filter magnifies the middle of a ball by π/2, so the letter
     // is set smaller to keep its apparent size where the eye lands
     const FONT = R * 1.4875; // -15% from the look-see size (was R * 1.17 * 0.72)
@@ -257,7 +257,6 @@ export default function Constellation({
       const isHome = homePull >= 1;
       if (isHome && !wasHome) { respawnMerged(); randomizeHomeTargets(); }
       wasHome = isHome;
-      syncCollapse();
     };
     // Scroll listeners are wired up at the very end of setup (see below) —
     // readScroll reaches into recomputeSlots/wordOrder, both declared
@@ -440,23 +439,31 @@ export default function Constellation({
     // proportional to the ball size so it still reads as a clear word break
     // whatever the field's width.
     const WORD_BREAK_GAP = R * 1.4;
-    // How many scroll-collapse merges are in effect (see syncCollapse)
-    let collapsed = 0;
+    // Landed word too wide for one line at this ball size: DESIGN lies on the
+    // floor and SKIP rests on top of it, each ball in a valley between two
+    let twoRows = false;
+    // Where a ball's bottom comes to rest: the floor — or, for the top line of
+    // the two-line landing, the height of the valleys between the balls below
+    const floorFor = (n: Node, landed = gravity > 0) =>
+      twoRows && landed && WORD_GROUP[n.id] === 0 ? HEIGHT - Math.sqrt(3) * R : HEIGHT;
     const recomputeSlots = () => {
       const n = Math.max(1, wordOrder.length);
-      // While the row is collapsing, it's packed and centred instead of
-      // pinned to both edges — each absorb is then always between touching
-      // neighbours, and whatever is left ends up in the middle.
-      if (collapsed > 0) {
-        const xs: number[] = [];
-        let x = 0;
-        wordOrder.forEach((id, i) => {
-          if (i > 0) x += 2 * R + (WORD_GROUP[id] !== WORD_GROUP[wordOrder[i - 1]] ? WORD_BREAK_GAP : 0);
-          xs.push(x);
-        });
-        const shift = WIDTH / 2 - x / 2;
-        wordOrder.forEach((id, i) => { if (nodes[id]) nodes[id].slotX = xs[i] + shift; });
-        return;
+      {
+        const PAD = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pad')) || 0;
+        const top = wordOrder.filter(id => WORD_GROUP[id] === 0);
+        const bottom = wordOrder.filter(id => WORD_GROUP[id] === 1);
+        const oneRow = (n - 1) * 2 * R + (top.length && bottom.length ? WORD_BREAK_GAP : 0);
+        twoRows = top.length > 0 && bottom.length > 0 && oneRow > WIDTH - 2 * PAD - 2 * R;
+        if (twoRows) {
+          const c = WIDTH / 2;
+          const m = top.length, b = bottom.length;
+          bottom.forEach((id, k) => { if (nodes[id]) nodes[id].slotX = c + (k - (b - 1) / 2) * 2 * R; });
+          // Same parity → the rows would line up ball over ball; shift the top
+          // row half a pitch so it sits in the valleys instead
+          const shift = (b - m) % 2 === 0 ? -R : 0;
+          top.forEach((id, k) => { if (nodes[id]) nodes[id].slotX = c + (k - (m - 1) / 2) * 2 * R + shift; });
+          return;
+        }
       }
       // How many consecutive pairs actually straddle the two words — normally
       // exactly one, but a merge can erase every ball on one side of it
@@ -816,7 +823,6 @@ export default function Constellation({
         );
       });
       mergedLog.length = 0;
-      collapsed = 0;
       rebuildEdges();
       // Whatever order they came back in, the row must read left to right
       // exactly as the word does
@@ -834,50 +840,6 @@ export default function Constellation({
       INITIAL_EDGES.forEach(([a, b]) => {
         if (nodes[a] && nodes[b]) createEdge(a, b, INITIAL_REST[a + '|' + b]);
       });
-    }
-
-    // ── Scroll collapse ──────────────────────────────────────────────────────
-    // Once the landed row has scrolled up past the middle of the screen, the
-    // letters swallow their neighbours one by one — no growth, just the cell
-    // fusion — until only S · K · P are left, centred. Scrolling back up
-    // spits them out again in reverse. [survivor, swallowed], in order.
-    const COLLAPSE_STEPS: [string, string][] = [
-      ['G', 'N'], ['K', 'I1'], ['I2', 'G'], ['S2', 'I2'], ['E', 'S2'], ['D', 'E'], ['P', 'D'],
-    ];
-    let collapseTarget = 0;
-    let lastCollapseAt = 0;
-    function syncCollapse() {
-      let target = 0;
-      if (gravity > 0 && !returning) {
-        // Hero's bottom edge: from the middle of the screen (nothing merged)
-        // up to a fifth of the way down (everything merged)
-        const bottom = svg!.getBoundingClientRect().bottom / window.innerHeight;
-        const p = Math.min(1, Math.max(0, (0.5 - bottom) / (0.5 - 0.2)));
-        target = Math.round(p * COLLAPSE_STEPS.length);
-      }
-      collapseTarget = target;
-      // One step at a time, a beat apart — a fast scroll still plays every
-      // absorb in turn instead of all of them in the same instant
-      const now = performance.now();
-      if (collapsed !== target && now - lastCollapseAt < 110) return;
-      if (collapsed !== target) lastCollapseAt = now;
-      if (collapsed < target) {
-        const [keepId, removeId] = COLLAPSE_STEPS[collapsed];
-        if (!nodes[keepId] || !nodes[removeId]) return;
-        collapsed++;
-        mergeInto(keepId, removeId);
-        rebuildEdges();
-      } else if (collapsed > target) {
-        const last = mergedLog.pop();
-        if (!last) { collapsed = 0; return; }
-        const keep = nodes[last.keepId];
-        collapsed--;
-        createNode(last.removedId, last.letter,
-          keep ? keep.x + keep.r * 0.3 : WIDTH / 2, keep ? keep.y : 0);
-        rebuildEdges();
-        wordOrder = WORD_ORDER.filter(id => nodes[id]);
-        recomputeSlots();
-      }
     }
 
     function checkMerge(id: string) {
@@ -960,6 +922,9 @@ export default function Constellation({
           // neighbours — that is how letters starting on the wrong side swap
           // places. The window closes right after, so the landed row is solid
           // and the balls push each other apart instead of overlapping.
+          // In the two-line landing the rows overlap sideways, so left/right
+          // order (the `swapped` check below) only means something within one word
+          const sameLine = !twoRows || WORD_GROUP[idsNow[a]] === WORD_GROUP[idsNow[b]];
           const crossing = gravity > 0
             && performance.now() - fallStart < CROSS_WINDOW
             && (Math.abs(i.slotX - i.x) > 8 || Math.abs(j.slotX - j.x) > 8);
@@ -974,39 +939,17 @@ export default function Constellation({
           // phase through each other forever, leaving one parked overlapping
           // (visually perched above) the other with collision never
           // re-engaging to push them apart.
-          const swapped = gravity > 0 && dragId === null
+          const swapped = sameLine && gravity > 0 && dragId === null
             && performance.now() - fallStart < CROSS_WINDOW * 3
             && (i.slotX - j.slotX) * (i.x - j.x) < 0;
           if (crossing || swapped) continue;
 
+          // Pushes go along the true line between the two centres — a ball
+          // resting on another rolls off into the valley instead of being
+          // propped up on its crown, which real balls can't do.
           const rawNx = dx / dist, rawNy = dy / dist;
-          // Balls give way upwards and downwards rather than sideways: pushing
-          // one into the row makes the others step out of the line instead of
-          // compressing it. The contact normal is tilted towards the vertical,
-          // keeping just enough of the horizontal that nothing locks up.
-          // …but only once the balls are where they belong. Mid-fall a ball
-          // that lands on another has to slide off sideways, or it would stay
-          // perched above the row instead of joining it. In the finished line
-          // (and in the resting constellation) pushes go up and down instead,
-          // so the order never gets shoved apart.
-          const inPlace = Math.abs(i.slotX - i.x) < 24 && Math.abs(j.slotX - j.x) < 24;
-          // Vertical bias only protects the landed reading row from being
-          // shoved out of order. At rest at the top (gravity 0, no row to
-          // protect) it used to apply here too, which could leave a ball
-          // parked directly above its neighbour forever — vertical push
-          // alone never resolves a purely horizontal overlap. Home state
-          // now separates along the true contact normal instead.
-          const bias = gravity > 0 && inPlace ? VERTICAL_BIAS : 0;
-          const sideY = rawNy === 0 ? (Math.random() < 0.5 ? -1 : 1) : Math.sign(rawNy);
-          let nx = rawNx * (1 - bias);
-          let ny = rawNy * (1 - bias) + sideY * bias;
-          const nLen = Math.hypot(nx, ny) || 1;
-          nx /= nLen; ny /= nLen;
+          const nx = rawNx, ny = rawNy;
 
-          // Geometry is always separated along the true contact normal: tilting
-          // THIS upwards only lifted a ball that gravity pushed straight back
-          // down, and the pair stayed overlapped. The tilt belongs to the
-          // impulse below, which is what makes neighbours give way vertically.
           const overlap = minDist - dist;
           const iDragged = idsNow[a] === dragId;
           const jDragged = idsNow[b] === dragId;
@@ -1071,8 +1014,6 @@ export default function Constellation({
     }
 
     function step() {
-      // Catch up on the scroll collapse a step per frame after a fast scroll
-      if (gravityOnScroll) syncCollapse();
       applySprings();
 
       // Squeeze fades on its own once nothing presses anymore; contacts top
@@ -1095,7 +1036,12 @@ export default function Constellation({
           // friction decays it, so the whole ball never fully sleeps and the
           // squash/stretch reads as a permanent faint shimmer.
           const dxSlot = n.slotX - n.x;
-          if (Math.abs(dxSlot) > 2) n.vx += dxSlot * SETTLE_K * scrolled;
+          if (Math.abs(dxSlot) > 2) {
+            n.vx += dxSlot * SETTLE_K * scrolled;
+            // Damped like the home spring, so a ball slides into its slot and
+            // stops instead of swinging past it and back
+            n.vx *= 1 - 0.2 * scrolled;
+          }
           else if (Math.abs(n.vx) < settleSpeed()) n.vx = 0;
         }
         if (homePull > 0) {
@@ -1137,10 +1083,10 @@ export default function Constellation({
           hitWall(Math.abs(n.vy));
           n.y = n.r;
           n.vy = Math.abs(n.vy) < settleSpeed() ? 0 : Math.abs(n.vy) * BOUNCE_DAMPING;
-        } else if (n.y + n.r > HEIGHT) {
+        } else if (n.y + n.r > floorFor(n)) {
           onWall = true;
           hitWall(Math.abs(n.vy));
-          n.y = HEIGHT - n.r;
+          n.y = floorFor(n) - n.r;
           // Settle instead of bouncing once the impact is no stronger than the
           // pull itself — otherwise gravity keeps the stack jittering (and
           // knocking) for as long as the page is scrolled.
@@ -1158,11 +1104,10 @@ export default function Constellation({
       // Collisions can shove a ball past the edge — keep everyone in the field
       Object.values(nodes).forEach(n => {
         n.x = Math.min(Math.max(n.x, n.r), WIDTH - n.r);
-        n.y = Math.min(Math.max(n.y, n.r), HEIGHT - n.r);
+        n.y = Math.min(Math.max(n.y, n.r), floorFor(n) - n.r);
       });
 
       const allSettled = dragId === null
-        && collapsed === collapseTarget
         && Object.keys(nodes).every(id => nodes[id].vx === 0 && nodes[id].vy === 0
           && nodes[id].rollX === 0 && nodes[id].rollY === 0);
       if (allSettled) {
@@ -1202,7 +1147,7 @@ export default function Constellation({
     if (intro && !introPlayed.current
         && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       introPlayed.current = true;
-      Object.values(nodes).forEach(n => { n.x = n.slotX; n.y = HEIGHT - n.r; n.vx = 0; n.vy = 0; });
+      Object.values(nodes).forEach(n => { n.x = n.slotX; n.y = floorFor(n, true) - n.r; n.vx = 0; n.vy = 0; });
       render();
     }
 

@@ -211,6 +211,14 @@
   input, textarea, select { font-size: 14px; }
 }
 
+/* ── Narrowest phones (< 360px): the header takes two rows (see .nav) —
+   the pill's row, then the links' row ── */
+@media (max-width: 359px) {
+  :root {
+    --header-h: calc(var(--logo-top) + 1px + 2 * var(--text-size) * var(--text-lh) + 11px + var(--space-xs));
+  }
+}
+
 /* ── Hard floor: body text never below 11 px on any viewport ────────────── */
 @media (max-width: 768px) {
   html, body { font-size: max(14px, var(--text-size)) !important; }

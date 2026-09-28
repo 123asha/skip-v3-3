@@ -963,9 +963,9 @@ function AppInner() {
           <span className={s.navSep}>,</span>
           <a href="/instruments" className={s.navLink} onClick={handleInstrumentsClick}>Подход</a>
         </span>
-        {/* «Написать» — the word turns into "телеграм" on hover, which is
+        {/* «Написать» — the word turns into "telegram" on hover, which is
             where it leads */}
-        <span style={{ display: 'inline-flex' }}>
+        <span className={s.navWrite} style={{ display: 'inline-flex' }}>
           <a
             href="https://t.me/skpdsgn"
             target="_blank"

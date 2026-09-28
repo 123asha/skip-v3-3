@@ -173,19 +173,21 @@ export default function CaseCard({
     });
   }, [hovered]);
 
-  // ── Mobile: image, then a caption ROW below it — name left, description right
-  //    (same layout as desktop, but the description is always visible since
-  //    there's no hover on touch). ──
+  // ── Mobile: the desktop caption row exactly — name left, description right,
+  //    same columns — only the description is always shown (no hover on
+  //    touch), with the grey categories above it. ──
   if (isMobile) {
     return (
       <div className={s.card} onClick={onClick}>
-        {services && <p style={svcStyle}>{services}</p>}
         <div className={s.cardImage} style={{ aspectRatio: ar, width: '100%', flex: 'none', ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}>
           {image && <img src={image} alt={title} loading="lazy" />}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 'var(--gap)', alignItems: 'flex-start', paddingTop: 10 }}>
-          <p className={s.cardMetaText} style={{ margin: 0, textAlign: 'left', ...metaStyle }}>{typo(desc)}</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(90px, 1fr) minmax(0, 3fr)', gap: 'var(--gap)', alignItems: 'flex-start', paddingTop: 10 }}>
           <p className={`${s.cardMetaText} ${s.cardLink}`} style={{ margin: 0, ...metaStyle }}>{title}</p>
+          <div style={{ minWidth: 0 }}>
+            {services && <p className={s.cardMetaText} style={{ margin: 0, opacity: 'var(--opacity-muted)' as any, ...metaStyle }}>{services}</p>}
+            <p className={s.cardMetaText} style={{ margin: 0, ...metaStyle }}>{typo(desc)}</p>
+          </div>
         </div>
       </div>
     );

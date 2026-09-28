@@ -1,4 +1,4 @@
-import { createPortal } from 'react-dom';
+import ZoomControl from './ZoomControl';
 // Sandbox copy of ExpertizaPage served at /services-2 — for trying ideas out
 // without touching the live /services page. Keep edits here; merge back into
 // ExpertizaPage.tsx only once an experiment is approved.
@@ -621,18 +621,14 @@ export default function ExpertizaPage2({ onNavigatePolicy, onGridMode }: { onNav
       {/* ⌘ ⊕ ⊖ — pinned at the start of the second column on the nav line,
           the same place and look as the density hint on the cases page */}
       {/* Portalled: stays fixed while the page slides out */}
-      {!isMobile && createPortal(
-        <div style={{ position: 'fixed', left: 'calc(var(--pad) + 30px)', bottom: 'var(--pad)', zIndex: 200 }}>
-          <span className={`${s.zoomHint} zoomPill`} style={{ position: 'static' }}>
-            <span className={s.zoomHintLabel} style={{ marginRight: 6 }}>⌘</span>
-            <button className={s.zoomKey} aria-label="Свернуть" disabled={level <= 1} onClick={fold}>⊖</button>
-            <button className={s.zoomKey} aria-label="Развернуть" disabled={level >= EXPERTISE_LEVELS - 1} onClick={unfold}>⊕</button>
-          </span>
-        </div>, document.body
-      )}
+      <ZoomControl
+        minusLabel="Свернуть" plusLabel="Развернуть"
+        minusDisabled={level <= 1} plusDisabled={level >= EXPERTISE_LEVELS - 1}
+        onMinus={fold} onPlus={unfold}
+      />
 
       {/* Only the table here — folded and unfolded level by level */}
-      <div style={{ marginTop: 'calc(var(--pad) + var(--heading-size) * var(--heading-lh) + var(--space-title) - var(--space-xl))' }}>
+      <div style={{ display: 'flow-root', marginTop: 'calc(var(--inner-content-top) - var(--space-xl))' }}>
         <ExpertiseSection2 level={level} onLevel={setLevel} />
       </div>
     </div>

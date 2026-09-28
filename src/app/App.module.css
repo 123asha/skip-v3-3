@@ -101,14 +101,18 @@
 }
 
 /* ── Nav ── */
+/* One row on every breakpoint: the section links, then «Написать». Items sit
+   on one shared text baseline; the pill's top rests on the logo's top line
+   (1px below --logo-top, where the pill's text lands on the links'
+   baseline). One gap between every item. */
 .nav {
   position: fixed;
   right: var(--pad);
-  top: var(--pad);
+  top: calc(var(--logo-top) + 1px);
   z-index: 200;
   display: flex;
-  gap: 0;
-  align-items: center;
+  gap: var(--nav-gap);
+  align-items: baseline;
   mix-blend-mode: difference;
 }
 
@@ -181,9 +185,6 @@
   mix-blend-mode: difference;
 }
 
-/* ── Mobile nav: left-aligned, vertically centred with the logo ── */
-.navWrite { margin-left: 13px; }
-
 /* Nav-sized face of the site's pill button — same 4px corners */
 .navPill {
   align-items: center;
@@ -193,22 +194,6 @@
   white-space: nowrap;
 }
 
-/* Desktop: the nav spans the last of the 5 page columns — sections from its
-   left edge, «Написать» on its right edge. --nav-sb is the inner pages'
-   scrollbar gutter, which the grid there doesn't include. */
-@media (min-width: 769px) {
-  .nav {
-    width: calc((100% - var(--nav-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5);
-  }
-  .navWrite { margin-left: auto; }
-}
-
-@media (max-width: 768px) {
-  .nav {
-    top: 6px;
-    height: 52px;
-  }
-}
 
 /* ── Logo ── */
 .logo {

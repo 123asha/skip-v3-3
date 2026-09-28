@@ -4,6 +4,7 @@ import { useMobile } from '../hooks/useMobile';
 import { usePinchSteps } from '../hooks/usePinchSteps';
 import { gsap } from 'gsap';
 import s from './CasesPage.module.css';
+import ZoomControl from './ZoomControl';
 import CaseCard, { CASE_AR_H as H, CASE_AR_V as V, type CaseCardAR as AR, isCaseRound } from './CaseCard';
 import ContactForm from './ContactForm';
 import { asset, arSuffix } from '../utils/asset';
@@ -355,8 +356,6 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
         // The frame stays put against its caption — the gap to the title
         // never changes on scroll
       });
-      const title = document.querySelector<HTMLElement>('body > h1[class*="titleCol2"]');
-      if (title) title.style.translate = `0 ${-page.scrollTop}px`;
       const bar = tabsBarRef.current;
       if (bar) {
         if (tabsStart === null) tabsStart = bar.offsetTop;
@@ -610,6 +609,56 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
     applyFilters(activeTab, next);
   };
 
+  // Desktop: the filter chips follow the page title on its own line — one
+  // --gap after it, their text on the title's baseline. If that would run
+  // into the menu, they take the row under the title instead, at its left
+  // edge. (Phone: fixed rows in CSS.)
+  useLayoutEffect(() => {
+    const bar = tabsBarRef.current;
+    if (!bar) return;
+    const clear = () => { bar.style.left = ''; bar.style.top = ''; };
+    if (isMobile) { clear(); return; }
+    const baseline = (el: HTMLElement) => {
+      const m = document.createElement('span');
+      m.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
+      el.appendChild(m);
+      const y = m.getBoundingClientRect().bottom;
+      m.remove();
+      return y;
+    };
+    const place = () => {
+      const title = document.querySelector<HTMLElement>('body > h1[class*="titleCol2"]');
+      const chip = bar.querySelector<HTMLElement>('button');
+      const nav = document.querySelector<HTMLElement>('nav');
+      if (!title || !chip) return;
+      // Rects are screen px under the root's CSS zoom; styles are layout px
+      const pz = parseFloat(document.documentElement.style.zoom || '1') || 1;
+      const root = getComputedStyle(document.documentElement);
+      const gap = parseFloat(root.getPropertyValue('--gap')) || 0;
+      const spaceXs = parseFloat(root.getPropertyValue('--space-xs')) || 0;
+      const t = title.getBoundingClientRect();
+      const b = bar.getBoundingClientRect();
+      // Chip text baseline, measured from the bar's own top
+      const chipBase = (baseline(chip) - b.top) / pz;
+      const inline = t.right / pz + gap;
+      const room = nav ? nav.getBoundingClientRect().left / pz - gap : Infinity;
+      if (inline + b.width / pz <= room) {
+        bar.style.left = `${inline}px`;
+        bar.style.top = `${baseline(title) / pz - chipBase}px`;
+      } else {
+        bar.style.left = `${t.left / pz}px`;
+        bar.style.top = `${t.bottom / pz + spaceXs}px`;
+      }
+    };
+    place();
+    const title = document.querySelector<HTMLElement>('body > h1[class*="titleCol2"]');
+    const ro = new ResizeObserver(place);
+    if (title) ro.observe(title);
+    window.addEventListener('resize', place);
+    document.fonts?.ready.then(place);
+    return () => { ro.disconnect(); window.removeEventListener('resize', place); clear(); };
+  }, [isMobile]);
+
   return (
     <div className={s.page} ref={pageRef}>
       {/* Same spot as the Услуги / Инсайты titles — the fixed 5-col page
@@ -620,32 +669,17 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
       {/* Fixed bar — always visible, so it stays out of the scroll-reveal */}
       {/* Portalled to <body>: fixed on screen, it stays put while the page
           itself slides out on a section change */}
-      {!isMobile && createPortal(
-        <span className="zoomPill" style={{
-          // Column 4, on the title's own line
-          position: 'fixed', left: 'calc(var(--pad) + 30px)', bottom: 'var(--pad)', zIndex: 200,
-          fontSize: 'var(--text-size)', fontFamily: 'var(--font)', lineHeight: 'var(--text-lh)',
-        }}>
-          <span style={{ marginRight: 6 }}>⌘</span>
-          <button
-            className={s.zoomKey}
-            aria-label="Плотнее"
-            disabled={zoom <= ZOOM_MIN}
-            onClick={() => setZoom(z => Math.max(ZOOM_MIN, z - 1))}
-          >⊖</button>
-          <button
-            className={s.zoomKey}
-            aria-label="Крупнее"
-            disabled={zoom >= ZOOM_MAX}
-            onClick={() => setZoom(z => Math.min(ZOOM_MAX, z + 1))}
-          >⊕</button>
-        </span>, document.body
-      )}
+      <ZoomControl
+        minusLabel="Плотнее" plusLabel="Крупнее"
+        minusDisabled={zoom <= ZOOM_MIN} plusDisabled={zoom >= ZOOM_MAX}
+        onMinus={() => setZoom(z => Math.max(ZOOM_MIN, z - 1))}
+        onPlus={() => setZoom(z => Math.min(ZOOM_MAX, z + 1))}
+      />
       {createPortal(
       <div ref={tabsBarRef} className={s.tabsBar}>
         {/* Row — just the categories now; the zoom hint moved to the
             bottom-left corner, beside the language switch */}
-        <div className={s.tabsRow} style={{ justifyContent: 'center', padding: '0 0 5px' }}>
+        <div className={s.tabsRow}>
           <div className={s.tabsBarInner}>
             {TABS.map(tab => (
               <button
@@ -698,7 +732,8 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
           + 100px of air. */}
       <div
         className={s.body}
-        style={{ paddingTop: isMobile ? 150 : 'var(--inner-content-top)' }}
+        // Phone: one more row (the filter chips) between the title and the grid
+        style={{ paddingTop: isMobile ? 'calc(var(--inner-content-top) + var(--space-xs) + var(--text-size) * var(--text-lh) + 9px)' : 'var(--inner-content-top)' }}
       >
         <div
           ref={gridRef}

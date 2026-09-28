@@ -252,27 +252,11 @@ function ConstellationHero() {
           must not swallow the pointer — every ball stays grabbable. */}
       {/* Headline a touch above the middle of the screen — the constellation
           keeps a clear patch there for it */}
-      {/* Studio line — fixed, centred at the top, stays put on scroll */}
-      <div style={{
-        position: 'fixed',
-        left: '50%',
-        translate: '-50% 0',
-        top: 'calc(var(--logo-top) + 6px)',
-        zIndex: 202,
-        fontFamily: 'var(--font)',
-        fontSize: 'var(--text-size)',
-        fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
-        letterSpacing: 'var(--text-ls)',
-        lineHeight: 'var(--text-lh)',
-        color: '#fff',
-        mixBlendMode: 'difference',
-        whiteSpace: 'nowrap',
-        pointerEvents: 'none',
-      }}>Skip Design</div>
       <p className={s.headline} style={{ pointerEvents: 'none',
-        // Centred on the screen, 1.5× the heading size
+        // Centred on the screen, 1.5× the heading size — capped by the
+        // viewport width so the two lines always fit on a phone too
         top: '45%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', maxWidth: 'none', width: 'max-content', whiteSpace: 'nowrap',
-        fontSize: 'calc(var(--heading-size) * 1.5)', lineHeight: 'calc(var(--heading-lh) * 0.94)' }}>
+        fontSize: 'min(calc(var(--heading-size) * 1.5), 7.2vw)', lineHeight: 'calc(var(--heading-lh) * 0.94)' }}>
         {HEADLINE_LINES.map((line, i) => (
           <span key={i} className={s.heroIntroText} style={{ display: 'block', animationDelay: `${0.35 + i * 0.12}s` }}>{kernHeadline(t(line))}</span>
         ))}

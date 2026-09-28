@@ -1,4 +1,3 @@
-import { createPortal } from 'react-dom';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { useMobile } from '../hooks/useMobile';
@@ -7,6 +6,7 @@ import { asset } from '../utils/asset';
 import { typo } from '../utils/typography';
 import { INSIGHTS_LIST } from './MediaSection';
 import cs from './CaseCard.module.css';
+import ZoomControl from './ZoomControl';
 
 // Same density steps as the cases grid: 3 columns (biggest, default) down to
 // 6 (densest). Zoom level rises toward the biggest cards, like the cases page.
@@ -171,17 +171,11 @@ export function InsightCards() {
   return (
     <>
     {/* Portalled: stays fixed while the page slides out */}
-    {!isMobile && createPortal(
-      <div className="zoomPill" style={{
-        position: 'fixed', left: 'calc(var(--pad) + 30px)', bottom: 'var(--pad)', zIndex: 200,
-        display: 'inline-flex', alignItems: 'center', gap: 6,
-        fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)',
-      }}>
-        <span style={{ marginRight: 6 }}>⌘</span>
-        <button disabled={zoom <= ZOOM_MIN} onClick={denser} aria-label="Плотнее" style={{ font: 'inherit', color: 'inherit', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>⊖</button>
-        <button disabled={zoom >= ZOOM_MAX} onClick={bigger} aria-label="Крупнее" style={{ font: 'inherit', color: 'inherit', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>⊕</button>
-      </div>, document.body
-    )}
+    <ZoomControl
+      minusLabel="Плотнее" plusLabel="Крупнее"
+      minusDisabled={zoom <= ZOOM_MIN} plusDisabled={zoom >= ZOOM_MAX}
+      onMinus={denser} onPlus={bigger}
+    />
     <div
       ref={gridRef}
       style={{
@@ -228,7 +222,9 @@ export function InsightCards() {
                 />
               )}
             </div>
-            <p className={`${cs.cardMetaText} insightCardCaption`} style={{ margin: '10px auto 0', maxWidth: 'calc((100vw - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5)', textAlign: 'center', transition: 'opacity 0.25s ease' }}>
+            <p className={`${cs.cardMetaText} insightCardCaption`} style={{ margin: '10px auto 0', // One page-grid column wide on desktop; a phone's grid is the cards'
+              // own, so the caption just takes the card's width
+              maxWidth: isMobile ? '100%' : 'calc((100vw - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5)', textAlign: 'center', transition: 'opacity 0.25s ease' }}>
               {typo(it.desc)}
             </p>
           </div>

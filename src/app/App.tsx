@@ -28,6 +28,7 @@ import { MediaSection } from './components/MediaSection';
 import { ExpertiseSection2 } from './components/ExpertiseSection2';
 import LabPage from './components/LabPage';
 import { SiteTitle } from './components/PageTitle';
+import { FOOTER_SLOT_ID } from './components/ZoomControl';
 import { LANG, LANG_PREFIX, stripLang, otherLangHref, t } from './i18n';
 
 // Title of each section page (see SiteTitle), per path
@@ -46,6 +47,32 @@ import SoundIcon from './sound/SoundIcon';
 import { sound } from './sound/Sound';
 import PillButton from './components/PillButton';
 import s from './App.module.css';
+
+// Telegram + LinkedIn circles for the footer — one definition for the desktop
+// corner and the mobile bar
+function SocialLinks() {
+  const circle: React.CSSProperties = {
+    width: 24, height: 24, borderRadius: '50%',
+    background: '#fff',
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    color: '#000', textDecoration: 'none',
+    transition: 'opacity 0.2s ease',
+  };
+  return (
+    <>
+      <a href="https://t.me/skpdsgn" target="_blank" rel="noreferrer" aria-label="Telegram" style={circle}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ transform: 'translate(-0.5px, 0.5px)' }}>
+          <path d="M22 4 2.5 11.5l5.6 1.9 2.2 7 3.7-3.6 5.2 3.8L22 4Zm-5.3 4.6-8 7.2-2.5-.9 10.5-6.3Zm-6 9.2 1.2-3.6 6.4 4.7-3.4-1.5-4.2.4Z" fill="#000" />
+        </svg>
+      </a>
+      <a href="https://ru.linkedin.com/company/skipdesign" target="_blank" rel="noreferrer" aria-label="LinkedIn" style={circle}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ transform: 'translateY(-1px)' }}>
+          <path d="M6.94 5a2 2 0 1 1-4-.001 2 2 0 0 1 4 .001ZM7 8.48H3V21h4V8.48Zm6.32 0H9.34V21h3.94v-6.57c0-3.66 4.77-4 4.77 0V21H22v-7.93c0-6.17-7.06-5.94-8.72-2.91l.04-1.68Z" fill="#000"/>
+        </svg>
+      </a>
+    </>
+  );
+}
 
 // ── People-block: client → video configuration ───────────────────────────────
 // Each client maps to a unique (src, objectPosition) pair for both card slots.
@@ -911,75 +938,83 @@ function AppInner() {
           the other links go grey. */}
       <nav
         className={s.nav}
-        // Every page: the menu set large as the page title, from column 2,
-        // capitals on the logo line; «Написать» on the right edge
-        // Same everywhere: small menu just to the left of «Написать»,
-        // vertically centred on the pill (not sat on the logo's own baseline)
-        style={{ right: `calc(var(--pad) + ${page !== 'home' && page !== 'index2' ? scrollbarW : 0}px + 110px)`, left: 'auto', width: 'auto', minWidth: 0,
-          top: 'calc(var(--logo-top) + 6px)', ['--nav-sb' as any]: `${scrollbarW}px` }}
+        // One row on every page: the section links, then «Написать» — all on
+        // one text baseline (the nav aligns its items by baseline), the pill's
+        // top on the logo's top line. Inner pages add the scrollbar gutter
+        // (see above) so the row sits identically on every page.
+        style={{ right: `calc(var(--pad) + ${page !== 'home' && page !== 'index2' ? scrollbarW : 0}px)`, ['--nav-sb' as any]: `${scrollbarW}px` }}
       >
-        <>
-            <span ref={casesLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
-              <a href="/cases" className={s.navLink} style={navLinkStyle('cases')} onClick={handleCasesClick}>
-                <LinkFlip flat>Проекты</LinkFlip>
-              </a>
+        <span ref={casesLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex' }}>
+          <a href="/cases" className={s.navLink} style={navLinkStyle('cases')} onClick={handleCasesClick}>
+            <LinkFlip flat>Проекты</LinkFlip>
+          </a>
+        </span>
+        <span ref={expertizaLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex' }}>
+          <a href="/services" className={s.navLink} style={navLinkStyle('expertiza')} onClick={handleExpertizaClick}>
+            <LinkFlip flat>Услуги</LinkFlip>
+          </a>
+        </span>
+        <span ref={labLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex' }}>
+          <a href="/lab" className={s.navLink} style={navLinkStyle('lab')} onClick={handleLabClick}>
+            <LinkFlip flat>Инсайты</LinkFlip>
+          </a>
+        </span>
+        <span ref={toolsLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'none' }}>
+          <span className={s.navSep}>,</span>
+          <a href="/instruments" className={s.navLink} onClick={handleInstrumentsClick}>Подход</a>
+        </span>
+        {/* «Написать» — the word turns into "телеграм" on hover, which is
+            where it leads */}
+        <span style={{ display: 'inline-flex' }}>
+          <a
+            href="https://t.me/skpdsgn"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${s.navLink} ${s.newProjectBtn}`}
+            onMouseEnter={() => sound.play('hover')}
+            style={{ textDecoration: 'none', display: 'inline-block' }}
+          >
+            {/* Same shape and cube flip as every PillButton, at nav size.
+                A black pill with white type. */}
+            <span className={s.newProjectFlipInner}>
+              {['Написать', 'Телеграм'].map((label, f) => (
+                <span
+                  key={f}
+                  className={`${s.newProjectFace}${f ? ` ${s.newProjectFaceBottom}` : ''} ${s.navPill}`}
+                  style={{
+                    // Black pill with white type. The nav inverts itself
+                    // (difference), so these are the pre-blend colours.
+                    background: '#fff', color: '#000',
+                    // Cube depth = half the pill's height
+                    transform: f ? 'rotateX(-90deg) translateZ(14px)' : 'translateZ(14px)',
+                  }}
+                >{label}</span>
+              ))}
             </span>
-            <span ref={expertizaLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center', marginLeft: '13px' }}>
-              <a href="/services" className={s.navLink} style={navLinkStyle('expertiza')} onClick={handleExpertizaClick}>
-                <LinkFlip flat>Услуги</LinkFlip>
-              </a>
-            </span>
-            <span ref={labLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center', marginLeft: '13px' }}>
-              <a href="/lab" className={s.navLink} style={navLinkStyle('lab')} onClick={handleLabClick}>
-                <LinkFlip flat>Инсайты</LinkFlip>
-              </a>
-            </span>
-            <span ref={toolsLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'none' }}>
-              <span className={s.navSep}>,</span>
-              <a href="/instruments" className={s.navLink} onClick={handleInstrumentsClick}>Подход</a>
-            </span>
-        </>
+          </a>
+        </span>
       </nav>
 
-      {/* «Написать» — outside <nav> on purpose (see navWrite comment above) */}
-            {/* Fourth link, in place of the old floating button: the word
-                turns into "телеграм" on hover, which is where it leads. */}
-            <span className={s.navWrite} style={{ display: 'inline-flex', alignItems: 'center',
-          // Always top-right, on the logo line — a sibling of <nav>, so a
-          // transform on the (centred) menu can never hijack this fixed
-          // positioning
-          position: 'fixed', top: 'calc(var(--logo-top) + 0.4px)', right: `calc(var(--pad) + ${page !== 'home' && page !== 'index2' ? scrollbarW : 0}px)`, zIndex: 200,
-          // Restores what living inside <nav> gave it for free: white
-          // pre-blend colours that read as a solid black pill once inverted
-          // against the page — .nav always inverts now, so this does too.
-          color: '#fff', mixBlendMode: 'difference' }}>
-              <a
-                href="https://t.me/skpdsgn"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`${s.navLink} ${s.newProjectBtn}`}
-                onMouseEnter={() => sound.play('hover')}
-                style={{ textDecoration: 'none', display: 'inline-block' }}
-              >
-                {/* Same shape and cube flip as every PillButton, at nav size.
-                    A black pill with white type. */}
-                <span className={s.newProjectFlipInner}>
-                  {['Написать', 'Телеграм'].map((label, f) => (
-                    <span
-                      key={f}
-                      className={`${s.newProjectFace}${f ? ` ${s.newProjectFaceBottom}` : ''} ${s.navPill}`}
-                      style={{
-                        // Black pill with white type. The nav inverts itself
-                        // (difference), so these are the pre-blend colours.
-                        background: '#fff', color: '#000',
-                        // Cube depth = half the pill's height
-                        transform: f ? 'rotateX(-90deg) translateZ(14px)' : 'translateZ(14px)',
-                      }}
-                    >{label}</span>
-                  ))}
-                </span>
-              </a>
-            </span>
+      {/* Home: the studio line, fixed and centred, on the menu's baseline.
+          Desktop only — on a phone the menu takes the middle of the row. */}
+      {page === 'home' && !isMobile && (
+        <div style={{
+          position: 'fixed',
+          left: '50%',
+          translate: '-50% 0',
+          top: 'calc(var(--logo-top) + 6px)',
+          zIndex: 200,
+          fontFamily: 'var(--font)',
+          fontSize: 'var(--text-size)',
+          fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+          letterSpacing: 'var(--text-ls)',
+          lineHeight: 'var(--text-lh)',
+          color: '#fff',
+          mixBlendMode: 'difference',
+          whiteSpace: 'nowrap',
+          pointerEvents: 'none',
+        }}>Skip Design</div>
+      )}
 
       <div
         ref={logoRef}
@@ -1137,51 +1172,21 @@ function AppInner() {
         onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
       >hi@skip.design</button>}
 
-      {/* Social icons — desktop only (mobile uses unified footer bar below) */}
+      {/* Social icons — desktop only (mobile uses the footer bar below). The
+          row is one text line tall, so the icons centre on the same line the
+          footer's text sits on */}
       {!isMobile && <div style={{
         position: 'fixed',
         left: 'calc(var(--pad) + 4 * ((100% - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap)))',
         bottom: 'var(--pad)',
+        height: 'calc(var(--text-size) * var(--text-lh))',
         zIndex: 200,
         display: 'flex',
         gap: '10px',
         alignItems: 'center',
         mixBlendMode: 'difference',
       }}>
-        <a
-          href="https://t.me/skpdsgn"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Telegram"
-          style={{
-            width: 24, height: 24, borderRadius: '50%',
-            background: '#fff',
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            color: '#000', textDecoration: 'none',
-            transition: 'opacity 0.2s ease',
-          }}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ transform: 'translate(-0.5px, 0.5px)' }}>
-            <path d="M22 4 2.5 11.5l5.6 1.9 2.2 7 3.7-3.6 5.2 3.8L22 4Zm-5.3 4.6-8 7.2-2.5-.9 10.5-6.3Zm-6 9.2 1.2-3.6 6.4 4.7-3.4-1.5-4.2.4Z" fill="#000" />
-          </svg>
-        </a>
-        <a
-          href="https://ru.linkedin.com/company/skipdesign"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="LinkedIn"
-          style={{
-            width: 24, height: 24, borderRadius: '50%',
-            background: '#fff',
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            color: '#000', textDecoration: 'none',
-            transition: 'opacity 0.2s ease',
-          }}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ transform: 'translateY(-1px)' }}>
-            <path d="M6.94 5a2 2 0 1 1-4-.001 2 2 0 0 1 4 .001ZM7 8.48H3V21h4V8.48Zm6.32 0H9.34V21h3.94v-6.57c0-3.66 4.77-4 4.77 0V21H22v-7.93c0-6.17-7.06-5.94-8.72-2.91l.04-1.68Z" fill="#000"/>
-          </svg>
-        </a>
+        <SocialLinks />
       </div>}
 
       {/* Language switch — bottom-left corner, desktop (mobile keeps it in
@@ -1198,26 +1203,33 @@ function AppInner() {
         lineHeight: 'var(--text-lh)',
         color: '#fff',
         mixBlendMode: 'difference',
+        // One row: language, then the home line or the page's own controls —
+        // one gap, one text baseline
+        display: 'flex',
+        alignItems: 'baseline',
+        gap: 16,
       }}>
         <a href={otherLangHref(pathname)} style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35 }}>{LANG === 'en' ? '/ru' : '/en'}</a>
-        {/* Home: the studio line sits beside the language switch */}
-        {page === 'home' && <span style={{ marginLeft: 16, pointerEvents: 'none' }}>{t('Дизайн, как правила игры')}</span>}
+        {page === 'home' && <span style={{ pointerEvents: 'none' }}>{t('Дизайн, как правила игры')}</span>}
+        {/* Pages put their ⌘ ⊖ ⊕ here (ZoomControl) */}
+        <span id={FOOTER_SLOT_ID} style={{ display: 'contents' }} />
       </div>}
 
-      {/* ── Mobile footer bar — single unified block ──────────────────────────
-          All bottom-fixed items consolidated into one flex row on touch screens.
-          Left: social links. Right: time + /en. */}
+      {/* ── Mobile footer bar — the desktop corners in one row: language on
+          the left, social + time on the right. One text line tall, pinned to
+          the same bottom edge as the desktop footer; every item is centred on
+          that line, so all the text shares one baseline. ── */}
       {isMobile && (
         <div style={{
           position: 'fixed',
-          bottom: 0,
-          left: 0,
-          width: '100%',
+          left: 'var(--pad)',
+          right: 'var(--pad)',
+          bottom: 'var(--pad)',
+          height: 'calc(var(--text-size) * var(--text-lh))',
           zIndex: 200,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: 'var(--pad)',
           color: '#fff',
           mixBlendMode: 'difference',
           pointerEvents: 'none',
@@ -1228,34 +1240,10 @@ function AppInner() {
           letterSpacing: 'var(--text-ls)',
           lineHeight: 'var(--text-lh)',
         }}>
-          {/* Left: privacy policy */}
-          <a
-            href="/policy"
-            onClick={e => { e.preventDefault(); navigateWithExit('/policy'); }}
-            style={{ color: 'inherit', textDecoration: 'none', opacity: 0.5, pointerEvents: 'auto' }}
-          >
-            Политика<br />конфиденциальности
-          </a>
-          {/* Right: social icons + time + /en */}
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', pointerEvents: 'auto' }}>
-            <a href="https://t.me/skpdsgn" target="_blank" rel="noreferrer" aria-label="Telegram"
-              style={{ width: 22, height: 22, borderRadius: '50%', background: '#fff',
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                color: '#000', textDecoration: 'none' }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ transform: 'translate(-0.5px, 0.5px)' }}>
-                <path d="M22 4 2.5 11.5l5.6 1.9 2.2 7 3.7-3.6 5.2 3.8L22 4Zm-5.3 4.6-8 7.2-2.5-.9 10.5-6.3Zm-6 9.2 1.2-3.6 6.4 4.7-3.4-1.5-4.2.4Z" fill="#000" />
-              </svg>
-            </a>
-            <a href="https://ru.linkedin.com/company/skipdesign" target="_blank" rel="noreferrer" aria-label="LinkedIn"
-              style={{ width: 22, height: 22, borderRadius: '50%', background: '#fff',
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                color: '#000', textDecoration: 'none' }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M6.94 5a2 2 0 1 1-4-.001 2 2 0 0 1 4 .001ZM7 8.48H3V21h4V8.48Zm6.32 0H9.34V21h3.94v-6.57c0-3.66 4.77-4 4.77 0V21H22v-7.93c0-6.17-7.06-5.94-8.72-2.91l.04-1.68Z" fill="#000"/>
-              </svg>
-            </a>
+          <a href={otherLangHref(pathname)} style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35, pointerEvents: 'auto' }}>{LANG === 'en' ? '/ru' : '/en'}</a>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', pointerEvents: 'auto' }}>
+            <SocialLinks />
             <span><MoscowTime /> (GMT+3)</span>
-            <a href={otherLangHref(pathname)} style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35 }}>{LANG === 'en' ? '/ru' : '/en'}</a>
           </div>
         </div>
       )}

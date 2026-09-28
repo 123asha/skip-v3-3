@@ -202,7 +202,10 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', width: '100%' }}>
                 <CircleInput
-                  prefix="@" placeholder="телеграм" size={isMobile ? 40 : 60} maxLength={32}
+                  prefix="@" placeholder="телеграм"
+                  // Phone: the "@" and the 8 placeholder letters fill exactly one
+                  // row — 9 circles plus 8 gaps of 0.1 circle = 9.8 diameters
+                  size={isMobile ? 'min(40px, calc((100vw - 2 * var(--pad)) / 9.8))' : 60} maxLength={32}
                   value={telegram} onChange={v => { handleTelegramChange(v); if (telegramError) setTelegramError(false); if (status === 'error') setStatus('idle'); }}
                   onFocus={() => setActiveFocus('telegram')}
                   onBlur={() => setActiveFocus(null)}

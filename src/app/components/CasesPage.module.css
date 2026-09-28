@@ -84,11 +84,11 @@
   /* Fixed at the top of the screen, on the nav's baseline. Above the
      sub-page layer (.page is at 160) so it isn't covered by it. */
   position: fixed;
-  /* Same line as the page title, centred */
-  top: calc(var(--logo-top) - 0.3265em + 6px);
-  height: calc(var(--heading-size) * var(--heading-lh));
+  /* Desktop: placed by CasesPage right after the page title, the chips'
+     text on the title's baseline (or on the row under the title when the
+     menu leaves no room) — see placeChips */
+  top: 0;
   left: 0;
-  right: 0;
   z-index: 168;
   /* No fill on the bar itself — only the tabs row is opaque, so cards scroll
      visibly under the sub-tag chips instead of behind a white block. */
@@ -96,17 +96,14 @@
   /* Two stacked rows: categories, then the sub-tags of the open one */
   display: flex;
   flex-direction: column;
-  padding: 0 var(--pad);
 }
 
 /* One row of the bar — its own centred group of buttons */
 .tabsRow {
   position: relative;
   display: flex;
-  /* Third grid column — clear of the title on every page, on its line */
   justify-content: flex-start;
   align-items: center;
-  padding: 0 0 0 calc(2 * ((100% - var(--page-sb, 0px) - 4 * var(--gap)) / 5 + var(--gap)));
 }
 
 /* The second row always keeps its space — the chips fade and rise into it,
@@ -354,15 +351,21 @@
 /* ── Mobile overrides (kept last so they win) ── */
 @media (max-width: 768px) {
   .body { padding-bottom: 0; }
+  /* Phone: the header owns the top row, so the title takes the next one
+     (left edge = the page edge), and the filter chips the one after it */
+  .title.titleCol2 {
+    top: calc(var(--header-h) + var(--space-xs));
+    left: var(--pad);
+    padding-top: 0 !important;
+  }
   .tabsBar {
-    /* Under the fixed header, not on top of it — the nav owns the first line */
-    top: 56px;
+    top: calc(var(--header-h) + 2 * var(--space-xs) + var(--heading-size) * var(--heading-lh));
+    height: auto;
     left: 0;
     right: 0;
     padding: 0 var(--pad);
-    z-index: 150;
   }
-  .tabsRow { flex-wrap: wrap; justify-content: center; row-gap: 5px; }
+  .tabsRow { flex-wrap: wrap; justify-content: flex-start; padding: 0; row-gap: 5px; }
   .subRow  { flex-wrap: wrap; justify-content: center; row-gap: 5px; }
 }
 

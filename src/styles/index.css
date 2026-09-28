@@ -53,6 +53,10 @@
      baseline sits 0.9375em below its top (lh 1.2), so its lowercase starts
      0.4465em below the line top (headings, lh 0.96: 0.3265em). */
   --logo-top: 23.2px;
+  /* Height of the fixed header row — the logo's box (top 6px + 52px) */
+  --header-h: 58px;
+  /* Space between the header's menu items (links and «Написать») */
+  --nav-gap: 13px;
   /* Inner pages: the menu links sit on the logo line in column 2 and the
      page title drops one menu line below them */
   --title-drop: 0px;
@@ -133,6 +137,9 @@
     --space-md: 32px;
     --space-sm: 20px;
     --space-xs: 12px;
+    /* Inner pages: the title gets its own row under the header, and the
+       content starts one --space-md below it — the same on every page */
+    --inner-content-top: calc(var(--header-h) + var(--space-xs) + var(--heading-size) * var(--heading-lh) + var(--space-md));
     /* Column counts come from the ≤980 / ≤375 blocks above — only the gaps
        are mobile-specific here. */
     /* Proportional to desktop's 120 px (≈ 40 % shrink, in line with --space-md) */
@@ -277,22 +284,15 @@ input::placeholder {
   opacity: 0.3;
 }
 
-/* ⌘ ⊖ ⊕ density control: ⌘ plain, ⊖ and ⊕ each in its own outlined circle,
-   the same outline as the cases filter chips */
-.zoomPill { opacity: 1 !important; color: var(--c-text-muted) !important; }
-.zoomPill button {
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--text-size) !important;
-  padding: 0 !important;
-  border: none !important;
-  background: none !important;
-  color: inherit !important;
-  transition: color 0.2s;
-}
-.zoomPill button:disabled { cursor: default !important; color: inherit !important; opacity: 0.4; }
-.zoomPill button:not(:disabled):hover { color: var(--c-text) !important; }
+/* ⌘ ⊖ ⊕ — lives in the footer's bottom-left row (see ZoomControl), so it
+   is drawn like its neighbour «/en»: white at 35 % inside the row's
+   difference blend, i.e. the site's grey on a light page. A key goes full on
+   hover; a key that can't act right now just doesn't react. */
+.zoomPill { display: inline-flex; align-items: baseline; gap: 6px; }
+.zoomPill > * { opacity: 0.35; transition: opacity 0.2s; }
+.zoomPill button { font: inherit; color: inherit; background: none; border: none; padding: 0; cursor: pointer; }
+.zoomPill button:disabled { cursor: default; }
+.zoomPill button:not(:disabled):hover { opacity: 1; }
 
 /* Insights hover focus: every preview but the hovered one fades to grey */
 [data-focus] [data-insight-card]:not([data-hot]) img,

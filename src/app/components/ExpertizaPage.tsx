@@ -1,4 +1,4 @@
-import { createPortal } from 'react-dom';
+import ZoomControl from './ZoomControl';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import s from './CasesPage.module.css';
@@ -992,21 +992,17 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
       {/* ⌘ ⊖ ⊕ — pinned bottom-left, same place and look as the density
           hint on the cases page. Folds/unfolds the table below. */}
       {/* Portalled: stays fixed while the page slides out */}
-      {!isMobile && createPortal(
-        <div style={{ position: 'fixed', left: 'calc(var(--pad) + 30px)', bottom: 'var(--pad)', zIndex: 200 }}>
-          <span className={`${s.zoomHint} zoomPill`} style={{ position: 'static' }}>
-            <span className={s.zoomHintLabel} style={{ marginRight: 6 }}>⌘</span>
-            <button className={s.zoomKey} aria-label="Свернуть" disabled={level <= 1} onClick={fold}>⊖</button>
-            <button className={s.zoomKey} aria-label="Развернуть" disabled={level >= EXPERTISE_LEVELS - 1} onClick={unfold}>⊕</button>
-          </span>
-        </div>, document.body
-      )}
+      <ZoomControl
+        minusLabel="Свернуть" plusLabel="Развернуть"
+        minusDisabled={level <= 1} plusDisabled={level >= EXPERTISE_LEVELS - 1}
+        onMinus={fold} onPlus={unfold}
+      />
 
       {/* Same table as the home page, but foldable one level at a time. It's
           the first block under the title now, so it carries the title →
           content gap (the title is absolutely positioned) in place of its own
           section spacing. */}
-      <div style={{ marginTop: 'calc(var(--pad) + var(--heading-size) * var(--heading-lh) + var(--space-title) - var(--space-xl))' }}>
+      <div style={{ display: 'flow-root', marginTop: 'calc(var(--inner-content-top) - var(--space-xl))' }}>
         <ExpertiseSection2 level={level} showHeading={false} />
       </div>
 

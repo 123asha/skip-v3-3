@@ -95,21 +95,18 @@ function MetaRow({
 }: { col1?: React.ReactNode; col2?: string; num?: string; text: string; col2IsTitle?: boolean }) {
   const mob = useMobile();
   if (mob) {
+    // Phone: the same caption grid as the case cards — name on the left,
+    // the year (grey) and the text on the right
     return (
-      <div style={{ position: 'relative', marginLeft: 'calc(var(--pad) - 4px)', marginRight: 'calc(var(--pad) - 4px)' }}>
-        {/* col1 + col2 stacked in the first column (left) */}
-        {(col1 || col2) && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 8 }}>
-            {col1 && <p style={{ ...textStyle, margin: 0 }}>{col1}</p>}
-            {col2 && (col2IsTitle
-              ? <h1 style={{ ...textStyle, margin: 0 }}>{col2}</h1>
-              : <p style={{ ...textStyle, margin: 0 }}>{col2}</p>)}
-          </div>
-        )}
-        {/* number — left edge at 1/3 vw */}
-        {num && <p style={{ ...textStyle, opacity: 'var(--opacity-muted)', margin: 0, marginLeft: 'calc(33.333vw - var(--pad) + 4px)' }}>{num}</p>}
-        {/* text — 4px below, same left edge */}
-        <div style={{ marginTop: num ? 4 : 0, marginLeft: 'calc(33.333vw - var(--pad) + 4px)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(90px, 1fr) minmax(0, 3fr)', gap: 'var(--gap)', alignItems: 'start' }}>
+        <div>
+          {col1 && <p style={{ ...textStyle, margin: 0 }}>{col1}</p>}
+          {col2 && (col2IsTitle
+            ? <h1 style={{ ...textStyle, margin: 0 }}>{col2}</h1>
+            : <p style={{ ...textStyle, margin: 0 }}>{col2}</p>)}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          {num && <p style={{ ...textStyle, opacity: 'var(--opacity-muted)', margin: 0 }}>{num}</p>}
           {text.split('\n\n').map((para, k) => (
             <p key={k} style={{ ...textStyle, margin: 0, marginTop: k === 0 ? 0 : PARA_GAP }}>{typo(para)}</p>
           ))}
@@ -480,30 +477,35 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
           of the viewport, on the nav's baseline, for the rest of the case. */}
       {/* In-flow placeholder (keeps the layout and the measured height); the
           visible, inverted row is PinnedInvert's body-level copy of it */}
+      {/* Phone: no pinning — the row simply follows the chips, 10px below
+          them, like a card's caption under its picture */}
       <div
         ref={metaRef}
-        aria-hidden="true"
+        aria-hidden={isMobile ? undefined : true}
         style={{
           position: 'relative',
           padding: '0 var(--pad)',
-          marginTop: -typesH,
-          visibility: 'hidden',
+          marginTop: isMobile ? 10 : -typesH,
+          visibility: isMobile ? 'visible' : 'hidden',
         }}
       >
         <MetaRow col2={data.title} col2IsTitle num={data.year} text={data.intro} />
       </div>
-      <PinnedInvert placeholderRef={metaRef}>
-        <div style={{ padding: '0 var(--pad)' }}>
-          <MetaRow col2={data.title} col2IsTitle num={data.year} text={data.intro} />
-        </div>
-      </PinnedInvert>
+      {!isMobile && (
+        <PinnedInvert placeholderRef={metaRef}>
+          <div style={{ padding: '0 var(--pad)' }}>
+            <MetaRow col2={data.title} col2IsTitle num={data.year} text={data.intro} />
+          </div>
+        </PinnedInvert>
+      )}
 
       <div style={{
         padding: 'var(--pad)',
         // Push the body past the first screen — with the meta row's own height
         // on top of this, nothing of the copy column or the image stack peeks
         // out from under the cover. Reduced to bring title/description higher.
-        marginTop: isMobile ? 'calc(100svh - 60vh)' : 'calc(100svh - 75vh)',
+        // Phone: the regular section spacing
+        marginTop: isMobile ? 'var(--space-xl)' : 'calc(100svh - 75vh)',
       }}>
 
         {/* ── Body ─────────────────────────────────────────────────────────

@@ -8,7 +8,8 @@ interface CircleInputProps {
   onChange?: (v: string) => void;
   onFocus?: () => void;
   onBlur?: () => void;
-  size?: number;
+  /** Circle diameter — px, or any CSS length (e.g. a width-derived calc) */
+  size?: number | string;
   disabled?: boolean;
   action?: React.ReactNode;
   error?: boolean;
@@ -37,7 +38,7 @@ export default function CircleInput({ placeholder, value: externalValue, onChang
     <div
       className={`${s.root} ${isEditing ? s.focused : ''} ${error ? s.error : ''}`}
       style={{
-        '--c-size': `${size}px`,
+        '--c-size': typeof size === 'number' ? `${size}px` : size,
         opacity: disabled ? 0.35 : 1,
         transition: 'opacity 0.2s',
         pointerEvents: disabled ? 'none' : undefined,

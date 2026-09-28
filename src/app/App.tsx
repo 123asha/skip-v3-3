@@ -1410,7 +1410,7 @@ function AppInner() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: isMobile ? 'var(--space-xs)' : 40,
+            gap: isMobile ? 'var(--space-xs)' : 28,
             textAlign: 'center',
           }}
         >

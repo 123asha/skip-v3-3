@@ -623,9 +623,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
       {!isMobile && createPortal(
         <span className="zoomPill" style={{
           // Column 4, on the title's own line
-          position: 'fixed', top: 'calc(var(--logo-top) + 6px)',
-          left: 'calc(var(--pad) + 3 * ((100% - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap)))',
-          zIndex: 200,
+          position: 'fixed', left: 'calc(var(--pad) + 30px)', bottom: 'var(--pad)', zIndex: 200,
           fontSize: 'var(--text-size)', fontFamily: 'var(--font)', lineHeight: 'var(--text-lh)',
         }}>
           <span style={{ marginRight: 6 }}>⌘</span>

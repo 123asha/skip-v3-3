@@ -622,7 +622,7 @@ export default function ExpertizaPage2({ onNavigatePolicy, onGridMode }: { onNav
           the same place and look as the density hint on the cases page */}
       {/* Portalled: stays fixed while the page slides out */}
       {!isMobile && createPortal(
-        <div style={{ position: 'fixed', top: 'calc(var(--logo-top) + 6px)', left: 'calc(var(--pad) + 3 * ((100% - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap)))', zIndex: 200 }}>
+        <div style={{ position: 'fixed', left: 'calc(var(--pad) + 30px)', bottom: 'var(--pad)', zIndex: 200 }}>
           <span className={`${s.zoomHint} zoomPill`} style={{ position: 'static' }}>
             <span className={s.zoomHintLabel} style={{ marginRight: 6 }}>⌘</span>
             <button className={s.zoomKey} aria-label="Свернуть" disabled={level <= 1} onClick={fold}>⊖</button>

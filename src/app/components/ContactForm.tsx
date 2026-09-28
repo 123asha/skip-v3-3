@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import CircleInput from './CircleInput';
-import { FooterBall, FOOTER_BALL_D } from './FooterBall';
 import { useMobile } from '../hooks/useMobile';
 import s from '../App.module.css';
 
@@ -144,11 +143,9 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
   return (
     <div ref={wrapRef} className={s.contactWrap}>
 
-      {/* No grey card any more: the ball is the backdrop, and the card is
-          tall enough to hold it whole */}
-      <div className={s.contactCard} style={{ background: 'transparent', overflow: 'visible', minHeight: `calc(${FOOTER_BALL_D} + 80px)`, justifyContent: 'center' }}>
-        <FooterBall />
-        {/* Form content — centered column, above the ball */}
+      {/* Sphere backdrop parked for now — plain white card */}
+      <div className={s.contactCard} style={{ background: '#fff', justifyContent: 'center' }}>
+        {/* Form content — centered column */}
         <div ref={formAreaRef} className={s.contactFormArea} style={{ position: 'relative', zIndex: 1, background: 'transparent', flex: '0 0 auto', paddingTop: 20, paddingBottom: 20 }}>
 
           {/* Tabs — centered, horizontal. Label of the 2nd tab + the side

@@ -173,7 +173,7 @@ export function InsightCards() {
     {/* Portalled: stays fixed while the page slides out */}
     {!isMobile && createPortal(
       <div className="zoomPill" style={{
-        position: 'fixed', top: 'calc(var(--logo-top) + 6px)', left: 'calc(var(--pad) + 3 * ((100% - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap)))', zIndex: 200,
+        position: 'fixed', left: 'calc(var(--pad) + 30px)', bottom: 'var(--pad)', zIndex: 200,
         display: 'inline-flex', alignItems: 'center', gap: 6,
         fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)',
       }}>

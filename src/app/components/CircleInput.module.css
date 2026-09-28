@@ -87,8 +87,8 @@
 }
 
 .prefix {
-  /* Always-present "@" — quieter than the letters the visitor types */
-  color: var(--c-text-muted);
+  /* Always-present "@" — same colour as the letters the visitor types */
+  color: var(--c-text);
   border-color: var(--c-border);
 }
 

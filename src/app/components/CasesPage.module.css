@@ -52,6 +52,25 @@
   max-width: 80%;
 }
 
+/* Left edge of the 2nd column of the 5-col page grid */
+/* Pinned to the screen and inverted against whatever scrolls under it, like
+   the nav. Top: the capitals' top edge sits on the logo's top line
+   (--logo-top; lowercase starts 0.3265em below the line box). */
+.titleCol2 {
+  position: fixed;
+  top: calc(var(--logo-top) - 0.3265em + 6px + var(--title-drop));
+  left: calc(var(--pad) + (100% - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap));
+  transform: none;
+  text-align: left;
+  z-index: 199;
+  color: #fff;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  /* Fades in with its page. `backwards`, not `both`: a held animation would
+     override the inline opacity the page-exit tween sets. */
+  animation: pageIn 0.35s 0.05s ease backwards;
+}
+
 .body {
   /* Title bottom → first content block: --space-title (200px at 1600) */
   padding-top: calc(var(--pad) + var(--heading-size) * var(--heading-lh) + var(--space-title));
@@ -65,7 +84,9 @@
   /* Fixed at the top of the screen, on the nav's baseline. Above the
      sub-page layer (.page is at 160) so it isn't covered by it. */
   position: fixed;
-  top: calc(var(--pad) - 3px);
+  /* Same line as the page title, centred */
+  top: calc(var(--logo-top) - 0.3265em + 6px);
+  height: calc(var(--heading-size) * var(--heading-lh));
   left: 0;
   right: 0;
   z-index: 168;
@@ -82,11 +103,10 @@
 .tabsRow {
   position: relative;
   display: flex;
-  justify-content: center;
+  /* Third grid column — clear of the title on every page, on its line */
+  justify-content: flex-start;
   align-items: center;
-  /* No top padding — the chips sit on the nav's line; same gap to the row
-     below as the horizontal gap between chips (5px) */
-  padding: 0 0 5px;
+  padding: 0 0 0 calc(2 * ((100% - var(--page-sb, 0px) - 4 * var(--gap)) / 5 + var(--gap)));
 }
 
 /* The second row always keeps its space — the chips fade and rise into it,
@@ -344,4 +364,26 @@
   }
   .tabsRow { flex-wrap: wrap; justify-content: center; row-gap: 5px; }
   .subRow  { flex-wrap: wrap; justify-content: center; row-gap: 5px; }
+}
+
+/* Body-level parts of a page (see PinnedInvert) fade in with it */
+.pageFloat {
+  animation: pageIn 0.35s 0.05s ease backwards;
+}
+
+/* Hover focus on the cases grid: every preview but the hovered one fades to
+   its grey frame (see CasesPage) */
+[data-case-card] [class*="cardImage"] { background: var(--c-surface); }
+[data-case-card] [class*="cardImage"] img,
+[data-case-card] [class*="cardImage"] video { transition: opacity 0.3s ease; }
+[data-focus] [data-case-card]:not([data-hot]) [class*="cardImage"] img,
+[data-focus] [data-case-card]:not([data-hot]) [class*="cardImage"] video { opacity: 0; }
+
+/* Cases page only: previews oversized so the scroll parallax can move them
+   far without ever uncovering an edge */
+.page [data-case-card] [class*="cardImage"] img {
+  left: -25% !important;
+  top: -25% !important;
+  width: 150% !important;
+  height: 150% !important;
 }

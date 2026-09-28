@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import { useMobile } from '../hooks/useMobile';
 import { usePinchSteps } from '../hooks/usePinchSteps';
@@ -11,7 +12,6 @@ function img(path: string): { image: string; ar: AR } {
   return { image: asset(path), ar: arSuffix(path) === 'v' ? V : H };
 }
 import { useReveal } from '../hooks/useReveal';
-import { caseCategories } from '../utils/caseCategories';
 
 interface Props {
   onBack: () => void;
@@ -21,7 +21,9 @@ interface Props {
   onGridCols?: (n: number) => void; // report current grid column count to the overlay
 }
 
-interface Project {
+export interface Project {
+  /** Real preview shown even while the rest are grey placeholders */
+  preview?: string;
   id: number;
   cats: string[];
   /** Second-level tags, keyed by SUBTABS below. Placeholder values for now —
@@ -36,18 +38,23 @@ interface Project {
   href?: string; // own case page (defaults to the generic template)
 }
 
-const PROJECTS: Project[] = [
+export const PROJECTS: Project[] = [
   { id: 1,  subs: ['strategy', 'design', 'uxui'], cats: ['branding', 'sites', 'interfaces'],       ...img('/case1-h.webp'), title: 'AEPlatform',     year: '2025', desc: 'Страница, которая приводит партнёров AliExpress' },
   { id: 2,  subs: ['strategy', 'design', 'architecture'], cats: ['branding', 'sites', 'instruments'],      ...img('/case2-v.webp'), title: 'Gate Legal',     year: '2024', desc: 'Помогли запуститься: от платформы бренда до сайта — за полтора месяца.' },
-  { id: 3,  subs: ['design', 'tools', 'uxui'], cats: ['branding', 'interfaces', 'instruments'], ...img('/case3-h.webp'), title: 'AEPlatform',     year: '2025', desc: 'Браузерное расширение для отображения affiliate-данных прямо на AliExpress' },
-  { id: 4,  subs: ['design', 'nocode'], cats: ['branding', 'sites'],                     ...img('/case4-v.webp'), title: "Kon' Ogon'",    year: '2025', desc: 'Новогодний спецпроект для команды и комьюнити' },
-  { id: 5,  subs: ['strategy', 'design', 'uxui'], cats: ['branding', 'sites', 'interfaces'],       ...img('/case5-v.webp'), title: 'Крипто', year: '2026', desc: 'Подготовили бренд-систему для запуска крипто-стартапа' },
-  { id: 6,  subs: ['tools', 'architecture', 'uxui'], cats: ['sites', 'interfaces', 'instruments'],    ...img('/case6-h.webp'), title: 'Gate Legal',     year: '2024', desc: 'Конструктор баннеров для ускорения разработки креативов к ежедневным постам' },
-  { id: 7,  subs: ['strategy', 'design', 'tools'], cats: ['branding', 'sites', 'instruments'],      ...img('/case1-h.webp'), title: 'Senior*s bar',   year: '2025', desc: 'Бар своей среды. Визуальный язык для офлайна и онлайна', href: '/Seniorsbar' },
-  { id: 8,  subs: ['design', 'uxui', 'productStrategy'], cats: ['sites', 'interfaces'],                   ...img('/case2-v.webp'), title: 'Magic Moon',     year: '2024', desc: 'Трекер целей от Юрия Мурадяна, в котором визуал поддерживает философию продукта', video: asset('/magic-moon.mp4') },
-  { id: 9,  subs: ['tools', 'uxui'], cats: ['interfaces', 'instruments'],             ...img('/case3-h.webp'), title: 'AliExpress',     year: '2026', desc: 'Тысячи партнёров AliExpress в одном дашборде' },
-  { id: 10, subs: ['architecture', 'nocode', 'uxui'], cats: ['sites', 'interfaces', 'instruments'],    ...img('/case4-v.webp'), title: 'Binaroom',       year: '2025', desc: '3D-проекты превращаются в сметы и КП за минуту' },
+  { id: 3, preview: asset('/preview-stickers.webp'),  subs: ['design', 'tools', 'uxui'], cats: ['branding', 'interfaces', 'instruments'], ...img('/case3-h.webp'), title: 'AEPlatform',     year: '2025', desc: 'Браузерное расширение для отображения affiliate-данных прямо на AliExpress' },
+  { id: 4, preview: asset('/preview-ultra.webp'),  subs: ['design', 'nocode'], cats: ['branding', 'sites'],                     ...img('/case4-v.webp'), title: "Kon' Ogon'",    year: '2025', desc: 'Новогодний спецпроект для команды и комьюнити' },
+  { id: 5, preview: asset('/preview-keys.jpg'),  subs: ['strategy', 'design', 'uxui'], cats: ['branding', 'sites', 'interfaces'],       ...img('/case5-v.webp'), title: 'Крипто', year: '2026', desc: 'Подготовили бренд-систему для запуска крипто-стартапа' },
+  { id: 6, preview: asset('/preview-app.jpg'),  subs: ['tools', 'architecture', 'uxui'], cats: ['sites', 'interfaces', 'instruments'],    ...img('/case6-h.webp'), title: 'Gate Legal',     year: '2024', desc: 'Конструктор баннеров для ускорения разработки креативов к ежедневным постам' },
+  { id: 7, preview: asset('/preview-storefront.webp'),  subs: ['strategy', 'design', 'tools'], cats: ['branding', 'sites', 'instruments'],      ...img('/case1-h.webp'), title: 'Senior*s bar',   year: '2025', desc: 'Бар своей среды. Визуальный язык для офлайна и онлайна', href: '/Seniorsbar' },
+  { id: 8, preview: asset('/preview-pocket.avif'),  subs: ['design', 'uxui', 'productStrategy'], cats: ['sites', 'interfaces'],                   ...img('/case2-v.webp'), title: 'Magic Moon',     year: '2024', desc: 'Трекер целей от Юрия Мурадяна, в котором визуал поддерживает философию продукта', video: asset('/magic-moon.mp4') },
+  { id: 9, preview: asset('/preview-phone.webp'),  subs: ['tools', 'uxui'], cats: ['interfaces', 'instruments'],             ...img('/case3-h.webp'), title: 'AliExpress',     year: '2026', desc: 'Тысячи партнёров AliExpress в одном дашборде' },
+  { id: 10, preview: asset('/preview-coffee.webp'), subs: ['architecture', 'nocode', 'uxui'], cats: ['sites', 'interfaces', 'instruments'],    ...img('/case4-v.webp'), title: 'Binaroom',       year: '2025', desc: '3D-проекты превращаются в сметы и КП за минуту' },
 ];
+
+// Grey category line in each card's description spot (gives way on hover): the case's filter categories, one or
+// two, comma-separated
+const CAT_LABEL: Record<string, string> = { branding: 'Брендинг', sites: 'Веб', interfaces: 'Продукт' };
+const catLine = (cats?: string[]) => (cats ?? []).map(c => CAT_LABEL[c]).filter(Boolean).slice(0, 2).join(', ');
 
 // Tabs mirror the three categories of the services table.
 const TABS = [
@@ -62,6 +69,9 @@ const WEB_CATS = ['sites', 'instruments'];
 
 // Second filter row — appears under the tabs once a category is picked.
 // Multi-select: a project shows if it carries ANY of the chosen tags.
+// Temporary: second filter row switched off — flip to true to bring it back.
+const SHOW_SUBTABS = false;
+
 const SUBTABS: Record<string, { key: string; label: string }[]> = {
   branding: [
     { key: 'strategy', label: 'Стратегия' },
@@ -84,7 +94,7 @@ const SUBTABS: Record<string, { key: string; label: string }[]> = {
 const CFG_GAP  = { a: '1 / 3', b: '4 / 6' };  // left card col 1-2, right col 4-5
 const CFG_ADJ  = { a: '2 / 4', b: '4 / 6' };  // left card col 2-3, right col 4-5 (always aligned)
 
-interface RowItem { project: Project; col: string; round?: boolean; }
+interface RowItem { project: Project; col: string; round?: boolean; ar?: AR; }
 interface Row { key: string; items: RowItem[]; }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -186,10 +196,10 @@ function interleaveHV(projects: Project[]): Project[] {
   return out;
 }
 
-// Hand-set shape sequence, left to right / top to bottom: square, circle,
-// then four squares, circle, square — whatever comes after just falls back
-// to the title-hash default (isCaseRound), same as every other page.
-const POSITION_ROUND = [false, true, false, false, false, false, true, false];
+// Only one circle on the page — the second case of the second row, at every
+// density; every other card is square or 4:5 (never the title-hash default,
+// which would scatter more circles).
+const ROUND_ROW = 1, ROUND_COL = 1;
 
 function buildScatterRows(projects: Project[], perRow: number, gridCols: number): Row[] {
   const items = interleaveHV(projects);
@@ -221,7 +231,9 @@ function buildScatterRows(projects: Project[], perRow: number, gridCols: number)
       items: chunk.map((project, j) => ({
         project,
         col: `${cols[j]} / ${cols[j] + 1}`,
-        round: POSITION_ROUND[i + j],
+        // Second row: vertical · circle · vertical
+        round: rows.length === 1 && j === 1,
+        ar: rows.length === 1 && j !== 1 ? V : undefined,
       })),
     });
   }
@@ -237,9 +249,7 @@ function buildScatterRows(projects: Project[], perRow: number, gridCols: number)
 // One step past the densest grid the previews go too: level 0 drops the images
 // and leaves the list as plain text.
 const ZOOM_CFG: Record<number, { cols: number; perRow: number; rowGap: number | string; cap: string; showMeta: boolean; imagesOff?: boolean }> = {
-  // The biggest step keeps the old scattered look: 2 cards in a 3-column
-  // row, one empty column landing at a random spot each row.
-  5: { cols: 3, perRow: 2, rowGap: 'var(--cases-row-gap, 120px)', cap: 'var(--text-size)', showMeta: true },
+  5: { cols: 3, perRow: 3, rowGap: 'var(--cases-row-gap, 120px)', cap: 'var(--text-size)', showMeta: true },
   4: { cols: 4, perRow: 4, rowGap: 100, cap: 'var(--text-size)', showMeta: true },
   3: { cols: 5, perRow: 5, rowGap: 80,  cap: 'var(--text-size)', showMeta: false },
   2: { cols: 6, perRow: 6, rowGap: 64,  cap: 'var(--text-size)', showMeta: false },
@@ -257,9 +267,9 @@ function mobileColSpan(idx: number): string {
 }
 
 // ── ProjectCard ───────────────────────────────────────────────────────────────
-function ProjectCard({ ar, cats, title, desc, image, video, onClick, servicesSize, metaSize, hideMeta, hideImage, round }: Project & { onClick?: () => void; servicesSize?: string | number; metaSize?: string | number; hideMeta?: boolean; hideImage?: boolean; round?: boolean }) {
+function ProjectCard({ ar, cats, title, desc, image, preview, video, onClick, servicesSize, metaSize, hideMeta, hideImage, round }: Project & { onClick?: () => void; servicesSize?: string | number; metaSize?: string | number; hideMeta?: boolean; hideImage?: boolean; round?: boolean }) {
   return (
-    <CaseCard ar={ar} title={title} desc={desc} services={caseCategories(cats)} servicesSize={servicesSize} metaSize={metaSize} hideMeta={hideMeta} hideImage={hideImage} image={image} video={video} onClick={onClick} round={round} />
+    <CaseCard ar={ar} title={title} desc={desc} services={catLine(cats)} showCats servicesSize={servicesSize} metaSize={metaSize} hideMeta={hideMeta} hideImage={hideImage} image={image} preview={preview} video={video} onClick={onClick} round={round} />
   );
 }
 
@@ -293,6 +303,121 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
   };
 
   useReveal(pageRef);
+
+  // Cards rise into place from below as they scroll into view, each once.
+  // The card's content moves, not the card box — the box is what the zoom
+  // FLIP animates, and the two mustn't fight over one transform.
+  useEffect(() => {
+    const page = pageRef.current;
+    if (!page || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const io = new IntersectionObserver(entries => {
+      const incoming = entries.filter(e => e.isIntersecting).map(e => e.target as HTMLElement);
+      incoming.forEach(el => { io.unobserve(el); el.dataset.risen = 'done'; });
+      gsap.to(incoming.map(el => el.firstElementChild), { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out', stagger: 0.08 });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    page.querySelectorAll<HTMLElement>('[data-case-card]').forEach(el => {
+      const inner = el.firstElementChild as HTMLElement | null;
+      if (!inner || el.dataset.risen === 'done') return;
+      if (!el.dataset.risen) {
+        // First sight: on screen already → just leave it; below → hide it
+        if (el.getBoundingClientRect().top < window.innerHeight) { el.dataset.risen = 'done'; return; }
+        el.dataset.risen = 'wait';
+        gsap.set(inner, { opacity: 0, y: 60 });
+      }
+      io.observe(el);   // still waiting (also after a re-render)
+    });
+    return () => io.disconnect();
+  });
+  // Light parallax: each preview slides a little against its frame as the
+  // page moves (the picture is already 12% larger than its mask). Uses the
+  // `translate` property so it never fights the hover hop's transform.
+  // Also: the page title scrolls away with the page, while the filter tabs
+  // ride up and stay pinned on the logo's line.
+  useEffect(() => {
+    const page = pageRef.current;
+    if (!page) return;
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const root = getComputedStyle(document.documentElement);
+    const textSize = parseFloat(root.getPropertyValue('--text-size'));
+    void textSize;
+    // The big current menu item stays pinned above the tabs, so they keep
+    // their place under it instead of rising to the logo line
+    const tabsPinTop = Infinity;
+    let tabsStart: number | null = null;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const vh = window.innerHeight;
+      if (!still) page.querySelectorAll<HTMLElement>('[data-case-card] img').forEach(img => {
+        const r = img.parentElement!.getBoundingClientRect();
+        const p = Math.max(-1, Math.min(1, (r.top + r.height / 2 - vh / 2) / vh));
+        img.style.translate = `0 ${(p * 20).toFixed(2)}%`;
+        // The frame stays put against its caption — the gap to the title
+        // never changes on scroll
+      });
+      const title = document.querySelector<HTMLElement>('body > h1[class*="titleCol2"]');
+      if (title) title.style.translate = `0 ${-page.scrollTop}px`;
+      const bar = tabsBarRef.current;
+      if (bar) {
+        if (tabsStart === null) tabsStart = bar.offsetTop;
+        const lift = Math.min(page.scrollTop, Math.max(0, tabsStart - tabsPinTop));
+        bar.style.translate = `0 ${-lift}px`;
+      }
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+    update();
+    page.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      page.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  // Hovering a case (while not scrolling) turns every other preview into a
+  // plain grey frame — only the pictures, the captions stay as they are.
+  useEffect(() => {
+    const page = pageRef.current, grid = gridRef.current;
+    if (!page || !grid) return;
+    let scrolling = false, t = 0, dwell = 0;
+    let hot: HTMLElement | null = null;
+    // The others go grey only after the pointer has rested on one case for
+    // 5 s without scrolling; any move to another case or scroll restarts it
+    const apply = () => {
+      clearTimeout(dwell);
+      delete grid.dataset.focus;
+      if (!hot || scrolling) return;
+      const card = hot;
+      dwell = window.setTimeout(() => {
+        if (hot === card && !scrolling) { grid.dataset.focus = ''; card.dataset.hot = ''; }
+      }, 5000);
+    };
+    const onOver = (e: MouseEvent) => {
+      const card = (e.target as HTMLElement).closest<HTMLElement>('[data-case-card]');
+      if (card === hot) return;
+      if (hot) delete hot.dataset.hot;
+      hot = card;
+      apply();
+    };
+    const onLeave = () => { if (hot) delete hot.dataset.hot; hot = null; apply(); };
+    const onScroll = () => {
+      scrolling = true; apply();
+      clearTimeout(t);
+      t = window.setTimeout(() => { scrolling = false; apply(); }, 180);
+    };
+    grid.addEventListener('mouseover', onOver);
+    grid.addEventListener('mouseleave', onLeave);
+    page.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      grid.removeEventListener('mouseover', onOver);
+      grid.removeEventListener('mouseleave', onLeave);
+      page.removeEventListener('scroll', onScroll);
+      clearTimeout(t);
+      clearTimeout(dwell);
+    };
+  }, []);
+
   const mountedRef = useRef(false);
   const [zoom, setZoomRaw] = useState(5); // default: the 3-column view
   // Every zoom change first notes where each card sits, so the re-laid grid
@@ -487,27 +612,42 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
 
   return (
     <div className={s.page} ref={pageRef}>
-      {/* Kept for structure and screen readers, hidden on the page itself */}
-      <h1
-        className={s.title}
-        style={{
-          position: 'absolute',
-          width: 1,
-          height: 1,
-          padding: 0,
-          overflow: 'hidden',
-          clip: 'rect(0 0 0 0)',
-          whiteSpace: 'nowrap',
-          border: 0,
-        }}
-      >Проекты</h1>
+      {/* Same spot as the Услуги / Инсайты titles — the fixed 5-col page
+          grid, not the zoomable card grid, so density changes don't move it */}
 
       {/* The bar mirrors the card grid of the current zoom level, so the tabs
           start exactly on the third card column whatever the density. */}
       {/* Fixed bar — always visible, so it stays out of the scroll-reveal */}
+      {/* Portalled to <body>: fixed on screen, it stays put while the page
+          itself slides out on a section change */}
+      {!isMobile && createPortal(
+        <span className="zoomPill" style={{
+          // Column 4, on the title's own line
+          position: 'fixed', top: 'calc(var(--logo-top) + 6px)',
+          left: 'calc(var(--pad) + 3 * ((100% - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap)))',
+          zIndex: 200,
+          fontSize: 'var(--text-size)', fontFamily: 'var(--font)', lineHeight: 'var(--text-lh)',
+        }}>
+          <span style={{ marginRight: 6 }}>⌘</span>
+          <button
+            className={s.zoomKey}
+            aria-label="Плотнее"
+            disabled={zoom <= ZOOM_MIN}
+            onClick={() => setZoom(z => Math.max(ZOOM_MIN, z - 1))}
+          >⊖</button>
+          <button
+            className={s.zoomKey}
+            aria-label="Крупнее"
+            disabled={zoom >= ZOOM_MAX}
+            onClick={() => setZoom(z => Math.min(ZOOM_MAX, z + 1))}
+          >⊕</button>
+        </span>, document.body
+      )}
+      {createPortal(
       <div ref={tabsBarRef} className={s.tabsBar}>
-        {/* Row 1 — categories, with the zoom hint trailing them */}
-        <div className={s.tabsRow}>
+        {/* Row — just the categories now; the zoom hint moved to the
+            bottom-left corner, beside the language switch */}
+        <div className={s.tabsRow} style={{ justifyContent: 'center', padding: '0 0 5px' }}>
           <div className={s.tabsBarInner}>
             {TABS.map(tab => (
               <button
@@ -520,27 +660,11 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
               </button>
             ))}
           </div>
-          {/* Zoom hint — bottom-left corner of the screen */}
-          {!isMobile && (
-            <span className={s.zoomHint}>
-              <span className={s.zoomHintLabel}>⌘</span>
-              <button
-                className={s.zoomKey}
-                aria-label="Плотнее"
-                onClick={() => setZoom(z => Math.max(ZOOM_MIN, z - 1))}
-              >⊖</button>
-              <button
-                className={s.zoomKey}
-                aria-label="Крупнее"
-                onClick={() => setZoom(z => Math.min(ZOOM_MAX, z + 1))}
-              >⊕</button>
-            </span>
-          )}
         </div>
 
-        {/* Row 2 — sub-tags of the open category. Collapses to nothing when no
+        {/* Row 3 — sub-tags of the open category. Collapses to nothing when no
             category is picked; several tags can be on at once. */}
-        <div className={s.subRowWrap}>
+        {SHOW_SUBTABS && <div className={s.subRowWrap}>
           <div>
             {/* Chips rise into place from below as the row opens */}
             <div
@@ -565,8 +689,8 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </div>}
+      </div>, document.body)}
       <div ref={tabsAnchorRef} />
       {/* paddingTop override: the shared .body padding-top already reserves
           space for the title, but here the tabsBar (with its own margin-top)
@@ -576,7 +700,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
           + 100px of air. */}
       <div
         className={s.body}
-        style={{ paddingTop: isMobile ? 150 : 'calc(var(--pad) + 26px + 100px)' }}
+        style={{ paddingTop: isMobile ? 150 : 'var(--inner-content-top)' }}
       >
         <div
           ref={gridRef}
@@ -609,7 +733,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
                   data-id={item.project.id}
                   style={{ gridColumn: item.col, gridRow: rowIdx + 1, minWidth: 0 }}
                 >
-                  <ProjectCard {...item.project} round={item.round} servicesSize={ZOOM_CFG[zoom].cap} metaSize={ZOOM_CFG[zoom].cap} hideMeta={!ZOOM_CFG[zoom].showMeta} hideImage={ZOOM_CFG[zoom].imagesOff} onClick={() => onCaseClick?.(item.project.href)} />
+                  <ProjectCard {...item.project} ar={item.ar ?? item.project.ar} round={item.round} servicesSize={ZOOM_CFG[zoom].cap} metaSize={ZOOM_CFG[zoom].cap} hideMeta={!ZOOM_CFG[zoom].showMeta} hideImage={ZOOM_CFG[zoom].imagesOff} onClick={() => onCaseClick?.(item.project.href)} />
                 </div>
               ))
             )

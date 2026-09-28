@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import s from './CasesPage.module.css';
@@ -259,10 +260,27 @@ const MATCH_POINTS: { sym: string; text: string }[] = [
 function IntroBlock() {
   const isMobile = useMobile();
   const P_GAP = PARA_GAP;
+  // Same entrance as the four tiles below: paragraphs come up from below one
+  // after another as the block scrolls in — both columns at once, top to bottom.
+  const blockRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const block = blockRef.current;
+    if (!block || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const cols = Array.from(block.children).map(c => Array.from(c.children) as HTMLElement[]);
+    gsap.set(cols.flat(), { opacity: 0, y: 60 });
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      cols.forEach(paras => gsap.to(paras, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out', stagger: 0.09, clearProps: 'transform,opacity' }));
+    }, { threshold: 0, rootMargin: '0px 0px -6% 0px' });
+    io.observe(block);
+    return () => io.disconnect();
+  }, []);
 
   return (
     <div
-      data-reveal=""
+      ref={blockRef}
+      data-title-release=""
       style={{
         padding: '0 var(--pad)',
         display: 'grid',
@@ -273,6 +291,11 @@ function IntroBlock() {
         marginTop: 'var(--space-xl)',
       }}
     >
+      {/* Col 3 — section label, plain body text */}
+      <div style={{ gridColumn: isMobile ? 'auto' : '3 / 4' }}>
+        <p style={{ ...ts, margin: 0 }}>Наш подход</p>
+      </div>
+
       {/* Col 4 — credo + principles */}
       <div style={{ gridColumn: isMobile ? 'auto' : '4 / 5' }}>
         {[CREDO, ...PRINCIPLES].map((para, i) => (
@@ -301,10 +324,10 @@ function IntroBlock() {
 // Kept to a similar length on purpose — each caption fills exactly two lines
 // at one column wide, so the four tiles read as one row.
 const TILES = [
-  'Собираем смыслы до того, как начинаем рисовать формы',
-  'Система важнее одной удачной картинки в презентации',
-  'Проверяем решения на реальных носителях, а не в вакууме',
-  'Оставляем шаблоны и инструменты, чтобы дизайн жил и не ломался',
+  'Бренд-смыслы и фирменный стиль для цифровых продуктов',
+  'Дизайн-системы и инструменты для маркетинга',
+  'Бренд-стратегия и позиционирование',
+  'UX/UI поддержка цифрового продукта',
 ];
 
 // Step markers with their labels, top-left of each tile
@@ -332,6 +355,31 @@ const NS = 'http://www.w3.org/2000/svg';
 
 // TileBalls: render animated falling numbered balls per tile on hover, built
 // the same way as Constellation's balls (shading gradient + sphere-warp filter).
+// ── A squashable balloon (дизайн tile) ──────────────────────────────────────
+// A superellipse |x/a|^n + |y/b|^n = 1: n = 2 is a ball; as the pressure (n)
+// rises it pushes out into the corners and turns into a soft cushion, while
+// a and b stop at the walls it presses against — flat where it touches,
+// round everywhere else, the way a blown-up balloon fills a box.
+type BlobCell = { l: number; t: number; w: number; h: number };
+const BLOB_N = 96;
+function balloonPath(a: number, b: number, n: number) {
+  const e = 2 / n;
+  const p: [number, number][] = [];
+  for (let k = 0; k < BLOB_N; k++) {
+    const t = (k / BLOB_N) * Math.PI * 2, c = Math.cos(t), s = Math.sin(t);
+    p.push([a * Math.sign(c) * Math.abs(c) ** e, b * Math.sign(s) * Math.abs(s) ** e]);
+  }
+  // Closed Catmull-Rom through the samples — a smooth outline, no facets
+  let d = `M${p[0][0].toFixed(2)},${p[0][1].toFixed(2)}`;
+  for (let k = 0; k < BLOB_N; k++) {
+    const p0 = p[(k - 1 + BLOB_N) % BLOB_N], p1 = p[k], p2 = p[(k + 1) % BLOB_N], p3 = p[(k + 2) % BLOB_N];
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6, c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6, c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += `C${c1x.toFixed(2)},${c1y.toFixed(2)} ${c2x.toFixed(2)},${c2y.toFixed(2)} ${p2[0].toFixed(2)},${p2[1].toFixed(2)}`;
+  }
+  return d + 'Z';
+}
+
 function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const filterIdRef = useRef(`tile-sphere-${tileIndex}-${Math.random().toString(36).slice(2)}`);
@@ -355,6 +403,8 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
     spin: number;
     /** Where it was drawn last frame — spin follows the real travel */
     drawnX: number;
+    /** дизайн: drawn as a rect so it can inflate into a flat panel */
+    shape?: SVGPathElement;
   }>>([]);
   const rafRef = useRef<number>();
 
@@ -430,15 +480,17 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
       // Same drop in every tile — only what's dropped, and where it ends up,
       // differs per step:
       //   стратегия   — six equal balls in a heap
-      //   дизайн      — a composition: one big ball, three small
+      //   дизайн      — two balls drop, then inflate and flatten until they
+      //                 fill the tile as two panels
       //   система     — six balls stacking into an exact 2 × 3 grid
       //   инструменты — one big ball that drops in and is caught mid-air a
       //                 little above the middle of the tile by an unseen updraft
       // Balls are sized to fill the tile, like the strategy heap.
-      type Spec = { r: number; lockX?: number; float?: boolean };
+      type Spec = { r: number; lockX?: number; float?: boolean; dropX?: number };
       let specs: Spec[];
       if (tileIndex === 1) {
-        specs = [{ r: R }, { r: R * 0.6 }, { r: R * 0.6 }, { r: R * 0.6 }];
+        const rd = W * 0.24;
+        specs = [{ r: rd, dropX: W / 2 - rd * 0.2 }, { r: rd, dropX: W / 2 + rd * 0.2 }];
       } else if (tileIndex === 2) {
         // Two balls span the full width, like the strategy heap's size
         const rg = W / 4;
@@ -449,14 +501,17 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         specs = Array.from({ length: TILE_BALLS }, () => ({ r: R }));
       }
       for (let i = 0; i < specs.length; i++) {
-        const { r, lockX, float } = specs[i];
+        const { r, lockX, float, dropX } = specs[i];
         const seed = tileIndex * 97 + i;
-        const x = lockX ?? (float ? W / 2 : r + pseudoRandom(seed) * Math.max(0, W - 2 * r));
+        const x = lockX ?? dropX ?? (float ? W / 2 : r + pseudoRandom(seed) * Math.max(0, W - 2 * r));
         // система: stacked in reading order from the bottom up, so the grid
         // counts 1 2 / 3 4 / 5 6 upward once it lands
+        // дизайн: the second ball follows the first from above the tile
         const y = lockX !== undefined
           ? r + H * 0.3 - Math.floor(i / 2) * 2.05 * r
-          : r + pseudoRandom(seed + 0.33) * (H * 0.3);
+          : dropX !== undefined
+            ? r - i * 2.6 * r
+            : r + pseudoRandom(seed + 0.33) * (H * 0.3);
         const vx = (pseudoRandom(seed + 0.67) - 0.5) * 200;
         const vy = -100 - pseudoRandom(seed + 0.9) * 50;
 
@@ -464,9 +519,17 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         const shadeId = `${filterIdRef.current}-shade-${i}`;
         const shade = document.createElementNS(NS, 'radialGradient');
         shade.setAttribute('id', shadeId);
-        shade.setAttribute('gradientUnits', 'userSpaceOnUse');
-        shade.setAttribute('cx', '0'); shade.setAttribute('cy', String(-r * 0.35));
-        shade.setAttribute('r', String(r * 1.45));
+        if (tileIndex === 1) {
+          // The same light as every other ball, but tied to the shape's box
+          // so it stretches with the balloon as it squashes
+          shade.setAttribute('gradientUnits', 'objectBoundingBox');
+          shade.setAttribute('cx', '0.5'); shade.setAttribute('cy', '0.325');
+          shade.setAttribute('r', '0.725');
+        } else {
+          shade.setAttribute('gradientUnits', 'userSpaceOnUse');
+          shade.setAttribute('cx', '0'); shade.setAttribute('cy', String(-r * 0.35));
+          shade.setAttribute('r', String(r * 1.45));
+        }
         for (const [o, col] of [['0', '#ffffff'], ['0.62', '#ffffff'], ['1', 'color-mix(in srgb, #ffffff 95.4%, #000)']]) {
           const st = document.createElementNS(NS, 'stop');
           st.setAttribute('offset', o); st.setAttribute('stop-color', col);
@@ -474,9 +537,18 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         }
         svg.querySelector('defs')!.appendChild(shade);
 
-        const circle = document.createElementNS(NS, 'circle');
-        circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0');
-        circle.setAttribute('r', String(r));
+        let circle: SVGElement;
+        let shape: SVGPathElement | undefined;
+        if (tileIndex === 1) {
+          // A soft outline rather than a circle, so it can squash (see balloonPath)
+          shape = document.createElementNS(NS, 'path');
+          shape.setAttribute('d', balloonPath(r, r, 2));
+          circle = shape;
+        } else {
+          circle = document.createElementNS(NS, 'circle');
+          circle.setAttribute('cx', '0'); circle.setAttribute('cy', '0');
+          circle.setAttribute('r', String(r));
+        }
         circle.setAttribute('fill', `url(#${shadeId})`);
 
         const text = document.createElementNS(NS, 'text');
@@ -491,8 +563,8 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         text.style.fontWeight = '500';
         text.style.userSelect = 'none';
         text.style.pointerEvents = 'none';
-        // Only the strategy step is numbered — the other tiles are plain spheres
-        if (tileIndex === 0) text.textContent = String(i + 1);
+        // стратегия and система are numbered — the other tiles are plain spheres
+        if (tileIndex === 0 || tileIndex === 2) text.textContent = String(i + 1);
 
         const face = document.createElementNS(NS, 'g');
         face.setAttribute('filter', `url(#${filterIdRef.current})`);
@@ -503,7 +575,7 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         group.append(circle, face);
         svg.appendChild(group);
 
-        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group, lockX, floatX: float ? x : undefined, floatY: float ? H * 0.42 : undefined, text, spin: 0, drawnX: x });
+        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group, lockX, floatX: float ? x : undefined, floatY: float ? H * 0.42 : undefined, text, spin: 0, drawnX: x, shape });
       }
     } else if (!hovered && ballsRef.current.length > 0) {
       ballsRef.current.forEach(b => {
@@ -535,22 +607,80 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
       playKnock(Math.min(1, speed / 900));
     };
 
+    // дизайн and система read as sluggish next to the others at the same
+    // physics step — speed their fall/settle up without touching the rest.
+    const SPEED = tileIndex === 2 ? 2 : tileIndex === 1 ? 1.5 : 1;
+
+    // дизайн: once the two balls have landed they blow up like two balloons
+    // in a box — stacked if they landed one on the other, side by side if they
+    // rolled apart. Each keeps to its half: it swells round, goes flat against
+    // the walls and its neighbour, then the pressure pushes it into the
+    // corners until the two fill the tile, corners soft (see balloonPath).
+    const INFLATE_MS = 1700 / SPEED;
+    const N_END = 7;                   // corner pressure at the end — soft cushion corners
+    let inflateAt: number | null = null;
+    let inflateDone = false;
+    let restFrames = 0;
+    type Cell = BlobCell;
+    let plan: { b: typeof balls[number]; x0: number; y0: number; r0: number; cell: Cell }[] = [];
+    const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+    const inflate = () => {
+      const now = performance.now();
+      if (inflateAt === null) {
+        const still = balls.every(b => Math.abs(b.vx) < 25 && Math.abs(b.vy) < 25 && b.y > 0);
+        restFrames = still ? restFrames + 1 : 0;
+        if (restFrames < 6 && now - spawnedAt < 1800 / SPEED) return false;
+        inflateAt = now;
+        const [a, b] = balls;
+        const stacked = Math.abs(a.y - b.y) >= Math.abs(a.x - b.x);
+        const [first, second] = stacked ? (a.y < b.y ? [a, b] : [b, a]) : (a.x < b.x ? [a, b] : [b, a]);
+        const cells: Cell[] = stacked
+          ? [{ l: 0, t: 0, w: W, h: H / 2 }, { l: 0, t: H / 2, w: W, h: H / 2 }]
+          : [{ l: 0, t: 0, w: W / 2, h: H }, { l: W / 2, t: 0, w: W / 2, h: H }];
+        plan = [first, second].map((ball, k) => ({ b: ball, x0: ball.x, y0: ball.y, r0: ball.r, cell: cells[k] }));
+      }
+      if (inflateDone) return true;
+      const t = Math.min(1, (now - inflateAt) / INFLATE_MS);
+      plan.forEach(({ b, x0, y0, r0, cell }) => {
+        // Air goes in fast, then slower as it presses on the walls
+        const grow = 1 - (1 - Math.min(1, t / 0.6)) ** 2.2;
+        const R = r0 + (Math.max(cell.w, cell.h) / 2 - r0) * grow;
+        // Flat against whatever it touches: the walls and its neighbour
+        const a = Math.min(R, cell.w / 2), bb = Math.min(R, cell.h / 2);
+        // Then the pressure fills the corners, with a small springy wobble
+        const q = clamp((t - 0.35) / 0.65, 0, 1);
+        const n = (2 + (N_END - 2) * (1 - (1 - q) ** 3)) * (1 + 0.06 * Math.sin(t * Math.PI * 6) * (1 - t));
+        // Stays where it landed until the walls push it to the middle
+        const cx = clamp(x0, cell.l + a, cell.l + cell.w - a);
+        const cy = clamp(y0, cell.t + bb, cell.t + cell.h - bb);
+        b.group.setAttribute('transform', `translate(${cx},${cy})`);
+        b.shape!.setAttribute('d', balloonPath(a, bb, Math.max(2, n)));
+      });
+      if (t >= 1) { inflateDone = true; playKnock(0.5); }
+      return true;
+    };
+
     const tick = () => {
+      if (tileIndex === 1 && balls.length === 2 && inflate()) {
+        if (!inflateDone) rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
       const GRAVITY = 600;
       const FRICTION = 0.99;
       const BOUNCE = 0.4;
+      const dt = 0.016 * SPEED;
 
       balls.forEach(b => {
-        b.vy += GRAVITY * 0.016;
+        b.vy += GRAVITY * dt;
         // The unseen updraft: cancels gravity and springs the ball toward its
         // hover spot, with a slow bob so it reads as held up by air
         if (b.floatY !== undefined) {
           const ty = b.floatY + Math.sin(performance.now() / 450) * 7;
-          b.vy += (-GRAVITY - 40 * (b.y - ty) - 6 * b.vy) * 0.016;
-          b.vx += (-18 * (b.x - b.floatX!) - 5 * b.vx) * 0.016;
+          b.vy += (-GRAVITY - 40 * (b.y - ty) - 6 * b.vy) * dt;
+          b.vx += (-18 * (b.x - b.floatX!) - 5 * b.vx) * dt;
         }
-        b.x += b.vx * 0.016;
-        b.y += b.vy * 0.016;
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
         b.vx *= FRICTION;
         b.vy *= FRICTION;
 
@@ -643,7 +773,7 @@ function Tile({ index, text, gap }: { index: number; text: string; gap: number }
   return (
     <div
       style={{ position: 'relative', aspectRatio: '4/5', background: 'var(--c-surface)', overflow: 'hidden' }}
-      onMouseEnter={isMobile ? undefined : () => setHovered(true)}
+      onMouseEnter={isMobile ? undefined : () => { setHovered(true); playKnock(0.35); }}
       onMouseLeave={isMobile ? undefined : () => setHovered(false)}
     >
       {/* Animated falling balls on hover */}
@@ -704,7 +834,7 @@ function TileBlocks() {
         columnGap: 'var(--gap)',
         marginBottom: 40,
       }}>
-        <h2 style={{ ...H2_STYLE, margin: 0, gridColumn: isMobile ? 'auto' : '1 / 6' }}>Как работаем</h2>
+        <h2 style={{ ...H2_STYLE, margin: 0, gridColumn: isMobile ? 'auto' : '1 / 6' }}>Решения</h2>
       </div>
 
       <div
@@ -858,18 +988,18 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
 
   return (
     <div className={s.page} ref={pageRef}>
-      <h1 className={s.title} data-reveal="" data-reveal-y="4">Услуги</h1>
 
       {/* ⌘ ⊖ ⊕ — pinned bottom-left, same place and look as the density
           hint on the cases page. Folds/unfolds the table below. */}
-      {!isMobile && (
-        <div style={{ position: 'fixed', left: 'var(--pad)', bottom: 'var(--pad)', zIndex: 170 }}>
-          <span className={s.zoomHint} style={{ position: 'static' }}>
-            <span className={s.zoomHintLabel}>⌘</span>
-            <button className={s.zoomKey} aria-label="Свернуть" onClick={fold}>⊖</button>
-            <button className={s.zoomKey} aria-label="Развернуть" onClick={unfold}>⊕</button>
+      {/* Portalled: stays fixed while the page slides out */}
+      {!isMobile && createPortal(
+        <div style={{ position: 'fixed', top: 'calc(var(--logo-top) + 6px)', left: 'calc(var(--pad) + 3 * ((100% - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap)))', zIndex: 200 }}>
+          <span className={`${s.zoomHint} zoomPill`} style={{ position: 'static' }}>
+            <span className={s.zoomHintLabel} style={{ marginRight: 6 }}>⌘</span>
+            <button className={s.zoomKey} aria-label="Свернуть" disabled={level <= 1} onClick={fold}>⊖</button>
+            <button className={s.zoomKey} aria-label="Развернуть" disabled={level >= EXPERTISE_LEVELS - 1} onClick={unfold}>⊕</button>
           </span>
-        </div>
+        </div>, document.body
       )}
 
       {/* Same table as the home page, but foldable one level at a time. It's

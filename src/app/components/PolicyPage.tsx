@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import s from './CasesPage.module.css';
 import { BODY_LONG_STYLE, typo } from '../utils/typography';
 import { useMobile } from '../hooks/useMobile';
+import { t } from '../i18n';
 
 const LINK_RE = /(https?:\/\/[^\s\n]+|[\w.+-]+@[\w-]+\.[\w]*\w)/g;
 
@@ -140,7 +141,7 @@ export default function PolicyPage() {
                   whiteSpace: 'pre-wrap',
                 }}
               >
-                {renderWithLinks(typo(p.text), p.heading ? h2Style : textStyle)}
+                {renderWithLinks(typo(t(p.text)), p.heading ? h2Style : textStyle)}
               </p>
             ))}
           </div>

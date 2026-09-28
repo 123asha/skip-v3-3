@@ -35,9 +35,9 @@
   --text-ls: -0.02em;
 
   --heading-size: 40px;
-  --heading-weight: 454;
+  --heading-weight: 450;
   --heading-lh: 0.96;
-  --heading-ls: -0.021em;
+  --heading-ls: -0.024em;
 
   --h2-size: var(--heading-size);
   --h2-weight: 454;
@@ -47,6 +47,18 @@
   --pad: 20px;
   --gap: 20px;
   --col: 296px;
+  /* Top line of the logo's lowercase letters (top of «s k p»). Header text
+     puts its own lowercase (x-height) on it — capitals rise above, as the
+     logo's dot does. In the site face x-height is 0.491em; a body-text line's
+     baseline sits 0.9375em below its top (lh 1.2), so its lowercase starts
+     0.4465em below the line top (headings, lh 0.96: 0.3265em). */
+  --logo-top: 23.2px;
+  /* Inner pages: the menu links sit on the logo line in column 2 and the
+     page title drops one menu line below them */
+  --title-drop: 0px;
+  /* Inner pages: where the content starts under the page title — the
+     services page's spacing, shared by every inner page */
+  --inner-content-top: calc(var(--title-drop) + var(--pad) + var(--heading-size) * var(--heading-lh) + var(--space-title) - 40px);
 
   /* ── Vertical spacing rhythm (desktop) ──────────────────────────────────
      Use these tokens everywhere instead of hardcoded margin/gap values.
@@ -264,3 +276,25 @@ input, select, textarea {
 input::placeholder {
   opacity: 0.3;
 }
+
+/* ⌘ ⊖ ⊕ density control: ⌘ plain, ⊖ and ⊕ each in its own outlined circle,
+   the same outline as the cases filter chips */
+.zoomPill { opacity: 1 !important; color: var(--c-text-muted) !important; }
+.zoomPill button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-size) !important;
+  padding: 0 !important;
+  border: none !important;
+  background: none !important;
+  color: inherit !important;
+  transition: color 0.2s;
+}
+.zoomPill button:disabled { cursor: default !important; color: inherit !important; opacity: 0.4; }
+.zoomPill button:not(:disabled):hover { color: var(--c-text) !important; }
+
+/* Insights hover focus: every preview but the hovered one fades to grey */
+[data-focus] [data-insight-card]:not([data-hot]) img,
+[data-focus] [data-insight-card]:not([data-hot]) video { opacity: 0; }
+[data-insight-card] img, [data-insight-card] video { transition: opacity 0.3s ease; }

@@ -4,20 +4,18 @@
 
 /* ── Tabs bar: sticky to top while scrolling through gallery ── */
 .tabsBar {
-  position: sticky;
-  top: 0;
+  /* Plain heading in the flow — scrolls away with the section */
+  position: relative;
   z-index: 50;
   background: transparent;
-  /* Inverts against whatever scrolls under it, like the nav — white text
-     blended by difference reads dark on the page and light on pictures.
-     Set on the bar itself: it's the stacking context that sits over them. */
-  color: #fff;
-  mix-blend-mode: difference;
+  color: var(--c-text);
   display: flex;
-  justify-content: center;
+  /* Left edge of the page grid */
+  justify-content: flex-start;
   align-items: center;
-  padding: var(--pad) var(--pad);
-  margin-bottom: 80px;
+  padding: var(--pad) var(--pad) 0;
+  /* Same gap to the cards as under «Решения» on the services page */
+  margin-bottom: 40px;
   line-height: var(--text-lh);
   letter-spacing: var(--text-ls);
 }
@@ -66,9 +64,6 @@
   font-weight: var(--heading-weight);
   line-height: var(--heading-lh);
   letter-spacing: var(--heading-ls);
-  /* Nudged up so its cap line sits level with the menu's while pinned */
-  position: relative;
-  top: -3px;
 }
 
 .tab {
@@ -174,4 +169,13 @@
   text-decoration: underline;
   text-decoration-style: dotted;
   text-underline-offset: 3px;
+}
+
+/* Oversized so the scroll parallax never uncovers a grey edge — same fix as
+   the cases grid */
+.root [data-case-card] [class*="cardImage"] img {
+  left: -25% !important;
+  top: -25% !important;
+  width: 150% !important;
+  height: 150% !important;
 }

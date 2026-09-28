@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useMobile } from '../hooks/useMobile';
 import s from './CasesPage.module.css';
 import app from '../App.module.css';
@@ -45,6 +46,50 @@ function Img({ ar, src, style, round }: { ar: string; src?: string; style?: Reac
 // 5-col grid on the page's normal grid. The number sits at viewport centre+4px,
 // the description in columns 4–5. On mobile: number centred, text 4px below it
 // with marginLeft = 1/3 viewport.
+/**
+ * Sticky + inverted, done at body level. A `position: sticky` row blended by
+ * difference inside the page's own scroll layer renders white on white in
+ * Chrome, so the row stays in the flow only as an invisible placeholder and a
+ * body-level copy tracks it: at its place until it reaches `top`, then held
+ * there — the same inversion the nav and section titles use.
+ */
+function PinnedInvert({ placeholderRef, children }: { placeholderRef: React.RefObject<HTMLDivElement>; children: React.ReactNode }) {
+  const floatRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const update = () => {
+      const ph = placeholderRef.current, fl = floatRef.current;
+      if (!ph || !fl) return;
+      const pad = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pad')) || 0;
+      // Rects come back in screen px under the page's CSS zoom; the fixed
+      // copy's left/top/width are layout px, so undo the zoom
+      const pz = parseFloat(document.documentElement.style.zoom || '1') || 1;
+      const r = ph.getBoundingClientRect();
+      fl.style.left = `${r.left / pz}px`;
+      fl.style.width = `${r.width / pz}px`;
+      fl.style.top = `${Math.max(pad, r.top / pz)}px`;
+    };
+    update();
+    window.addEventListener('scroll', update, { capture: true, passive: true });
+    window.addEventListener('resize', update);
+    const ro = new ResizeObserver(update);
+    if (placeholderRef.current) ro.observe(placeholderRef.current);
+    return () => {
+      window.removeEventListener('scroll', update, { capture: true });
+      window.removeEventListener('resize', update);
+      ro.disconnect();
+    };
+  }, [placeholderRef]);
+  return createPortal(
+    <div
+      ref={floatRef}
+      data-page-float=""
+      className={s.pageFloat}
+      style={{ position: 'fixed', zIndex: 199, color: '#fff', mixBlendMode: 'difference' }}
+    >{children}</div>,
+    document.body,
+  );
+}
+
 function MetaRow({
   col1, col2, num, text, col2IsTitle,
 }: { col1?: React.ReactNode; col2?: string; num?: string; text: string; col2IsTitle?: boolean }) {
@@ -338,8 +383,11 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
     if (!el) return;
     const measure = () => {
       const coverFrac = isMobile ? 0.70 : 0.84;
-      // Same line the strip sits on at the top of a case: cover + its 10px gap
-      const target = window.innerHeight * coverFrac + 10;
+      // Same line the strip's text sits on at the top of a case: cover + its
+      // 10px gap. The strip carries its own top padding (--pad) above the
+      // text, so its box starts that much higher.
+      const pad = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pad')) || 0;
+      const target = window.innerHeight * coverFrac + 10 - pad;
       setNextPad(Math.max(0, window.innerHeight - target - el.offsetHeight));
     };
     measure();
@@ -430,24 +478,25 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
       {/* Year + intro — pulled up by one line so all four meta items start on
           the same row under the cover; from there these two stick to the top
           of the viewport, on the nav's baseline, for the rest of the case. */}
+      {/* In-flow placeholder (keeps the layout and the measured height); the
+          visible, inverted row is PinnedInvert's body-level copy of it */}
       <div
         ref={metaRef}
+        aria-hidden="true"
         style={{
-          position: 'sticky',
-          top: 'var(--pad)',
-          zIndex: 5,
+          position: 'relative',
           padding: '0 var(--pad)',
           marginTop: -typesH,
-          // Inverts against whatever scrolls under it, like the nav: white
-          // text blended by difference reads dark on the page and light over
-          // pictures. Set here on the sticky row itself — a blend on the text
-          // inside would be isolated by it and have nothing to invert against.
-          color: '#fff',
-          mixBlendMode: 'difference',
+          visibility: 'hidden',
         }}
       >
         <MetaRow col2={data.title} col2IsTitle num={data.year} text={data.intro} />
       </div>
+      <PinnedInvert placeholderRef={metaRef}>
+        <div style={{ padding: '0 var(--pad)' }}>
+          <MetaRow col2={data.title} col2IsTitle num={data.year} text={data.intro} />
+        </div>
+      </PinnedInvert>
 
       <div style={{
         padding: 'var(--pad)',
@@ -662,7 +711,6 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
         {/* ⌘ ⊖ ⊕ — bottom-left, same control as on the other pages */}
         {!isMobile && (
           <span className={s.zoomHint}>
-            <span className={s.zoomHintLabel}>⌘</span>
             <button className={s.zoomKey} aria-label="Описание" onClick={zoomOut}>⊖</button>
             <button className={s.zoomKey} aria-label="Только картинки" onClick={zoomIn}>⊕</button>
           </span>
@@ -784,7 +832,35 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
           cover itself. Clicking it opens that case. */}
       <div
         ref={nextRef}
-        onClick={() => nextCase.href && onNavigateCase?.(nextCase.href)}
+        onClick={() => {
+          if (!nextCase.href) return;
+          // The strip stays put while the rest of the page leaves: a copy is
+          // pinned at body level at the same spot (outside the exiting page),
+          // and fades once the next case — whose meta row lands right here —
+          // has come in.
+          const el = nextRef.current;
+          if (el) {
+            const r = el.getBoundingClientRect();
+            const pz = parseFloat(document.documentElement.style.zoom || '1') || 1;
+            const copy = el.cloneNode(true) as HTMLElement;
+            Object.assign(copy.style, {
+              position: 'fixed', left: `${r.left / pz}px`, top: `${r.top / pz}px`, width: `${r.width / pz}px`,
+              margin: '0', zIndex: '195', pointerEvents: 'none', transition: 'opacity 0.4s ease',
+            });
+            document.body.appendChild(copy);
+            el.style.visibility = 'hidden';
+            // Once the next case is in, glide onto its meta row, then hand over
+            window.setTimeout(() => {
+              const meta = document.querySelector<HTMLElement>('body > [data-page-float]');
+              const to = meta ? meta.getBoundingClientRect().top / pz : null;
+              copy.style.transition = 'top 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease 0.4s';
+              if (to !== null) copy.style.top = `${to}px`;
+              copy.style.opacity = '0';
+            }, 650);
+            window.setTimeout(() => copy.remove(), 1500);
+          }
+          onNavigateCase?.(nextCase.href);
+        }}
         style={{ marginTop: 'var(--space-xl)', cursor: onNavigateCase ? 'pointer' : undefined }}
       >
         {/* Category chips sit in the first column of the same line as the

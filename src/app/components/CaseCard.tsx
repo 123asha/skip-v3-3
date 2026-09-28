@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { useMobile } from '../hooks/useMobile';
 import { typo } from '../utils/typography';
 import s from './CaseCard.module.css';
+import { t } from '../i18n';
 
 /**
  * Shared case card used on every page that lists cases.
@@ -21,7 +22,16 @@ export type CaseCardAR = typeof CASE_AR_H | typeof CASE_AR_V;
 
 // Temporary: render every card preview as a plain grey rectangle (no image/video)
 // until the real card thumbnails are ready. Flip to false to restore images.
-const PLACEHOLDER_PREVIEWS = false;
+const PLACEHOLDER_PREVIEWS = true;
+
+// Temporary: hide the grey category tags (services) at rest — just the title
+// shows, and the description still reveals on hover as before. Flip to true
+// to bring the tags back.
+const SHOW_CATEGORY_TAGS = false;
+
+// Case previews are squares and 4:5 rectangles only for now — no circles.
+// Flip to true to bring the round previews back.
+const ROUND_PREVIEWS = false;
 
 // Some previews round, the rest square — picked from the title so a case
 // keeps its shape across reloads and pages. Exported so a gallery can balance
@@ -34,10 +44,12 @@ export interface CaseCardProps {
   ar: CaseCardAR;
   title: string;          // top meta label (project / case name)
   desc: string;           // bottom description text
+  showCats?: boolean;     // grey categories in the description's spot, even with SHOW_CATEGORY_TAGS off
   services?: string;      // caption ABOVE the card — the project year (e.g. "2025")
   servicesSize?: string | number; // font size for that caption (shrinks with the grid zoom)
   metaSize?: string | number; // font size for the bottom name + description (shrinks with the grid zoom)
   image?: string;         // optional image url (omit for plain placeholder)
+  preview?: string;       // real preview — shown even while PLACEHOLDER_PREVIEWS is on
   video?: string;         // optional hover video (desktop only — mobile shows image)
   onClick?: () => void;
   linkLabel?: string;     // defaults to "Перейти"
@@ -70,7 +82,7 @@ const servicesStyle: React.CSSProperties = {
 };
 
 export default function CaseCard({
-  ar, title, desc, services, servicesSize, metaSize, image: rawImage, video: rawVideo, onClick, linkLabel = 'Перейти', hideMeta = false, hideImage = false, aspect, scrubVideo, round,
+  ar, title, desc, services, showCats, servicesSize, metaSize, image: rawImage, preview, video: rawVideo, onClick, linkLabel = 'Перейти', hideMeta = false, hideImage = false, aspect, scrubVideo, round,
 }: CaseCardProps) {
   // Per-card caption style — size overridable so it scales with the grid zoom.
   const svcStyle: React.CSSProperties = servicesSize != null
@@ -79,7 +91,8 @@ export default function CaseCard({
   // Bottom name + description — same proportional shrink as the grid zooms.
   const metaStyle: React.CSSProperties = metaSize != null ? { fontSize: metaSize } : {};
   // Force grey placeholder previews while PLACEHOLDER_PREVIEWS is on.
-  const image = PLACEHOLDER_PREVIEWS ? undefined : rawImage;
+  // A real preview, when a case has one, shows even over the placeholders
+  const image = preview ?? (PLACEHOLDER_PREVIEWS ? undefined : rawImage);
   const video = PLACEHOLDER_PREVIEWS ? undefined : rawVideo;
   const [hovered, setHovered]  = useState(false);
   const isMobile = useMobile();
@@ -93,7 +106,7 @@ export default function CaseCard({
   // For now every preview is round, wherever cases are listed
   // The flagship (a card given its own proportions, e.g. the full-width one)
   // always keeps those instead of round/square.
-  const isRound = !aspect && (round ?? isCaseRound(title));
+  const isRound = !aspect && (round ?? (ROUND_PREVIEWS && isCaseRound(title)));
 
   // No fixed card height: the image always keeps its aspect ratio and the
   // description row always reserves its space (only its text fades in on
@@ -141,6 +154,8 @@ export default function CaseCard({
     if (cats) {
       gsap.killTweensOf(cats);
       const muted = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--opacity-muted')) || 0.4;
+      // Rise up and out as the description comes in; back down once it's gone
+      gsap.killTweensOf(cats);
       gsap.to(cats, hovered
         ? { y: -LINE_Y, opacity: 0, ...LINE_REVEAL, duration: 0.3 }
         : { y: 0, opacity: muted, ...LINE_REVEAL, delay: lines.length * LINE_STAGGER });
@@ -165,7 +180,7 @@ export default function CaseCard({
     return (
       <div className={s.card} onClick={onClick}>
         {services && <p style={svcStyle}>{services}</p>}
-        <div className={s.cardImage} style={{ aspectRatio: ar, width: '100%', flex: 'none' }}>
+        <div className={s.cardImage} style={{ aspectRatio: ar, width: '100%', flex: 'none', ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}>
           {image && <img src={image} alt={title} loading="lazy" />}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 'var(--gap)', alignItems: 'flex-start', paddingTop: 10 }}>
@@ -192,14 +207,14 @@ export default function CaseCard({
           picture — no year, no title, no description */}
       {/* On a full preview the categories live in the description's spot
           instead (below); up here only when that spot isn't shown */}
-      {services && !aspect && (hideMeta || hideImage) && <p ref={servicesRef} className={s.cardMetaText} style={{ margin: 0, paddingBottom: hideImage ? 4 : 10, flexShrink: 0, opacity: 'var(--opacity-muted)' as any, ...metaStyle }}>{services}</p>}
+      {SHOW_CATEGORY_TAGS && services && !aspect && (hideMeta || hideImage) && <p ref={servicesRef} className={s.cardMetaText} style={{ margin: 0, paddingBottom: hideImage ? 4 : 10, flexShrink: 0, opacity: 'var(--opacity-muted)' as any, ...metaStyle }}>{services}</p>}
 
       {/* Image — always its own aspect ratio, never squeezed by the desc.
           Dropped entirely on the densest grid: the card is text only. */}
       {!hideImage && (
         <div
-          className={`${s.cardImage}${isRound ? ` ${s.cardRound}` : ''}${aspect ? ` ${s.cardWide}` : ''}`}
-          style={{ aspectRatio: aspect ?? (isHorizontal ? '4/3' : '4/5'), width: '100%', flexShrink: 0 }}
+          className={`${s.cardImage}${isRound ? ` ${s.cardRound}` : ''}${aspect ? ` ${s.cardWide}` : ''}${!isRound && !aspect && !isHorizontal ? ` ${s.cardTall}` : ''}`}
+          style={{ aspectRatio: aspect ?? (isHorizontal ? '4/3' : '4/5'), width: '100%', flexShrink: 0, ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}
         >
           {scrubVideo && !PLACEHOLDER_PREVIEWS && (
             <video
@@ -252,11 +267,11 @@ export default function CaseCard({
             <div style={{ position: 'relative' }}>
               {/* At rest the description's spot shows the categories, grey;
                   on hover the description rises in and pushes them up and out */}
-              {services && (
+              {(SHOW_CATEGORY_TAGS || showCats) && services && (
                 <p ref={catsRef} className={s.cardMetaText} style={{ margin: 0, position: 'absolute', left: 0, top: 0, opacity: 'var(--opacity-muted)' as any, pointerEvents: 'none', ...metaStyle }}>{services}</p>
               )}
               <p ref={descRef} className={s.cardMetaText} style={{ margin: 0, ...metaStyle }}>
-                {typo(desc).split(' ').map((w, i, arr) => (
+                {typo(t(desc)).split(' ').map((w, i, arr) => (
                   <span key={i}>
                     <span data-word style={{ display: 'inline-block', opacity: 0, willChange: 'transform' }}>{w}</span>
                     {i < arr.length - 1 ? ' ' : ''}

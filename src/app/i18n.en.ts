@@ -1,0 +1,337 @@
+/**
+ * English copy of the site: Russian text → English text.
+ *
+ * Edit the English side freely. The Russian side must match the text on the
+ * site (spaces and line breaks don't matter). Anything missing here simply
+ * stays in Russian on the English site.
+ */
+export const EN: Record<string, string> = {
+  // ── Navigation, header, footer ───────────────────────────────────────────
+  'Проекты': 'Projects',
+  'Услуги': 'Services',
+  'Инсайты': 'Insights',
+  'Написать': 'Contact',
+  'Телеграм': 'Telegram',
+  'Подход': 'Approach',
+  'Инструменты': 'Tools',
+  'Студия': 'Studio',
+  'Проекты Skip Design': 'Skip Design Projects',
+  'Услуги Skip Design': 'Skip Design Services',
+  'Инсайты команды': 'Team insights',
+  'Skip Design. Дизайн, как правила игры': 'Skip Design. Design as the rules of the game',
+  'Дизайн, как правила игры': 'Design as the rules of the game',
+  'Skip Design: дизайн, как правила игры': 'Skip Design: design as the rules of the game',
+  'Skip Design — студия цифрового дизайна': 'Skip Design — digital design studio',
+  'скопировано': 'copied',
+  'Перейти на главную': 'Back to home',
+  'Политика конфиденциальности': 'Privacy policy',
+  'Политика': 'Privacy',
+  'конфиденциальности': 'policy',
+  'Выключить звук': 'Sound off',
+  'Включить звук': 'Sound on',
+  'Свернуть': 'Collapse',
+  'Развернуть': 'Expand',
+  'Свернуть все': 'Collapse all',
+  'Раскрыть все': 'Expand all',
+  'Плотнее': 'Denser',
+  'Крупнее': 'Larger',
+
+  // ── Home ─────────────────────────────────────────────────────────────────
+  'Визуальные системы для': 'Visual systems from',
+  'быстрорастущих компаний': 'strategic ideas',
+  'Skip Design — бутиковая студия цифрового дизайна. Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться сути.':
+    'Skip Design is a boutique digital design studio. We believe simplicity isn’t about dumbing things down — it’s the courage to skip whatever keeps the essence from showing.',
+  'Нам доверяют': 'Trusted by',
+  'Недавние проекты': 'Recent projects',
+  'больше проектов': 'more projects',
+  'Экспертиза': 'Expertise',
+  'Готовим бренд к&nbsp;росту. Собираем системы. Передаем правила, по&nbsp;которым они работают.':
+    'We get brands ready to grow. We build systems. We hand over the rules they run on.',
+
+  // ── Cases ────────────────────────────────────────────────────────────────
+  'Брендинг': 'Branding',
+  'Веб': 'Web',
+  'Продукт': 'Product',
+  'Перейти': 'Open',
+  'Крипто': 'Crypto',
+  'Страница, которая приводит партнёров AliExpress': 'A page that brings in AliExpress partners',
+  'Помогли запуститься: от платформы бренда до сайта — за полтора месяца.': 'Helped them launch: from brand platform to website in six weeks.',
+  'Браузерное расширение для отображения affiliate-данных прямо на AliExpress': 'A browser extension that shows affiliate data right on AliExpress',
+  'Новогодний спецпроект для команды и комьюнити': 'A New Year special project for the team and the community',
+  'Подготовили бренд-систему для запуска крипто-стартапа': 'A brand system for a crypto start-up’s launch',
+  'Конструктор баннеров для ускорения разработки креативов к ежедневным постам': 'A banner builder that speeds up creatives for daily posts',
+  'Бар своей среды. Визуальный язык для офлайна и онлайна': 'A bar for your own crowd. A visual language for offline and online',
+  'Бар своей среды. Визуальный язык для офлайна и онлайна.': 'A bar for your own crowd. A visual language for offline and online.',
+  'Трекер целей от Юрия Мурадяна, в котором визуал поддерживает философию продукта': 'A goal tracker by Yuri Muradyan, where the visuals carry the product’s philosophy',
+  'Тысячи партнёров AliExpress в одном дашборде': 'Thousands of AliExpress partners in one dashboard',
+  '3D-проекты превращаются в сметы и КП за минуту': '3D projects turn into estimates and proposals in a minute',
+  'Юрий Мурадян': 'Yuri Muradyan',
+  'Стратегия': 'Strategy',
+  'Дизайн': 'Design',
+  'Архитектура': 'Architecture',
+  'Нокод, вайбкод': 'No-code, vibe coding',
+
+  // Case page
+  'Краткое описание проекта и ключевых задач. Что было сделано, каких результатов достигли.':
+    'A short description of the project and its key tasks: what was done and what it achieved.',
+  'Контекст': 'Context',
+  'Разработка': 'Development',
+  'Результат': 'Result',
+  'Описание': 'Description',
+  'Только картинки': 'Images only',
+  'Над проектом работали:': 'Team:',
+  'новый проект': 'new project',
+  'сайт': 'website',
+  'Финтех': 'Fintech',
+  'ХоРеКа': 'HoReCa',
+  'Аша Саакян': 'Asha Saakian',
+  'арт-директор': 'art director',
+  'Рузана Пшигонова': 'Ruzana Pshigonova',
+  'дизайнер': 'designer',
+  'Кирилл Жуков': 'Kirill Zhukov',
+  'разработчик': 'developer',
+  'Елена Новикова': 'Elena Novikova',
+  'стратег': 'strategist',
+  '«Здесь будет отзыв клиента о работе команды над проектом — пара предложений о результате.»':
+    '“A client’s review of the team’s work goes here — a couple of sentences about the result.”',
+  'Имя Фамилия, должность': 'Name Surname, position',
+  'Одна фраза о сотрудничестве.': 'One line about working together.',
+  'Подпись к блоку — короткое описание решения.': 'Block caption — a short description of the solution.',
+  'Рынок приложений для саморазвития перегрет. Продукты выглядят одинаково из-за ассоциаций первого уровня — космос, луна, звёзды. Другая проблема — восприятие приложений-трекеров, которые работают по принципу «сделай или умри». Это приводит к выгоранию и чувству вины. Даже если человек скачивает приложение, то потом забрасывает.\n\nMagic Moon — приложение, которое объединяет целеполагание, медитации и ментальные практики. Продукт работал с тёплой аудиторией, которая хорошо знает основателя — Юру Мурадяна. Задача — масштабироваться, а значит выйти на холодную аудиторию. Для этого приложению нужно самодостаточное позиционирование и визуальный язык, который вызовет доверие и не скатится в ощущение «очередное приложение с гороскопами».':
+    'The self-development app market is overheated. Products look alike because they all reach for the obvious associations — space, the moon, the stars. The other problem is how tracker apps are perceived: they work on a “do it or die” basis, which leads to burnout and guilt. Even when people download an app, they drop it later.\n\nMagic Moon is an app that brings together goal setting, meditation and mental practices. The product had a warm audience that knew its founder, Yuri Muradyan, well. The task was to scale, which meant reaching a cold audience. For that the app needed self-sufficient positioning and a visual language that earns trust and doesn’t slide into “yet another horoscope app”.',
+  'Инсайт из анализа глубинных интервью, вокруг которого строится продукт: людям не нужен ещё один пинок. Они ищут поддержку и хотят выбирать: прислушиваться к советам или нет.\n\nМиссия Magic Moon — создавать новую культуру достижения целей. Другой путь к большим мечтам: без жёстких трекеров и насилия над собой.':
+    'The insight from in-depth interviews that the product is built around: people don’t need another kick. They look for support and want to choose whether to take advice or not.\n\nMagic Moon’s mission is to create a new culture of reaching goals. A different path to big dreams: no rigid trackers, no forcing yourself.',
+  'Стать ежедневным ритуалом для людей, которые выбирают путь к мечте через гармонию с собой.':
+    'To become a daily ritual for people who choose to reach their dreams through harmony with themselves.',
+  'Метафора бренда — лунный цветок. Цветок раскрывается постепенно, его нельзя заставить расти быстрее, за ним важно ухаживать. Лунный — потому что растёт в особых условиях и в своём ритме.':
+    'The brand metaphor is a moon flower. A flower opens gradually, it can’t be made to grow faster, and it needs care. A moon flower — because it grows in special conditions and at its own pace.',
+  'Баров в Тбилиси десятки, и каждый сезон закрываются старые и открываются новые, а конкуренция за гостей — огромная. Хорошие напитки и классная атмосфера — база, этим невозможно выделиться.\n\nЕщё одна проблема — название. Senior’s читается как бар для сеньоров — для пенсионеров или только для разработчиков. Реальная аудитория бара шире, но название сужает и может отпугнуть людей из креативных индустрий.':
+    'Tbilisi has dozens of bars; every season old ones close and new ones open, and the competition for guests is huge. Good drinks and a great atmosphere are the baseline — you can’t stand out with them.\n\nAnother problem was the name. Senior’s reads as a bar for seniors — for pensioners, or only for developers. The bar’s real audience is broader, but the name narrows it and can put off people from the creative industries.',
+  'Боль аудитории не в том, что некуда пойти в пятницу вечером. Боль — одиночество, изоляция и потеря старых социальных связей после переезда. Это меняет задачу: искать точку отстройки не через меню и атмосферу, а через отношения.\n\nСуть бренда — бар своей среды. Это коммьюнити-бар, в котором экспаты находят своих. Место, где случайный разговор может стать началом дружбы. Митапы, диджей-сеты, нетворкинг, ивенты — то, из-за чего хочется зайти в бар в любой день.':
+    'The audience’s pain isn’t that there’s nowhere to go on a Friday night. It’s loneliness, isolation and losing old social ties after moving. That changes the task: look for the point of difference not in the menu or the atmosphere, but in relationships.\n\nThe essence of the brand is a bar for your own crowd. A community bar where expats find their people. A place where a chance conversation can start a friendship. Meetups, DJ sets, networking, events — reasons to drop in any day.',
+  'Ключевой образ бренда — звезда и её путеводный свет — заметный ориентир, к которому хочется вернуться.':
+    'The brand’s key image is a star and its guiding light — a visible landmark you want to come back to.',
+  'Буква S и лучевая композиция построены на одной оси: лучи задают ритм, а S движется вместе с ними. Так возникает естественная связь между образом света и знаком бренда.':
+    'The letter S and the radiating composition share one axis: the rays set the rhythm and the S moves with them. That creates a natural link between the image of light and the brand mark.',
+  'В фонах используется тот же лучевой ритм: это и маяк, и центр притяжения, вокруг которого выстраиваются все элементы. Световые лучи могут быть длиннее или короче, задавая нужные темп и настроение.':
+    'Backgrounds use the same radiating rhythm: both a beacon and a centre of gravity that everything lines up around. The rays of light can be longer or shorter to set the pace and mood.',
+  'Айдентика превращает ключевую идею бренда в цельную и современную визуальную систему: в основе каждого элемента — точка света, с которой всё начинается.':
+    'The identity turns the brand’s key idea into a coherent, modern visual system: every element is built on a point of light where it all begins.',
+  'Система живая, тёплая и динамичная. С ней Senior*s ещё отчётливее звучит как место своего света, оставаясь визуально понятным и эмоционально близким своему сообществу.':
+    'The system is alive, warm and dynamic. With it Senior*s speaks even more clearly as a place with a light of its own, while staying visually clear and emotionally close to its community.',
+  'скипнуть': 'skip it',
+
+  // ── Services ─────────────────────────────────────────────────────────────
+  'Бренд-стратегия': 'Brand strategy',
+  'Фирменный стиль': 'Brand identity',
+  'Автоматизация': 'Automation',
+  'Информационная архитектура': 'Information architecture',
+  'Веб-дизайн': 'Web design',
+  'No-code, vibe coding': 'No-code, vibe coding',
+  'Product Vision': 'Product Vision',
+  'Платформа бренда': 'Brand platform',
+  'Исследования': 'Research',
+  'Исследование': 'Research',
+  'Нейминг и регистрация': 'Naming and registration',
+  'Логотипы': 'Logos',
+  'Шаблоны': 'Templates',
+  'Лендинги и промо': 'Landing pages and promo',
+  'Спецпроекты': 'Special projects',
+  'Корпоративные сайты': 'Corporate websites',
+  'Разработка и поддержка': 'Development and support',
+  'Продуктовое видение': 'Product vision',
+  'Дорожная карта': 'Roadmap',
+  'Приложения и платформы': 'Apps and platforms',
+  'Дизайн-библиотеки и поддержка': 'Design libraries and support',
+  'Короткое описание услуги: что входит в работу, как мы её ведём и что получает команда на выходе. Текст-рыба — заменим на финальный.':
+    'A short description of the service: what’s included, how we run it and what the team gets at the end. Placeholder text — to be replaced.',
+  'Неважно, это одностраничный лендинг или большой корпоративный сайт — для нас это один из главных носителей бренда и важная точка контакта с аудиторией.\n\nОбъединяем стратегию, дизайн и разработку в одном процессе, чтобы быстрее запускать проекты и сохранять качество на каждом этапе.':
+    'Whether it’s a one-page landing or a large corporate website, to us it’s one of the brand’s main carriers and a key point of contact with its audience.\n\nWe bring strategy, design and development into one process to launch faster and keep the quality up at every stage.',
+  'Бренд без платформы — набор случайных решений: продажи говорят одно, маркетинг делает другое, в продукте — третье. В итоге бренд выглядит и звучит как пять разных человек вместо одного.\n\nМы собираем воедино все смыслы и формулируем суть: кто вы, почему это важно и чем отличаетесь от других. Платформа бренда помогает последовательно и здраво принимать решения: от нейминга до изменений в продукте.':
+    'A brand without a platform is a set of random decisions: sales say one thing, marketing does another, the product a third. The brand ends up looking and sounding like five different people instead of one.\n\nWe pull all the meanings together and put the essence into words: who you are, why it matters and what sets you apart. A brand platform helps you make consistent, sound decisions — from naming to changes in the product.',
+  'Бренд не сферический конь в вакууме: вокруг всегда есть контекст, в котором компания находится и развивается. Люди, рынок, тренды в индустрии — всё это влияет на восприятие.\n\nМы проводим исследование рынка, конкурентов и аудитории. Это помогает бренду определить точки дифференциации, занять сильную позицию и быть понятным людям.':
+    'A brand doesn’t exist in a vacuum: there’s always a context the company lives and grows in. People, the market, industry trends — all of it shapes perception.\n\nWe research the market, competitors and audience. It helps the brand find its points of difference, take a strong position and be clear to people.',
+  'В название можно влюбиться на брейншторме, а после — выяснить, что оно конфликтует со стратегией или его невозможно зарегистрировать.\n\nМы генерируем варианты, отсеиваем лонги до шорт-листов, проверяем лингвистику и восприятие. Дальше юрист проверяет по базам и ведёт регистрацию товарного знака до свидетельства.':
+    'You can fall in love with a name at a brainstorm and later find out it clashes with the strategy or can’t be registered.\n\nWe generate options, narrow long lists down to short lists, and check linguistics and perception. Then a lawyer checks the registries and takes the trademark all the way to its certificate.',
+  'Фирменный стиль без системы превращается в набор случайных решений. Со временем бренд теряет цельность, а каждая новая задача требует придумывать всё заново.\n\nМы создаём визуальную систему бренда: определяем ключевую идею и правила, которые помогают команде принимать дизайн-решения последовательно и уверенно.':
+    'An identity without a system turns into a set of random decisions. Over time the brand loses its integrity, and every new task means inventing everything from scratch.\n\nWe create the brand’s visual system: we define the key idea and the rules that help the team make design decisions consistently and with confidence.',
+  'Помогаем внедрить систему в повседневные процессы. Разрабатываем шаблоны презентаций, постов, коммерческих предложений и других документов в фирменном стиле.\n\nВ результате новые материалы создаются быстрее, а качество остаётся стабильным.':
+    'We help bring the system into everyday work. We design on-brand templates for presentations, posts, proposals and other documents.\n\nNew materials get made faster, and the quality stays consistent.',
+  'Разрабатываем нестандартные digital-форматы: промо-сайты, интерактивные истории и игровые механики.\n\nСобираем под каждую задачу отдельную систему визуальных и интерактивных решений, которая помогает выделиться и решить конкретную бизнес-задачу. Особое внимание уделяем нарративу.':
+    'We make unconventional digital formats: promo sites, interactive stories and game mechanics.\n\nFor each task we build its own system of visual and interactive solutions that helps it stand out and solve a specific business goal. We pay special attention to the narrative.',
+  'Поможем запустить цифровой продукт. Спроектируем b2b-платформы и админки. Возьмём на себя повседневные задачи — структурно и по делу.':
+    'We’ll help launch a digital product. We design b2b platforms and admin panels, and take on the day-to-day tasks — structured and to the point.',
+  'Создаём библиотеки в Figma, брендбуки и инструкции, которыми команда действительно пользуется в работе. Документируем принципы так, чтобы их понимали и люди, и ИИ-инструменты.':
+    'We create Figma libraries, brand books and guides the team actually uses. We document the principles so that both people and AI tools understand them.',
+
+  'Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться сути.':
+    'We believe simplicity isn’t about dumbing things down — it’s the courage to skip whatever keeps the essence from showing.',
+  'Один из наших принципов — привносить в работу лёгкость, юмор и отступать от шаблонов, если так получится лучший результат.':
+    'One of our principles is to bring lightness and humour to the work, and to break from templates when that gets a better result.',
+  'Любим структуру и уважаем ясность. Поэтому делаем так, чтобы случился мэтч у всех, кто вовлечён в проект:':
+    'We love structure and respect clarity. So we make sure there’s a match for everyone involved in a project:',
+  'клиентам — понятно, каким будет процесс и результат.': 'clients — it’s clear what the process and the result will be.',
+  'пользователям — удобно и приятно взаимодействовать с продуктом или брендом.': 'users — the product or brand is easy and pleasant to deal with.',
+  'разработчикам — не приходится тратить время, чтобы разобраться в логике макетов.': 'developers — no time wasted figuring out the logic of the layouts.',
+  'команде — не стыдно за результат, и хочется им поделиться.': 'the team — proud of the result and keen to share it.',
+
+  'Решения': 'Solutions',
+  'Наш подход': 'Our approach',
+  'Бренд-смыслы и фирменный стиль для цифровых продуктов': 'Brand meaning and identity for digital products',
+  'Дизайн-системы и инструменты для маркетинга': 'Design systems and marketing tools',
+  'Бренд-стратегия и позиционирование': 'Brand strategy and positioning',
+  'UX/UI поддержка цифрового продукта': 'UX/UI support for digital products',
+  'стратегия': 'strategy',
+  'дизайн': 'design',
+  'система': 'system',
+  'инструменты': 'tools',
+
+  // ── Insights ─────────────────────────────────────────────────────────────
+  'Дата': 'Date',
+  'Название': 'Title',
+  'Источник': 'Source',
+  'Коротко': 'Short',
+  'Средне': 'Medium',
+  'Вся мысль': 'Full',
+  'Статья': 'Article',
+  'Фреймворк': 'Framework',
+  'Памятка': 'Guide',
+  'Дизайн-кабак': 'Design Kabak',
+  'Зачем стартапу стратегия, если всё постоянно меняется': 'Why a start-up needs a strategy when everything keeps changing',
+  '«Рано думать о стратегии, давайте проверять гипотезы» — так думает почти каждый стартап.':
+    '“It’s too early for strategy, let’s test hypotheses” — almost every start-up thinks so.',
+  'Сейчас запустить продукт просто: за пару недель навайбкодить MVP, запустить рекламу и даже получить первых пользователей. И на этом этапе может казаться, что о стратегии думать рано.':
+    'Launching a product is easy now: vibe-code an MVP in a couple of weeks, run ads and even get your first users. At that stage it can feel too early to think about strategy.',
+  'Как смыслы бренда становятся продуктовыми решениями': 'How brand meaning turns into product decisions',
+  'Компания потратила несколько месяцев и бюджет на ребрендинг. Сделали красивую презентацию с миссией, видением, ценностями.':
+    'A company spent months and a budget on a rebrand and made a beautiful deck with the mission, vision and values.',
+  'Все полюбовались и отдали в отдел маркетинга. А продукт живёт своей жизнью.':
+    'Everyone admired it and handed it to marketing. Meanwhile the product lives a life of its own.',
+  'В чём разница между product vision и brand vision': 'What’s the difference between product vision and brand vision',
+  'Их легко перепутать, потому что оба говорят о будущем. Но отвечают на разные вопросы.':
+    'They’re easy to mix up because both talk about the future. But they answer different questions.',
+  'Brand vision — куда мы хотим прийти как бренд через 2–5 лет. Product vision — каким должен стать продукт, чтобы это будущее стало возможным.':
+    'Brand vision is where we want to be as a brand in 2–5 years. Product vision is what the product has to become to make that future possible.',
+  'Что должно измениться в жизни человека благодаря вашему продукту?': 'What should change in someone’s life thanks to your product?',
+  'На этот вопрос поможет ответить product vision.': 'Product vision helps answer that question.',
+  'Product vision полезен даже маленьким командам: он помогает сверяться с целью, держать фокус и расставлять приоритеты.':
+    'Product vision is useful even for small teams: it helps check against the goal, stay focused and set priorities.',
+  'Конструктор миссии': 'Mission builder',
+  'В основе конструктора — идея, что к ответу на вопрос «Почему мы этим занимаемся?» можно прийти четырьмя разными путями.':
+    'The builder rests on the idea that there are four different ways to answer the question “Why do we do this?”',
+  'Поиск миссии бренда часто превращается в гонку за идеальной фразой, как у Nike или Apple. Команды попадают в ловушку: штурмят, креативят, запираются в переговорках, чтобы найти те самые вдохновляющие слова.':
+    'The search for a brand mission often turns into a race for the perfect line, like Nike’s or Apple’s. Teams fall into a trap: brainstorming, getting creative, locking themselves in meeting rooms to find those inspiring words.',
+  'Критерии для проверки идей': 'Criteria for testing ideas',
+  'Когда нет метафоры, любая концепция рассыпается. Получается набор приёмов, которые не держат форму.':
+    'Without a metaphor any concept falls apart. You get a set of techniques that don’t hold their shape.',
+  'В Skip Design мы используем собственную методологию. Каждый критерий — вопрос, который проверяет метафору по шкале от 1 до 5.':
+    'At Skip Design we use our own methodology. Each criterion is a question that rates the metaphor on a scale of 1 to 5.',
+  'Как ИИ генерирует метафоры': 'How AI generates metaphors',
+  '5 нейросетей, 3 индустрии, 150 метафор — выясняем, почему повсюду архитекторы, дирижёры и навигаторы.':
+    '5 neural networks, 3 industries, 150 metaphors — finding out why it’s all architects, conductors and navigators.',
+  'В этой статье мы говорим «метафора», но не как средство языка и приём в тексте на лендинге, а шире. Метафора помогает быстро передать суть через знакомый образ и задаёт фрейм — рамку, которая определяет, как мы воспринимаем реальность и принимаем решения.':
+    'In this article we say “metaphor” not as a figure of speech or a trick in landing-page copy, but more broadly. A metaphor quickly conveys the essence through a familiar image and sets a frame that defines how we perceive reality and make decisions.',
+  'Памятка по юридическим документам': 'A guide to legal documents',
+  'Получилась практическая памятка для продуктовых команд, дизайнеров и фаундеров.':
+    'A practical guide for product teams, designers and founders.',
+  'Когда запускают сайт, приложение или бота, про юридическую часть часто вспоминают в последнюю очередь — уже после релиза.':
+    'When a website, app or bot launches, the legal side is often remembered last — after the release.',
+  'Почему не все бренды могут использовать ИИ': 'Why not every brand can use AI',
+  'Объясняем на примере трёх классических ограничений «быстро — качественно — дёшево», почему одни бренды могут использовать ИИ, а другие — нет.':
+    'Using the classic “fast — good — cheap” triangle, we explain why some brands can use AI and others can’t.',
+  'Если переложить модель на терминологию брендинга, она помогает понять, на чём бренд делает главный акцент и что именно обещает своим клиентам.':
+    'Translated into branding terms, the model shows what a brand puts first and what exactly it promises its customers.',
+  'Короткий вводный абзац: о чём материал и почему мы взялись за эту тему. Буквально пара предложений.':
+    'A short intro: what the piece is about and why we took on the topic. Just a couple of sentences.',
+  'Второй абзац — главный вывод и что из этого можно применить у себя. Тоже совсем коротко.':
+    'The second paragraph is the main takeaway and what you can apply yourself. Also very short.',
+
+  // ── Contact form ─────────────────────────────────────────────────────────
+  'Обсудить проект': 'Discuss a project',
+  'Сотрудничество': 'Join us',
+  'Отправьте CV': 'Send your CV',
+  'креативному директору': 'to our creative director',
+  'мы назначим встречу': 'and we’ll set up a call',
+  'Оставьте контакт,': 'Leave your contact,',
+  'Оставьте': 'Leave your',
+  'контакт': 'contact',
+  'почту': 'email',
+  'телеграм': 'telegram',
+  'телефон': 'phone',
+  'ссылку': 'link',
+  'Спасибо! Скоро напишем вам в Telegram.': 'Thank you! We’ll message you on Telegram soon.',
+  'Даю согласие на обработку персональных данных': 'I agree to the processing of my personal data',
+  'в соответствии с': 'in accordance with the',
+  'Политикой конфиденциальности': 'Privacy Policy',
+
+  // ── Privacy policy ───────────────────────────────────────────────────────
+  'Этот документ определяет политику ИП Саакян Ашхен Арменовны в области обработки персональных данных.':
+    'This document sets out the personal data processing policy of sole proprietor Ashkhen Armenovna Saakian.',
+  'Оператор разработал Политику в соответствии с законодательством РФ для защиты персональных данных. Политика действует в отношении всех персональных данных, которые Оператор может получить от субъекта персональных данных.':
+    'The Operator has drawn up this Policy in accordance with the laws of the Russian Federation to protect personal data. The Policy applies to all personal data the Operator may receive from a data subject.',
+  'Если вы не согласны с Политикой, пожалуйста, не направляйте персональные данные Оператору. При наличии любых вопросов о содержании Политики или запросов в части персональных данных просим направлять запрос на адрес электронной почты: hi@skip.design.':
+    'If you do not agree with the Policy, please do not send personal data to the Operator. For any questions about the Policy or requests regarding personal data, please write to hi@skip.design.',
+  'Основания обработки персональных данных': 'Grounds for processing personal data',
+  'Персональные данные обрабатываются при наличии согласия субъекта персональных данных или на основании договора в объеме, предусмотренном таким договором.':
+    'Personal data is processed with the consent of the data subject or on the basis of a contract, to the extent provided for by that contract.',
+  'В частности, используя Сайт, вы можете предоставить согласие на обработку персональных данных:\n— путем согласия с использованием cookie файлов;\n— путем отражения своих персональных данных в форме обратной связи.':
+    'In particular, by using the Website you may consent to the processing of personal data:\n— by agreeing to the use of cookies;\n— by entering your personal data in the contact form.',
+  'Пожалуйста, ознакомьтесь с Политикой и текстом согласия на обработку персональных данных перед предоставлением согласия на обработку персональных данных. В том случае, если вы предоставили персональные данные по ошибке, вы можете обратиться по адресу электронной почты, указанной в Политике, с запросом на уничтожение ваших персональных данных.':
+    'Please read the Policy and the consent text before giving consent to the processing of personal data. If you have provided personal data by mistake, you may write to the email address given in the Policy and ask for it to be destroyed.',
+  'Категории персональных данных и цели обработки': 'Categories of personal data and purposes of processing',
+  'Оператор может обрабатывать следующие персональные данные:\n— технические данные: IP-адрес, вид операционной системы, тип браузера, поставщик доступа в интернет, геолокация;\n— файлы cookies;\n— сведения о поведении Пользователя на сайте;\n— контактные данные: фамилия, имя и отчество, компания и должность, номер телефона, адрес электронной почты, аккаунт в мессенджерах.':
+    'The Operator may process the following personal data:\n— technical data: IP address, operating system, browser type, internet service provider, geolocation;\n— cookies;\n— information about the User’s behaviour on the website;\n— contact details: full name, company and position, phone number, email address, messenger account.',
+  'Иные персональные данные Оператор может обрабатывать на основании договора с субъектом персональных данных или на основании отдельного согласия на обработку персональных данных.':
+    'The Operator may process other personal data on the basis of a contract with the data subject or of separate consent to its processing.',
+  'Оператор обрабатывает персональные данные в следующих целях:\n— обеспечение работоспособности и функциональности Сайта, улучшение пользовательского опыта;\n— обработка заявок с Сайта о потенциальном сотрудничестве;\n— направление адресной информации информационного и рекламного содержания, а также обсуждение условий работы и сотрудничества, коллабораций, маркетинговых активностей;\n— предоставление отзыва об услугах клиентов и партнеров Оператора.':
+    'The Operator processes personal data for the following purposes:\n— keeping the Website running and functional, improving the user experience;\n— handling enquiries from the Website about potential cooperation;\n— sending targeted informational and promotional content, and discussing terms of work and cooperation, collaborations and marketing activities;\n— providing reviews of the services of the Operator’s clients and partners.',
+  'Оператор также может обрабатывать персональные данные в иных целях на основании договора с субъектом персональных данных или письменного согласия, в частности, для заключения и исполнения договоров с клиентами, контрагентами и партнерами.':
+    'The Operator may also process personal data for other purposes on the basis of a contract with the data subject or written consent, in particular to conclude and perform contracts with clients, counterparties and partners.',
+  'Cookie и иные средства веб-аналитики': 'Cookies and other web analytics tools',
+  'Cookie — это файлы, которые создаются и сохраняются браузером при посещении сайтов. Cookie-файлы позволяют нам отслеживать качество работы сайта и характеристики их использования, а также оптимизировать маркетинговые активности в интернете.':
+    'Cookies are files that the browser creates and stores when you visit websites. Cookies let us monitor how well the website works and how it is used, and optimise our marketing online.',
+  'На сайте используются два типа cookie файлов: технические и функциональные. Эти файлы используются для обеспечения бесперебойной работы сайтов, а также для запоминания выбранных настроек.\n\nМаркетинговые и аналитические. На сайте используются решения Яндекс.Метрика для сбора и статистического анализа данных, связанных с использованием сайтов.':
+    'The website uses two types of cookies. Technical and functional cookies keep the website running smoothly and remember the settings you choose.\n\nMarketing and analytics cookies: the website uses Yandex.Metrica to collect and statistically analyse data on how the website is used.',
+  'По умолчанию настройки большинства браузеров позволяют принимать cookie-файлы. Если вы не согласны с использованием cookie, вы можете настроить запрет cookie или их удаление в настройках вашего браузера, однако это может отразиться на функциональности сайта.':
+    'By default most browsers accept cookies. If you do not agree to the use of cookies, you can block or delete them in your browser settings, though this may affect how the website works.',
+  'Способы обработки персональных данных': 'How personal data is processed',
+  'Мы обрабатываем персональные данные как в цифровой форме (автоматизировано), так и вручную (без использования средств автоматизации).':
+    'We process personal data both digitally (automated) and manually (without automation tools).',
+  'Способы обработки: сбор; систематизация; накопление; хранение; уточнение (обновление, изменение); обезличивание; уничтожение.':
+    'Processing methods: collection; systematisation; accumulation; storage; clarification (updating, changing); anonymisation; destruction.',
+  'Срок обработки персональных данных': 'How long personal data is processed',
+  'Мы обрабатываем персональные данные до тех пор, пока не достигнуты цели их обработки или не истёк срок действия согласия на обработку персональных данных. По истечении указанных сроков мы можем обрабатывать персональные данные только если обработка необходима для соблюдения нами законодательства, в частности требований бухгалтерского и налогового учёта.':
+    'We process personal data until the purposes of processing are achieved or the consent expires. After that we may process personal data only where this is required for us to comply with the law, in particular accounting and tax requirements.',
+  'В любой момент вы можете отозвать согласие на обработку персональных данных, а также воспользоваться иными правами, предусмотренными законодательством о персональных данных. Для этого напишите нам по адресу электронной почты, указанной в Политике. Мы ответим вам в течение 15 рабочих дней.':
+    'You may withdraw your consent to the processing of personal data at any time, and exercise the other rights provided by personal data law. To do so, write to the email address given in the Policy. We will reply within 15 working days.',
+  'Уничтожение персональных данных осуществляется путём уничтожения материального носителя (бумаги) с использованием шредера, или путём полного удаления данных в электронном виде.':
+    'Personal data is destroyed by shredding the physical medium (paper) or by fully deleting the data in electronic form.',
+  'Охрана персональных данных': 'Protection of personal data',
+  'Оператор предпринимает все необходимые меры, направленные на соблюдение законодательства о персональных данных. В частности, приоритетом Оператора является обеспечение организационных и технических мер, направленных на защиту персональных данных.':
+    'The Operator takes all necessary measures to comply with personal data law. In particular, the Operator’s priority is to ensure organisational and technical measures to protect personal data.',
+  'В наших внутренних документах, а также в соглашениях с контрагентами мы определяем обязательные для исполнения процедуры, направленные на защиту персональных данных и прав субъектов персональных данных.':
+    'In our internal documents and in agreements with counterparties we set out mandatory procedures to protect personal data and the rights of data subjects.',
+  'Также для защиты персональных данных и прочей информации мы предпринимаем следующие меры: разрабатываем и соблюдаем внутренние документы по вопросам обработки персональных данных, процедуры предотвращения и выявления нарушений законодательства, устранения их последствий; используем современные технические средства и программные комплексы, принимаем организационные меры для защиты персональных данных от несанкционированного доступа, неправомерной обработки или передачи, а также от утери, искажения или уничтожения; определяем правила доступа к персональным данным, минимизируем и предоставляем доступ только в случаях действительной необходимости; оцениваем эффективность и регулярно пересматриваем принимаемые меры.':
+    'To protect personal data and other information we also: develop and follow internal documents on personal data processing and procedures to prevent and detect breaches of the law and remedy their consequences; use modern technical means and software and take organisational measures to protect personal data from unauthorised access, unlawful processing or transfer, and from loss, distortion or destruction; set rules for access to personal data, minimise it and grant access only where genuinely necessary; assess the effectiveness of these measures and review them regularly.',
+  'Мы обеспечиваем локализацию персональных данных на территорию РФ и не используем базы данных, расположенные за её пределами, за исключением случаев, предусмотренных законодательством. Мы передаём персональные данные третьим лицам только в случае, если Пользователь прямо выразил на это согласие в письменной форме, или если это предусмотрено законодательством РФ.':
+    'We keep personal data localised in the Russian Federation and do not use databases located outside it, except where provided by law. We transfer personal data to third parties only if the User has expressly consented to this in writing, or where required by Russian law.',
+  'Если Оператор установит факт неправомерной утечки персональных данных, Оператор предпримет действия, предусмотренные законодательством РФ. В частности, в таком случае Оператор уведомит об инциденте Роскомнадзор, проведёт внутреннее расследование и выполнит все предписания регулятора.':
+    'If the Operator establishes an unlawful leak of personal data, it will take the actions required by Russian law. In particular, it will notify Roskomnadzor of the incident, conduct an internal investigation and follow all of the regulator’s instructions.',
+  'Права и ограничения Пользователя': 'User rights and restrictions',
+  'Мы уважаем и соблюдаем ваши права.': 'We respect and uphold your rights.',
+  'Право на получение информации. Вы вправе запрашивать у Оператора сведения, которые касаются обработки ваших персональных данных. В том числе вы можете запросить копию ваших персональных данных, которые хранит и обрабатывает Оператор.\n\nПраво на уточнение или внесение изменений в персональные данные. Вы можете запросить внесение изменений или уточнений в части ваших персональных данных, мы актуализируем их в соответствии с данной информацией.\n\nПраво на отзыв согласия. В любой момент вы можете отозвать своё согласие на обработку данных. В случае отзыва согласия мы прекращаем обработку персональных данных, за исключением случаев, когда у нас имеются иные основания для их обработки.\n\nПраво на запрет неправомерной обработки. Если вы считаете обработку своих данных Оператором неправомерной, вы вправе обратиться к Оператору для устранения возможного нарушения или прекращения обработки ваших данных.':
+    'Right to information. You may request from the Operator information about the processing of your personal data, including a copy of the personal data the Operator stores and processes.\n\nRight to correction. You may ask for your personal data to be changed or clarified, and we will update it accordingly.\n\nRight to withdraw consent. You may withdraw your consent to data processing at any time. If you do, we stop processing your personal data unless we have other grounds for processing it.\n\nRight to object to unlawful processing. If you believe the Operator is processing your data unlawfully, you may contact the Operator to have the possible breach remedied or the processing stopped.',
+  'Мы просим вас предоставлять Оператору исключительно ваши персональные данные в том объёме, в котором это необходимо для выбранного способа взаимодействия и комфортно вам. Пожалуйста, не предоставляйте Оператору персональные данные третьих лиц без наличия их согласия.':
+    'Please provide the Operator only with your own personal data, to the extent needed for the chosen way of interacting and that you are comfortable with. Please do not provide the Operator with third parties’ personal data without their consent.',
+  'Оператор не проверяет дееспособность Пользователя и достоверность представленных Пользователем персональных данных.':
+    'The Operator does not verify the User’s legal capacity or the accuracy of the personal data the User provides.',
+  'Далее мы используем следующие термины:\nСайт — https://www.skip.design/\nПользователь — дееспособный посетитель Сайта;\nОператор или Мы — ИП Саакян Ашхен Арменовна;\nПолитика — этот документ.':
+    'We use the following terms:\nWebsite — https://www.skip.design/\nUser — a legally capable visitor to the Website;\nOperator or We — sole proprietor Ashkhen Armenovna Saakian;\nPolicy — this document.',
+  'Сервис «Яндекс.Метрика» принадлежит ООО «Яндекс», адрес: 119021, Россия, Москва, ул. Льва Толстого, д. 16. Информация, хранящаяся в файлах cookie, передаётся и сохраняется на сервисах ООО «Яндекс». При использовании Сайта Пользователь даёт согласие Оператору на обработку и передачу сведений указанной компании. При этом Пользователь может заблокировать Яндекс.Метрика, информация размещена по ссылке: https://yandex.ru/support/metrica/ru/general/opt-out.':
+    'The Yandex.Metrica service belongs to Yandex LLC, 16 Lva Tolstogo St, Moscow, 119021, Russia. Information stored in cookies is transferred to and stored on Yandex LLC’s services. By using the Website the User consents to the Operator processing and transferring this information to that company. The User can block Yandex.Metrica; see https://yandex.ru/support/metrica/ru/general/opt-out.',
+  'Политика публикуется на сайте https://www.skip.design/\n\nОператор может вносить изменения в Политику. Любые запросы и вопросы в части обработки персональных данных вы можете направить по адресу электронной почты Оператора: hi@skip.design. Мы ответим в течение 15 рабочих дней.':
+    'The Policy is published at https://www.skip.design/\n\nThe Operator may amend the Policy. Any requests and questions about the processing of personal data can be sent to the Operator’s email: hi@skip.design. We will reply within 15 working days.',
+  'Заключительные положения': 'Final provisions',
+  'ИП Саакян Ашхен Арменовна, ИНН 910700287536, ОГРНИП 319911200010480\nАдрес: Санкт-Петербург, Ленинский 168, 708':
+    'Sole proprietor Ashkhen Armenovna Saakian, TIN 910700287536, OGRNIP 319911200010480\nAddress: 168 Leninsky Ave, office 708, Saint Petersburg',
+};

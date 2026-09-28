@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import s from './CasesPage.module.css';
 import { MediaSection } from './MediaSection';
+import { InsightCards } from './InsightCards';
 import ContactForm from './ContactForm';
 import { useReveal } from '../hooks/useReveal';
 
@@ -29,16 +30,18 @@ export default function LabPage({
 
   return (
     <div className={s.page} ref={pageRef}>
-      <h1 className={s.title} data-reveal="" data-reveal-y="4">Инсайты</h1>
-      <div className={s.body} style={{ paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
+      <div className={s.body} style={{ paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
 
 
         {/* MediaSection (Инсайты) above the contact form — its own h2 is off,
             the page title already says "Инсайты". */}
         {/* flushTop — the page body already carries the title → content gap,
             so the section must not add its own on top of it. */}
+        <InsightCards />
         <div style={{ marginLeft: 'calc(-1 * var(--pad))', marginRight: 'calc(-1 * var(--pad))' }}>
-          <MediaSection showHeading={false} flushTop showZoom />
+          {/* showZoom off here — InsightCards above already carries the
+              page's one ⌘ ⊖ ⊕ control */}
+          <MediaSection showHeading={false} flushTop bandHeader />
         </div>
         <ContactForm onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
       </div>

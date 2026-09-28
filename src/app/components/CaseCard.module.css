@@ -36,6 +36,11 @@
   border-radius: 50%;
 }
 
+/* Vertical cases that aren't round keep a 4:5 frame among the squares */
+.cardTall {
+  aspect-ratio: 4 / 5 !important;
+}
+
 /* Hover hop: the frame hops over a stationary picture, squashing from its
    bottom edge. A little picture past the top and bottom edge keeps the
    background from showing as the frame lifts. */

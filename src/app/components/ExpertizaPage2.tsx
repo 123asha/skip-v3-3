@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 // Sandbox copy of ExpertizaPage served at /services-2 — for trying ideas out
 // without touching the live /services page. Keep edits here; merge back into
 // ExpertizaPage.tsx only once an experiment is approved.
@@ -616,18 +617,18 @@ export default function ExpertizaPage2({ onNavigatePolicy, onGridMode }: { onNav
 
   return (
     <div className={s.page} ref={pageRef}>
-      <h1 className={s.title} data-reveal="" data-reveal-y="4">Услуги</h1>
 
       {/* ⌘ ⊕ ⊖ — pinned at the start of the second column on the nav line,
           the same place and look as the density hint on the cases page */}
-      {!isMobile && (
-        <div style={{ position: 'fixed', left: 'var(--pad)', bottom: 'var(--pad)', zIndex: 170 }}>
-          <span className={s.zoomHint} style={{ position: 'static' }}>
-            <span className={s.zoomHintLabel}>⌘</span>
-            <button className={s.zoomKey} aria-label="Свернуть" onClick={fold}>⊖</button>
-            <button className={s.zoomKey} aria-label="Развернуть" onClick={unfold}>⊕</button>
+      {/* Portalled: stays fixed while the page slides out */}
+      {!isMobile && createPortal(
+        <div style={{ position: 'fixed', top: 'calc(var(--logo-top) + 6px)', left: 'calc(var(--pad) + 3 * ((100% - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap)))', zIndex: 200 }}>
+          <span className={`${s.zoomHint} zoomPill`} style={{ position: 'static' }}>
+            <span className={s.zoomHintLabel} style={{ marginRight: 6 }}>⌘</span>
+            <button className={s.zoomKey} aria-label="Свернуть" disabled={level <= 1} onClick={fold}>⊖</button>
+            <button className={s.zoomKey} aria-label="Развернуть" disabled={level >= EXPERTISE_LEVELS - 1} onClick={unfold}>⊕</button>
           </span>
-        </div>
+        </div>, document.body
       )}
 
       {/* Only the table here — folded and unfolded level by level */}

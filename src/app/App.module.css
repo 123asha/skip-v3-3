@@ -182,6 +182,27 @@
 }
 
 /* ── Mobile nav: left-aligned, vertically centred with the logo ── */
+.navWrite { margin-left: 13px; }
+
+/* Nav-sized face of the site's pill button — same 4px corners */
+.navPill {
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* Desktop: the nav spans the last of the 5 page columns — sections from its
+   left edge, «Написать» on its right edge. --nav-sb is the inner pages'
+   scrollbar gutter, which the grid there doesn't include. */
+@media (min-width: 769px) {
+  .nav {
+    width: calc((100% - var(--nav-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5);
+  }
+  .navWrite { margin-left: auto; }
+}
+
 @media (max-width: 768px) {
   .nav {
     top: 6px;
@@ -577,3 +598,6 @@
   letter-spacing: var(--text-ls);
   cursor: pointer;
 }
+
+/* Nav row passes clicks through; its items catch them */
+.nav > * { pointer-events: auto; }

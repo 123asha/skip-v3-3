@@ -9,6 +9,7 @@ import { TEXT_STYLE } from '../utils/typography';
 import { asset, videoAsset } from '../utils/asset';
 import { useMobile } from '../hooks/useMobile';
 import { PLACEHOLDER_MEDIA, PLACEHOLDER_COLOR } from '../utils/placeholders';
+import { t } from '../i18n';
 
 
 // Sidebar section items hidden for now — keep the export so dependents still
@@ -51,6 +52,7 @@ const HERO_VIDEO_AUTOPLAY = false;
 const HERO_CONSTELLATION = true;
 // First screen's own shade — a touch deeper than the site's --c-surface
 const HERO_BG = '#eaeaea';
+const HERO_BG_SCROLLED = '#ffffff';
 
 // VIDEO_PRELOADER: slides that are scroll-scrubbed videos instead of images.
 // Desktop only — mobile always uses the static BG_IMGS image (see !isMobile guard below).
@@ -248,14 +250,15 @@ function ConstellationHero() {
     >
       {/* The playing field is the whole hero, so the copy floats over it and
           must not swallow the pointer — every ball stays grabbable. */}
-      {/* Studio line — centred at the top, on the nav's line. Absolute (not
-          fixed): it scrolls away with the hero instead of staying pinned. */}
+      {/* Headline a touch above the middle of the screen — the constellation
+          keeps a clear patch there for it */}
+      {/* Studio line — fixed, centred at the top, stays put on scroll */}
       <div style={{
-        position: 'absolute',
+        position: 'fixed',
         left: '50%',
-        top: 'var(--pad)',
-        transform: 'translateX(-50%)',
-        zIndex: 2,
+        translate: '-50% 0',
+        top: 'calc(var(--logo-top) + 6px)',
+        zIndex: 202,
         fontFamily: 'var(--font)',
         fontSize: 'var(--text-size)',
         fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
@@ -265,12 +268,13 @@ function ConstellationHero() {
         mixBlendMode: 'difference',
         whiteSpace: 'nowrap',
         pointerEvents: 'none',
-      }}>Skip Design. Дизайн, как правила игры</div>
-      {/* Headline a touch above the middle of the screen — the constellation
-          keeps a clear patch there for it */}
-      <p className={`${s.headline} ${s.heroIntroText}`} style={{ pointerEvents: 'none', animationDelay: '0.35s', top: '45%', transform: 'translate(-50%, -50%)', fontSize: 'calc(var(--heading-size) * 1.2)', lineHeight: 'calc(var(--heading-lh) * 0.97)' }}>
+      }}>Skip Design</div>
+      <p className={s.headline} style={{ pointerEvents: 'none',
+        // Centred on the screen, 1.5× the heading size
+        top: '45%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', maxWidth: 'none', width: 'max-content', whiteSpace: 'nowrap',
+        fontSize: 'calc(var(--heading-size) * 1.5)', lineHeight: 'calc(var(--heading-lh) * 0.94)' }}>
         {HEADLINE_LINES.map((line, i) => (
-          <span key={i} style={{ display: 'block' }}>{kernHeadline(line)}</span>
+          <span key={i} className={s.heroIntroText} style={{ display: 'block', animationDelay: `${0.35 + i * 0.12}s` }}>{kernHeadline(t(line))}</span>
         ))}
       </p>
 

@@ -1,35 +1,15 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useMobile } from '../hooks/useMobile';
 import s from './ProjectGallery.module.css';
 import CaseCard, { CASE_AR_H as H, CASE_AR_V as V, type CaseCardAR as AR, isCaseRound } from './CaseCard';
+import { PROJECTS, type Project } from './CasesPage';
 import { MagneticDivider } from './MagneticDivider';
 import { asset, arSuffix, videoAsset } from '../utils/asset';
 import { caseCategories } from '../utils/caseCategories';
 
-/** Returns { image, ar } — aspect ratio is inferred from the -h / -v filename suffix. */
-function img(path: string): { image: string; ar: AR } {
-  return { image: asset(path), ar: arSuffix(path) === 'v' ? V : H };
-}
-
-interface Project {
-  id: number;
-  cats: string[];
-  ar: AR;
-  image: string;
-  video?: string;
-  title: string;
-  desc: string;
-  year: string;   // shown above the card
-}
-
-export const PROJECTS: Project[] = [
-  { id: 1, cats: ['branding', 'sites', 'interfaces'],       ...img('/case1-h.webp'), title: 'Magic Moon',     year: '2024', desc: 'Трекер целей от Юрия Мурадяна, в котором визуал поддерживает философию продукта' },
-  { id: 2, cats: ['branding', 'sites', 'instruments'],      ...img('/case2-v.webp'), title: 'Gate Legal',     year: '2024', desc: 'Помогли запуститься: от платформы бренда до сайта — за полтора месяца.' },
-  { id: 3, cats: ['branding', 'interfaces', 'instruments'], ...img('/case3-h.webp'), title: 'AEPlatform',     year: '2025', desc: 'Браузерное расширение для отображения affiliate-данных прямо на AliExpress' },
-  { id: 4, cats: ['branding', 'sites'],                     ...img('/case4-v.webp'), title: 'Skip Design',    year: '2025', desc: 'Новогодний спецпроект для команды и комьюнити' },
-  { id: 5, cats: ['branding', 'sites', 'interfaces'],       ...img('/case5-v.webp'), title: 'Крипто', year: '2026', desc: 'Подготовили бренд-систему для запуска крипто-стартапа' },
-  { id: 6, cats: ['sites', 'interfaces', 'instruments'],    ...img('/case6-h.webp'), title: 'Gate Legal',     year: '2024', desc: 'Конструктор баннеров для ускорения разработки креативов к ежедневным постам' },
-];
+// The same cases as the cases page — one list, so the home cards and the
+// cases page always show (and open) the same projects
+export { PROJECTS };
 
 // ── Row configs: each card = 2 cols in 5-col grid ────────────────────────────
 const CFG_GAP = { a: '1 / 3', b: '4 / 6' };  // left card col 1-2, right col 4-5
@@ -100,16 +80,17 @@ function buildRows(projects: Project[]): Row[] {
   return rows;
 }
 
-function ProjectCard({ project, onClick, aspect, scrubVideo }: { project: Project; onClick?: () => void; aspect?: string; scrubVideo?: string }) {
+function ProjectCard({ project, onClick, aspect, scrubVideo, shape }: { project: Project; onClick?: () => void; aspect?: string; scrubVideo?: string; shape?: Shape }) {
   return (
     <CaseCard
-      ar={project.ar}
+      ar={shape === 'vertical' ? V : shape ? H : project.ar}
       aspect={aspect}
       scrubVideo={scrubVideo}
       title={project.title}
       desc={project.desc}
       services={caseCategories(project.cats)}
       image={project.image}
+      preview={project.preview}
       video={project.video}
       onClick={onClick}
     />
@@ -124,36 +105,62 @@ const WIDE_ASPECT = '16/9';
 // The wide card carries the flower, opening up as the page scrolls past it
 const WIDE_VIDEO = '/flower2.mp4';
 
-interface Slot { project: Project; col: string; row: number; aspect?: string; scrubVideo?: string }
+type Shape = 'vertical' | 'square';
+interface Slot { project: Project; col: string; row: number; aspect?: string; scrubVideo?: string; shape?: Shape }
 
 function buildHomeLayout(projects: Project[]): Slot[] {
   const pick = shuffle(projects);
+  // Take the first project of the wanted orientation (any, if none left), so
+  // each shape gets a shot that suits it
+  const take = (ar?: AR) => {
+    const i = ar ? pick.findIndex(p => p.ar === ar) : 0;
+    return pick.splice(i < 0 ? 0 : i, 1)[0];
+  };
   // The wide slot reads best with a horizontal shot
-  const wideIdx = pick.findIndex(p => p.ar === H);
-  const wide = pick.splice(wideIdx < 0 ? 0 : wideIdx, 1)[0];
-  // Fixed shape rhythm around the wide video: square, circle · circle, square
-  const order: boolean[] = [false, false, true, false]; // wanted roundness, a…d
-  order.forEach((wantRound, i) => {
-    if (isCaseRound(pick[i].title) === wantRound) return;
-    const j = pick.findIndex((p, k) => k > i && isCaseRound(p.title) === wantRound);
-    if (j !== -1) [pick[i], pick[j]] = [pick[j], pick[i]];
-  });
-  const [a, b, c, d] = pick;
+  const wide = take(H);
+  // Fixed shape order: square, vertical · wide 16:9 · vertical, square
+  const b = take(V), c = take(V), a = take(H), d = take(H);
   return [
-    { project: a, col: '1 / 3', row: 1 },
-    { project: b, col: '3 / 5', row: 1 },   // right next to the first, no empty column between
+    { project: a, col: '1 / 3', row: 1, shape: 'square' },
+    { project: b, col: '3 / 5', row: 1, shape: 'vertical' },   // right next to the first, no empty column between
     { project: wide, col: '1 / 6', row: 2, aspect: WIDE_ASPECT, scrubVideo: videoAsset(WIDE_VIDEO) },
     // Third row mirrors the first: the pair side by side, shifted right,
     // with the first column left empty
-    { project: c, col: '2 / 4', row: 3 },
-    { project: d, col: '4 / 6', row: 3 },
+    { project: c, col: '2 / 4', row: 3, shape: 'vertical' },
+    { project: d, col: '4 / 6', row: 3, shape: 'square' },
   ];
 }
 
-export default function ProjectGallery({ onCaseClick }: { onCaseClick?: () => void }) {
+export default function ProjectGallery({ onCaseClick }: { onCaseClick?: (href?: string) => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [slots] = useState<Slot[]>(() => buildHomeLayout(PROJECTS));
   const isMobile = useMobile();
+
+  // Scroll parallax — same as the cases grid: each picture drifts inside
+  // its frame as it crosses the middle of the screen.
+  useEffect(() => {
+    const root = containerRef.current;
+    if (!root || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const vh = window.innerHeight;
+      root.querySelectorAll<HTMLElement>('[data-case-card] img').forEach(img => {
+        const r = img.parentElement!.getBoundingClientRect();
+        const p = Math.max(-1, Math.min(1, (r.top + r.height / 2 - vh / 2) / vh));
+        img.style.translate = `0 ${(p * 20).toFixed(2)}%`;
+      });
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
 
   return (
     <div ref={containerRef} className={s.root}>
@@ -185,7 +192,7 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: () => vo
               minWidth: 0,
             }}
           >
-            <ProjectCard project={slot.project} aspect={slot.aspect} scrubVideo={slot.scrubVideo} onClick={onCaseClick} />
+            <ProjectCard project={slot.project} aspect={slot.aspect} scrubVideo={slot.scrubVideo} shape={slot.shape} onClick={() => onCaseClick?.(slot.project.href)} />
           </div>
         ))}
       </div>

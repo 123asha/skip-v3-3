@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import s from './CircleInput.module.css';
+import { t } from '../i18n';
 
 interface CircleInputProps {
   placeholder: string;
@@ -52,7 +53,7 @@ export default function CircleInput({ placeholder, value: externalValue, onChang
 
       {/* Placeholder stays mounted and collapses away, so the row of circles
           shrinks smoothly instead of snapping when the field is focused. */}
-      {Array.from(placeholder).map((ch, i) => (
+      {Array.from(t(placeholder)).map((ch, i) => (
         <div
           key={`p-${i}`}
           className={`${s.circle} ${s.placeholder} ${isEditing ? s.collapsed : ''}`}

@@ -162,7 +162,7 @@ export default function Constellation({
     const SIDE_PAD = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pad')) || 0;
     // Balls at ~1.5x the size that fits the full word on one row — they
     // land as a heap rather than a line
-    const BALL_SCALE = 1.47;
+    const BALL_SCALE = 1.125; // -15% from 1.47, then -10% more
     const R = BALL_SCALE * Math.max(R_MIN, Math.min(R_MAX, (WIDTH / WORD_ORDER.length) * 0.484, (WIDTH - 2 * SIDE_PAD) / 21.84));
     // The sphere filter magnifies the middle of a ball by π/2, so the letter
     // is set smaller to keep its apparent size where the eye lands
@@ -299,7 +299,7 @@ export default function Constellation({
       shade.setAttribute('gradientUnits', 'userSpaceOnUse');
       shade.setAttribute('cx', '0'); shade.setAttribute('cy', String(-R * 0.35));
       shade.setAttribute('r', String(R * 1.45));
-      for (const [o, c] of [['0', ballColor], ['0.62', ballColor], ['1', `color-mix(in srgb, ${ballColor} 95.4%, #000)`]]) {
+      for (const [o, c] of [['0', ballColor], ['0.52', ballColor], ['1', `color-mix(in srgb, ${ballColor} 95%, #000)`]]) {
         const st = document.createElementNS(NS, 'stop');
         st.setAttribute('offset', o); st.setAttribute('stop-color', c);
         shade.appendChild(st);
@@ -405,6 +405,8 @@ export default function Constellation({
     function separateHomes() {
       const list = Object.values(nodes);
       const MIN = 2 * R + 12;
+      // No ball rests in the top band, where the menu line runs
+      const TOP_CLEAR = 120;
       // A clear patch in the middle for the headline — a ball whose home
       // lands inside it is moved straight up or down to the nearer edge.
       // Matches the hero headline, a touch above centre (45%)
@@ -429,10 +431,11 @@ export default function Constellation({
             moved = true;
           }
         }
-        list.forEach(n => { n.homeY = Math.min(Math.max(n.homeY, R), HEIGHT - R); });
+        list.forEach(n => { n.homeY = Math.min(Math.max(n.homeY, TOP_CLEAR + R), HEIGHT - R); });
         if (!moved) break;
       }
       clearCenter();
+      list.forEach(n => { n.homeY = Math.max(n.homeY, TOP_CLEAR + R); });
     }
     separateHomes();
     Object.values(nodes).forEach(n => { n.x = n.homeX; n.y = n.homeY; });

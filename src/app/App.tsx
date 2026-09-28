@@ -25,8 +25,19 @@ import BunnyFollower from './components/BunnyFollower';
 import ContactForm from './components/ContactForm';
 import { ToolsSection } from './components/ToolsSection';
 import { MediaSection } from './components/MediaSection';
-import { ExpertiseSection } from './components/ExpertiseSection';
+import { ExpertiseSection2 } from './components/ExpertiseSection2';
 import LabPage from './components/LabPage';
+import { SiteTitle } from './components/PageTitle';
+import { LANG, LANG_PREFIX, stripLang, otherLangHref, t } from './i18n';
+
+// Title of each section page (see SiteTitle), per path
+function sectionTitleFor(path: string): string | null {
+  const p = path.split(/[?#]/)[0].replace(/\/$/, '');
+  if (p === '/cases') return 'Проекты Skip Design';
+  if (p === '/services' || p === '/services-2' || p === '/expertiza') return 'Услуги Skip Design';
+  if (p === '/lab') return 'Инсайты команды';
+  return null;
+}
 import DesignSystemPage from './components/DesignSystemPage';
 import ServiceDetailPage from './components/ServiceDetailPage';
 import LinkFlip from './components/LinkFlip';
@@ -404,7 +415,8 @@ const _BASE = import.meta.env.BASE_URL.replace(/\/$/, ''); // e.g. '/skip-design
 function stripBase(p: string): string {
   const stripped = (_BASE && p.startsWith(_BASE)) ? p.slice(_BASE.length) : p;
   // Remove trailing slash (GitHub Pages 404 serves /cases/ → we need /cases)
-  return stripped.replace(/\/$/, '') || '/';
+  // …and the /en language prefix (see i18n)
+  return stripLang(stripped.replace(/\/$/, '') || '/');
 }
 
 // Pages whose top area is a full-bleed cover/video — there the nav inverts
@@ -422,6 +434,8 @@ function AppInner() {
     }
     return stripBase(window.location.pathname);
   });
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
   const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/services-2', '/policy', '/index2', '/case-template', '/Seniorsbar', '/guide', '/lab', '/system', '/brand', '/visual', '/digital'];
   const page = pathname === '/cases' ? 'cases'
              : pathname === '/instruments' ? 'instruments'
@@ -443,7 +457,7 @@ function AppInner() {
              : 'home';
 
   const navigate = useCallback((path: string) => {
-    window.history.pushState({}, '', _BASE + path);
+    window.history.pushState({}, '', _BASE + LANG_PREFIX + path);
     setPathname(path);
   }, []);
 
@@ -471,6 +485,9 @@ function AppInner() {
     probe.style.cssText = 'position:absolute;visibility:hidden;overflow:scroll;width:50px;height:50px';
     document.body.appendChild(probe);
     setScrollbarW(probe.offsetWidth - probe.clientWidth);
+    // Fixed page titles line up with the inner page's grid, which excludes
+    // the page's own scrollbar gutter
+    document.documentElement.style.setProperty('--page-sb', `${probe.offsetWidth - probe.clientWidth}px`);
     probe.remove();
   }, []);
   // Mobile: track when the hero video phase ends (scroll > 280px) so the button fades
@@ -740,13 +757,21 @@ function AppInner() {
   // Page exit then navigate. Nav (Кейсы/Услуги/О нас) now stays fixed and
   // visible across every page, so it no longer fades with the page content.
   const navigateWithExit = useCallback((dest: string) => {
+    // Already there (e.g. «Инсайты» clicked on the insights page): nothing
+    // would come back in after the exit, so the page and title would stay
+    // faded out — just stay put.
+    if (dest === pathnameRef.current) return;
     // On a sub-page it is that page that has to fade out, not the home
     // wrapper underneath it — otherwise page-to-page jumps look abrupt while
     // home → page is animated.
     const subPage = document.querySelector('[class*="_page_"]') as HTMLElement | null;
     const exitEl = subPage ?? mainRef.current;
     if (!exitEl) { navigate(dest); return; }
-    gsap.to(exitEl, {
+    // Parts of the page that live at body level (the section title, see
+    // SiteTitle; a case's pinned meta row, see PinnedInvert) are outside the
+    // page layer — they leave with it all the same
+    const floats = Array.from(document.querySelectorAll<HTMLElement>('body > h1[class*="titleCol2"], body > [data-page-float]'));
+    gsap.to([exitEl, ...floats], {
       opacity: 0,
       y: 20,
       duration: 0.35,
@@ -787,11 +812,28 @@ function AppInner() {
 
   // Current section stays black, the rest go grey — only where the nav is
   // plain text (over a cover it inverts and every link stays white).
+  // The nav inverts over everything now (white + difference), so the other
+  // sections are dimmed with opacity instead of a grey colour.
   const navLinkStyle = (target: string): React.CSSProperties | undefined => {
-    if (INVERTED_NAV_PAGES.has(page)) return undefined;
     // The /services-2 sandbox counts as the services section
+    // Case pages count as the projects section
+    const section = page === 'expertiza2' ? 'expertiza'
+      : page === 'case-template' || page === 'seniors' ? 'cases' : page;
+    // Home and other pages with no current section: all three dark
+    if (!['cases', 'expertiza', 'lab'].includes(section)) return undefined;
+    // The site's standard muted grey (--c-text-muted) — flat, not the
+    // blend-derived opacity trick, so it reads exactly like other grey text
+    return section === target ? undefined : { color: 'var(--c-text-muted)', mixBlendMode: 'normal' as const };
+  };
+  // The menu is the page title on inner pages — heading size
+  const navItemStyle = (target: string): React.CSSProperties => {
     const section = page === 'expertiza2' ? 'expertiza' : page;
-    return { color: section === target ? 'var(--c-text)' : 'var(--c-text-muted)' };
+    const own = navLinkStyle(target) ?? {};
+    // Inner pages: all three items at heading size, the current one black
+    // and the others grey (navLinkStyle); home keeps the small menu
+    return true
+      ? { ...own, textTransform: 'lowercase', fontFamily: 'var(--font-display)', fontSize: 'var(--heading-size)', fontWeight: 'var(--heading-weight)' as any, lineHeight: 'var(--heading-lh)', letterSpacing: 'var(--heading-ls)' }
+      : own;
   };
 
   const handleCasesClick = (e: React.MouseEvent) => {
@@ -868,8 +910,13 @@ function AppInner() {
       {/* On a plain (non-inverted) page the current section stays black and
           the other links go grey. */}
       <nav
-        className={`${s.nav}${INVERTED_NAV_PAGES.has(page) ? '' : ` ${s.navPlain}`}`}
-        style={page !== 'home' && page !== 'index2' ? { right: `calc(var(--pad) + ${scrollbarW}px)` } : undefined}
+        className={s.nav}
+        // Every page: the menu set large as the page title, from column 2,
+        // capitals on the logo line; «Написать» on the right edge
+        // Same everywhere: small menu just to the left of «Написать»,
+        // vertically centred on the pill (not sat on the logo's own baseline)
+        style={{ right: `calc(var(--pad) + ${page !== 'home' && page !== 'index2' ? scrollbarW : 0}px + 110px)`, left: 'auto', width: 'auto', minWidth: 0,
+          top: 'calc(var(--logo-top) + 6px)', ['--nav-sb' as any]: `${scrollbarW}px` }}
       >
         <>
             <span ref={casesLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center' }}>
@@ -877,33 +924,14 @@ function AppInner() {
                 <LinkFlip flat>Проекты</LinkFlip>
               </a>
             </span>
-            <span ref={expertizaLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center', marginLeft: '17.14px' }}>
+            <span ref={expertizaLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center', marginLeft: '13px' }}>
               <a href="/services" className={s.navLink} style={navLinkStyle('expertiza')} onClick={handleExpertizaClick}>
                 <LinkFlip flat>Услуги</LinkFlip>
               </a>
             </span>
-            <span ref={labLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center', marginLeft: '17.14px' }}>
+            <span ref={labLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex', alignItems: 'center', marginLeft: '13px' }}>
               <a href="/lab" className={s.navLink} style={navLinkStyle('lab')} onClick={handleLabClick}>
                 <LinkFlip flat>Инсайты</LinkFlip>
-              </a>
-            </span>
-            {/* Fourth link, in place of the old floating button: the word
-                turns into "телеграм" on hover, which is where it leads. */}
-            <span style={{ display: 'inline-flex', alignItems: 'center', marginLeft: '17.14px' }}>
-              <a
-                href="https://t.me/skpdsgn"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={s.navLink}
-                // Always reads as the guide's black — it is an action, not a
-                // section. Over a cover the nav inverts itself, so there the
-                // colour has to be white for the blend to land on black.
-                style={{ color: INVERTED_NAV_PAGES.has(page) ? '#fff' : 'var(--c-text)' }}
-              >
-                <LinkFlip flat hoverLabel="Телеграм">Написать</LinkFlip>
-                {/* Leads off the site — the arrow says so. Outside the flip, so
-                    it stays put while the word turns over. */}
-                <span aria-hidden="true" style={{ marginLeft: 4, textDecoration: 'none', display: 'inline-block' }}>↗</span>
               </a>
             </span>
             <span ref={toolsLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'none' }}>
@@ -912,6 +940,46 @@ function AppInner() {
             </span>
         </>
       </nav>
+
+      {/* «Написать» — outside <nav> on purpose (see navWrite comment above) */}
+            {/* Fourth link, in place of the old floating button: the word
+                turns into "телеграм" on hover, which is where it leads. */}
+            <span className={s.navWrite} style={{ display: 'inline-flex', alignItems: 'center',
+          // Always top-right, on the logo line — a sibling of <nav>, so a
+          // transform on the (centred) menu can never hijack this fixed
+          // positioning
+          position: 'fixed', top: 'calc(var(--logo-top) + 0.4px)', right: `calc(var(--pad) + ${page !== 'home' && page !== 'index2' ? scrollbarW : 0}px)`, zIndex: 200,
+          // Restores what living inside <nav> gave it for free: white
+          // pre-blend colours that read as a solid black pill once inverted
+          // against the page — .nav always inverts now, so this does too.
+          color: '#fff', mixBlendMode: 'difference' }}>
+              <a
+                href="https://t.me/skpdsgn"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${s.navLink} ${s.newProjectBtn}`}
+                onMouseEnter={() => sound.play('hover')}
+                style={{ textDecoration: 'none', display: 'inline-block' }}
+              >
+                {/* Same shape and cube flip as every PillButton, at nav size.
+                    A black pill with white type. */}
+                <span className={s.newProjectFlipInner}>
+                  {['Написать', 'Телеграм'].map((label, f) => (
+                    <span
+                      key={f}
+                      className={`${s.newProjectFace}${f ? ` ${s.newProjectFaceBottom}` : ''} ${s.navPill}`}
+                      style={{
+                        // Black pill with white type. The nav inverts itself
+                        // (difference), so these are the pre-blend colours.
+                        background: '#fff', color: '#000',
+                        // Cube depth = half the pill's height
+                        transform: f ? 'rotateX(-90deg) translateZ(14px)' : 'translateZ(14px)',
+                      }}
+                    >{label}</span>
+                  ))}
+                </span>
+              </a>
+            </span>
 
       <div
         ref={logoRef}
@@ -985,7 +1053,7 @@ function AppInner() {
         <a href="/policy" onClick={e => { e.preventDefault(); navigate('/policy'); }} style={{ textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px', color: 'inherit' }}>Политика конфиденциальности</a>
       </div>}
 
-      {/* Fixed bottom: /en + time — desktop only (mobile uses unified footer bar below) */}
+      {/* Fixed bottom: time — desktop only (mobile uses unified footer bar below) */}
       {!isMobile && <div style={{
         position: 'fixed',
         ...(page === 'index2'
@@ -1008,7 +1076,6 @@ function AppInner() {
       }}>
         <SoundIcon />
         <span style={{ color: 'inherit' }}><MoscowTime /> (GMT+3)</span>
-        <span style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35, cursor: 'default' }}>/en</span>
       </div>}
 
       {/* hi@skip.design — desktop only (on mobile it would overlap the
@@ -1117,8 +1184,9 @@ function AppInner() {
         </a>
       </div>}
 
-      {/* Zoom controls — home page only, bottom-left (no function yet) */}
-      {page === 'home' && !isMobile && <div style={{
+      {/* Language switch — bottom-left corner, desktop (mobile keeps it in
+          the footer bar) */}
+      {!isMobile && <div style={{
         position: 'fixed',
         left: 'var(--pad)',
         bottom: 'var(--pad)',
@@ -1130,10 +1198,10 @@ function AppInner() {
         lineHeight: 'var(--text-lh)',
         color: '#fff',
         mixBlendMode: 'difference',
-        pointerEvents: 'none',
-        userSelect: 'none',
       }}>
-        <span style={{ color: 'inherit' }}>⊖ ⊕</span>
+        <a href={otherLangHref(pathname)} style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35 }}>{LANG === 'en' ? '/ru' : '/en'}</a>
+        {/* Home: the studio line sits beside the language switch */}
+        {page === 'home' && <span style={{ marginLeft: 16, pointerEvents: 'none' }}>{t('Дизайн, как правила игры')}</span>}
       </div>}
 
       {/* ── Mobile footer bar — single unified block ──────────────────────────
@@ -1187,7 +1255,7 @@ function AppInner() {
               </svg>
             </a>
             <span><MoscowTime /> (GMT+3)</span>
-            <span style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35, cursor: 'default' }}>/en</span>
+            <a href={otherLangHref(pathname)} style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35 }}>{LANG === 'en' ? '/ru' : '/en'}</a>
           </div>
         </div>
       )}
@@ -1216,6 +1284,13 @@ function AppInner() {
         onNavigatePolicy={() => navigateWithExit('/policy')}
         onGridMode={setGridVisible}
       />}
+      {sectionTitleFor(pathname) && (
+        <SiteTitle
+          key={sectionTitleFor(pathname)!}
+          title={sectionTitleFor(pathname)!}
+          releaseAt={page === 'expertiza' ? '[data-title-release]' : undefined}
+        />
+      )}
       {page === 'policy' && <PolicyPage />}
       {page === 'index2' && <Index2Page />}
       {page === 'case-template' && <CaseTemplatePage onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}
@@ -1309,7 +1384,7 @@ function AppInner() {
         )}
 
         <div id="cases" ref={casesRevealRef} style={{ marginTop: 'var(--space-xl)' }}>
-          <ProjectGallery onCaseClick={() => navigateWithExit('/case-template')} />
+          <ProjectGallery onCaseClick={(href) => navigateWithExit(href || '/case-template')} />
         </div>
 
         {/* Straight to the full list — same pill as «написать нам», in grey.
@@ -1323,10 +1398,9 @@ function AppInner() {
             «Материалы и инструменты» (MediaSection), per the unified list. */}
         {/* <ToolsSection /> */}
 
-        {/* Home shows only the first two levels — the full services list lives
-            on the /services page. */}
+        {/* The same table as on /services — one source, so the two never drift */}
         <div>
-          <ExpertiseSection showItems={false} />
+          <ExpertiseSection2 showHeading />
         </div>
 
         {/* Trusted-by clients — moved below Cases */}

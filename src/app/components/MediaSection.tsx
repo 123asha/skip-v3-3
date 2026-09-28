@@ -29,7 +29,68 @@ const FULL_PLACEHOLDER = [
 
 // `date` — publication date, DD.MM.YYYY. The ones below are placeholders
 // until the real dates are filled in.
-const tools: { name: string; desc: string; year?: string; date?: string; source?: string; href?: string; body?: [string, string]; full?: string[] }[] = [
+type Insight = { name: string; desc: string; year?: string; date?: string; source?: string; href?: string; body?: [string, string]; full?: string[] };
+
+// DD.MM.YYYY (or just the year) → sortable number
+const dateKey = (t: Insight) => {
+  const [d, m, y] = (t.date ?? `01.01.${t.year ?? '0'}`).split('.').map(Number);
+  return y * 10000 + m * 100 + d;
+};
+
+// Shown date: the current year is dropped (03.06), other years keep two
+// digits (12.11.25)
+const shownDate = (t: Insight) => {
+  if (!t.date) return t.year;
+  const [d, m, y] = t.date.split('.');
+  return Number(y) === new Date().getFullYear() ? `${d}.${m}` : `${d}.${m}.${y.slice(-2)}`;
+};
+
+// Listed newest first, whatever order they're written in below
+const INSIGHTS: Insight[] = [
+  {
+    name: 'Статья',
+    desc: 'Зачем стартапу стратегия, если всё постоянно меняется',
+    date: '27.09.2026',
+    source: 'Дизайн-кабак',
+    href: 'https://designpub.ru/zachem-startapu-strategiya-yesli-vsyo-postoyanno-menyayetsya-5538434cc1da',
+    body: [
+      '«Рано думать о стратегии, давайте проверять гипотезы» — так думает почти каждый стартап.',
+      'Сейчас запустить продукт просто: за пару недель навайбкодить MVP, запустить рекламу и даже получить первых пользователей. И на этом этапе может казаться, что о стратегии думать рано.',
+    ],
+  },
+  {
+    name: 'Статья',
+    desc: 'Как смыслы бренда становятся продуктовыми решениями',
+    date: '23.09.2026',
+    source: 'Дизайн-кабак',
+    href: 'https://designpub.ru/kak-smysly-brenda-stanovyatsya-produktovymi-resheniyami-aa0b46964c37',
+    body: [
+      'Компания потратила несколько месяцев и бюджет на ребрендинг. Сделали красивую презентацию с миссией, видением, ценностями.',
+      'Все полюбовались и отдали в отдел маркетинга. А продукт живёт своей жизнью.',
+    ],
+  },
+  {
+    name: 'Статья',
+    desc: 'В чём разница между product vision и brand vision',
+    date: '16.09.2026',
+    source: 'Дизайн-кабак',
+    href: 'https://designpub.ru/v-chyom-raznitsa-mezhdu-product-vision-i-brand-vision-7f649efe1c57',
+    body: [
+      'Их легко перепутать, потому что оба говорят о будущем. Но отвечают на разные вопросы.',
+      'Brand vision — куда мы хотим прийти как бренд через 2–5 лет. Product vision — каким должен стать продукт, чтобы это будущее стало возможным.',
+    ],
+  },
+  {
+    name: 'Статья',
+    desc: 'Что должно измениться в жизни человека благодаря вашему продукту?',
+    date: '16.09.2026',
+    source: 'Дизайн-кабак',
+    href: 'https://designpub.ru/chto-dolzhno-izmenitsya-v-zhizni-cheloveka-blagodarya-vashemu-produktu-ec1f871c1d98',
+    body: [
+      'На этот вопрос поможет ответить product vision.',
+      'Product vision полезен даже маленьким командам: он помогает сверяться с целью, держать фокус и расставлять приоритеты.',
+    ],
+  },
   {
     name: 'Фреймворк',
     desc: 'Конструктор миссии',
@@ -92,8 +153,15 @@ const tools: { name: string; desc: string; year?: string; date?: string; source?
   },
 ];
 
-export function ToolsList({ toolsRowsRef, showZoom = false }: {
+const tools = [...INSIGHTS].sort((a, b) => dateKey(b) - dateKey(a));
+
+/** Insights newest first, with their shown date — for the card grid on the insights page */
+export const INSIGHTS_LIST = tools.map(i => ({ ...i, shown: shownDate(i) }));
+
+export function ToolsList({ toolsRowsRef, showZoom = false, bandHeader = false }: {
   toolsRowsRef?: React.RefObject<HTMLDivElement> | null;
+  /** Column header as a grey band (like the services table), no line under it */
+  bandHeader?: boolean;
   /** ⌘ ⊕ ⊖ above the table, same control as on the services page */
   showZoom?: boolean;
 }) {
@@ -208,7 +276,7 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
   );
 
   const headerStyle: React.CSSProperties = {
-    opacity: 'var(--opacity-muted)' as any,
+    ...(bandHeader ? null : { opacity: 'var(--opacity-muted)' as any }),
     fontFamily: 'var(--font)',
     fontSize: 'var(--text-size)',
     lineHeight: 'var(--text-lh)',
@@ -216,12 +284,22 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
     margin: 0,
   };
 
+  // Insights page: the first column is inset like the services table's
+  const firstColPad: React.CSSProperties = bandHeader ? { paddingLeft: '22.86px' } : {};
+  // …and the last one mirrors it on the right
+  const lastColPad: React.CSSProperties = bandHeader ? { paddingRight: '22.86px' } : {};
+
+  // Insights page: a grey band like the category rows of the services table
+  const headerBand: React.CSSProperties = {
+    display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', columnGap: 'var(--gap)',
+    ...(bandHeader ? { padding: '8px 0 12px', background: 'var(--c-surface)' } : { paddingBottom: 12 }),
+  };
+
   const zoomUI = !isMobile && showZoom && (
     <div style={{
       position: 'fixed', left: 'var(--pad)', bottom: 'var(--pad)', zIndex: 170,
-      display: 'inline-flex', alignItems: 'center', gap: 6, ...headerStyle,
+      display: 'inline-flex', alignItems: 'center', gap: 6, ...headerStyle, opacity: 'var(--opacity-muted)' as any,
     }}>
-      <span>⌘</span>
       <button onClick={fold} aria-label="Свернуть" style={{ font: 'inherit', color: 'inherit', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>⊖</button>
       <button onClick={unfold} aria-label="Развернуть" style={{ font: 'inherit', color: 'inherit', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>⊕</button>
     </div>
@@ -232,8 +310,8 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
     return (
       <div ref={toolsRowsRef ?? undefined} className={s.toolsList}>
         {zoomUI}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', columnGap: 'var(--gap)', paddingBottom: 12 }}>
-          <p style={{ ...headerStyle, gridColumn: '1 / 3', display: 'flex', gap: 10 }}>
+        <div style={headerBand}>
+          <p style={{ ...headerStyle, ...firstColPad, gridColumn: '1 / 3', display: 'flex', gap: 10 }}>
             <span style={{ width: '10ch' }}>Дата</span><span>Название</span>
           </p>
           <p style={{ ...headerStyle, gridColumn: '3 / 5' }}>Вся мысль</p>
@@ -256,11 +334,11 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
             >
               <MagneticDivider />
               <p className={s.toolRowText} style={{
-                gridColumn: '1 / 3', margin: 0, display: 'flex', gap: 10,
+                gridColumn: '1 / 3', margin: 0, display: 'flex', gap: 10, ...firstColPad,
                 opacity: (open ? 1 : 'var(--opacity-muted)') as any,
                 transition: 'opacity 0.3s ease',
               }}>
-                <span data-flip={`y${i}`} style={{ width: '10ch', flexShrink: 0, display: 'inline-block', opacity: 'var(--opacity-muted)' as any }}>{row.date ?? row.year}</span>
+                <span data-flip={`y${i}`} style={{ width: '10ch', flexShrink: 0, display: 'inline-block', opacity: 'var(--opacity-muted)' as any }}>{shownDate(row)}</span>
                 <span data-flip={`t${i}`} style={{ display: 'inline-block' }}>{typo(row.desc)}</span>
               </p>
               <div style={{ gridColumn: '3 / 5', display: 'grid', gridTemplateRows: open ? '1fr' : '0fr', transition: 'grid-template-rows 0.6s cubic-bezier(0.22, 1, 0.36, 1)' }}>
@@ -295,9 +373,8 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
         // used to sit — same place as on the cases page.
         <div style={{
           position: 'fixed', left: 'var(--pad)', bottom: 'var(--pad)', zIndex: 170,
-          display: 'inline-flex', alignItems: 'center', gap: 6, ...headerStyle,
+          display: 'inline-flex', alignItems: 'center', gap: 6, ...headerStyle, opacity: 'var(--opacity-muted)' as any,
         }}>
-          <span>⌘</span>
           <button
             onClick={fold}
             aria-label="Свернуть все"
@@ -311,22 +388,20 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
         </div>
       )}
       {!isMobile && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', columnGap: 'var(--gap)', paddingBottom: 12 }}>
-          <p style={headerStyle}>Дата</p>
-          <p style={headerStyle}>Название</p>
-          <p style={{ ...headerStyle, gridColumn: '3 / 6' }}>{expanded.length ? 'Средне' : 'Коротко'}</p>
+        <div style={headerBand}>
+          <p style={{ ...headerStyle, ...firstColPad }}>Дата</p>
+          <p style={{ ...headerStyle, gridColumn: '2' }}>Название</p>
+          {bandHeader
+            ? <p style={{ ...headerStyle, ...lastColPad, gridColumn: '5', textAlign: 'right' }}>Источник</p>
+            : <p style={{ ...headerStyle, gridColumn: '3 / 5' }}>{expanded.length ? 'Средне' : 'Коротко'}</p>}
         </div>
       )}
       {tools.map((tool, i) => {
         const isOpen = expanded.includes(i);
         const body = tool.body ?? BODY_PLACEHOLDER;
         const meta = tool.source ?? tool.year;
-        // Hover dimming — applied per cell so the divider lines stay untouched.
-        // An open row keeps full contrast: it is the one being read.
-        const fade: React.CSSProperties = {
-          opacity: (hovered !== null && hovered !== i && !isOpen ? 'var(--opacity-muted)' : 1) as any,
-          transition: `opacity ${EXPAND}`,
-        };
+        // No hover dimming — hovering a row only shows its ⤴
+        const fade: React.CSSProperties = {};
         return (
           <div
             key={i}
@@ -341,7 +416,7 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
             {/* Divider keeps one constant colour everywhere — the hover dimming
                 below sits on the text cells, never on the line. Flat on mobile
                 so touch scroll can't bend it. */}
-            <MagneticDivider flat={isMobile} />
+            {!(bandHeader && i === 0) && <MagneticDivider flat={isMobile} />}
 
             {isMobile ? (
               // Mobile: name (left) + year (right), title below, then the
@@ -367,12 +442,19 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
             ) : (
               // Desktop: year (col 1) | title+arrow (col 2) | type (col 4)
               <>
-                <p className={s.toolRowText} style={{ gridColumn: '1', margin: 0, ...fade }}><span data-flip={`y${i}`} style={{ display: 'inline-block', opacity: 'var(--opacity-muted)' as any }}>{tool.date ?? tool.year}</span></p>
+                <p className={s.toolRowText} style={{ gridColumn: '1', margin: 0, ...firstColPad, ...fade, ...(bandHeader ? { display: 'flex', justifyContent: 'space-between' } : null) }}>
+                  <span data-flip={`y${i}`} style={{ display: 'inline-block', opacity: 'var(--opacity-muted)' as any }}>{shownDate(tool)}</span>
+                  {/* Insights page: the ⤴ sits one column left of the title, as
+                      in the services table, and shows while the row is hovered */}
+                  {bandHeader && (
+                    <span aria-hidden="true" style={{ color: 'var(--c-text)', opacity: hovered === i ? 1 : 0, transition: 'opacity 0.2s ease' }}>⤴</span>
+                  )}
+                </p>
                 {/* Type, with the hover glyph pinned to the column's right edge */}
                 <div style={{ gridColumn: '2', display: 'flex', alignItems: 'baseline', ...fade }}>
                   <p className={s.toolRowText} style={{ margin: 0 }}><span data-flip={`t${i}`} style={{ display: 'inline-block' }}>{typo(tool.desc)}</span></p>
                   <span style={{ flex: 1 }} />
-                  {tool.href && (
+                  {tool.href && !bandHeader && (
                     <span
                       className={`${s.toolRowText} ${s.toolRowTextRight}`}
                       style={{
@@ -385,11 +467,34 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
                     >⤴</span>
                   )}
                 </div>
+                {bandHeader ? (
+                  <>
+                    {/* Insights page: the source in the last column; the
+                        description opens under the row the way the services
+                        table does it — one column right of the title and one
+                        line down, then «Перейти» */}
+                    <p className={s.toolRowText} style={{ gridColumn: '5', margin: 0, textAlign: 'right', ...lastColPad, opacity: 'var(--opacity-muted)' as any }}>{tool.source}</p>
+                    <div style={{ gridColumn: '3 / 5', gridRow: 1, display: 'grid', gridTemplateRows: isOpen ? '1fr' : '0fr', transition: `grid-template-rows ${EXPAND}` }}>
+                      <div style={{ overflow: 'hidden' }}>
+                        <div style={{ marginTop: 'calc(var(--text-size) * var(--text-lh) + 20px)', paddingBottom: 32 }}>
+                          {/* Two paragraphs side by side, one per column */}
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', columnGap: 'var(--gap)', alignItems: 'start' }}>
+                            {body.map((para, k) => (
+                              <p key={k} className={s.toolRowText} style={{ margin: 0 }}>{typo(para)}</p>
+                            ))}
+                          </div>
+                          {tool.href && <PillButton href={tool.href} style={{ marginTop: 20 }}>Перейти</PillButton>}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                <>
                 {/* Short → medium: closed, the start of the article in one
                     column, two lines; opened, it runs on in the same place and
                     the next paragraph joins it on the same line, then «Перейти» */}
-                <div style={{ gridColumn: '3 / 6', ...fade }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--gap)', alignItems: 'start' }}>
+                <div style={{ gridColumn: '3 / 5', ...fade }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--gap)', alignItems: 'start' }}>
                     <p className={s.toolRowText} style={{
                       margin: 0, position: 'relative', zIndex: 2,
                       display: '-webkit-box', WebkitLineClamp: isOpen ? 4 : 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
@@ -412,6 +517,8 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
                     </div>
                   </div>
                 </div>
+                </>
+                )}
               </>
             )}
           </div>
@@ -423,7 +530,8 @@ export function ToolsList({ toolsRowsRef, showZoom = false }: {
 
 /** showHeading=false drops the section's own h2 — used where the page title
  *  already names the block (the Инсайты page). */
-export function MediaSection({ toolsRowsRef, showHeading = true, flushTop = false, showZoom = false }: {
+export function MediaSection({ toolsRowsRef, showHeading = true, flushTop = false, showZoom = false, bandHeader = false }: {
+  bandHeader?: boolean;
   toolsRowsRef?: React.RefObject<HTMLDivElement> | null;
   showHeading?: boolean;
   /** ⌘ ⊕ ⊖ over the table — unfolds and folds the rows one at a time */
@@ -444,7 +552,7 @@ export function MediaSection({ toolsRowsRef, showHeading = true, flushTop = fals
           color: 'var(--c-text)',
           margin: 0,
         }}>Экспертиза</h2>}
-        <ToolsList toolsRowsRef={toolsRowsRef} showZoom={showZoom} />
+        <ToolsList toolsRowsRef={toolsRowsRef} showZoom={showZoom} bandHeader={bandHeader} />
       </div>
     </div>
   );

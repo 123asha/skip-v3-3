@@ -89,15 +89,14 @@ const SERVICES: { category: string; groupLabel?: string; items: ServiceItem[] }[
 export const EXPERTISE_LEVELS = 5;
 export const EXPERTISE_DEFAULT_LEVEL = 2;
 
-// Phone: the arrow on a tappable row (no hover on touch), turned down while
-// the row is open
+// Phone: the arrow on a tappable row (no hover on touch) — the desktop's ⤴,
+// always shown, dark while the row is open
 const mobArrow = (open: boolean) => (
   <span aria-hidden="true" style={{
-    flexShrink: 0, opacity: 'var(--opacity-muted)' as any,
-    display: 'inline-block', transform: open ? 'rotate(90deg)' : 'none',
-    transition: 'transform 0.3s ease',
+    flexShrink: 0, opacity: open ? 1 : 'var(--opacity-muted)' as any,
+    transition: 'opacity 0.3s ease',
     fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)',
-  }}>→</span>
+  }}>⤴</span>
 );
 
 // Phone: where a category's name starts (symbol column + its 12px gap) —

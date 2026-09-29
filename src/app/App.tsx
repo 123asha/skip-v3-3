@@ -911,6 +911,24 @@ function AppInner() {
   // Phone: the menu links are chips — the current one spreads the others
   // from it, like the filter chips (utils/chipBounce)
   const navLinksRef = useRef<HTMLSpanElement>(null);
+  // Phone, projects and case pages: the menu tucks away while scrolling down
+  // and comes back on the way up (index.css, data-nav-hidden)
+  useEffect(() => {
+    const root = document.documentElement;
+    const on = isMobile && (page === 'cases' || page === 'case-template' || page === 'seniors');
+    if (!on) { root.removeAttribute('data-nav-hidden'); return; }
+    let last = 0;
+    const onScroll = (e: Event) => {
+      const el = e.target instanceof HTMLElement ? e.target : null;
+      if (!el || !el.className.toString().includes('_page_')) return;
+      const y = el.scrollTop;
+      if (Math.abs(y - last) < 6) return;
+      root.toggleAttribute('data-nav-hidden', y > last && y > 80);
+      last = y;
+    };
+    window.addEventListener('scroll', onScroll, { capture: true, passive: true });
+    return () => { window.removeEventListener('scroll', onScroll, { capture: true }); root.removeAttribute('data-nav-hidden'); };
+  }, [isMobile, page]);
   useEffect(() => {
     // In-flow on phones: the row fills the width and its ends stay put
     settleChips(navLinksRef.current, isMobile ? ['home', 'cases', 'expertiza', 'lab'].indexOf(navSection) : -1, isMobile);
@@ -1310,6 +1328,7 @@ function AppInner() {
               left: 'calc(var(--m-head-x) - 10px + 72.5px + 6px)', top: 6, height: 52,
               display: 'flex', alignItems: 'center',
               color: '#fff', mixBlendMode: 'difference', opacity: 0.35, textDecoration: 'none',
+              transform: 'translateZ(0)',   // own layer — steady while scrolling (iOS)
               fontSize: 'var(--text-size)', fontFamily: 'var(--font)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
               letterSpacing: 'var(--text-ls)', lineHeight: 'var(--text-lh)',
             }}
@@ -1319,6 +1338,7 @@ function AppInner() {
             <div style={{
               position: 'fixed', zIndex: 200, left: 0, right: 0, top: 6, height: 52,
               display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none',
+              transform: 'translateZ(0)',
               color: '#fff', mixBlendMode: 'difference',
               fontSize: 'var(--text-size)', fontFamily: 'var(--font)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
               letterSpacing: 'var(--text-ls)', lineHeight: 'var(--text-lh)',

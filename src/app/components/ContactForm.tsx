@@ -27,6 +27,20 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
   // Scrolled right to the end: the screen inverts (overlay below)
   const cardRef = useRef<HTMLDivElement>(null);
   const [atBottom, setAtBottom] = useState(false);
+  // The inversion layer exists only while needed: mounted at the end of the
+  // page, faded in on the next frame, kept until its fade-out has finished
+  const [invertOn, setInvertOn] = useState(false);
+  const [invertShown, setInvertShown] = useState(false);
+  useEffect(() => {
+    if (atBottom) {
+      setInvertOn(true);
+      const r = requestAnimationFrame(() => setInvertShown(true));
+      return () => cancelAnimationFrame(r);
+    }
+    setInvertShown(false);
+    const t = window.setTimeout(() => setInvertOn(false), 300);
+    return () => window.clearTimeout(t);
+  }, [atBottom]);
   useEffect(() => {
     const onScroll = () => {
       const el = cardRef.current;
@@ -225,13 +239,16 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
         {/* A bit of mischief: scrolled right to the end, the whole screen
             inverts — dark background, white type. One overlay flips the colours
             of everything under it (backdrop-filter), fading in and out. */}
-        {createPortal(
+        {/* Mounted only around the inversion itself: an always-present
+            full-screen backdrop-filter layer (even at opacity 0) made iOS
+            repaint every pinned element on each scroll frame — they shook */}
+        {invertOn && createPortal(
           <div
             aria-hidden="true"
             style={{
               position: 'fixed', inset: 0, zIndex: 9990, pointerEvents: 'none',
               backdropFilter: 'invert(1)', WebkitBackdropFilter: 'invert(1)',
-              opacity: atBottom ? 1 : 0,
+              opacity: atBottom && invertShown ? 1 : 0,
               transition: 'opacity 0.25s ease-out',
             }}
           />,

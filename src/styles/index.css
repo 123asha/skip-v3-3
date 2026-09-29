@@ -260,6 +260,15 @@ html {
 }
 
 
+/* Phone, projects and case pages: scrolling down tucks the menu away below
+   the screen (App sets data-nav-hidden); what sat over it drops to the
+   bottom edge, and scrolling up brings the menu back */
+:root[data-nav-hidden] {
+  --m-menu-bottom: calc(-1 * var(--m-chip-h) - 20px);
+  --m-above-menu: var(--pad);
+  --m-chips-bottom: var(--pad);
+}
+
 /* No system focus rings anywhere (the blue frame Safari and Chrome draw
    around a clicked link or card) */
 *:focus, *:focus-visible { outline: none; }

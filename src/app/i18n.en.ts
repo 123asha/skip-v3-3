@@ -121,6 +121,7 @@ export const EN: Record<string, string> = {
   'Система живая, тёплая и динамичная. С ней Senior*s ещё отчётливее звучит как место своего света, оставаясь визуально понятным и эмоционально близким своему сообществу.':
     'The system is alive, warm and dynamic. With it Senior*s speaks even more clearly as a place with a light of its own, while staying visually clear and emotionally close to its community.',
   'скипнуть': 'skip it',
+  'скипнуть описание': 'skip the story',
   'о проекте': 'about the project',
   'Наверх': 'Back to top',
   'все услуги': 'all services',

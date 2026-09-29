@@ -396,8 +396,10 @@
   /* The filter chips sit just above the bottom menu, under the thumb */
   .tabsBar {
     top: auto !important;
-    /* 20px over the menu chips — room for the dotted links from «Проекты» */
-    bottom: calc(var(--m-menu-bottom) + var(--m-chip-h) + 20px);
+    /* 20px over the menu chips; down on the bottom edge while the menu is
+       tucked away (App: data-nav-hidden) */
+    bottom: var(--m-chips-bottom, calc(var(--m-menu-bottom) + var(--m-chip-h) + 20px));
+    transition: bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1);
     height: auto;
     left: 0;
     right: 0;

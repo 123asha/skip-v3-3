@@ -639,10 +639,11 @@
    links' grey box across the row, «Написать» at its right end.
    (The top row now holds language, social and time — App.tsx.) */
 @media (max-width: 768px) {
-  /* Menu chips centred above the footer line */
+  /* Menu chips centred on the bottom edge (tucked below it while hidden) */
   .nav.navBoxed {
     top: auto;
     bottom: var(--m-menu-bottom);
+    transition: bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1);
     left: 0;
     right: 0 !important;
     justify-content: center;
@@ -655,9 +656,12 @@
     top: calc(6px + (52px - (var(--text-size) * var(--text-lh) + 17px)) / 2);
     right: var(--m-head-x);
   }
-  /* The header keeps 10px side margins (the logo's glyph sits 10px into
+  /* The header keeps its side margins (the logo's glyph sits 10px into
      its box) */
   .logo { left: calc(var(--m-head-x) - 10px) !important; }
+  /* Pinned header items on their own layers — iOS Safari otherwise nudges
+     fixed elements around while the page scrolls */
+  .logo, .navWrite { transform: translateZ(0); backface-visibility: hidden; }
   /* The links as chips, like the filter chips: outlined pills that touch at
      rest, the current section's neighbours spreading from it with a dotted
      link (settleChips, App.tsx) */

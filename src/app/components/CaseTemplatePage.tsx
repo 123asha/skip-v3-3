@@ -877,7 +877,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                       const el = document.querySelector('[data-case-credits]') as HTMLElement | null;
                       el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }}
-                  >скипнуть</PillButton>
+                  >скипнуть описание</PillButton>
                   {data.links?.map(l => (
                     <PillButton key={l.href} href={l.href}>{l.label}</PillButton>
                   ))}
@@ -898,9 +898,9 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             transform: `translate(-50%, ${paneBtn ? 0 : 12}px)`,
             opacity: paneBtn ? 1 : 0,
             pointerEvents: paneBtn ? 'auto' : 'none',
-            transition: 'opacity 0.3s ease, transform 0.3s ease',
+            transition: 'opacity 0.3s ease, transform 0.3s ease, bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
           }}>
-            <PillButton onClick={() => showPane(!aboutPane)}>{aboutPane ? 'скипнуть' : 'о проекте'}</PillButton>
+            <PillButton onClick={() => showPane(!aboutPane)}>{aboutPane ? 'скипнуть описание' : 'о проекте'}</PillButton>
           </div>,
           document.body,
         )}

@@ -220,6 +220,10 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
             // don't, and the services inside an open group are grouped by that
             // silence rather than split by lines.
             const showDivider = !row.header && !row.itemKey && j >= 2;
+            // Services (3rd level) are split by lines too — between one service
+            // and the next, drawn from the services' own column (col 4) so the
+            // nesting still reads. Descriptions (4th level) get none.
+            const showItemDivider = !!row.itemKey && !!rows[j - 1]?.itemKey;
             // Last item (3rd level) of a sub-group — its own text cell (col 4
             // only) gets extra room below, so the gap before the boundary reads
             // the same whether that boundary is the next group's divider or,
@@ -277,6 +281,12 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
             // on desktop ("скакалка"), flat/static on touch.
             const divider = showDivider ? (
               <MagneticDivider flat={isMobile} />
+            ) : showItemDivider ? (
+              isMobile ? <MagneticDivider flat /> : (
+                <div style={{ position: 'absolute', top: 0, right: 0, left: 'calc(3 * (100% - 4 * var(--gap)) / 5 + 3 * var(--gap))' }}>
+                  <MagneticDivider />
+                </div>
+              )
             ) : null;
             // Hover affordance for a clickable row — placed by the caller, one
             // column to the left of whatever words the row carries.

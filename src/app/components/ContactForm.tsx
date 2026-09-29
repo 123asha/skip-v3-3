@@ -158,6 +158,15 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
     transition: 'color 0.2s',
   });
 
+  // Telegram's paper plane in the first circle, in place of an «@». Nudged
+  // down-left: the circle's bottom padding is tuned for letters, and the
+  // plane's weight sits up-right (same nudge as the footer icon).
+  const telegramIcon = (
+    <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: '45%', height: '45%', display: 'block', transform: 'translate(-4%, 10%)' }}>
+      <path d="M22 4 2.5 11.5l5.6 1.9 2.2 7 3.7-3.6 5.2 3.8L22 4Zm-5.3 4.6-8 7.2-2.5-.9 10.5-6.3Zm-6 9.2 1.2-3.6 6.4 4.7-3.4-1.5-4.2.4Z" fill="currentColor" />
+    </svg>
+  );
+
   const arrowSvg = (
     <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
       <path d="M1 5h10M6 1l4 4-4 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -228,7 +237,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
                 {/* Desktop: one column of three wide — the circles wrap */}
                 <div style={{ maxWidth: isMobile ? '100%' : 'calc((100% - 2 * var(--gap)) / 3)' }}>
                 <CircleInput
-                  prefix="@" placeholder="телеграм" caretAtRest
+                  prefix={telegramIcon} placeholder="телеграм" caretAtRest
                   // Phone: the "@" and 8 typed letters fill exactly one row —
                   // 9 circles plus 8 gaps of 0.1 circle = 9.8 diameters
                   size={isMobile ? 'min(40px, calc((100vw - 2 * var(--pad)) / 9.8))' : 60} maxLength={tgMax}
@@ -246,14 +255,6 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
                   ) : undefined}
                 />
                 </div>
-                {/* Or skip the form and write straight away */}
-                <p className={s.checkboxLabel} style={{ margin: 0, textAlign: 'center' }}>
-                  или напишите нам в{' '}
-                  <a
-                    href="https://t.me/skpdsgn" target="_blank" rel="noopener noreferrer"
-                    style={{ color: 'inherit', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}
-                  >Телеграм</a>
-                </p>
                 {status === 'error' && (
                   <p style={{ margin: 0, fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)', color: '#c0392b', textAlign: 'center' }}>
                     Не отправилось. Попробуйте ещё раз или напишите в{' '}

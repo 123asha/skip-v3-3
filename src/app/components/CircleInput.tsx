@@ -14,8 +14,8 @@ interface CircleInputProps {
   action?: React.ReactNode;
   error?: boolean;
   maxLength?: number;
-  /** Circle that always stays first (e.g. "@") — not part of the value */
-  prefix?: string;
+  /** Circle that always stays first (e.g. "@" or an icon) — not part of the value */
+  prefix?: React.ReactNode;
   /** At rest show the blinking caret circle instead of the placeholder
    *  letters (the placeholder stays as the field's aria-label) */
   caretAtRest?: boolean;

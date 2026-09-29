@@ -644,6 +644,12 @@
   letter-spacing: var(--text-ls);
   cursor: pointer;
 }
+/* Hovering the consent lights it up as if ticked: the text goes to the full
+   text colour (white on the dark form), the box to the text colour */
+@media (hover: hover) {
+  .contactCheckbox:hover .checkboxLabel { color: var(--c-text) !important; }
+  .contactCheckbox:hover .checkbox { border-color: var(--c-text); }
+}
 
 /* Nav row passes clicks through; its items catch them */
 .nav > * { pointer-events: auto; }

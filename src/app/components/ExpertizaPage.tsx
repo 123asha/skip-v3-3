@@ -13,6 +13,7 @@ import { ExpertiseSection2, EXPERTISE_LEVELS, EXPERTISE_DEFAULT_LEVEL } from './
 import { PARA_GAP } from './CaseTemplatePage';
 import { usePinchSteps } from '../hooks/usePinchSteps';
 import { playKnock } from '../utils/knock';
+import DownRightArrow from './DownRightArrow';
 
 // ── Service data ──────────────────────────────────────────────────────────────
 
@@ -246,9 +247,9 @@ const PRINCIPLES = [
 ];
 
 // Symbol works as the bullet for its line.
-const MATCH_POINTS: { sym: string; text: string }[] = [
+const MATCH_POINTS: { sym: React.ReactNode; text: string }[] = [
   { sym: '⭆', text: 'клиентам — понятно, каким будет процесс и результат.' },
-  { sym: '⤷', text: 'пользователям — удобно и приятно взаимодействовать с продуктом или брендом.' },
+  { sym: <DownRightArrow />, text: 'пользователям — удобно и приятно взаимодействовать с продуктом или брендом.' },
   { sym: '⧉', text: 'разработчикам — не приходится тратить время, чтобы разобраться в логике макетов.' },
   { sym: '※', text: 'команде — не стыдно за результат, и хочется им поделиться.' },
 ];
@@ -306,7 +307,7 @@ function IntroBlock() {
       {/* Col 5 — the match points: symbol as a bullet, text to its right */}
       <div style={{ gridColumn: isMobile ? 'auto' : '5 / 6' }}>
         {MATCH_POINTS.map(({ sym, text }, i) => (
-          <p key={sym} style={{ ...ts, margin: 0, marginTop: i === 0 ? 0 : P_GAP, display: 'flex', gap: 10 }}>
+          <p key={i} style={{ ...ts, margin: 0, marginTop: i === 0 ? 0 : P_GAP, display: 'flex', gap: 10 }}>
             <span aria-hidden="true" style={{ flexShrink: 0 }}>{sym}</span>
             <span>{typo(text)}</span>
           </p>

@@ -35,7 +35,8 @@ export default function MobileFooter() {
           Политика конфиденциальности
         </a>
       </div>
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><SocialLinks onLight /></div>
+      {/* A touch bigger (+10%) and closer together than elsewhere */}
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}><SocialLinks onLight size={26.4} /></div>
     </div>
   );
 }

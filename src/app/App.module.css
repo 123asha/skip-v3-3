@@ -563,8 +563,9 @@
 }
 
 .submitCircle {
-  width: 44px;
-  height: 44px;
+  /* Same diameter as the field's letter circles (--c-size, set by CircleInput) */
+  width: var(--c-size, 44px);
+  height: var(--c-size, 44px);
   border-radius: 50%;
   background: var(--c-text);
   border: none;
@@ -576,6 +577,9 @@
   padding: 0;
   animation: submitCircleIn 0.18s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 }
+
+/* The arrow scales with the circle */
+.submitCircle svg { width: calc(var(--c-size, 44px) * 0.3); height: auto; }
 
 @keyframes submitCircleIn {
   from { opacity: 0; transform: scale(0.5); }

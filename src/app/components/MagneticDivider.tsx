@@ -131,6 +131,9 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
       ref={lineRef}
       aria-hidden="true"
       style={{
+        // Explicit: the phone table's «hide the empty spacer divs» rule
+        // (App.module.css) would otherwise hide this line too
+        display: 'block',
         position: 'absolute',
         top: 0,
         left: 0,

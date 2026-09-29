@@ -243,6 +243,10 @@
 
   /* Section spacing — uses the proportional vertical token */
   [class*="_section_"] { margin-top: var(--space-xl) !important; }
+  /* …except a section that sits right under its own heading (flushTop) —
+     that gap is the heading's, so the heading stays nearer its content
+     than the block above */
+  [class*="_section_"][data-flush] { margin-top: 0 !important; }
 }
 
 /* ── Small mobile (≤ 490px) — exact pixel sizes, overrides 768px block ── */

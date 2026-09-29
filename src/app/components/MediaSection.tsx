@@ -541,7 +541,7 @@ export function MediaSection({ toolsRowsRef, showHeading = true, flushTop = fals
   flushTop?: boolean;
 }) {
   return (
-    <div className={s.section} style={flushTop ? { marginTop: 0 } : undefined}>
+    <div className={s.section} data-flush={flushTop ? '' : undefined} style={flushTop ? { marginTop: 0 } : undefined}>
       <div className={s.tools}>
         {showHeading && <h2 style={{
           fontFamily: 'var(--font-display)',

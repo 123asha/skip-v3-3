@@ -154,7 +154,8 @@
   :root {
     --pad:            16px;   /* side margins of the content on phones */
     --hero-h:         85svh;  /* the home hero: 85% of the screen */
-    --gap:            8px;
+    --gap:            16px;   /* the two-column grid's gutter = the margins */
+    --heading-size:   33.6px; /* phones: headings 20% up from 28px */
     --text-size:      clamp(11px, 3.5vw, 18px);
     --text-lh:        1.38;   /* phones: 15% more leading than 1.2 */
     /* Proportional vertical rhythm — keeps the same ratio as desktop */
@@ -221,7 +222,11 @@
   }
   /* One screen tall on phones too; the form sits a touch above its middle
      (ContactForm's bottom margin), clear of the bottom menu */
-  [class*="_contactCard_"] { min-height: 100svh !important; }
+  [class*="_contactCard_"] {
+    /* The card and the footer line under it fill the screen together, so
+       at the end of the page the form sits a little above the middle */
+    min-height: calc(100svh - (var(--space-md) + var(--m-foot) + var(--m-menu-bottom) + var(--m-chip-h) + var(--space-xs))) !important;
+  }
 
   /* Page title */
   [class*="_title_"] {

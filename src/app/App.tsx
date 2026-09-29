@@ -1011,14 +1011,15 @@ function AppInner() {
             className={s.gridOverlay}
             aria-hidden="true"
             style={{
-              gridTemplateColumns: `repeat(${overlayCols}, 1fr)`,
+              // Phone: always the two-column grid
+              gridTemplateColumns: `repeat(${isMobile ? 2 : overlayCols}, 1fr)`,
               // Sub-pages scroll inside .page → account for its scrollbar gutter
               ...(page !== 'home' && page !== 'index2'
                 ? { paddingRight: `calc(var(--pad) + ${scrollbarW}px)` }
                 : null),
             }}
           >
-            {Array.from({ length: overlayCols }).map((_, i) => <div key={i} className={s.gridCol} />)}
+            {Array.from({ length: isMobile ? 2 : overlayCols }).map((_, i) => <div key={i} className={s.gridCol} />)}
           </div>
         </>
       )}

@@ -854,8 +854,8 @@ function TileBlocks() {
         style={{
           display: 'grid',
           gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
-          // Phone: the same gap as the page's side margins
-          gap: isMobile ? 'var(--pad)' : GAP,
+          // Phone: on the two-column grid (its gutter)
+          gap: isMobile ? 'var(--gap)' : GAP,
         }}
       >
       {TILES.map((text, i) => (

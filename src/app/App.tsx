@@ -1012,9 +1012,11 @@ function AppInner() {
   return (
     <>
 
-      {gridVisible && (
+      {/* The column grid overlay is a desktop tool — never drawn on a phone,
+          whichever page or control asks for it */}
+      {gridVisible && !isMobile && (
         <>
-          {!isMobile && <BunnyFollower />}
+          <BunnyFollower />
           <div
             className={s.gridOverlay}
             aria-hidden="true"

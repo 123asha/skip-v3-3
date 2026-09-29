@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import s from './CircleInput.module.css';
 import { t } from '../i18n';
 
@@ -19,9 +19,11 @@ interface CircleInputProps {
   /** At rest show the blinking caret circle instead of the placeholder
    *  letters (the placeholder stays as the field's aria-label) */
   caretAtRest?: boolean;
+  /** Enter pressed in the field */
+  onSubmit?: () => void;
 }
 
-export default function CircleInput({ placeholder, value: externalValue, onChange, onFocus: onFocusProp, onBlur: onBlurProp, size = 120, disabled, action, error, maxLength, prefix, caretAtRest }: CircleInputProps) {
+export default function CircleInput({ placeholder, value: externalValue, onChange, onFocus: onFocusProp, onBlur: onBlurProp, size = 120, disabled, action, error, maxLength, prefix, caretAtRest, onSubmit }: CircleInputProps) {
   const isControlled = onChange !== undefined;
   const [ownValue, setOwnValue] = useState('');
   const [focused, setFocused] = useState(false);
@@ -37,6 +39,41 @@ export default function CircleInput({ placeholder, value: externalValue, onChang
   const isEditing = focused || value.length > 0;
   const chars = Array.from(value);
 
+  // ── Selection, like plain text ────────────────────────────────────────
+  // The real <input> is hidden, so its selection is mirrored onto the
+  // circles (selected ones fill in). Dragging across the circles, a double
+  // click, Shift+arrows and Cmd+A all select; copy, delete and typing over a
+  // selection are the input's own.
+  const [sel, setSel] = useState<[number, number]>([0, 0]);
+  const syncSel = () => {
+    const el = inputRef.current;
+    if (el) setSel([el.selectionStart ?? 0, el.selectionEnd ?? 0]);
+  };
+  useEffect(syncSel, [value]);
+  const dragFrom = useRef<number | null>(null);
+  // Caret position under the pointer: before or after the circle it's over
+  const posAt = (x: number, y: number) => {
+    const hit = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-ci]');
+    if (!hit) return chars.length;
+    const i = Number(hit.dataset.ci);
+    const r = hit.getBoundingClientRect();
+    return x > r.left + r.width / 2 ? i + 1 : i;
+  };
+  const select = (a: number, b: number) => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.setSelectionRange(Math.min(a, b), Math.max(a, b), b < a ? 'backward' : 'forward');
+    syncSel();
+  };
+  useEffect(() => {
+    if (!caretAtRest) return;
+    const onMove = (e: MouseEvent) => { if (dragFrom.current !== null) select(dragFrom.current, posAt(e.clientX, e.clientY)); };
+    const onUp = () => { dragFrom.current = null; };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  });
+
   return (
     <div
       className={`${s.root} ${isEditing ? s.focused : ''} ${focused ? s.hasFocus : ''} ${caretAtRest ? s.caretAtRest : ''} ${error ? s.error : ''}`}
@@ -49,7 +86,16 @@ export default function CircleInput({ placeholder, value: externalValue, onChang
       // preventDefault keeps the browser from moving focus to <body> on
       // mousedown — without it a click on the circles never reaches the input
       // and the submit arrow (which waits for focus) never appears.
-      onMouseDown={e => { e.preventDefault(); inputRef.current?.focus(); }}
+      onMouseDown={e => {
+        e.preventDefault();
+        inputRef.current?.focus();
+        if (caretAtRest) {
+          const pos = posAt(e.clientX, e.clientY);
+          dragFrom.current = pos;
+          select(pos, pos);
+        }
+      }}
+      onDoubleClick={caretAtRest ? () => select(0, chars.length) : undefined}
       onClick={() => inputRef.current?.focus()}
     >
       {/* Fixed first circle — stays put, typing starts after it */}
@@ -71,7 +117,10 @@ export default function CircleInput({ placeholder, value: externalValue, onChang
       {caretAtRest && (
         <>
           {chars.map((ch, i) => (
-            <div key={`${ch}-${i}`} className={`${s.circle} ${s.typed}`}>{ch}</div>
+            <div
+              key={`${ch}-${i}`} data-ci={i}
+              className={`${s.circle} ${s.typed} ${focused && i >= sel[0] && i < sel[1] ? s.selected : ''}`}
+            >{ch}</div>
           ))}
           <div className={`${s.circle} ${s.cursor}`}>
             <span className={s.caret}>|</span>
@@ -99,6 +148,9 @@ export default function CircleInput({ placeholder, value: externalValue, onChang
         value={value}
         onChange={handleChange}
         onFocus={() => { setFocused(true); onFocusProp?.(); }}
+        onSelect={syncSel}
+        onKeyUp={syncSel}
+        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); onSubmit?.(); } }}
         onBlur={() => { setFocused(false); onBlurProp?.(); }}
         className={s.hiddenInput}
         aria-label={placeholder}

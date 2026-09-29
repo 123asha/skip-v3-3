@@ -100,6 +100,12 @@
 .caretAtRest .prefix {
   border-color: var(--c-text);
 }
+/* Selected letters — filled, like a text selection */
+.selected {
+  background: var(--c-text) !important;
+  color: #fff !important;
+}
+
 /* The caret stands still until the field is clicked, then blinks */
 .caretAtRest .caret { animation: none; }
 .caretAtRest.hasFocus .caret { animation: blink 1.1s cubic-bezier(0.4, 0, 0.6, 1) infinite; }

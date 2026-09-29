@@ -174,8 +174,8 @@ export function InsightCards() {
             </div>
             <p className={`${cs.cardMetaText} insightCardCaption`} style={{ margin: '10px auto 0',
               // At most 360px, centred under the circle, 20px in from each side
-              // (phone: 10px)
-              maxWidth: 360, padding: isMobile ? '0 10px' : '0 20px', boxSizing: 'border-box',
+              // (phone: 4px — the two-up column is narrow)
+              maxWidth: 360, padding: isMobile ? '0 4px' : '0 20px', boxSizing: 'border-box',
               textAlign: 'center', transition: 'opacity 0.25s ease' }}>
               {typo(it.desc)}
             </p>

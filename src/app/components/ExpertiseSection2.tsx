@@ -156,7 +156,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
           marginBottom: isMobile ? 40 : 60,
           maxWidth: isMobile ? '100%' : '50vw',
         }}>
-          Готовим бренд к&nbsp;росту. Собираем системы. Передаем правила, по&nbsp;которым они работают.
+          Готовим бренд к&nbsp;росту. Собираем системы.<br />Передаем правила, по&nbsp;которым они работают.
         </h2>
       )}
 

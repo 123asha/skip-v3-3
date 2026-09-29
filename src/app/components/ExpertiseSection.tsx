@@ -137,7 +137,7 @@ export function ExpertiseSection({ showItems = true, showHeading = true }: { sho
           marginBottom: isMobile ? 40 : 60,
           maxWidth: isMobile ? '100%' : '50vw',
         }}>
-          Готовим бренд к&nbsp;росту. Собираем системы. Передаем правила, по&nbsp;которым они работают.
+          Готовим бренд к&nbsp;росту. Собираем системы.<br />Передаем правила, по&nbsp;которым они работают.
         </h2>
       )}
 

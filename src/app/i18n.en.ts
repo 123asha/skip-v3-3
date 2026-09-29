@@ -45,8 +45,9 @@ export const EN: Record<string, string> = {
   'Недавние проекты': 'Recent projects',
   'больше проектов': 'more projects',
   'Экспертиза': 'Expertise',
-  'Готовим бренд к&nbsp;росту. Собираем системы. Передаем правила, по&nbsp;которым они работают.':
-    'We get brands ready to grow. We build systems. We hand over the rules they run on.',
+  // Two lines on the page (a <br /> between them), so two text nodes
+  'Готовим бренд к&nbsp;росту. Собираем системы.': 'We get brands ready to grow. We build systems.',
+  'Передаем правила, по&nbsp;которым они работают.': 'We hand over the rules they run on.',
 
   // ── Cases ────────────────────────────────────────────────────────────────
   'Брендинг': 'Branding',

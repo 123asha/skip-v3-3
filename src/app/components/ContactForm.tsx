@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
+import { createPortal } from 'react-dom';
 import CircleInput from './CircleInput';
 import { useMobile } from '../hooks/useMobile';
 import s from '../App.module.css';
@@ -22,7 +23,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
   // fit = three rows minus the icon, the caret and the arrow circles.
   const fieldsRef = useRef<HTMLDivElement>(null);
 
-  // The last screen (this card) greys a touch once the page reaches its end
+  // Scrolled right to the end: the screen inverts (overlay below)
   const cardRef = useRef<HTMLDivElement>(null);
   const [atBottom, setAtBottom] = useState(false);
   useEffect(() => {
@@ -194,13 +195,23 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
       <div
         ref={cardRef}
         className={s.contactCard}
-        style={{
-          // Turns softly grey once the page is scrolled all the way down
-          background: atBottom ? 'var(--c-surface)' : '#fff',
-          transition: 'background-color 0.3s ease',
-          justifyContent: 'center',
-        }}
+        style={{ background: '#fff', justifyContent: 'center' }}
       >
+        {/* A bit of mischief: scrolled right to the end, the whole screen
+            inverts — dark background, white type. One overlay flips the colours
+            of everything under it (backdrop-filter), fading in and out. */}
+        {createPortal(
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'fixed', inset: 0, zIndex: 9990, pointerEvents: 'none',
+              backdropFilter: 'invert(1)', WebkitBackdropFilter: 'invert(1)',
+              opacity: atBottom ? 1 : 0,
+              transition: 'opacity 0.4s ease',
+            }}
+          />,
+          document.body,
+        )}
         {/* Form content — centered column */}
         <div ref={formAreaRef} className={s.contactFormArea} style={{ position: 'relative', zIndex: 1, background: 'transparent', flex: '0 0 auto', paddingTop: 20, paddingBottom: 20,
           // A touch above the middle of the screen: the card centres this

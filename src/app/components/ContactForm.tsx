@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { createPortal } from 'react-dom';
 import CircleInput from './CircleInput';
+import MobileFooter from './MobileFooter';
 import { useMobile } from '../hooks/useMobile';
 import s from '../App.module.css';
 
@@ -365,6 +366,8 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
         </div>
       </div>
 
+      {/* Phone: time and social as the page's last line */}
+      <MobileFooter />
     </div>
   );
 }

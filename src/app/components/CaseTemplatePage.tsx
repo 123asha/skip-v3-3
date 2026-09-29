@@ -9,6 +9,7 @@ import LinkFlip from './LinkFlip';
 import { sound } from '../sound/Sound';
 import { MagneticDivider } from './MagneticDivider';
 import PillButton from './PillButton';
+import MobileFooter from './MobileFooter';
 import { asset } from '../utils/asset';
 import { usePinchSteps } from '../hooks/usePinchSteps';
 
@@ -1021,6 +1022,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
         // No closing strip for now — just room above the fixed footer row
         <div style={{ height: 'var(--space-xl)' }} />
       )}
+      <MobileFooter />
       </div>{/* /the case page (picsPaneRef) */}
       {/* Phone: «о проекте» — a whole page to the right of the case */}
       {isMobile && (

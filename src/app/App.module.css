@@ -382,6 +382,8 @@
 
 /* ── Contact form ── */
 .contactWrap {
+  /* Card, then (phone) the footer line under it */
+  flex-direction: column;
   margin-top: var(--space-xl);
   /* The card is one screen tall and ends the page — its own bottom padding
      keeps the form clear of the fixed footer row */
@@ -659,7 +661,11 @@
   /* The links as chips, like the filter chips: outlined pills that touch at
      rest, the current section's neighbours spreading from it with a dotted
      link (settleChips, App.tsx) */
-  .navLinks { flex: none; background: none; padding: 0; gap: 0; height: auto; }
+  /* The chips fill the row, leaving 12px at each end — the room a selection
+     needs to spread them (utils/chipBounce) */
+  .navLinks { flex: none; width: calc(100% - 2 * var(--pad) - 24px); background: none; padding: 0; gap: 0; height: auto; }
+  .navLinks > span { flex: 1; }
+  .navLinks > span > .navLink { width: 100%; justify-content: center; text-align: center; box-sizing: border-box; }
   .navLinks > span { position: relative; }
   .navLinks > span + span::before {
     content: '';

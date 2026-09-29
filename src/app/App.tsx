@@ -49,32 +49,8 @@ import { sound } from './sound/Sound';
 import PillButton from './components/PillButton';
 import s from './App.module.css';
 import { settleChips } from './utils/chipBounce';
+import SocialLinks from './components/SocialLinks';
 
-// Telegram + LinkedIn circles for the footer — one definition for the desktop
-// corner and the mobile bar
-function SocialLinks() {
-  const circle: React.CSSProperties = {
-    width: 24, height: 24, borderRadius: '50%',
-    background: '#fff',
-    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-    color: '#000', textDecoration: 'none',
-    transition: 'opacity 0.2s ease',
-  };
-  return (
-    <>
-      <a href="https://t.me/skpdsgn" target="_blank" rel="noreferrer" aria-label="Telegram" style={circle}>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ transform: 'translate(-0.5px, 0.5px)' }}>
-          <path d="M22 4 2.5 11.5l5.6 1.9 2.2 7 3.7-3.6 5.2 3.8L22 4Zm-5.3 4.6-8 7.2-2.5-.9 10.5-6.3Zm-6 9.2 1.2-3.6 6.4 4.7-3.4-1.5-4.2.4Z" fill="#000" />
-        </svg>
-      </a>
-      <a href="https://ru.linkedin.com/company/skipdesign" target="_blank" rel="noreferrer" aria-label="LinkedIn" style={circle}>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ transform: 'translateY(-1px)' }}>
-          <path d="M6.94 5a2 2 0 1 1-4-.001 2 2 0 0 1 4 .001ZM7 8.48H3V21h4V8.48Zm6.32 0H9.34V21h3.94v-6.57c0-3.66 4.77-4 4.77 0V21H22v-7.93c0-6.17-7.06-5.94-8.72-2.91l.04-1.68Z" fill="#000"/>
-        </svg>
-      </a>
-    </>
-  );
-}
 
 // ── People-block: client → video configuration ───────────────────────────────
 // Each client maps to a unique (src, objectPosition) pair for both card slots.
@@ -936,7 +912,7 @@ function AppInner() {
   // from it, like the filter chips (utils/chipBounce)
   const navLinksRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
-    settleChips(navLinksRef.current, isMobile ? ['cases', 'expertiza', 'lab'].indexOf(navSection) : -1);
+    settleChips(navLinksRef.current, isMobile ? ['home', 'cases', 'expertiza', 'lab'].indexOf(navSection) : -1);
   }, [navSection, isMobile]);
   const navLinkStyle = (target: string): React.CSSProperties | undefined => {
     // The /services-2 sandbox counts as the services section
@@ -1047,6 +1023,14 @@ function AppInner() {
       >
         {/* The section links share one grey box; «Написать» stands apart */}
         <span ref={navLinksRef} className={s.navLinks}>
+          {/* Phone only: «Главная» first, so the chips fill the row */}
+          {isMobile && (
+            <span style={{ display: 'inline-flex' }}>
+              <a href="/" className={s.navLink} data-current={navSection === 'home' ? '' : undefined} style={navLinkStyle('home')} onClick={e => { e.preventDefault(); if (page !== 'home') handleBack(); }}>
+                <LinkFlip flat>Главная</LinkFlip>
+              </a>
+            </span>
+          )}
           <span ref={casesLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex' }}>
             <a href="/cases" className={s.navLink} data-current={navSection === 'cases' ? '' : undefined} style={navLinkStyle('cases')} onClick={handleCasesClick}>
               <LinkFlip flat>Проекты</LinkFlip>
@@ -1310,11 +1294,10 @@ function AppInner() {
         <span id={FOOTER_SLOT_ID} style={{ display: 'contents' }} />
       </div>}
 
-      {/* ── Phone header and footer. Header: the logo, the language switch
-          right beside it (centred on the logo's line), «Написать» in the top
-          right corner (.navWrite, App.module.css). Footer: time on the left,
-          social on the right, on the bottom line; the menu chips sit centred
-          just above it (.nav). ── */}
+      {/* ── Phone header: the logo, the language switch right beside it
+          (centred on the logo's line), «Написать» in the top right corner
+          (.navWrite, App.module.css). The menu chips are pinned at the bottom
+          (.nav); time and social are the page's last line (MobileFooter). ── */}
       {isMobile && (
         <>
           <a
@@ -1330,17 +1313,6 @@ function AppInner() {
               letterSpacing: 'var(--text-ls)', lineHeight: 'var(--text-lh)',
             }}
           >{LANG === 'en' ? '/ru' : '/en'}</a>
-          <div style={{
-            position: 'fixed', left: 'var(--pad)', right: 'var(--pad)', bottom: 'var(--pad)',
-            height: 'var(--m-foot)', zIndex: 200,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            color: '#fff', mixBlendMode: 'difference', userSelect: 'none',
-            fontSize: 'var(--text-size)', fontFamily: 'var(--font)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
-            letterSpacing: 'var(--text-ls)', lineHeight: 'var(--text-lh)',
-          }}>
-            <span><MoscowTime /> (GMT+3)</span>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><SocialLinks /></div>
-          </div>
         </>
       )}
 

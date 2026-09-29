@@ -42,7 +42,7 @@
      (38.4px, reached at 2240px — an iMac). Phones: see the media blocks. */
   --heading-size: max(32px, min(38.4px, 32px + (100vw - 1440px) * 0.008));
   --heading-weight: 450;
-  --heading-lh: 0.96;
+  --heading-lh: 1.104;   /* 0.96, then 15% more air */
   --heading-ls: -0.024em;
 
   --page-title-size: var(--heading-size);
@@ -156,6 +156,7 @@
     --hero-h:         85svh;  /* the home hero: 85% of the screen */
     --gap:            8px;
     --text-size:      clamp(11px, 3.5vw, 18px);
+    --text-lh:        1.38;   /* phones: 15% more leading than 1.2 */
     /* Proportional vertical rhythm — keeps the same ratio as desktop */
     --space-xl: 80px;
     --space-lg: 48px;

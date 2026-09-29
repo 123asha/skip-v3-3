@@ -119,6 +119,7 @@ export default function CaseCard({
   const LINE_REVEAL = { duration: 0.4, ease: 'power3.out' };
   const LINE_STAGGER = 0.08;   // seconds between consecutive lines
   const LINE_Y = 12;           // px — how far below a line rests when hidden
+  const CATS_OUT = 0.15;       // seconds — the grey categories clear out fast
 
   // Resting state — set once (and after the copy or layout changes) so every
   // tween can run as a plain `to()`. Interrupting a hover then picks up from
@@ -157,12 +158,16 @@ export default function CaseCard({
       // Rise up and out as the description comes in; back down once it's gone
       gsap.killTweensOf(cats);
       gsap.to(cats, hovered
-        ? { y: -LINE_Y, opacity: 0, ...LINE_REVEAL, duration: 0.3 }
+        ? { y: -LINE_Y, opacity: 0, duration: CATS_OUT, ease: 'power2.out' }
         : { y: 0, opacity: muted, ...LINE_REVEAL, delay: lines.length * LINE_STAGGER });
     }
 
     lines.forEach((line, i) => {
-      const delay = (hovered ? i : lines.length - 1 - i) * LINE_STAGGER;
+      // On hover the first line waits until the categories are nearly gone,
+      // so the two never overlap
+      const delay = hovered
+        ? (cats ? CATS_OUT * 0.8 : 0) + i * LINE_STAGGER
+        : (lines.length - 1 - i) * LINE_STAGGER;
       gsap.to(line, {
         y: hovered ? 0 : LINE_Y,
         opacity: hovered ? 1 : 0,
@@ -270,7 +275,7 @@ export default function CaseCard({
               {/* At rest the description's spot shows the categories, grey;
                   on hover the description rises in and pushes them up and out */}
               {(SHOW_CATEGORY_TAGS || showCats) && services && (
-                <p ref={catsRef} className={s.cardMetaText} style={{ margin: 0, position: 'absolute', left: 0, top: 0, opacity: 'var(--opacity-muted)' as any, pointerEvents: 'none', ...metaStyle }}>{services}</p>
+                <p ref={catsRef} className={s.cardMetaText} style={{ margin: 0, position: 'absolute', left: 0, top: 0, opacity: 'var(--opacity-muted)' as any, pointerEvents: 'none', transition: 'none', ...metaStyle }}>{services}</p>
               )}
               <p ref={descRef} className={s.cardMetaText} style={{ margin: 0, ...metaStyle }}>
                 {typo(t(desc)).split(' ').map((w, i, arr) => (

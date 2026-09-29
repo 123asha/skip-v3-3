@@ -1491,15 +1491,16 @@ function AppInner() {
         </div>
         )}
 
-        {/* Phone: half the usual gap under the hero */}
-        <div id="cases" ref={casesRevealRef} style={{ marginTop: isMobile ? 'calc(var(--space-xl) / 2)' : 'var(--space-xl)' }}>
+        {/* Phone: the same gap under the hero as between the cases */}
+        <div id="cases" ref={casesRevealRef} style={{ marginTop: isMobile ? 'var(--cases-row-gap)' : 'var(--space-xl)' }}>
           <ProjectGallery onCaseClick={(href) => navigateWithExit(href || '/case-template')} />
         </div>
 
         {/* Straight to the full list — same pill as «написать нам», in grey.
             100px under the last row of cases; the section below keeps the
             usual --space-xl gap of its own. */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
+        {/* Phone: nearer the cases than the next block */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: isMobile ? 'var(--space-sm)' : 100 }}>
           <PillButton onClick={() => navigateWithExit('/cases')}>больше проектов</PillButton>
         </div>
 

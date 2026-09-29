@@ -1049,7 +1049,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
       <div style={{ height: nextPad }} />
       </>) : (
         // No closing strip for now — just room above the fixed footer row
-        <div style={{ height: 'var(--space-xl)' }} />
+        <div style={{ height: 'var(--space-form)' }} />
       )}
       {/* The contact form, as at the end of every page (on a phone it also
           carries the footer line) */}

@@ -91,6 +91,8 @@
      220px at the 1600px design width and shrinks with the viewport, floored
      at 120px and capped at 220px so it never runs away on ultra-wide. */
   --space-xl: clamp(120px, 13.75vw, 220px);
+  /* The room in front of the contact form, on every page: half a section gap */
+  --space-form: calc(var(--space-xl) / 2);
   /* Gap from a page title to the first content block on inner pages.
      12.5vw hits 200px at the 1600px design width. */
   --space-title: clamp(100px, 12.5vw, 200px);

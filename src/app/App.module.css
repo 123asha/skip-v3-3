@@ -397,7 +397,7 @@
 .contactWrap {
   /* Card, then (phone) the footer line under it */
   flex-direction: column;
-  margin-top: var(--space-xl);
+  margin-top: var(--space-form);
   /* The card is one screen tall and ends the page — its own bottom padding
      keeps the form clear of the fixed footer row */
   margin-bottom: 0;

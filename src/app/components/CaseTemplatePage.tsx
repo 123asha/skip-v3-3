@@ -308,7 +308,8 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
   // exactly this much so all four meta items start on the same line, however
   // many lines the first one wraps to.
   const typesRef = useRef<HTMLDivElement>(null);
-  const chipsRowMobile = useMobile();
+  const isMobileEarly = useMobile();
+  const chipsRowMobile = isMobileEarly;
   const [typesH, setTypesH] = useState(0);
   // Height of the sticky meta row — the copy column sticks 40px below it.
   const metaRef = useRef<HTMLDivElement>(null);
@@ -339,6 +340,46 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
   //   0 — images on the left, the copy column on the right (default)
   //   1 — the copy folds away to the right and the images take the full width
   const [caseZoom, setCaseZoom] = useState(0);
+
+  // ── Phone: pictures ↔ «о проекте» ────────────────────────────────────
+  // Under the cover the body is two panes side by side: the pictures (shown
+  // first) and the copy with credits and the quote. A horizontal swipe — or
+  // the grey button pinned at the bottom — slides between them; the cover
+  // and meta stay put. The box takes the height of the pane on screen.
+  const [aboutPane, setAboutPane] = useState(false);
+  const paneBoxRef = useRef<HTMLDivElement>(null);
+  const picsPaneRef = useRef<HTMLDivElement>(null);
+  const aboutPaneRef = useRef<HTMLDivElement>(null);
+  const [paneH, setPaneH] = useState<number | undefined>(undefined);
+  const [paneBtn, setPaneBtn] = useState(false);
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
+  useLayoutEffect(() => {
+    const el = aboutPane ? aboutPaneRef.current : picsPaneRef.current;
+    if (!el) return;
+    const measure = () => setPaneH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [aboutPane, isMobileEarly]);
+  // The button shows once the page is scrolled a little past the cover
+  useEffect(() => {
+    if (!isMobileEarly) return;
+    const onScroll = () => {
+      const box = paneBoxRef.current;
+      if (box) setPaneBtn(box.getBoundingClientRect().top < window.innerHeight * 0.7);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { capture: true, passive: true });
+    return () => window.removeEventListener('scroll', onScroll, { capture: true });
+  }, [isMobileEarly]);
+  const showPane = (about: boolean) => {
+    if (about === aboutPane) return;
+    setAboutPane(about);
+    // Start the other pane from its top if we're already past it
+    const box = paneBoxRef.current;
+    if (box && box.getBoundingClientRect().top < 0) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
   // Widening the images column reflows every picture below it, so the page's
   // height changes under a fixed scrollTop and whatever was on screen jumps.
   // Instead: note which picture is currently in view, switch the zoom level,
@@ -448,6 +489,72 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
     obs.observe(form);
     return () => obs.disconnect();
   }, []);
+
+  // ── Credits + testimonial (desktop: under the body; phone: inside the
+  //    «о проекте» pane of the swipe, see below) ──
+  const creditsAndQuote = (
+    <>
+        {/* ── Credits. Desktop: centred, 40px gap under label, 20px between names.
+              Mobile: left-aligned at 1/3 vw, role appears LEFT of the name. ── */}
+        <div data-case-credits style={{
+          marginTop: 120,
+          display: 'flex', flexDirection: 'column', gap: 40,
+          ...(isMobile
+            ? { alignItems: 'flex-start', paddingLeft: 'calc(33.333vw - var(--pad) + 4px)', textAlign: 'left' }
+            : { alignItems: 'center', textAlign: 'center' }),
+        }}>
+          <p style={{ ...textStyle, margin: 0 }}>Над проектом работали:</p>
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: 20,
+            alignItems: isMobile ? 'flex-start' : 'center',
+            ...headingStyle,
+            textAlign: isMobile ? 'left' : 'center',
+          }}>
+            {data.team.map(({ name, role }, i) => (
+              <p
+                key={i}
+                style={{ position: 'relative', margin: 0, fontSize: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                onMouseEnter={() => { setHoveredTeam(i); sound.play('hover'); }}
+                onMouseLeave={() => setHoveredTeam(null)}
+                onTouchStart={() => { setHoveredTeam(hoveredTeam === i ? null : i); sound.play('hover'); }}
+              >
+                <LinkFlip flat>{name}</LinkFlip>
+                {/* role — desktop: top-right; mobile: top-left of the name */}
+                <span style={{
+                  ...textStyle,
+                  lineHeight: 1,
+                  position: 'absolute',
+                  ...(isMobile
+                    ? { right: 'calc(100% + 8px)', bottom: '100%' }
+                    : { left: 'calc(100% + 8px)', bottom: '100%' }),
+                  transform: 'translateY(0.55em)',
+                  whiteSpace: 'nowrap',
+                  opacity: hoveredTeam === i ? 1 : 0,
+                  transition: 'opacity 0.2s ease',
+                  pointerEvents: 'none',
+                }}>{role}</span>
+              </p>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Testimonial — only when the case provides one. Quote is h2; below
+              it a small avatar circle + name/role + one phrase. ── */}
+        {data.testimonial && (
+        <div style={{ marginTop: 120, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+          <p style={{ ...h2Style, margin: 0, maxWidth: 820 }}>
+            {data.testimonial.quote}
+          </p>
+          <div style={{ marginTop: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            {/* photo placeholder */}
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--c-surface)' }} />
+            <p style={{ ...textStyle, margin: 0 }}>{data.testimonial.name}</p>
+            <p style={{ ...textStyle, margin: 0, opacity: 'var(--opacity-muted)' }}>{data.testimonial.phrase}</p>
+          </div>
+        </div>
+        )}
+    </>
+  );
 
   return (
     // No sideways scroll ever — the zoom step's slide-out must not flash a bar
@@ -643,27 +750,44 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             if (b.belowText) pushCopy(`b${i}`, b.belowText, b.belowTitle);
           });
 
-          // Mobile: the copy block first (first entry open, the rest just
-          // headings), then every image stacked underneath.
+          // Phone: two panes, pictures first — see showPane above
           if (isMobile) {
             return (
-              <>
-                <div style={{ marginBottom: 40 }}>
-                  {copy}
-                  <div style={{ marginTop: 40, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                    <PillButton
-                      onClick={() => {
-                        const el = document.querySelector('[data-case-credits]') as HTMLElement | null;
-                        el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }}
-                    >скипнуть</PillButton>
-                    {data.links?.map(l => (
-                      <PillButton key={l.href} href={l.href}>{l.label}</PillButton>
-                    ))}
+              <div
+                ref={paneBoxRef}
+                style={{ overflow: 'hidden', height: paneH, transition: 'height 0.4s ease', touchAction: 'pan-y' }}
+                onTouchStart={e => { const t = e.touches[0]; swipeStart.current = { x: t.clientX, y: t.clientY }; }}
+                onTouchEnd={e => {
+                  const st = swipeStart.current;
+                  swipeStart.current = null;
+                  if (!st) return;
+                  const t = e.changedTouches[0];
+                  const dx = t.clientX - st.x, dy = t.clientY - st.y;
+                  // A clear sideways swipe: content follows the finger
+                  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) showPane(dx < 0);
+                }}
+              >
+                <div style={{
+                  display: 'flex', alignItems: 'flex-start', width: '200%',
+                  transform: `translateX(${aboutPane ? -50 : 0}%)`,
+                  transition: 'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
+                }}>
+                  <div ref={picsPaneRef} style={{ width: '50%', flex: 'none' }}>{images}</div>
+                  <div ref={aboutPaneRef} style={{ width: '50%', flex: 'none', paddingLeft: 'var(--pad)', boxSizing: 'border-box' }}>
+                    {copy}
+                    {!!data.links?.length && (
+                      <div style={{ marginTop: 40, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                        {data.links.map(l => (
+                          <PillButton key={l.href} href={l.href}>{l.label}</PillButton>
+                        ))}
+                      </div>
+                    )}
+                    {creditsAndQuote}
+                    {/* Room for the pinned button and the menu under it */}
+                    <div style={{ height: 120 }} />
                   </div>
                 </div>
-                {images}
-              </>
+              </div>
             );
           }
 
@@ -719,6 +843,23 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
           );
         })()}
 
+        {/* Phone: grey button over the menu — «о проекте» from the pictures,
+            «скипнуть» back from the copy; shows once past the cover */}
+        {isMobile && createPortal(
+          <div style={{
+            position: 'fixed', left: '50%', zIndex: 205,
+            // Above the bottom menu (its box ≈ 37px) with a 10px gap
+            bottom: 'calc(var(--pad) + 47px)',
+            transform: `translate(-50%, ${paneBtn ? 0 : 12}px)`,
+            opacity: paneBtn ? 1 : 0,
+            pointerEvents: paneBtn ? 'auto' : 'none',
+            transition: 'opacity 0.3s ease, transform 0.3s ease',
+          }}>
+            <PillButton onClick={() => showPane(!aboutPane)}>{aboutPane ? 'скипнуть' : 'о проекте'}</PillButton>
+          </div>,
+          document.body,
+        )}
+
         {/* ⌘ ⊖ ⊕ — bottom-left, same control as on the other pages */}
         {!isMobile && (
           <span className={s.zoomHint}>
@@ -727,65 +868,8 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
           </span>
         )}
 
-        {/* ── Credits. Desktop: centred, 40px gap under label, 20px between names.
-              Mobile: left-aligned at 1/3 vw, role appears LEFT of the name. ── */}
-        <div data-case-credits style={{
-          marginTop: 120,
-          display: 'flex', flexDirection: 'column', gap: 40,
-          ...(isMobile
-            ? { alignItems: 'flex-start', paddingLeft: 'calc(33.333vw - var(--pad) + 4px)', textAlign: 'left' }
-            : { alignItems: 'center', textAlign: 'center' }),
-        }}>
-          <p style={{ ...textStyle, margin: 0 }}>Над проектом работали:</p>
-          <div style={{
-            display: 'flex', flexDirection: 'column', gap: 20,
-            alignItems: isMobile ? 'flex-start' : 'center',
-            ...headingStyle,
-            textAlign: isMobile ? 'left' : 'center',
-          }}>
-            {data.team.map(({ name, role }, i) => (
-              <p
-                key={i}
-                style={{ position: 'relative', margin: 0, fontSize: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                onMouseEnter={() => { setHoveredTeam(i); sound.play('hover'); }}
-                onMouseLeave={() => setHoveredTeam(null)}
-                onTouchStart={() => { setHoveredTeam(hoveredTeam === i ? null : i); sound.play('hover'); }}
-              >
-                <LinkFlip flat>{name}</LinkFlip>
-                {/* role — desktop: top-right; mobile: top-left of the name */}
-                <span style={{
-                  ...textStyle,
-                  lineHeight: 1,
-                  position: 'absolute',
-                  ...(isMobile
-                    ? { right: 'calc(100% + 8px)', bottom: '100%' }
-                    : { left: 'calc(100% + 8px)', bottom: '100%' }),
-                  transform: 'translateY(0.55em)',
-                  whiteSpace: 'nowrap',
-                  opacity: hoveredTeam === i ? 1 : 0,
-                  transition: 'opacity 0.2s ease',
-                  pointerEvents: 'none',
-                }}>{role}</span>
-              </p>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Testimonial — only when the case provides one. Quote is h2; below
-              it a small avatar circle + name/role + one phrase. ── */}
-        {data.testimonial && (
-        <div style={{ marginTop: 120, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-          <p style={{ ...h2Style, margin: 0, maxWidth: 820 }}>
-            {data.testimonial.quote}
-          </p>
-          <div style={{ marginTop: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-            {/* photo placeholder */}
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--c-surface)' }} />
-            <p style={{ ...textStyle, margin: 0 }}>{data.testimonial.name}</p>
-            <p style={{ ...textStyle, margin: 0, opacity: 'var(--opacity-muted)' }}>{data.testimonial.phrase}</p>
-          </div>
-        </div>
-        )}
+        {/* Credits + testimonial — on a phone they live in the «о проекте» pane */}
+        {!isMobile && creditsAndQuote}
 
       </div>
 

@@ -905,20 +905,21 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             the contact form comes up */}
         {isMobile && createPortal(
           <div style={{
-            // Full width, within the side margins
-            position: 'fixed', left: 'var(--pad)', right: 'var(--pad)', zIndex: 205,
+            // The regular button (as «больше проектов»), centred on the screen;
+            // the wrapper passes taps through around it
+            position: 'fixed', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 205,
             // 10px above the bottom menu
             bottom: 'var(--m-above-menu)',
             transform: `translateY(${formInView ? 12 : 0}px)`,
             opacity: formInView ? 0 : 1,
-            pointerEvents: formInView ? 'none' : 'auto',
+            pointerEvents: 'none',
             transition: 'opacity 0.3s ease, transform 0.3s ease, bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
           }}>
-            <PillButton fullWidth onClick={() => showPane(!aboutPane)}>
+            <PillButton style={{ pointerEvents: formInView ? 'none' : 'auto' }} onClick={() => showPane(!aboutPane)}>
               {/* Arrows at the button's own edges — back on the left, forward
                   on the right; an empty slot of the same width on the other
                   side keeps the label centred */}
-              <span style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
                 <span style={{ width: 12, display: 'flex' }}>{aboutPane && <SideArrow left />}</span>
                 <span>{aboutPane ? 'скипнуть описание' : 'о проекте'}</span>
                 <span style={{ width: 12, display: 'flex' }}>{!aboutPane && <SideArrow />}</span>

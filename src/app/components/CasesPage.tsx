@@ -283,13 +283,14 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
   // keeps them there (utils/chipBounce)
   const tabsRowRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    settleChips(tabsRowRef.current, TABS.findIndex(t => t.key === activeTab));
-  }, [activeTab]);
   // Sub-tags of the open category — multi-select
   const [activeSubs, setActiveSubs] = useState<string[]>([]);
   const [rows, setRows] = useState<Row[]>(() => buildRows(PROJECTS));
   const isMobile = useMobile();
+  useEffect(() => {
+    // Phone: in-flow, as the row is full width (like the menu)
+    settleChips(tabsRowRef.current, TABS.findIndex(t => t.key === activeTab), isMobile);
+  }, [activeTab, isMobile]);
 
   // ── Phone: the category chips come out of «Проекты» ───────────────────
   // On arrival they start on the «Проекты» chip in the bottom menu, small,

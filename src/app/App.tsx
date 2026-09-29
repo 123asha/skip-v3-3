@@ -1334,8 +1334,9 @@ function AppInner() {
               letterSpacing: 'var(--text-ls)', lineHeight: 'var(--text-lh)',
             }}
           >{LANG === 'en' ? '/ru' : '/en'}</a>
-          {/* Home: «Skip Design» in the middle of the header, on the logo's line */}
-          {page === 'home' && (
+          {/* «Skip Design» in the middle of the header on every page, on the
+              logo's line */}
+          {(
             <div style={{
               position: 'fixed', zIndex: 200, left: 0, right: 0, top: 6, height: 52,
               display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none',

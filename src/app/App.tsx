@@ -48,7 +48,6 @@ import SoundIcon from './sound/SoundIcon';
 import { sound } from './sound/Sound';
 import PillButton from './components/PillButton';
 import s from './App.module.css';
-import { settleChips } from './utils/chipBounce';
 import SocialLinks from './components/SocialLinks';
 
 
@@ -937,10 +936,6 @@ function AppInner() {
     window.addEventListener('scroll', onScroll, { capture: true, passive: true });
     return () => { window.removeEventListener('scroll', onScroll, { capture: true }); root.removeAttribute('data-nav-hidden'); };
   }, [isMobile, page]);
-  useEffect(() => {
-    // In-flow on phones: the row fills the width and its ends stay put
-    settleChips(navLinksRef.current, isMobile ? ['home', 'cases', 'expertiza', 'lab'].indexOf(navSection) : -1, isMobile);
-  }, [navSection, isMobile]);
   const navLinkStyle = (target: string): React.CSSProperties | undefined => {
     // The /services-2 sandbox counts as the services section
     // Case pages count as the projects section

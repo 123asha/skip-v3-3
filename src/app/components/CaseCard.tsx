@@ -191,7 +191,7 @@ export default function CaseCard({
         <div className={`${s.cardImage}${stackMeta ? ` ${s.cardTall}` : ''}`} style={{ aspectRatio: ar, width: '100%', flex: 'none', ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}>
           {image && <img src={image} alt={title} loading="lazy" />}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: stackMeta ? '1fr' : 'minmax(90px, 1fr) minmax(0, 3fr)', gap: stackMeta ? 4 : 'var(--gap)', alignItems: 'flex-start', paddingTop: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: stackMeta ? '1fr' : 'minmax(90px, 1fr) minmax(0, 3fr)', gap: stackMeta ? 0 : 'var(--gap)', alignItems: 'flex-start', paddingTop: 10 }}>
           <p className={`${s.cardMetaText} ${s.cardLink}`} style={{ margin: 0, ...metaStyle }}>{title}</p>
           <div style={{ minWidth: 0 }}>
             {/* Categories first, then (one per row only) the description */}

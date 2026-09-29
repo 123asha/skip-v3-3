@@ -675,24 +675,11 @@
   /* Pinned header items on their own layers — iOS Safari otherwise nudges
      fixed elements around while the page scrolls */
   .logo, .navWrite { transform: translateZ(0); backface-visibility: hidden; }
-  /* The links as chips, like the filter chips: outlined pills that touch at
-     rest, the current section's neighbours spreading from it with a dotted
-     link (settleChips, App.tsx) */
-  /* The chips fill the row edge to edge; a selection opens gaps by shrinking
-     them, so «Главная» and «Инсайты» never leave the edges (chipBounce) */
-  .navLinks { flex: none; width: calc(100% - 2 * var(--pad)); background: none; padding: 0; gap: 0; height: auto; }
+  /* The links as outlined chips, evenly spread: equal widths, one 10px gap
+     between each, the row edge to edge — the current one just outlined dark */
+  .navLinks { flex: none; width: calc(100% - 2 * var(--pad)); background: none; padding: 0; gap: 10px; height: auto; }
   .navLinks > span { flex: 1 1 0; min-width: 0; }
   .navLinks > span > .navLink { width: 100%; justify-content: center; text-align: center; box-sizing: border-box; }
-  .navLinks > span { position: relative; }
-  .navLinks > span + span::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: calc(100% + 1px);
-    width: var(--pull, 0px);
-    border-top: 1px dotted var(--c-text-muted);
-    pointer-events: none;
-  }
   .navLinks .navLink {
     text-decoration: none;
     /* Bigger chips (the type stays the same); 1px more under the text */

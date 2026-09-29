@@ -297,8 +297,8 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
   // Phone: one card per row or two (⊖ denser, ⊕ bigger)
   const [mobCols, setMobCols] = useState<1 | 2>(1);
   useEffect(() => {
-    // Phone: in-flow, as the row is full width (like the menu)
-    settleChips(tabsRowRef.current, TABS.findIndex(t => t.key === activeTab), isMobile);
+    // Phone: the row already spreads the chips across the width — no spread
+    settleChips(tabsRowRef.current, isMobile ? -1 : TABS.findIndex(t => t.key === activeTab));
   }, [activeTab, isMobile]);
 
   // ── Phone: the category chips come out of «Проекты» ───────────────────

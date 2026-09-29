@@ -87,6 +87,15 @@ const CLIENT_VIDEOS: Record<PeopleClient, { left: VideoConfig; right: VideoConfi
   'Gate Legal':   { left: { src: '/video.mp4', pos: '0% 50%'   }, right: { src: '/video.mp4', pos: '100% 50%' } },
   'Senior*s Bar': { left: { src: '/video.mp4', pos: '50% 100%' }, right: { src: '/video.mp4', pos: '50% 0%'   } },
 };
+// Picture shown in a circle under the «Нам доверяют» ticker while a client's
+// name is hovered — the preview of that client's case
+const CLIENT_PICTURES: Record<PeopleClient, string> = {
+  'AliExpress':   '/preview-phone.webp',
+  'Юрий Мурадян': '/preview-pocket.avif',
+  'Gate Legal':   '/preview-app.jpg',
+  'Senior*s Bar': '/preview-storefront.webp',
+};
+
 const DEFAULT_PEOPLE_VIDEOS = {
   left:  { src: '/video.mp4', pos: '50% 50%' } as VideoConfig,
   right: { src: '/video.mp4', pos: '50% 50%' } as VideoConfig,
@@ -536,6 +545,7 @@ function AppInner() {
   const heroClientLabelRef = useRef<HTMLParagraphElement>(null);
   const heroClientTrackRef = useRef<HTMLDivElement>(null);
   const heroClientSetRef = useRef<HTMLDivElement>(null);
+  const heroClientBoxRef = useRef<HTMLDivElement>(null);
   const toolsRowsRef = useRef<HTMLDivElement>(null);
   const casesRevealRef = useRef<HTMLDivElement>(null);
   const introHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -544,6 +554,10 @@ function AppInner() {
      a slide-up transition (PeopleVideoSlot handles the animation). */
   const isMobile = useMobile();
   const [hoveredClient, setHoveredClient] = useState<string | null>(null);
+  // The circle keeps the last picture while it fades out
+  const lastClientRef = useRef<PeopleClient | null>(null);
+  if (hoveredClient && hoveredClient in CLIENT_PICTURES) lastClientRef.current = hoveredClient as PeopleClient;
+  const clientPicture = lastClientRef.current;
   const peopleVideos = hoveredClient && (hoveredClient in CLIENT_VIDEOS)
     ? CLIENT_VIDEOS[hoveredClient as PeopleClient]
     : DEFAULT_PEOPLE_VIDEOS;
@@ -559,23 +573,80 @@ function AppInner() {
   // track's own column-gap (the gap between set 1 and set 2) — using
   // track.scrollWidth/2 is only an approximation and produces a visible
   // stutter/snap at the loop point, since it doesn't precisely equal that.
+  // Always runs on its own; it can also be grabbed and dragged either way
+  // (mouse or finger), and a flick coasts a little before the drift takes
+  // over again. The position wraps by exactly one cycle, so no seam shows.
   useEffect(() => {
     const track = heroClientTrackRef.current;
     const set0 = heroClientSetRef.current;
-    if (!track || !set0) return;
+    const box = heroClientBoxRef.current;
+    if (!track || !set0 || !box) return;
     const PX_PER_SEC = 32;
-    let tween: gsap.core.Tween | null = null;
-    const start = () => {
-      tween?.kill();
+    let cycle = 0;
+    let x = 0;
+    let fling = 0;            // px/s left over from a drag, decays to 0
+    let dragging = false;
+    let lastX = 0;
+    let lastT = 0;
+    const measure = () => {
       const colGap = parseFloat(getComputedStyle(track).columnGap || '0');
-      const cycle = set0.offsetWidth + colGap;
-      if (!cycle) return;
-      gsap.set(track, { x: 0 });
-      tween = gsap.to(track, { x: -cycle, duration: cycle / PX_PER_SEC, ease: 'none', repeat: -1 });
+      cycle = set0.offsetWidth + colGap;
     };
-    start();
-    window.addEventListener('resize', start, { passive: true });
-    return () => { tween?.kill(); window.removeEventListener('resize', start); };
+    const apply = () => {
+      if (cycle) x = ((x % cycle) - cycle) % cycle;   // keep x in (-cycle, 0]
+      gsap.set(track, { x });
+    };
+    const tick = (_t: number, dtMs: number) => {
+      const dt = Math.min(dtMs, 64) / 1000;
+      x -= PX_PER_SEC * dt;                 // the drift never stops
+      if (!dragging && fling) {
+        x += fling * dt;
+        fling *= Math.pow(0.04, dt);        // ~96% of the fling gone per second
+        if (Math.abs(fling) < 2) fling = 0;
+      }
+      apply();
+    };
+    const onDown = (e: PointerEvent) => {
+      dragging = true;
+      fling = 0;
+      lastX = e.clientX;
+      lastT = performance.now();
+      box.setPointerCapture(e.pointerId);
+      box.style.cursor = 'grabbing';
+    };
+    const onMove = (e: PointerEvent) => {
+      if (!dragging) return;
+      const now = performance.now();
+      const dx = e.clientX - lastX;
+      x += dx;
+      // Flick speed, capped so a jerky move can't send it flying
+      fling = Math.max(-1500, Math.min(1500, dx / Math.max(8, now - lastT) * 1000));
+      lastX = e.clientX;
+      lastT = now;
+      apply();
+    };
+    const onUp = () => {
+      dragging = false;
+      box.style.cursor = '';
+      // A pause before letting go means no flick
+      if (performance.now() - lastT > 80) fling = 0;
+    };
+    measure();
+    apply();
+    gsap.ticker.add(tick);
+    box.addEventListener('pointerdown', onDown);
+    box.addEventListener('pointermove', onMove);
+    box.addEventListener('pointerup', onUp);
+    box.addEventListener('pointercancel', onUp);
+    window.addEventListener('resize', measure, { passive: true });
+    return () => {
+      gsap.ticker.remove(tick);
+      box.removeEventListener('pointerdown', onDown);
+      box.removeEventListener('pointermove', onMove);
+      box.removeEventListener('pointerup', onUp);
+      box.removeEventListener('pointercancel', onUp);
+      window.removeEventListener('resize', measure);
+    };
   }, []);
   useReveal(toolsRowsRef, { selector: `.${s.toolRow}`, fromY: 14, stagger: 0.08, duration: 0.55 }, preloaderDone);
   // Case cards just rise a little from below on scroll — NO opacity fade
@@ -1393,8 +1464,13 @@ function AppInner() {
         >
           <p ref={heroClientLabelRef} style={{ ...ts, margin: 0 }}>Нам доверяют</p>
           <div
+            ref={heroClientBoxRef}
             style={{
               position: 'relative',
+              // Grab-and-drag (see the ticker effect); vertical swipes still scroll
+              cursor: 'grab',
+              userSelect: 'none',
+              touchAction: 'pan-y',
               // 2 of the 5 grid columns wide, centred (the flex parent centres it).
               width: isMobile ? '100%' : 'calc(2 / 5 * (100% - 4 * var(--gap)) + 1 * var(--gap))',
               // Taller than one line-height so descenders (g, p, у) aren't
@@ -1450,6 +1526,41 @@ function AppInner() {
               ))}
             </div>
           </div>
+          {/* Hovered client's picture — a circle one grid column wide just
+              under the names. Zero-height anchor, so it never moves the page. */}
+          {!isMobile && (
+            <div style={{ position: 'relative', width: '100%', height: 0 }}>
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute', top: 0, left: '50%',
+                  width: 'calc((100vw - 2 * var(--pad) - 4 * var(--gap)) / 5)',
+                  aspectRatio: '1 / 1',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  background: 'var(--c-surface)',
+                  pointerEvents: 'none',
+                  zIndex: 3,
+                  opacity: hoveredClient ? 1 : 0,
+                  transform: `translateX(-50%) scale(${hoveredClient ? 1 : 0.9})`,
+                  transition: 'opacity 0.3s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
+                }}
+              >
+                {PEOPLE_CLIENTS.map(name => (
+                  <img
+                    key={name}
+                    src={asset(CLIENT_PICTURES[name])}
+                    alt=""
+                    style={{
+                      position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+                      opacity: clientPicture === name ? 1 : 0,
+                      transition: 'opacity 0.25s ease',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* "+ новый проект" — sticky pill above the contact form.

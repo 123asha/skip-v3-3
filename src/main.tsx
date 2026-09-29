@@ -23,6 +23,14 @@ function updateZoom() {
 updateZoom();
 window.addEventListener('resize', updateZoom, { passive: true });
 
+// No copying the site's text: selection is off in CSS (index.css), and copy /
+// cut are refused too — except inside form fields, where they behave as usual.
+const inField = (t: EventTarget | null) =>
+  t instanceof HTMLElement && !!t.closest('input, textarea, [contenteditable]');
+for (const type of ['copy', 'cut'] as const) {
+  document.addEventListener(type, e => { if (!inField(e.target)) e.preventDefault(); });
+}
+
 installTranslator();
 createRoot(document.getElementById('root')!).render(<App />);
   

@@ -220,19 +220,10 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
             // don't, and the services inside an open group are grouped by that
             // silence rather than split by lines.
             const showDivider = !row.header && !row.itemKey && j >= 2;
-            // Services (3rd level) are split by full-width lines too, between
-            // one service and the next. Descriptions (4th level) get none.
-            const showItemDivider = !!row.itemKey && !!rows[j - 1]?.itemKey;
-            // Last item (3rd level) of a sub-group — its own text cell (col 4
-            // only) gets extra room below, so the gap before the boundary reads
-            // the same whether that boundary is the next group's divider or,
-            // for the closing group of a category, the next category header.
-            // A one-item group counts too: its single item is also its last.
-            const nextRow = rows[j + 1];
-            const isLastItemBeforeDivider = !!row.itemKey && (
-              !nextRow ||                                             // category ends here
-              (!nextRow.header && !nextRow.itemKey && j + 1 >= 2)     // next sub-group starts
-            );
+            // Services (3rd level) get a full-width line above each of them —
+            // the first one too, under its sub-group. Descriptions (4th level)
+            // get none.
+            const showItemDivider = !!row.itemKey && j >= 1;
             const rowBg = row.header ? 'var(--c-surface)' : 'transparent';
             // What each level shows (rows collapse to 0 height rather than
             // unmounting, so every level change animates):
@@ -349,7 +340,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                   <p style={{ ...numberStyle, ...cellFade }}>{row.itemIndex ?? ''}</p>
                   {!!row.itemKey && onRowClick && arrow}
                 </div>
-                <p style={{ ...itemStyle, gridColumn: '4 / 5', paddingBottom: isLastItemBeforeDivider ? 20 : 0, ...cellFade }}>{row.header ? '' : typo(row.text)}</p>
+                <p style={{ ...itemStyle, gridColumn: '4 / 5', ...cellFade }}>{row.header ? '' : typo(row.text)}</p>
                 <div style={{ gridColumn: '5 / 6', ...cellFade }}>{descPanel}</div>
               </div>
             );

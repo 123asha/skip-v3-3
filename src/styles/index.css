@@ -247,6 +247,12 @@ html {
   -webkit-font-smoothing: antialiased;
 }
 
+
+/* Text on the site can't be selected (and so copied — see main.tsx); form
+   fields stay normal */
+body { -webkit-user-select: none; user-select: none; }
+input, textarea, [contenteditable] { -webkit-user-select: text; user-select: text; }
+
 body {
   min-height: 100vh;
   overflow-x: hidden;

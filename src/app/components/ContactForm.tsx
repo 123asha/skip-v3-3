@@ -201,6 +201,8 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', width: '100%' }}>
+                {/* Desktop: one column of three wide — the circles wrap */}
+                <div style={{ maxWidth: isMobile ? '100%' : 'calc((100% - 2 * var(--gap)) / 3)' }}>
                 <CircleInput
                   prefix="@" placeholder="телеграм" caretAtRest
                   // Phone: the "@" and 8 typed letters fill exactly one row —
@@ -219,6 +221,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
                     >{status === 'sending' ? '···' : arrowSvg}</button>
                   ) : undefined}
                 />
+                </div>
                 {status === 'error' && (
                   <p style={{ margin: 0, fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)', color: '#c0392b', textAlign: 'center' }}>
                     Не отправилось. Попробуйте ещё раз или напишите в{' '}

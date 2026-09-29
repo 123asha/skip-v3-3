@@ -65,12 +65,21 @@ export default function CircleInput({ placeholder, value: externalValue, onChang
         >{ch}</div>
       ))}
 
-      {caretAtRest && !isEditing && (
-        <div className={`${s.circle} ${s.cursor}`}>
-          <span className={s.caret}>|</span>
-        </div>
+      {/* Caret-at-rest fields keep the caret circle for good — always the
+          last circle, after the typed letters, focused or not; the submit
+          arrow follows it */}
+      {caretAtRest && (
+        <>
+          {chars.map((ch, i) => (
+            <div key={`${ch}-${i}`} className={`${s.circle} ${s.typed}`}>{ch}</div>
+          ))}
+          <div className={`${s.circle} ${s.cursor}`}>
+            <span className={s.caret}>|</span>
+          </div>
+          {action}
+        </>
       )}
-      {isEditing && (
+      {!caretAtRest && isEditing && (
         <>
           {chars.map((ch, i) => (
             <div key={`${ch}-${i}`} className={`${s.circle} ${s.typed}`}>{ch}</div>

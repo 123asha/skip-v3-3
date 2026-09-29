@@ -407,7 +407,7 @@
   }
   .tabsRow { flex-wrap: wrap; padding: 0; row-gap: 5px; }
   /* Same size as the menu chips under them */
-  .tabsBarInner .chip { padding: 8px 14px 7px; }
+  .tabsBarInner .chip { padding: 7px 14px 8px; }   /* text 1px higher */
   .tabsRow, .tabsBarInner { justify-content: center; }
   .subRow  { flex-wrap: wrap; justify-content: center; row-gap: 5px; }
 }

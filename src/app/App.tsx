@@ -1311,7 +1311,7 @@ function AppInner() {
         alignItems: 'baseline',
         gap: 16,
       }}>
-        <a href={otherLangHref(pathname)} style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35 }}>{LANG === 'en' ? '/ru' : '/en'}</a>
+        <a href={otherLangHref(pathname)} style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35 }}><LinkFlip flat hoverLabel={LANG === 'en' ? '/ru' : '/en'}>{LANG === 'en' ? '/en' : '/ru'}</LinkFlip></a>
         {page === 'home' && <span style={{ pointerEvents: 'none' }}>{t('Дизайн, как правила игры')}</span>}
         {/* Pages put their ⌘ ⊖ ⊕ here (ZoomControl) */}
         <span id={FOOTER_SLOT_ID} style={{ display: 'contents' }} />
@@ -1336,7 +1336,11 @@ function AppInner() {
               fontSize: 'var(--text-size)', fontFamily: 'var(--font)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
               letterSpacing: 'var(--text-ls)', lineHeight: 'var(--text-lh)',
             }}
-          >{LANG === 'en' ? '/ru' : '/en'}</a>
+          >
+            {/* The current language; the other one turns up on hover (the
+                menu's cube flip), a click switches */}
+            <LinkFlip flat hoverLabel={LANG === 'en' ? '/ru' : '/en'}>{LANG === 'en' ? '/en' : '/ru'}</LinkFlip>
+          </a>
           {/* «Skip Design» in the middle of the header on every page, on the
               logo's line */}
           {(

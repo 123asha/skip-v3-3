@@ -39,3 +39,10 @@
   top: 0;
   transform: rotateX(-90deg) translateZ(0.5em);
 }
+
+/* Touch screens: no flip — a tap is just a tap (the flip stays a desktop
+   hover effect) */
+@media (hover: none) {
+  .wrap:hover .inner { transform: rotateX(0deg); }
+  .inner { transition: none; }
+}

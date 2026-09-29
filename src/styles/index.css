@@ -281,6 +281,10 @@ html {
   --m-chips-bottom: var(--pad);
 }
 
+/* Phone ⊖ ⊕ (projects): bigger signs, spaced, with room around each tap */
+.zoomPillBig .zoomPill { gap: 18px; }
+.zoomPillBig .zoomPill button { padding: 6px; margin: -6px; }
+
 /* No grey flash on tap (iOS/Android) */
 * { -webkit-tap-highlight-color: transparent; }
 

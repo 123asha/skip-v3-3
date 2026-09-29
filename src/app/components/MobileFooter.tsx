@@ -24,7 +24,8 @@ export default function MobileFooter() {
       alignSelf: 'stretch', width: '100%', boxSizing: 'border-box',
       padding: '0 var(--pad)', height: 'var(--m-foot)',
       marginTop: 'var(--space-md)',
-      marginBottom: 'calc(var(--m-menu-bottom) + var(--m-chip-h) + var(--space-xs))',
+      // Twice the room under it, above the pinned menu
+      marginBottom: 'calc(var(--m-menu-bottom) + var(--m-chip-h) + 2 * var(--space-xs))',
       fontFamily: 'var(--font)', fontSize: 'var(--text-size)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
       lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)', color: 'var(--c-text)',
     }}>

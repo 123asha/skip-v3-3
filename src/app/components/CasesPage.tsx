@@ -800,8 +800,9 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
             <div style={{
               position: 'absolute', left: 0, right: 0, bottom: 'calc(20px - var(--text-size) * var(--text-lh) / 2)',
               display: 'flex', justifyContent: 'center',
-              fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)', color: 'var(--c-text)',
-            }}>
+              // Bigger signs than the body text — easier to hit with a finger
+              fontFamily: 'var(--font)', fontSize: 24, lineHeight: 1, color: 'var(--c-text)',
+            }} className="zoomPillBig">
               <ZoomControl
                 inline noKey
                 minusLabel="Одна колонка" plusLabel="Две колонки"
@@ -834,7 +835,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
           className={s.grid}
           style={
             isMobile
-              ? { gridTemplateColumns: `repeat(${mobCols}, 1fr)`, columnGap: 'var(--gap)', rowGap: 'var(--cases-row-gap)' }
+              ? { gridTemplateColumns: `repeat(${mobCols}, 1fr)`, columnGap: 'var(--gap)', rowGap: 'var(--cases-row-gap)', alignItems: 'start' }
               : {
                   gridTemplateColumns: `repeat(${ZOOM_CFG[zoom].cols}, 1fr)`,
                   rowGap: ZOOM_CFG[zoom].rowGap,

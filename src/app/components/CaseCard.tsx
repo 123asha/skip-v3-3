@@ -187,7 +187,8 @@ export default function CaseCard({
   if (isMobile) {
     return (
       <div className={s.card} onClick={onClick}>
-        <div className={s.cardImage} style={{ aspectRatio: ar, width: '100%', flex: 'none', ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}>
+        {/* Two per row: every picture 4:5, so the rows line up */}
+        <div className={`${s.cardImage}${stackMeta ? ` ${s.cardTall}` : ''}`} style={{ aspectRatio: ar, width: '100%', flex: 'none', ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}>
           {image && <img src={image} alt={title} loading="lazy" />}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: stackMeta ? '1fr' : 'minmax(90px, 1fr) minmax(0, 3fr)', gap: stackMeta ? 4 : 'var(--gap)', alignItems: 'flex-start', paddingTop: 10 }}>

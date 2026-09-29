@@ -793,21 +793,24 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
         className={s.body}
         style={{ paddingTop: 'var(--inner-content-top)' }}
       >
-        {/* Phone: one sign between the title and the grid — a circled «2»
-            switches to two cards a row, a circled «1» back to one; room
-            above and below it */}
+        {/* Phone: both column counts under the title, circled «1» and «2» —
+            the current one dark, the other grey; tap to switch */}
         {isMobile && (
-          <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 32px' }}>
-            <button
-              aria-label={mobCols === 1 ? 'Две колонки' : 'Одна колонка'}
-              onClick={() => setMobCols(c => (c === 1 ? 2 : 1))}
-              style={{ background: 'none', border: 'none', padding: 8, margin: -8, color: 'var(--c-text)', opacity: 0.6, cursor: 'pointer', display: 'flex' }}
-            >
-              <svg width="24" height="24" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1" />
-                <text x="8" y="8" textAnchor="middle" dominantBaseline="central" fill="currentColor" fontSize="9" fontFamily="var(--font)">{mobCols === 1 ? 2 : 1}</text>
-              </svg>
-            </button>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 12, margin: '0 0 32px' }}>
+            {([1, 2] as const).map(n => (
+              <button
+                key={n}
+                aria-label={n === 1 ? 'Одна колонка' : 'Две колонки'}
+                aria-pressed={mobCols === n}
+                onClick={() => setMobCols(n)}
+                style={{ background: 'none', border: 'none', padding: 4, margin: -4, color: mobCols === n ? 'var(--c-text)' : 'var(--c-text-muted)', cursor: 'pointer', display: 'flex', transition: 'color 0.2s' }}
+              >
+                <svg width="24" height="24" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1" />
+                  <text x="8" y="8" textAnchor="middle" dominantBaseline="central" fill="currentColor" fontSize="9" fontFamily="var(--font)">{n}</text>
+                </svg>
+              </button>
+            ))}
           </div>
         )}
         {/* ⌘ ⊖ ⊕ — top-left, ~40px above the first row (desktop) */}

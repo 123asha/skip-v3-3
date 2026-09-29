@@ -609,8 +609,10 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
     applyFilters(activeTab, next);
   };
 
-  // Desktop: the filter chips sit centred under the page title, one
-  // --space-xs below it. (Phone: fixed rows in CSS.)
+  // Desktop: the filter chips sit centred under the page title, their top
+  // one --space-xs below the title's baseline — measured from the text, not
+  // the line box, whose empty descender room would add to the gap.
+  // (Phone: fixed rows in CSS.)
   useLayoutEffect(() => {
     const bar = tabsBarRef.current;
     if (!bar) return;
@@ -624,8 +626,13 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
       const spaceXs = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--space-xs')) || 0;
       const t = title.getBoundingClientRect();
       const b = bar.getBoundingClientRect();
+      const m = document.createElement('span');
+      m.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
+      title.appendChild(m);
+      const baseline = m.getBoundingClientRect().bottom;
+      m.remove();
       bar.style.left = `${(t.left + t.width / 2 - b.width / 2) / pz}px`;
-      bar.style.top = `${t.bottom / pz + spaceXs}px`;
+      bar.style.top = `${baseline / pz + spaceXs}px`;
     };
     place();
     const title = document.querySelector<HTMLElement>('body > h1[class*="titleCol2"]');

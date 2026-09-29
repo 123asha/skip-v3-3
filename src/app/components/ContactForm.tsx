@@ -31,7 +31,9 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
       const el = cardRef.current;
       // Only once the page is scrolled right to the end — the card fills the
       // screen, so its top edge is never seen changing colour
-      if (el) setAtBottom(el.getBoundingClientRect().bottom <= window.innerHeight + 2);
+      // (40px of slack: smooth scrolling crawls over the last few pixels, and
+      // waiting for the exact end made the switch feel late)
+      if (el) setAtBottom(el.getBoundingClientRect().bottom <= window.innerHeight + 40);
     };
     onScroll();
     // Capture: inner pages scroll in their own container, not the window
@@ -207,7 +209,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
               position: 'fixed', inset: 0, zIndex: 9990, pointerEvents: 'none',
               backdropFilter: 'invert(1)', WebkitBackdropFilter: 'invert(1)',
               opacity: atBottom ? 1 : 0,
-              transition: 'opacity 0.4s ease',
+              transition: 'opacity 0.25s ease-out',
             }}
           />,
           document.body,

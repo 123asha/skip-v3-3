@@ -189,7 +189,17 @@
    right edge, whatever the screen width — and as far from the top of the
    screen as from its right edge (--pad) */
 @media (min-width: 769px) {
-  .nav.navBoxed { top: var(--pad); gap: var(--nav-gap); }
+  /* The menu fills the 5th page column: links from the column's left edge
+     (the same line as the text blocks in that column), «Написать» at its
+     right edge. If the items ever need more than the column, it grows to
+     the left rather than squeezing them. --nav-sb: the inner pages'
+     scrollbar gutter, which their grid doesn't include. */
+  .nav.navBoxed {
+    top: var(--pad);
+    gap: var(--nav-gap);
+    min-width: calc((100% - var(--nav-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5);
+  }
+  .navBoxed .navWrite { margin-left: auto; }
   /* No grey box behind the links on desktop — plain text, and «Написать»
      one link-gap after the last of them */
   .navBoxed .navLinks { background: none; padding: 0; }

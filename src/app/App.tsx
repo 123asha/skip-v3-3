@@ -1009,6 +1009,10 @@ function AppInner() {
     }
   }, [pathname]);
 
+  // Right-hand gutter of the page grid that fixed header items must add: the
+  // inner pages' own scrollbar gutter, minus any window scrollbar still there
+  const navSb = page !== 'home' && page !== 'index2' ? Math.max(0, scrollbarW - winSb) : 0;
+
   return (
     <>
 
@@ -1045,8 +1049,10 @@ function AppInner() {
         // top on the logo's top line. Inner pages add the scrollbar gutter
         // (see above) so the row sits identically on every page.
         style={{
-          right: `calc(var(--pad) + ${page !== 'home' && page !== 'index2' ? Math.max(0, scrollbarW - winSb) : 0}px)`,
-          ['--nav-sb' as any]: `${scrollbarW}px`,
+          right: `calc(var(--pad) + ${navSb}px)`,
+          // The gutter the page grid leaves on the right — the same amount the
+          // row is shifted by, so its width is exactly the 5th column
+          ['--nav-sb' as any]: `${navSb}px`,
         }}
       >
         {/* The section links share one grey box; «Написать» stands apart */}

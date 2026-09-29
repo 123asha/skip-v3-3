@@ -256,10 +256,10 @@ function ConstellationHero() {
       {/* Headline a touch above the middle of the screen — the constellation
           keeps a clear patch there for it */}
       <p className={s.headline} style={{ pointerEvents: 'none',
-        // Centred on the screen, 1.5× the heading size — capped by the
+        // Centred on the screen, at the hero size — capped by the
         // viewport width so the two lines always fit on a phone too
         top: '45%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', maxWidth: 'none', width: 'max-content', whiteSpace: 'nowrap',
-        fontSize: 'min(calc(var(--heading-size) * 1.5), 7.2vw)', lineHeight: 'calc(var(--heading-lh) * 0.94)' }}>
+        fontSize: 'min(var(--hero-size), 7.2vw)', lineHeight: 'calc(var(--heading-lh) * 0.94)' }}>
         {HEADLINE_LINES.map((line, i) => (
           <span key={i} className={s.heroIntroText} style={{ display: 'block', animationDelay: `${0.35 + i * 0.12}s` }}>{kernHeadline(t(line))}</span>
         ))}

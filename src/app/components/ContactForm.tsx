@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import CircleInput from './CircleInput';
-import PillButton from './PillButton';
 import { useMobile } from '../hooks/useMobile';
 import s from '../App.module.css';
 
@@ -20,7 +19,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
   const [email, setEmail]       = useState('');
   const [telegram, setTelegram] = useState('');
   // The telegram field never runs past three rows of circles: letters that
-  // fit = three rows minus the icon and the caret circles.
+  // fit = three rows minus the icon, the caret and the arrow circles.
   const fieldsRef = useRef<HTMLDivElement>(null);
   const [tgMax, setTgMax] = useState(32);
   const [phone, setPhone]       = useState('');
@@ -134,7 +133,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
       const size = isMobile ? Math.min(40, (window.innerWidth - 2 * pad) / 9.8) : 60;
       // The circles touch — no gap between them
       const perRow = Math.max(1, Math.floor(width / size));
-      setTgMax(Math.max(1, Math.min(32, perRow * 3 - 2)));
+      setTgMax(Math.max(1, Math.min(32, perRow * 3 - 3)));
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -244,12 +243,22 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
                   onBlur={() => setActiveFocus(null)}
                   error={telegramError}
                   onSubmit={handleTelegramSubmit}
+                  // Arrow circle right after the caret, once there's something to send
+                  action={activeFocus === 'telegram' && telegram.length > 1 ? (
+                    <button
+                      className={s.submitCircle}
+                      aria-label="Отправить"
+                      onMouseDown={e => e.preventDefault()}
+                      onClick={handleTelegramSubmit}
+                      disabled={status === 'sending'}
+                    >{status === 'sending' ? '···' : (
+                      <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+                        <path d="M1 5h10M6 1l4 4-4 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}</button>
+                  ) : undefined}
                 />
                 </div>
-                {/* A plain button under the field (Enter in the field sends too) */}
-                <PillButton variant="primary" onClick={handleTelegramSubmit} style={{ marginTop: 10 }}>
-                  {status === 'sending' ? '···' : 'Отправить'}
-                </PillButton>
                 {status === 'error' && (
                   <p style={{ margin: 0, fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)', color: '#c0392b', textAlign: 'center' }}>
                     Не отправилось. Попробуйте ещё раз или напишите в{' '}

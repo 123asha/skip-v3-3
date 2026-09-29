@@ -271,7 +271,6 @@ export const SENIORS_BAR: CaseData = {
     { kind: 'duo', left: 'v', right: 'v', leftSrc: si(9), rightSrc: si(10) },
     { kind: 'single', ar: 'h', src: si(12) },
     { kind: 'single', ar: 'h', src: si(11) },
-    { kind: 'single', ar: 'h', src: si(13) },
   ],
 
   team: TEAM,

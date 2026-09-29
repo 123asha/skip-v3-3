@@ -246,6 +246,10 @@ html {
 }
 
 
+/* No system focus rings anywhere (the blue frame Safari and Chrome draw
+   around a clicked link or card) */
+*:focus, *:focus-visible { outline: none; }
+
 /* Text on the site can't be selected (and so copied — see main.tsx); form
    fields stay normal */
 body { -webkit-user-select: none; user-select: none; }

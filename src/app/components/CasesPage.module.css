@@ -157,9 +157,7 @@
 /* Chips standing side by side are linked like the nodes of a graph: a thin
    dotted line runs across the gap from each chip to the one before it */
 .chip { position: relative; }
-/* No browser focus ring on a click; keyboard focus shows as the dark outline */
-.chip:focus { outline: none; }
-.chip:focus-visible { border-color: var(--c-text); }
+
 .chip + .chip::before {
   content: '';
   position: absolute;

@@ -218,9 +218,7 @@
   padding: 0 14px;
   box-sizing: border-box;
 }
-/* No browser focus ring on a click; keyboard focus still shows */
-.navLinks a:focus { outline: none; }
-.navLinks a:focus-visible { outline: 1px solid var(--c-text); outline-offset: 2px; }
+
 .navBoxed .navPill { background: var(--c-text) !important; color: #fff !important; padding: 8px 14px 9px; }
 
 /* Nav-sized face of the site's pill button — same 4px corners */

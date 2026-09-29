@@ -1,18 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { useMobile } from '../hooks/useMobile';
-import { usePinchSteps } from '../hooks/usePinchSteps';
 import { asset } from '../utils/asset';
 import { typo } from '../utils/typography';
 import { INSIGHTS_LIST } from './MediaSection';
 import cs from './CaseCard.module.css';
-import ZoomControl from './ZoomControl';
 import { driftTo } from '../utils/parallaxInertia';
 
-// Same density steps as the cases grid: 3 columns (biggest, default) down to
-// 6 (densest). Zoom level rises toward the biggest cards, like the cases page.
-const ZOOM_MIN = 0, ZOOM_MAX = 3;
-const COLS_AT = [6, 5, 4, 3]; // index = zoom level
+// Always five in a row on desktop (no density control here)
+const COLS = 5;
 
 // Stand-in pictures until each article has its own — cycled over the cards
 const PICS = [
@@ -30,30 +26,7 @@ const PICS = [
 export function InsightCards() {
   const isMobile = useMobile();
   const gridRef = useRef<HTMLDivElement>(null);
-  // Density control — same ⊕ ⊖ / pinch / ⌘± pattern as the cases grid.
-  const [zoom, setZoomRaw] = useState(2); // default: 4 columns
-  // Every zoom change first notes where each card sits, so the re-laid grid
-  // can glide cards from their old spot and size into the new ones (FLIP).
-  const flipRef = useRef<Map<string, DOMRect> | null>(null);
-  const setZoom = (next: (z: number) => number) => {
-    const cards = gridRef.current?.querySelectorAll<HTMLElement>('[data-insight-card]');
-    if (cards?.length) flipRef.current = new Map([...cards].map(el => [el.dataset.id ?? '', el.getBoundingClientRect()]));
-    setZoomRaw(next);
-  };
-  const bigger = () => setZoom(z => Math.min(ZOOM_MAX, z + 1));
-  const denser = () => setZoom(z => Math.max(ZOOM_MIN, z - 1));
-  usePinchSteps(bigger, denser, !isMobile);
-  useEffect(() => {
-    if (isMobile) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (!e.metaKey && !e.ctrlKey) return;
-      if (e.key === '-') { e.preventDefault(); denser(); }
-      else if (e.key === '+' || e.key === '=') { e.preventDefault(); bigger(); }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isMobile]);
-  const cols = isMobile ? 2 : COLS_AT[zoom];
+  const cols = isMobile ? 2 : COLS;
 
   // Rise in from below, each once — the cards already on screen stay put
   useEffect(() => {
@@ -82,24 +55,6 @@ export function InsightCards() {
     return () => io.disconnect();
   }, []);
 
-  // Zoom change: each card glides from where it was, at its old size, into
-  // its new place (same as the cases page's density control).
-  useLayoutEffect(() => {
-    const prev = flipRef.current;
-    flipRef.current = null;
-    if (!prev) return;
-    const pz = parseFloat(document.documentElement.style.zoom || '1') || 1;
-    gridRef.current?.querySelectorAll<HTMLElement>('[data-insight-card]').forEach(el => {
-      const was = prev.get(el.dataset.id ?? '');
-      gsap.killTweensOf(el);
-      if (!was) return;
-      const now = el.getBoundingClientRect();
-      gsap.fromTo(el,
-        { x: (was.left - now.left) / pz, y: (was.top - now.top) / pz, scale: was.width / now.width, transformOrigin: '0 0' },
-        { x: 0, y: 0, scale: 1, duration: 0.7, ease: 'power3.inOut', clearProps: 'transform' },
-      );
-    });
-  }, [zoom]);
 
   // Parallax: the picture is larger than its circle and slides against it
   useEffect(() => {
@@ -171,12 +126,6 @@ export function InsightCards() {
 
   return (
     <>
-    {/* Portalled: stays fixed while the page slides out */}
-    <ZoomControl
-      minusLabel="Плотнее" plusLabel="Крупнее"
-      minusDisabled={zoom <= ZOOM_MIN} plusDisabled={zoom >= ZOOM_MAX}
-      onMinus={denser} onPlus={bigger}
-    />
     <div
       ref={gridRef}
       style={{
@@ -223,9 +172,9 @@ export function InsightCards() {
                 />
               )}
             </div>
-            <p className={`${cs.cardMetaText} insightCardCaption`} style={{ margin: '10px auto 0', // One page-grid column wide on desktop; a phone's grid is the cards'
-              // own, so the caption just takes the card's width
-              maxWidth: isMobile ? '100%' : 'calc((100vw - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5)', textAlign: 'center', transition: 'opacity 0.25s ease' }}>
+            <p className={`${cs.cardMetaText} insightCardCaption`} style={{ margin: '10px auto 0',
+              // At most 360px, centred under the circle
+              maxWidth: 360, textAlign: 'center', transition: 'opacity 0.25s ease' }}>
               {typo(it.desc)}
             </p>
           </div>

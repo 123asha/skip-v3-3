@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { createPortal } from 'react-dom';
 import CircleInput from './CircleInput';
 import MobileFooter from './MobileFooter';
+import FormBalls from './FormBalls';
 import MoscowTime from './MoscowTime';
 import { useMobile } from '../hooks/useMobile';
 import s from '../App.module.css';
@@ -340,7 +341,9 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
                   error={telegramError}
                   onSubmit={handleTelegramSubmit}
                   // Arrow circle right after the caret, once there's something to send
-                  action={activeFocus === 'telegram' && telegram.length > 1 ? (
+                  // Shows as soon as the handle is a real one, and stays — even
+                  // after the visitor taps elsewhere
+                  action={isValidTelegram(telegram) ? (
                     <button
                       className={s.submitCircle}
                       aria-label="Отправить"
@@ -395,6 +398,8 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
           </div>
           </div>
         </div>
+        {/* Desktop: balls fall here (tap an empty spot, or ten quiet seconds) */}
+        {!isMobile && <FormBalls hostRef={cardRef} />}
       </div>
 
       {/* Phone: time and social as the page's last line */}

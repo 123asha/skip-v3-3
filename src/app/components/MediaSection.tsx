@@ -474,15 +474,14 @@ export function ToolsList({ toolsRowsRef, showZoom = false, bandHeader = false }
                         table does it — one column right of the title and one
                         line down, then «Перейти» */}
                     <p className={s.toolRowText} style={{ gridColumn: '5', margin: 0, textAlign: 'right', ...lastColPad, opacity: 'var(--opacity-muted)' as any }}>{tool.source}</p>
-                    <div style={{ gridColumn: '3 / 5', gridRow: 1, display: 'grid', gridTemplateRows: isOpen ? '1fr' : '0fr', transition: `grid-template-rows ${EXPAND}` }}>
+                    <div style={{ gridColumn: '3', gridRow: 1, display: 'grid', gridTemplateRows: isOpen ? '1fr' : '0fr', transition: `grid-template-rows ${EXPAND}` }}>
                       <div style={{ overflow: 'hidden' }}>
                         <div style={{ marginTop: 'calc(var(--text-size) * var(--text-lh) + 20px)', paddingBottom: 32 }}>
-                          {/* Two paragraphs side by side, one per column */}
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', columnGap: 'var(--gap)', alignItems: 'start' }}>
-                            {body.map((para, k) => (
-                              <p key={k} className={s.toolRowText} style={{ margin: 0 }}>{typo(para)}</p>
-                            ))}
-                          </div>
+                          {/* One column, and short: the start of the piece */}
+                          <p className={s.toolRowText} style={{
+                            margin: 0,
+                            display: '-webkit-box', WebkitLineClamp: 5, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                          }}>{typo(body[0])}</p>
                           {tool.href && <PillButton href={tool.href} style={{ marginTop: 20 }}>Перейти</PillButton>}
                         </div>
                       </div>

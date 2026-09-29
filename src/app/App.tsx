@@ -35,7 +35,7 @@ import { LANG, LANG_PREFIX, stripLang, otherLangHref, t } from './i18n';
 function sectionTitleFor(path: string): string | null {
   const p = path.split(/[?#]/)[0].replace(/\/$/, '');
   if (p === '/cases') return 'Проекты Skip Design';
-  if (p === '/services' || p === '/services-2' || p === '/expertiza') return 'Услуги и решения Skip Design';
+  if (p === '/services' || p === '/services-2' || p === '/expertiza') return 'Услуги и решения студии';
   if (p === '/lab') return 'Инсайты команды';
   if (p === '') return 'Skip Design';
   return null;
@@ -1180,7 +1180,7 @@ function AppInner() {
         display: 'flex',
         flexDirection: 'column',
         gap: '4px',
-        opacity: showPrivacy ? 0.7 : 0,
+        opacity: showPrivacy ? 'var(--opacity-muted)' as any : 0,
         transition: 'opacity 0.4s ease',
         pointerEvents: showPrivacy ? 'auto' : 'none',
         fontSize: 'var(--text-size)',
@@ -1217,7 +1217,7 @@ function AppInner() {
         userSelect: 'none',
       }}>
         <SoundIcon />
-        <span style={{ color: 'inherit' }}><MoscowTime /> (GMT+3)</span>
+        <span style={{ color: 'inherit', opacity: 'var(--opacity-muted)' as any }}><MoscowTime /> (GMT+3)</span>
       </div>}
 
       {/* hi@skip.design — desktop only (on mobile it would overlap the
@@ -1274,9 +1274,11 @@ function AppInner() {
           textUnderlineOffset: '3px',
           whiteSpace: 'nowrap',
           transition: 'opacity 0.2s ease',
+          // Grey like the rest of the footer text; clicking copies the address
+          opacity: 'var(--opacity-muted)' as any,
         }}
-        onMouseEnter={e => (e.currentTarget.style.opacity = '0.7')}
-        onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+        onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+        onMouseLeave={e => (e.currentTarget.style.opacity = 'var(--opacity-muted)')}
       >hi@skip.design</button>}
 
       {/* Social icons — desktop only (mobile uses the footer bar below). The
@@ -1317,7 +1319,7 @@ function AppInner() {
         gap: 16,
       }}>
         <a href={otherLangHref(pathname)} style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35 }}><LinkFlip flat hoverLabel={LANG === 'en' ? '/ru' : '/en'}>{LANG === 'en' ? '/en' : '/ru'}</LinkFlip></a>
-        {page === 'home' && <span style={{ pointerEvents: 'none' }}>{t('Дизайн, как правила игры')}</span>}
+        {page === 'home' && <span style={{ pointerEvents: 'none', opacity: 'var(--opacity-muted)' as any }}>{t('Дизайн, как правила игры')}</span>}
         {/* Pages put their ⌘ ⊖ ⊕ here (ZoomControl) */}
         <span id={FOOTER_SLOT_ID} style={{ display: 'contents' }} />
       </div>}
@@ -1328,24 +1330,27 @@ function AppInner() {
           (.nav); time and social are the page's last line (MobileFooter). ── */}
       {isMobile && (
         <>
-          <a
-            href={otherLangHref(pathname)}
+          <div
             style={{
               position: 'fixed', zIndex: 200,
               // Right of the logo (its box: 10px−10px from the edge, 72.5px
               // wide; top 6px, 52px tall), centred on its line
               left: 'calc(var(--m-head-x) - 10px + 72.5px + 6px)', top: 6, height: 52,
-              display: 'flex', alignItems: 'center',
-              color: '#fff', mixBlendMode: 'difference', opacity: 0.35, textDecoration: 'none',
+              display: 'flex', alignItems: 'center', gap: 8,
+              color: '#fff', mixBlendMode: 'difference',
               transform: 'translateZ(0)',   // own layer — steady while scrolling (iOS)
               fontSize: 'var(--text-size)', fontFamily: 'var(--font)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
               letterSpacing: 'var(--text-ls)', lineHeight: 'var(--text-lh)',
             }}
           >
-            {/* The current language; the other one turns up on hover (the
-                menu's cube flip), a click switches */}
-            <LinkFlip flat hoverLabel={LANG === 'en' ? '/ru' : '/en'}>{LANG === 'en' ? '/en' : '/ru'}</LinkFlip>
-          </a>
+            {/* Both languages shown: the current one full (white, i.e. dark on
+                the page), the other grey and tappable */}
+            {(['ru', 'en'] as const).map(l => (
+              LANG === l
+                ? <span key={l} style={{ color: 'inherit' }}>/{l}</span>
+                : <a key={l} href={otherLangHref(pathname)} style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35 }}>/{l}</a>
+            ))}
+          </div>
           {/* «Skip Design» in the middle of the header on every page, on the
               logo's line */}
           {(

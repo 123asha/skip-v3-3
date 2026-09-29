@@ -16,7 +16,7 @@ export const EN: Record<string, string> = {
   'Инструменты': 'Tools',
   'Студия': 'Studio',
   'Проекты Skip Design': 'Skip Design Projects',
-  'Услуги и решения Skip Design': 'Skip Design services and solutions',
+  'Услуги и решения студии': 'Studio services and solutions',
   'Инсайты команды': 'Team insights',
   'Skip Design. Дизайн, как правила игры': 'Skip Design. Design as the rules of the game',
   'Дизайн, как правила игры': 'Design as the rules of the game',

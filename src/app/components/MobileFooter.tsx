@@ -27,7 +27,8 @@ export default function MobileFooter() {
       // Twice the room under it, above the pinned menu
       marginBottom: 'calc(var(--m-menu-bottom) + var(--m-chip-h) + 2 * var(--space-xs))',
       fontFamily: 'var(--font)', fontSize: 'var(--text-size)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
-      lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)', color: 'var(--c-text)',
+      // Grey text; only the social circles are dark
+      lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)', color: 'var(--c-text-muted)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <SoundIcon />

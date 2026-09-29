@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useMobile } from '../hooks/useMobile';
 import s from './CasesPage.module.css';
@@ -165,8 +165,8 @@ function MetaRow({
 }
 
 // Full-width case (copy folded away): a vertical picture never stands alone
-// at the page's width — it pairs up with the picture after it in one row. Both
-// get widths in proportion to their aspect ratios, so their heights match.
+// at the page's width — it pairs up with the picture after it in one row, each
+// taking half.
 const arNum = (ar: string, round: boolean) => {
   if (round) return 1;
   const [w, h] = ar.split('/').map(Number);
@@ -178,14 +178,14 @@ function pairUp(items: { ar: string; src?: string; round: boolean }[]) {
     const a = items[i], b = items[i + 1];
     const vertical = !a.round && arNum(a.ar, false) < 1;
     if (vertical && b) {
-      const ra = arNum(a.ar, a.round), rb = arNum(b.ar, b.round);
+      // Two halves of the row (less the column gap), each keeping its own
+      // proportions and hanging from the top line — heights are not matched
       rows.push(
         <Block key={i}>
-          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-            {/* In a pair a round picture shows as a square — vertical + square
-                is the usual pairing */}
-            <div style={{ flex: `${ra} 1 0`, minWidth: 0 }}><Img ar={a.round ? '1/1' : a.ar} src={a.src} /></div>
-            <div style={{ flex: `${rb} 1 0`, minWidth: 0 }}><Img ar={b.round ? '1/1' : b.ar} src={b.src} /></div>
+          <div style={{ display: 'flex', gap: 4, alignItems: 'flex-start' }}>
+            {/* In a pair a round picture shows as a square */}
+            <div style={{ flex: '1 1 0', minWidth: 0 }}><Img ar={a.round ? '1/1' : a.ar} src={a.src} /></div>
+            <div style={{ flex: '1 1 0', minWidth: 0 }}><Img ar={b.round ? '1/1' : b.ar} src={b.src} /></div>
           </div>
         </Block>,
       );
@@ -196,6 +196,10 @@ function pairUp(items: { ar: string; src?: string; round: boolean }[]) {
   }
   return rows;
 }
+
+// The ⊖ ⊕ (copy folded away / pictures full width) control on desktop case
+// pages — hidden for now, the function itself is untouched
+const SHOW_CASE_ZOOM = false;
 
 // Block wrapper — spacing to the NEXT block: 20px normally, +32px (= 52px) when
 // the block ends with a caption.
@@ -240,7 +244,7 @@ export interface CaseData {
   coverVideo?: string; // if set, the cover plays this video instead of a flat colour
   blocks: CaseBlock[];
   team: { name: string; role: string }[];
-  testimonial?: { quote: string; name: string; phrase: string }; // omit to hide
+  testimonial?: { quote: string; name: string; role: string }; // omit to hide
 }
 
 // Reading order of the cases — the last block of one case shows the next one
@@ -248,8 +252,8 @@ const CASES: CaseData[] = [];
 
 const DEFAULT_TESTIMONIAL = {
   quote: '«Здесь будет отзыв клиента о работе команды над проектом — пара предложений о результате.»',
-  name: 'Имя Фамилия, должность',
-  phrase: 'Одна фраза о сотрудничестве.',
+  name: 'Имя Фамилия',
+  role: 'должность',
 };
 
 const CAP = 'Подпись к блоку — короткое описание решения.';
@@ -545,66 +549,73 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
     return () => obs.disconnect();
   }, []);
 
-  // ── Credits + testimonial (desktop: under the body; phone: inside the
-  //    «о проекте» pane of the swipe, see below) ──
+  // ── Credits + testimonial — under the body, on every screen ──
   const creditsAndQuote = (
     <>
         {/* ── Credits. Desktop: centred, 40px gap under label, 20px between names.
               Mobile: left-aligned at 1/3 vw, role appears LEFT of the name. ── */}
         <div data-case-credits style={{
           marginTop: 120,
-          display: 'flex', flexDirection: 'column', gap: 40,
           ...(isMobile
-            ? { alignItems: 'flex-start', paddingLeft: 'calc(33.333vw - var(--pad) + 4px)', textAlign: 'left' }
-            : { alignItems: 'center', textAlign: 'center' }),
+            ? { display: 'flex', flexDirection: 'column', gap: 40, alignItems: 'flex-start', paddingLeft: 'calc(33.333vw - var(--pad) + 4px)', textAlign: 'left' }
+            // Desktop: on the page's 5-column grid, from the 4th column (the
+            // right-hand content's line)
+            : { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', columnGap: 'var(--gap)' }),
         }}>
-          <p style={{ ...textStyle, margin: 0 }}>Над проектом работали:</p>
-          <div style={{
-            display: 'flex', flexDirection: 'column', gap: 20,
-            alignItems: isMobile ? 'flex-start' : 'center',
-            ...headingStyle,
-            textAlign: isMobile ? 'left' : 'center',
-          }}>
-            {data.team.map(({ name, role }, i) => (
-              <p
-                key={i}
-                style={{ position: 'relative', margin: 0, fontSize: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                onMouseEnter={() => { setHoveredTeam(i); sound.play('hover'); }}
-                onMouseLeave={() => setHoveredTeam(null)}
-                onTouchStart={() => { setHoveredTeam(hoveredTeam === i ? null : i); sound.play('hover'); }}
-              >
-                <LinkFlip flat>{name}</LinkFlip>
-                {/* role — desktop: top-right; mobile: top-left of the name */}
-                <span style={{
-                  ...textStyle,
-                  lineHeight: 1,
-                  position: 'absolute',
-                  ...(isMobile
-                    ? { right: 'calc(100% + 8px)', bottom: '100%' }
-                    : { left: 'calc(100% + 8px)', bottom: '100%' }),
-                  transform: 'translateY(0.55em)',
-                  whiteSpace: 'nowrap',
-                  opacity: hoveredTeam === i ? 1 : 0,
-                  transition: 'opacity 0.2s ease',
-                  pointerEvents: 'none',
-                }}>{role}</span>
-              </p>
-            ))}
-          </div>
+          {isMobile ? (
+            <>
+              <p style={{ ...textStyle, margin: 0 }}>Над проектом работали</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'flex-start', ...headingStyle, textAlign: 'left' }}>
+                {data.team.map(({ name, role }, i) => (
+                  <p
+                    key={i}
+                    style={{ position: 'relative', margin: 0, fontSize: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    onMouseEnter={() => { setHoveredTeam(i); sound.play('hover'); }}
+                    onMouseLeave={() => setHoveredTeam(null)}
+                    onTouchStart={() => { setHoveredTeam(hoveredTeam === i ? null : i); sound.play('hover'); }}
+                  >
+                    <LinkFlip flat>{name}</LinkFlip>
+                    {/* role: top-left of the name */}
+                    <span style={{
+                      ...textStyle, lineHeight: 1, position: 'absolute',
+                      right: 'calc(100% + 8px)', bottom: '100%', transform: 'translateY(0.55em)',
+                      whiteSpace: 'nowrap', opacity: hoveredTeam === i ? 1 : 0,
+                      transition: 'opacity 0.2s ease', pointerEvents: 'none',
+                    }}>{role}</span>
+                  </p>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div style={{ gridColumn: '4 / 6' }}>
+              <p style={{ ...headingStyle, margin: 0 }}>Над проектом работали</p>
+              {/* Name in the 4th column, role in the 5th — plain text */}
+              <div style={{ marginTop: 40, display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 'var(--gap)', rowGap: 10 }}>
+                {data.team.map(({ name, role }) => (
+                  <Fragment key={name}>
+                    <p style={{ ...textStyle, margin: 0 }}>{name}</p>
+                    <p style={{ ...textStyle, margin: 0 }}>{role}</p>
+                  </Fragment>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── Testimonial — only when the case provides one. Quote is h2; below
               it a small avatar circle + name/role + one phrase. ── */}
         {data.testimonial && (
         <div style={{ marginTop: 120, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-          <p style={{ ...h2Style, margin: 0, maxWidth: 820 }}>
+          {/* The size of the home headline; phones: the heading size */}
+          <p style={{ ...h2Style, margin: 0, maxWidth: 'min(100%, 1200px)',
+            fontSize: 'var(--hero-fs, min(var(--hero-size), 7.2vw))', lineHeight: 'var(--heading-lh)' }}>
             {data.testimonial.quote}
           </p>
-          <div style={{ marginTop: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-            {/* photo placeholder */}
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--c-surface)' }} />
+          {/* Name, then the position in grey — centred under the quote */}
+          <div style={{ marginTop: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? 12 : 4 }}>
+            {isMobile && <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--c-surface)' }} />}
             <p style={{ ...textStyle, margin: 0 }}>{data.testimonial.name}</p>
-            <p style={{ ...textStyle, margin: 0, opacity: 'var(--opacity-muted)' }}>{data.testimonial.phrase}</p>
+            <p style={{ ...textStyle, margin: 0, opacity: 'var(--opacity-muted)' }}>{data.testimonial.role}</p>
           </div>
         </div>
         )}
@@ -787,7 +798,8 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                           10px apart (PARA_GAP). */}
                       <div style={{
                         marginTop: isMobile ? 0 : 'calc(var(--text-size) * var(--text-lh))',
-                        paddingBottom: 8,
+                        // Desktop: twice the room under an opened description
+                        paddingBottom: isMobile ? 8 : 16,
                       }}>
                         {text.split('\n\n').map((para, k) => (
                           <p key={k} style={{ ...textStyle, margin: 0, marginTop: k === 0 ? 0 : PARA_GAP }}>{typo(para)}</p>
@@ -852,7 +864,6 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                     ))}
                   </div>
                 )}
-                {creditsAndQuote}
                 {/* Room for the pinned button and the menu under it */}
                 <div style={{ height: 120 }} />
               </>
@@ -930,16 +941,18 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
           document.body,
         )}
 
-        {/* ⌘ ⊖ ⊕ — bottom-left, same control as on the other pages */}
-        {!isMobile && (
+        {/* ⌘ ⊖ ⊕ — bottom-left, same control as on the other pages. Switched
+            off for now (flip SHOW_CASE_ZOOM to bring it back) */}
+        {!isMobile && SHOW_CASE_ZOOM && (
           <span className={s.zoomHint}>
             <button className={s.zoomKey} aria-label="Описание" onClick={zoomOut}>⊖</button>
             <button className={s.zoomKey} aria-label="Только картинки" onClick={zoomIn}>⊕</button>
           </span>
         )}
 
-        {/* Credits + testimonial — on a phone they live in the «о проекте» pane */}
-        {!isMobile && creditsAndQuote}
+        {/* Credits + testimonial — always at the end of the case, phones too
+            (they are not tucked away in «о проекте») */}
+        {creditsAndQuote}
 
       </div>
 

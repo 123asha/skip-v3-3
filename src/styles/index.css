@@ -42,7 +42,7 @@
      (38.4px, reached at 2240px — an iMac). Phones: see the media blocks. */
   --heading-size: max(32px, min(38.4px, 32px + (100vw - 1440px) * 0.008));
   --heading-weight: 450;
-  --heading-lh: 1.104;   /* 0.96, then 15% more air */
+  --heading-lh: 1.07;    /* 0.96, then a little more air (1.104 was a touch much) */
   --heading-ls: -0.024em;
 
   --page-title-size: var(--heading-size);

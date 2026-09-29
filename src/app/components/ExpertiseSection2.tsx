@@ -94,6 +94,9 @@ export const EXPERTISE_DEFAULT_LEVEL = 2;
 // Telegram chat with the studio, the message already typed — about this
 // service, in the page's language
 const TELEGRAM = 'skpdsgn';
+// Where «задать вопрос» leads for now: the contact form at the page's foot.
+// Switch to 'telegram' to open the prefilled chat instead (kept intact).
+const ASK_GOES_TO: 'footer' | 'telegram' = 'footer';
 function AskButton({ service }: { service: string }) {
   const name = t(service);
   const text = LANG === 'en'
@@ -103,7 +106,13 @@ function AskButton({ service }: { service: string }) {
     <a
       href={`https://t.me/${TELEGRAM}?text=${encodeURIComponent(text)}`}
       target="_blank" rel="noopener noreferrer"
-      onClick={e => e.stopPropagation()}   // not a click on the row
+      onClick={e => {
+        e.stopPropagation();   // not a click on the row
+        if (ASK_GOES_TO === 'footer') {
+          e.preventDefault();
+          document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }}
       style={{
         display: 'inline-flex', alignItems: 'center', marginTop: 20,
         // The header pill's size, in grey

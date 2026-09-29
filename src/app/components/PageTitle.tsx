@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import s from './CasesPage.module.css';
 
@@ -14,6 +14,17 @@ import s from './CasesPage.module.css';
 export function SiteTitle({ title: text, releaseAt }: { title: string; releaseAt?: string }) {
   const ref = useRef<HTMLHeadingElement>(null);
 
+
+  // Phone: the title lives inside the page's own scroll layer, so it scrolls
+  // away natively — moving a pinned copy after the scroll made it shake in
+  // iOS Safari
+  const [host, setHost] = useState<Element>(document.body);
+  useLayoutEffect(() => {
+    if (window.innerWidth > 768) return;
+    const page = document.querySelector('[class*="_page_"]');
+    if (page) setHost(page);
+  }, []);
+
   // Phone: publish the title's height (it may wrap), so the content starts
   // 40px under it (--inner-content-top, index.css)
   useEffect(() => {
@@ -25,19 +36,7 @@ export function SiteTitle({ title: text, releaseAt }: { title: string; releaseAt
     const ro = new ResizeObserver(measure);
     ro.observe(title);
     return () => { ro.disconnect(); root.style.removeProperty('--m-title-h'); };
-  }, []);
-
-  // Phone: the title simply scrolls away with the page (it's pinned at body
-  // level, so it's moved by the page's own scroll)
-  useEffect(() => {
-    const title = ref.current;
-    if (!title || window.innerWidth > 768) return;
-    const page = () => document.querySelector<HTMLElement>('[class*="_page_"]');
-    const follow = () => { title.style.translate = `0 ${-(page()?.scrollTop ?? 0)}px`; };
-    follow();
-    window.addEventListener('scroll', follow, { capture: true, passive: true });
-    return () => window.removeEventListener('scroll', follow, { capture: true });
-  }, []);
+  }, [host]);   // re-measure once the title has moved into the page
 
   useEffect(() => {
     const title = ref.current;
@@ -65,7 +64,7 @@ export function SiteTitle({ title: text, releaseAt }: { title: string; releaseAt
 
   return createPortal(
     <h1 ref={ref} className={`${s.title} ${s.titleCol2}`}>{text}</h1>,
-    document.body,
+    host,
   );
 }
 

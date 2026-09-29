@@ -390,6 +390,8 @@
   /* Phone: the header owns the top row, so the title takes the next one
      (left edge = the page edge), and the filter chips the one after it */
   .title.titleCol2 {
+    /* In the page's own scroll layer (PageTitle): scrolls natively */
+    position: absolute;
     top: calc(var(--header-h) + 40px);
     padding-top: 0 !important;
   }

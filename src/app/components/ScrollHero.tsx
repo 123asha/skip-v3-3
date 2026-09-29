@@ -230,7 +230,8 @@ const MENU_TYPE: React.CSSProperties = {
 // Manual kerning for pairs the display face sets too loose at this size
 // Hand kerning for «для» at display size: «д» gives «л» a little air (their
 // feet touched), «л» tucks into «я».
-const KERN: Record<string, string> = { 'д': '0.03em', 'л': '-0.05em' };
+// (д's extra room over the headline's -0.03em tracking: 0.06em, then 20% less)
+const KERN: Record<string, string> = { 'д': '0.018em', 'л': '-0.05em' };
 function kernHeadline(line: string) {
   return line.split(/(д(?=л)|л(?=я))/).map((part, i) =>
     KERN[part] ? <span key={i} style={{ letterSpacing: KERN[part] }}>{part}</span> : part);

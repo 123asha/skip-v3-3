@@ -22,8 +22,9 @@
 
 /* Mobile: hide tabs (Сделали / Брендинг / Диджитал) — not needed on small screen. */
 @media (max-width: 768px) {
+  /* Phone: «Недавние проекты» stays, in the side margins */
   .tabsBar {
-    display: none;
+    padding: 0 var(--pad);
   }
 }
 

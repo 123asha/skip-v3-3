@@ -921,8 +921,11 @@ function AppInner() {
     const onScroll = (e: Event) => {
       const el = e.target instanceof HTMLElement ? e.target : null;
       if (!el || !el.className.toString().includes('_page_')) return;
-      const y = el.scrollTop;
-      if (Math.abs(y - last) < 6) return;
+      // iOS rubber-bands past both ends — ignore that, and small moves, or
+      // the menu flips back and forth (it shook)
+      const max = el.scrollHeight - el.clientHeight;
+      const y = Math.max(0, Math.min(max, el.scrollTop));
+      if (y !== el.scrollTop || Math.abs(y - last) < 16) return;
       root.toggleAttribute('data-nav-hidden', y > last && y > 80);
       last = y;
     };
@@ -1527,7 +1530,7 @@ function AppInner() {
               width: isMobile ? '100%' : 'calc(2 / 5 * (100% - 4 * var(--gap)) + 1 * var(--gap))',
               // Taller than one line-height so descenders (g, p, у) aren't
               // clipped by the overflow that hides the off-screen names.
-              height: isMobile ? 'calc(clamp(36px, 10vw, 56px) * 1.4)' : 'calc(var(--heading-size) * 1.4)',
+              height: 'calc(var(--heading-size) * 1.4)',
               display: 'flex',
               alignItems: 'center',
               overflow: 'hidden',
@@ -1553,7 +1556,7 @@ function AppInner() {
                 alignItems: 'center',
                 gap: isMobile ? 24 : 40,
                 fontFamily: 'var(--font-display)',
-                fontSize: isMobile ? 'clamp(36px, 10vw, 56px)' : 'var(--heading-size)',
+                fontSize: 'var(--heading-size)',   // the heading style on every screen
                 fontWeight: 'var(--heading-weight)' as React.CSSProperties['fontWeight'],
                 lineHeight: 'var(--heading-lh)',
                 letterSpacing: 'var(--heading-ls)',

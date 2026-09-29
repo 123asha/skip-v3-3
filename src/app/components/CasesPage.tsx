@@ -674,7 +674,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
     const follow = () => {
       const y = page.scrollTop;
       const title = getTitle();
-      if (title) title.style.translate = `0 ${-y}px`;
+      if (title && !isMobile) title.style.translate = `0 ${-y}px`;
       if (!isMobile) bar.style.top = `${Math.max(stickTop, baseTop - y)}px`;
     };
     const place = () => {

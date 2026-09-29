@@ -396,7 +396,7 @@
   /* The filter chips sit just above the bottom menu, under the thumb */
   .tabsBar {
     top: auto !important;
-    bottom: calc(var(--pad) + var(--text-size) * var(--text-lh) + 17px + 10px);
+    bottom: var(--m-above-menu);
     height: auto;
     left: 0;
     right: 0;

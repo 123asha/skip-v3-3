@@ -637,16 +637,29 @@
    links' grey box across the row, «Написать» at its right end.
    (The top row now holds language, social and time — App.tsx.) */
 @media (max-width: 768px) {
+  /* Menu chips centred above the footer line */
   .nav.navBoxed {
     top: auto;
-    bottom: var(--pad);
-    left: var(--pad);
-    right: var(--pad) !important;
+    bottom: var(--m-menu-bottom);
+    left: 0;
+    right: 0 !important;
+    justify-content: center;
+    pointer-events: none;
   }
+  .nav.navBoxed > * { pointer-events: auto; }
+  /* «Написать» goes up to the header's right corner, on the logo's line */
+  .navWrite {
+    position: fixed;
+    top: calc(6px + (52px - (var(--text-size) * var(--text-lh) + 17px)) / 2);
+    right: var(--m-head-x);
+  }
+  /* The header keeps 10px side margins (the logo's glyph sits 10px into
+     its box) */
+  .logo { left: calc(var(--m-head-x) - 10px) !important; }
   /* The links as chips, like the filter chips: outlined pills that touch at
      rest, the current section's neighbours spreading from it with a dotted
      link (settleChips, App.tsx) */
-  .navLinks { flex: 1; background: none; padding: 0; gap: 0; height: auto; }
+  .navLinks { flex: none; background: none; padding: 0; gap: 0; height: auto; }
   .navLinks > span { position: relative; }
   .navLinks > span + span::before {
     content: '';
@@ -659,7 +672,8 @@
   }
   .navLinks .navLink {
     text-decoration: none;
-    padding: 3px 10px 4px;
+    /* Bigger chips (the type stays the same) */
+    padding: 7px 14px 8px;
     border: 1px solid var(--c-border);
     border-radius: 999px;
     background: var(--c-bg);

@@ -1310,37 +1310,38 @@ function AppInner() {
         <span id={FOOTER_SLOT_ID} style={{ display: 'contents' }} />
       </div>}
 
-      {/* ── Mobile top bar — language, social and time in one row at the top
-          right, centred on the logo's line (the menu moved to the bottom of
-          the screen, under the thumb — see .nav in App.module.css). ── */}
+      {/* ── Phone header and footer. Header: the logo, the language switch
+          right beside it (centred on the logo's line), «Написать» in the top
+          right corner (.navWrite, App.module.css). Footer: time on the left,
+          social on the right, on the bottom line; the menu chips sit centred
+          just above it (.nav). ── */}
       {isMobile && (
-        <div style={{
-          position: 'fixed',
-          right: 'var(--pad)',
-          // Same box as the logo (top 6px, 52px tall), so the row centres on it
-          top: 6,
-          height: 52,
-          zIndex: 200,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 16,
-          color: '#fff',
-          mixBlendMode: 'difference',
-          pointerEvents: 'none',
-          userSelect: 'none',
-          fontSize: 'var(--text-size)',
-          fontFamily: 'var(--font)',
-          fontWeight: 'var(--text-weight)',
-          letterSpacing: 'var(--text-ls)',
-          lineHeight: 'var(--text-lh)',
-        }}>
-          <a href={otherLangHref(pathname)} style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35, pointerEvents: 'auto' }}>{LANG === 'en' ? '/ru' : '/en'}</a>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', pointerEvents: 'auto' }}>
+        <>
+          <a
+            href={otherLangHref(pathname)}
+            style={{
+              position: 'fixed', zIndex: 200,
+              // Right of the logo (its box: 10px−10px from the edge, 72.5px
+              // wide; top 6px, 52px tall), centred on its line
+              left: 'calc(var(--m-head-x) - 10px + 72.5px + 6px)', top: 6, height: 52,
+              display: 'flex', alignItems: 'center',
+              color: '#fff', mixBlendMode: 'difference', opacity: 0.35, textDecoration: 'none',
+              fontSize: 'var(--text-size)', fontFamily: 'var(--font)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+              letterSpacing: 'var(--text-ls)', lineHeight: 'var(--text-lh)',
+            }}
+          >{LANG === 'en' ? '/ru' : '/en'}</a>
+          <div style={{
+            position: 'fixed', left: 'var(--pad)', right: 'var(--pad)', bottom: 'var(--pad)',
+            height: 'var(--m-foot)', zIndex: 200,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            color: '#fff', mixBlendMode: 'difference', userSelect: 'none',
+            fontSize: 'var(--text-size)', fontFamily: 'var(--font)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+            letterSpacing: 'var(--text-ls)', lineHeight: 'var(--text-lh)',
+          }}>
             <span><MoscowTime /> (GMT+3)</span>
-            {/* Social icons at the far right */}
-            <SocialLinks />
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><SocialLinks /></div>
           </div>
-        </div>
+        </>
       )}
 
       {page === 'cases' && <CasesPage

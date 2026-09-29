@@ -889,8 +889,8 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
         {isMobile && createPortal(
           <div style={{
             position: 'fixed', left: '50%', zIndex: 205,
-            // Above the bottom menu (its box ≈ 37px) with a 10px gap
-            bottom: 'calc(var(--pad) + 47px)',
+            // 10px above the bottom menu
+            bottom: 'var(--m-above-menu)',
             transform: `translate(-50%, ${paneBtn ? 0 : 12}px)`,
             opacity: paneBtn ? 1 : 0,
             pointerEvents: paneBtn ? 'auto' : 'none',

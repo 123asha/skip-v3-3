@@ -67,6 +67,13 @@
   --header-h: 58px;
   /* Space between the header's menu items (links and «Написать») */
   --nav-gap: 13px;
+  /* Phone bottom stack (used ≤768px): footer line (the social circles'
+     height), the menu chips 10px above it, anything else 10px above those */
+  --m-foot: 24px;
+  --m-head-x: 10px;   /* header side margins */
+  --m-chip-h: calc(var(--text-size) * var(--text-lh) + 16px);
+  --m-menu-bottom: calc(var(--pad) + var(--m-foot) + 10px);
+  --m-above-menu: calc(var(--m-menu-bottom) + var(--m-chip-h) + 10px);
   /* Space between neighbouring chips — a thin line links them across it */
   --chip-gap: 12px;
   /* Inner pages: the menu links sit on the logo line in column 2 and the

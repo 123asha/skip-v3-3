@@ -74,6 +74,16 @@ function TagChip({ label }: { label: string }) {
  * body-level copy tracks it: at its place until it reaches `top`, then held
  * there — the same inversion the nav and section titles use.
  */
+// A small sideways arrow in the text colour — for the phone's «о проекте»
+// button, which slides the page left/right
+function SideArrow({ left }: { left?: boolean }) {
+  return (
+    <svg width="12" height="10" viewBox="0 0 12 10" fill="none" aria-hidden="true" style={{ transform: left ? 'scaleX(-1)' : undefined, flexShrink: 0 }}>
+      <path d="M1 5h10M6 1l4 4-4 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function PinnedInvert({ placeholderRef, children }: { placeholderRef: React.RefObject<HTMLDivElement>; children: React.ReactNode }) {
   const floatRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -410,7 +420,6 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
   const picsPaneRef = useRef<HTMLDivElement>(null);
   const aboutPaneRef = useRef<HTMLDivElement>(null);
   const [paneH, setPaneH] = useState<number | undefined>(undefined);
-  const [paneBtn, setPaneBtn] = useState(false);
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   useLayoutEffect(() => {
     const el = aboutPane ? aboutPaneRef.current : picsPaneRef.current;
@@ -421,18 +430,6 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
     ro.observe(el);
     return () => ro.disconnect();
   }, [aboutPane, isMobileEarly]);
-  // The button shows once the page is scrolled a little past the cover
-  useEffect(() => {
-    if (!isMobileEarly) return;
-    const onScroll = () => {
-      const box = paneBoxRef.current;
-      // (on «о проекте» it stays: that page has no cover to scroll past)
-      if (box) setPaneBtn(aboutPaneRef.current?.dataset.on === '1' || box.getBoundingClientRect().top < window.innerHeight * 0.7);
-    };
-    onScroll();
-    window.addEventListener('scroll', onScroll, { capture: true, passive: true });
-    return () => window.removeEventListener('scroll', onScroll, { capture: true });
-  }, [isMobileEarly]);
   const showPane = (about: boolean) => {
     if (about === aboutPane) return;
     setAboutPane(about);
@@ -923,20 +920,28 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
           );
         })()}
 
-        {/* Phone: grey button over the menu — «о проекте» from the pictures,
-            «скипнуть» back from the copy; shows once past the cover */}
+        {/* Phone: grey button over the menu — «о проекте →» from the pictures,
+            «← скипнуть описание» back from the copy (the arrow says the page
+            slides sideways, as a swipe does). Shown all the way down, until
+            the contact form comes up */}
         {isMobile && createPortal(
           <div style={{
             // Full width, within the side margins
             position: 'fixed', left: 'var(--pad)', right: 'var(--pad)', zIndex: 205,
             // 10px above the bottom menu
             bottom: 'var(--m-above-menu)',
-            transform: `translateY(${paneBtn ? 0 : 12}px)`,
-            opacity: paneBtn ? 1 : 0,
-            pointerEvents: paneBtn ? 'auto' : 'none',
+            transform: `translateY(${formInView ? 12 : 0}px)`,
+            opacity: formInView ? 0 : 1,
+            pointerEvents: formInView ? 'none' : 'auto',
             transition: 'opacity 0.3s ease, transform 0.3s ease, bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
           }}>
-            <PillButton fullWidth onClick={() => showPane(!aboutPane)}>{aboutPane ? 'скипнуть описание' : 'о проекте'}</PillButton>
+            <PillButton fullWidth onClick={() => showPane(!aboutPane)}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                {aboutPane && <SideArrow left />}
+                {aboutPane ? 'скипнуть описание' : 'о проекте'}
+                {!aboutPane && <SideArrow />}
+              </span>
+            </PillButton>
           </div>,
           document.body,
         )}

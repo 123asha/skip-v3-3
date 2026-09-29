@@ -199,9 +199,12 @@
   [class*="_contactWrap_"] {
     min-height: auto !important;
     padding-top: var(--space-xl) !important;
-    padding-bottom: var(--space-xl) !important;
+    /* The card itself is one screen tall and ends the page (as on desktop) */
+    padding-bottom: 0 !important;
   }
-  [class*="_contactCard_"] { min-height: auto !important; }
+  /* One screen tall on phones too; the form sits a touch above its middle
+     (ContactForm's bottom margin), clear of the bottom menu */
+  [class*="_contactCard_"] { min-height: 100svh !important; }
 
   /* Page title */
   [class*="_title_"] {

@@ -1108,6 +1108,17 @@ function AppInner() {
           gsap.to(kRef.current,   { x: 0, duration: 0.22, ease: 'power3.out' });
           gsap.to(pRef.current,   { x: 0, duration: 0.22, ease: 'power3.out' });
         }}
+        // Touch: a tap fires the hover but never a mouse-leave, so the letters
+        // stayed spread — on a touch release they settle back after a beat
+        // (a timer, not a delayed tween: the emulated mouse-enter that follows
+        // the touch kills the letters' tweens)
+        onTouchEnd={() => {
+          window.setTimeout(() => {
+            const refs = [dotRef.current, sRef.current, kRef.current, pRef.current];
+            gsap.killTweensOf(refs);
+            gsap.to(refs, { x: 0, y: 0, duration: 0.22, ease: 'power3.out' });
+          }, 350);
+        }}
       >
         <svg fill="none" preserveAspectRatio="none" viewBox="0 0 52.5283 32" overflow="visible" style={{ overflow: 'visible' }}>
           <g ref={sRef}><path d={logoPaths.s} fill="#ffffff" /></g>

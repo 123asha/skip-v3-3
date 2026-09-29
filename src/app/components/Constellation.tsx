@@ -162,7 +162,9 @@ export default function Constellation({
     const SIDE_PAD = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pad')) || 0;
     // Balls at ~1.5x the size that fits the full word on one row — they
     // land as a heap rather than a line
-    const BALL_SCALE = 1.125; // -15% from 1.47, then -10% more
+    // Phones (≤768px): 1.5× bigger — at the minimum radius they read as
+    // dots on a narrow screen
+    const BALL_SCALE = 1.125 * (WIDTH <= 768 ? 1.5 : 1); // -15% from 1.47, then -10% more
     const R = BALL_SCALE * Math.max(R_MIN, Math.min(R_MAX, (WIDTH / WORD_ORDER.length) * 0.484, (WIDTH - 2 * SIDE_PAD) / 21.84));
     // The sphere filter magnifies the middle of a ball by π/2, so the letter
     // is set smaller to keep its apparent size where the eye lands

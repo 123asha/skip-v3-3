@@ -216,8 +216,10 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
     fontFamily: 'var(--font)', fontSize: 'var(--text-size)',
     fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
     lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)',
-    // Plain text, same two greys the cases tabs use — no underline, no glyph
+    // Same two greys the cases tabs use, with a light dotted underline
     color: active ? 'var(--c-text)' : 'var(--c-text-muted)',
+    textDecoration: 'underline', textDecorationStyle: 'dotted',
+    textDecorationColor: 'var(--c-text-muted)', textUnderlineOffset: '3px',
     transition: 'color 0.2s',
   });
 
@@ -316,8 +318,10 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
           {/* Input + consent travel together as one block, centred in the
               form rectangle — the consent reads as the input's own fine
               print instead of drifting down to the footer line */}
-          <div style={{ marginTop: 'auto', marginBottom: 'auto', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 }}>
-          <div ref={fieldsRef} className={s.contactFields} style={{ width: '100%', marginTop: 64 }}>
+          {/* Phone: the same 40px from the heading block to the field and from
+              the field to the consent */}
+          <div style={{ marginTop: 'auto', marginBottom: 'auto', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? 40 : 32 }}>
+          <div ref={fieldsRef} className={s.contactFields} style={{ width: '100%', marginTop: isMobile ? 40 : 64 }}>
             {status === 'sent' ? (
               <p className={s.contactTitle} style={{ textAlign: 'center', margin: 0 }}>
                 Спасибо! Скоро напишем вам в Telegram.
@@ -369,7 +373,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
             style={isMobile
               // Phone: a compact block centred under the field, the text wrapping
               // on its own left edge next to the box
-              ? { gap: 10, justifyContent: 'center', alignItems: 'flex-start', maxWidth: 300, marginLeft: 'auto', marginRight: 'auto', boxSizing: 'border-box' }
+              ? { gap: 10, justifyContent: 'center', alignItems: 'flex-start', marginLeft: 'auto', marginRight: 'auto', boxSizing: 'border-box', whiteSpace: 'nowrap' }
               : { gap: 10, justifyContent: 'center', alignItems: 'flex-start' }}
             onClick={() => setChecked(!checked)}
           >
@@ -380,8 +384,9 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
                 </svg>
               )}
             </div>
-            <span className={s.checkboxLabel} style={{ textAlign: 'left' }}>
-              Даю согласие на обработку персональных данных{isMobile ? ' ' : <br />}в&nbsp;соответствии с&nbsp;
+            {/* Phone: the fine print a pixel smaller, so its two lines fit */}
+            <span className={s.checkboxLabel} style={{ textAlign: 'left', ...(isMobile ? { fontSize: 13 } : null) }}>
+              Даю согласие на обработку персональных данных<br />в&nbsp;соответствии с&nbsp;
               <button
                 style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'inherit', letterSpacing: 'inherit', lineHeight: 'inherit', color: 'inherit', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}
                 onClick={e => { e.stopPropagation(); onNavigatePolicy?.(); }}

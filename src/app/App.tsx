@@ -27,7 +27,7 @@ import { ToolsSection } from './components/ToolsSection';
 import { MediaSection } from './components/MediaSection';
 import { ExpertiseSection2 } from './components/ExpertiseSection2';
 import LabPage from './components/LabPage';
-import { SiteTitle } from './components/PageTitle';
+import { SiteTitle, ScrollTopArrow } from './components/PageTitle';
 import { FOOTER_SLOT_ID } from './components/ZoomControl';
 import { LANG, LANG_PREFIX, stripLang, otherLangHref, t } from './i18n';
 
@@ -1350,6 +1350,8 @@ function AppInner() {
           releaseAt={page === 'expertiza' ? '[data-title-release]' : undefined}
         />
       )}
+      {/* Inner section pages: an up arrow under the title at the very end */}
+      {sectionTitleFor(pathname) && page !== 'home' && <ScrollTopArrow key={pathname} />}
       {page === 'policy' && <PolicyPage />}
       {page === 'index2' && <Index2Page />}
       {page === 'case-template' && <CaseTemplatePage onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}

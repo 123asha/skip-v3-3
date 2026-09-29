@@ -122,6 +122,7 @@ export const EN: Record<string, string> = {
     'The system is alive, warm and dynamic. With it Senior*s speaks even more clearly as a place with a light of its own, while staying visually clear and emotionally close to its community.',
   'скипнуть': 'skip it',
   'о проекте': 'about the project',
+  'Наверх': 'Back to top',
   'все услуги': 'all services',
 
   // ── Services ─────────────────────────────────────────────────────────────

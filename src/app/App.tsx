@@ -928,14 +928,19 @@ function AppInner() {
       const max = el.scrollHeight - el.clientHeight;
       const y = Math.max(0, Math.min(max, el.scrollTop));
       const atEnd = y >= max - 2;
-      if (!atEnd && Math.abs(y - last) < 16) return;
+      // Once the contact form's start is on screen: the menu stays out and the
+      // filter chips above it go (index.css / CasesPage.module.css)
+      const form = document.querySelector('[class*="contactWrap"]');
+      const formShown = !!form && form.getBoundingClientRect().top < window.innerHeight * 0.85;
+      root.toggleAttribute('data-form-view', formShown);
+      if (!atEnd && Math.abs(y - last) < 16) { if (formShown) root.removeAttribute('data-nav-hidden'); return; }
       const down = y > last;
       // At the very end the menu stays: the footer keeps its own room above it
-      root.toggleAttribute('data-nav-hidden', hideOnDown && !atEnd && down && y > 80);
+      root.toggleAttribute('data-nav-hidden', hideOnDown && !atEnd && !formShown && down && y > 80);
       last = y;
     };
     window.addEventListener('scroll', onScroll, { capture: true, passive: true });
-    return () => { window.removeEventListener('scroll', onScroll, { capture: true }); root.removeAttribute('data-nav-hidden'); };
+    return () => { window.removeEventListener('scroll', onScroll, { capture: true }); root.removeAttribute('data-nav-hidden'); root.removeAttribute('data-form-view'); };
   }, [isMobile, page]);
   const navLinkStyle = (target: string): React.CSSProperties | undefined => {
     // The /services-2 sandbox counts as the services section

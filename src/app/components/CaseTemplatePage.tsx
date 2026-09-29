@@ -43,6 +43,26 @@ function Img({ ar, src, style, round }: { ar: string; src?: string; style?: Reac
   );
 }
 
+// A case's category chip opens the projects page with that category picked
+// (handed over through sessionStorage — the app's router has no query part)
+const TAG_KEYS: Record<string, string> = { 'Брендинг': 'branding', 'Веб': 'web', 'Продукт': 'interfaces' };
+function TagChip({ label }: { label: string }) {
+  const key = TAG_KEYS[label];
+  if (!key) return <span className={s.chip}>{label}</span>;
+  return (
+    <button
+      className={s.chip}
+      onClick={() => {
+        try { sessionStorage.setItem('casesTag', key); } catch { /* private mode */ }
+        const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+        const lang = location.pathname.replace(base, '').startsWith('/en') ? '/en' : '';
+        window.history.pushState({}, '', base + lang + '/cases');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }}
+    >{label}</button>
+  );
+}
+
 // ── Meta / caption row ───────────────────────────────────────────────────────
 // 5-col grid on the page's normal grid. The number sits at viewport centre+4px,
 // the description in columns 4–5. On mobile: number centred, text 4px below it
@@ -111,12 +131,13 @@ function MetaRow({
           {text.split('\n\n').map((para, k) => (
             <p key={k} style={{ ...textStyle, margin: 0, marginTop: k === 0 ? 0 : PARA_GAP }}>{typo(para)}</p>
           ))}
-          {tags && tags.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--chip-gap)', marginTop: PARA_GAP }}>
-              {tags.map(t => <span key={t} className={s.chip}>{t}</span>)}
+          {/* The chips, then the year right after them on the same row */}
+          {((tags && tags.length > 0) || num) && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--chip-gap)', marginTop: PARA_GAP }}>
+              {tags?.map(t => <TagChip key={t} label={t} />)}
+              {num && <span style={{ ...textStyle, opacity: 'var(--opacity-muted)' as any }}>{num}</span>}
             </div>
           )}
-          {num && <p style={{ ...textStyle, opacity: 'var(--opacity-muted)', margin: 0, marginTop: PARA_GAP }}>{num}</p>}
         </div>
       </div>
     );
@@ -641,7 +662,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
       {!isMobile && <div ref={typesRef} style={{ padding: '0 var(--pad)', marginTop: 10 }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--chip-gap)' }}>
           {data.tags.map(t => (
-            <span key={t} className={s.chip}>{t}</span>
+            <TagChip key={t} label={t} />
           ))}
         </div>
       </div>}
@@ -892,15 +913,16 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             «скипнуть» back from the copy; shows once past the cover */}
         {isMobile && createPortal(
           <div style={{
-            position: 'fixed', left: '50%', zIndex: 205,
+            // Full width, within the side margins
+            position: 'fixed', left: 'var(--pad)', right: 'var(--pad)', zIndex: 205,
             // 10px above the bottom menu
             bottom: 'var(--m-above-menu)',
-            transform: `translate(-50%, ${paneBtn ? 0 : 12}px)`,
+            transform: `translateY(${paneBtn ? 0 : 12}px)`,
             opacity: paneBtn ? 1 : 0,
             pointerEvents: paneBtn ? 'auto' : 'none',
             transition: 'opacity 0.3s ease, transform 0.3s ease, bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
           }}>
-            <PillButton onClick={() => showPane(!aboutPane)}>{aboutPane ? 'скипнуть описание' : 'о проекте'}</PillButton>
+            <PillButton fullWidth onClick={() => showPane(!aboutPane)}>{aboutPane ? 'скипнуть описание' : 'о проекте'}</PillButton>
           </div>,
           document.body,
         )}

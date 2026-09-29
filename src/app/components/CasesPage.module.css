@@ -407,7 +407,7 @@
   }
   .tabsRow { flex-wrap: wrap; padding: 0; row-gap: 5px; }
   /* Same size as the menu chips under them */
-  .tabsBarInner .chip { padding: 7px 14px 8px; }   /* text 1px higher */
+  .tabsBarInner .chip { padding: 8px 14px 7px; }   /* text placed exactly as in the menu chips */
   /* Full width, like the menu under it: the chips share the row, and a
      selection opens its gaps by shrinking them (ends stay put) */
   .tabsRow, .tabsBarInner { width: 100%; }

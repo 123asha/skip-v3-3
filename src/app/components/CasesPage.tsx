@@ -278,7 +278,14 @@ function ProjectCard({ ar, cats, title, desc, image, preview, video, onClick, se
 
 // ── CasesPage ─────────────────────────────────────────────────────────────────
 export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGridMode, onGridCols }: Props) {
-  const [activeTab, setActiveTab] = useState<string | null>(null);
+  // A case page's chip may hand over a category to open with
+  const [activeTab, setActiveTab] = useState<string | null>(() => {
+    try {
+      const t = sessionStorage.getItem('casesTag');
+      sessionStorage.removeItem('casesTag');
+      return t;
+    } catch { return null; }
+  });
   // The selected category pushes its neighbours up against the next chip and
   // keeps them there (utils/chipBounce)
   const tabsRowRef = useRef<HTMLDivElement>(null);

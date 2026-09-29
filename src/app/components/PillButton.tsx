@@ -10,8 +10,10 @@ import { sound } from '../sound/Sound';
  * App.module.css), so hovering any button on the site feels identical.
  */
 export default function PillButton({
-  children, variant = 'secondary', href, onClick, icon, style,
+  children, variant = 'secondary', href, onClick, icon, style, fullWidth,
 }: {
+  /** Stretch to the full width of its container */
+  fullWidth?: boolean;
   children: React.ReactNode;
   variant?: 'primary' | 'secondary';
   href?: string;
@@ -35,10 +37,11 @@ export default function PillButton({
     justifyContent: 'center',
     gap: icon ? 10 : 0,
     whiteSpace: 'nowrap',
+    ...(fullWidth ? { width: '100%', boxSizing: 'border-box' as const } : null),
   };
 
   const inner = (
-    <span className={s.newProjectFlipInner}>
+    <span className={s.newProjectFlipInner} style={fullWidth ? { width: '100%' } : undefined}>
       {[0, 1].map(f => (
         <span
           key={f}
@@ -71,6 +74,7 @@ export default function PillButton({
     display: 'inline-block',
     perspective: 'none',
     color: primary ? '#fff' : 'var(--c-text)',
+    ...(fullWidth ? { display: 'block', width: '100%' } : null),
     ...style,
   };
 

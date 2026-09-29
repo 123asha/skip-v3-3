@@ -42,7 +42,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
       return () => { cancelAnimationFrame(r1); cancelAnimationFrame(r2); };
     }
     setInvertShown(false);
-    const t = window.setTimeout(() => setInvertOn(false), 850);
+    const t = window.setTimeout(() => setInvertOn(false), 600);
     return () => window.clearTimeout(t);
   }, [atBottom]);
   useEffect(() => {
@@ -253,7 +253,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
               backdropFilter: 'invert(1)', WebkitBackdropFilter: 'invert(1)',
               opacity: atBottom && invertShown ? 1 : 0,
               // A calm system-theme-like switch: longer, eased at both ends
-              transition: 'opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'opacity 0.56s cubic-bezier(0.4, 0, 0.2, 1)',   // 0.8s, 30% quicker
             }}
           />,
           document.body,

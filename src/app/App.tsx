@@ -1080,7 +1080,7 @@ function AppInner() {
                     // (difference), so these are the pre-blend colours.
                     background: '#fff', color: '#000',
                     // Cube depth = half the pill's height
-                    transform: f ? 'rotateX(-90deg) translateZ(14px)' : 'translateZ(14px)',
+                    transform: f ? 'rotateX(-90deg) translateZ(18px)' : 'translateZ(18px)',
                   }}
                 >{label}</span>
               ))}

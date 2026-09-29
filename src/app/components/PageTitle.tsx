@@ -45,24 +45,28 @@ export function SiteTitle({ title: text, releaseAt }: { title: string; releaseAt
 }
 
 /**
- * Up arrow under the section title, shown once an inner page is scrolled all
- * the way down; a click glides back to the top. Sits where the title's own
- * line box ends (layout position — on /cases the title itself has scrolled
- * away by then), centred like the title.
+ * Up arrow shown once an inner page is scrolled all the way down; a click
+ * glides back to the top. Desktop: in the menu's row, just left of it and as
+ * tall as it. Phone (menu at the bottom): centred in the top bar, on the
+ * logo's line.
  */
 export function ScrollTopArrow() {
   const [shown, setShown] = useState(false);
-  const [top, setTop] = useState(0);
+  const [pos, setPos] = useState<React.CSSProperties>({});
   const scroller = () => document.querySelector<HTMLElement>('[class*="_page_"]');
   useEffect(() => {
     const check = () => {
       const page = scroller();
       if (!page) { setShown(false); return; }
       setShown(page.scrollTop + page.clientHeight >= page.scrollHeight - 60);
-      const title = document.querySelector<HTMLElement>('body > h1[class*="titleCol2"]');
-      if (title) {
-        const space = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--space-xs')) || 0;
-        setTop(title.offsetTop + title.offsetHeight + space);
+      const nav = document.querySelector('nav')?.getBoundingClientRect();
+      if (!nav) return;
+      if (window.innerWidth <= 768) {
+        // Top bar: the logo's box is 6px from the top, 52px tall
+        setPos({ top: 6 + (52 - 30) / 2, left: '50%', transform: 'translateX(-50%)' });
+      } else {
+        const pz = parseFloat(document.documentElement.style.zoom || '1') || 1;
+        setPos({ top: nav.top / pz, left: (nav.left / pz) - 10 - nav.height / pz, width: nav.height / pz, height: nav.height / pz });
       }
     };
     check();
@@ -79,17 +83,18 @@ export function ScrollTopArrow() {
       aria-label="Наверх"
       onClick={() => scroller()?.scrollTo({ top: 0, behavior: 'smooth' })}
       style={{
-        position: 'fixed', left: '50%', top, zIndex: 199,
-        width: 40, height: 40, borderRadius: '50%', border: 'none', padding: 0,
+        position: 'fixed', zIndex: 201,
+        width: 30, height: 30, borderRadius: 4, border: 'none', padding: 0,
         background: 'var(--c-text)', color: '#fff', cursor: 'pointer',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
+        ...pos,
         opacity: shown ? 1 : 0,
-        transform: `translate(-50%, ${shown ? 0 : 8}px)`,
+        translate: `0 ${shown ? 0 : -6}px`,
         pointerEvents: shown ? 'auto' : 'none',
-        transition: 'opacity 0.3s ease, transform 0.3s ease',
+        transition: 'opacity 0.3s ease, translate 0.3s ease',
       }}
     >
-      <svg width="12" height="14" viewBox="0 0 12 14" fill="none" aria-hidden="true">
+      <svg width="10" height="12" viewBox="0 0 12 14" fill="none" aria-hidden="true">
         <path d="M6 13V1M1 6l5-5 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </button>,

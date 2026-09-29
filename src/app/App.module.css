@@ -199,9 +199,9 @@
   mix-blend-mode: normal;
   /* The links' box, then the smallest gap in use (10px), then «Написать» */
   gap: 10px;
-  /* The box stretches to the button's height — exactly the same top and
-     bottom in every browser (baseline alignment drifted in Safari) */
-  align-items: stretch;
+  /* Both centred on one line — the box is sized explicitly (below), so
+     no browser's baseline or stretch rules can shift it */
+  align-items: center;
   /* Plain colours — the grey links use the muted grey itself, not its inverse */
   --c-text-muted-inv: var(--c-text-muted);
 }
@@ -213,12 +213,15 @@
   gap: var(--nav-gap);
   background: var(--c-surface);
   border-radius: 4px;
-  padding: 0 12px;
-  /* 1px past the button top and bottom: the light box reads smaller than
-     the dark pill at the same size */
-  margin: -1px 0;
+  /* Exactly the pill's height: one text line + its 8px / 9px padding */
+  height: calc(var(--text-size) * var(--text-lh) + 17px);
+  padding: 0 14px;
+  box-sizing: border-box;
 }
-.navBoxed .navPill { background: var(--c-text) !important; color: #fff !important; }
+/* No browser focus ring on a click; keyboard focus still shows */
+.navLinks a:focus { outline: none; }
+.navLinks a:focus-visible { outline: 1px solid var(--c-text); outline-offset: 2px; }
+.navBoxed .navPill { background: var(--c-text) !important; color: #fff !important; padding: 8px 14px 9px; }
 
 /* Nav-sized face of the site's pill button — same 4px corners */
 .navPill {

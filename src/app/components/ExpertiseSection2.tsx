@@ -372,7 +372,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
       {onAllServices && (
         // Same visible gap as above «больше проектов» on the home page (76px
         // from the last line of text; the last row adds its own 12px padding)
-        <div style={{ marginTop: 64, display: 'flex', justifyContent: 'center' }}>
+        <div style={{ marginTop: 64, display: 'flex', justifyContent: 'flex-start' }}>
           <PillButton onClick={onAllServices}>все услуги</PillButton>
         </div>
       )}

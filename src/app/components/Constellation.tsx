@@ -177,7 +177,10 @@ export default function Constellation({
     {
       const f = sphereRef.current, feImg = f?.querySelector('feImage'), feMap = f?.querySelector('feDisplacementMap');
       if (f && feImg && feMap) {
-        const N = 128;
+        // One map pixel per device pixel of the ball (a fixed 128px map,
+        // stretched over a big ball on a Retina screen, bent the letters'
+        // edges into visible steps)
+        const N = Math.min(1024, Math.max(128, Math.ceil(2 * R * (window.devicePixelRatio || 1))));
         const c = document.createElement('canvas'); c.width = N; c.height = N;
         const ctx = c.getContext('2d')!;
         const img = ctx.createImageData(N, N);

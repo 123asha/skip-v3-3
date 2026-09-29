@@ -1459,7 +1459,13 @@ function AppInner() {
 
         {/* The same table as on /services — one source, so the two never drift */}
         <div>
-          <ExpertiseSection2 showHeading />
+          <ExpertiseSection2
+            showHeading
+            onAllServices={() => {
+              if (expertizaLinkRef.current) flyToTitle('Услуги', expertizaLinkRef.current, '/services');
+              else navigate('/services');
+            }}
+          />
         </div>
 
         {/* Trusted-by clients — moved below Cases */}

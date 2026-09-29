@@ -150,15 +150,16 @@
 }
 
 /* Chips standing side by side are linked like the nodes of a graph: a thin
-   line runs across the gap from each chip to the one before it */
+   dotted line runs across the gap from each chip to the one before it */
 .chip { position: relative; }
 .chip + .chip::before {
   content: '';
   position: absolute;
   top: 50%;
   right: calc(100% + 1px);
-  width: var(--chip-gap);
-  border-top: 1px solid var(--c-border);
+  /* --pull: set while a neighbour springs away (utils/chipBounce.ts) */
+  width: calc(var(--chip-gap) + var(--pull, 0px));
+  border-top: 1px dotted var(--c-text-muted);
   pointer-events: none;
 }
 

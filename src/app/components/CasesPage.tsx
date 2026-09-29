@@ -13,6 +13,7 @@ function img(path: string): { image: string; ar: AR } {
   return { image: asset(path), ar: arSuffix(path) === 'v' ? V : H };
 }
 import { useReveal } from '../hooks/useReveal';
+import { bounceChips } from '../utils/chipBounce';
 
 interface Props {
   onBack: () => void;
@@ -609,38 +610,68 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
     applyFilters(activeTab, next);
   };
 
-  // Desktop: the filter chips sit centred under the page title, their top
-  // one --space-xs below the title's baseline — measured from the text, not
-  // the line box, whose empty descender room would add to the gap.
-  // (Phone: fixed rows in CSS.)
+  // The filter chips sit centred under the page title (desktop: their top one
+  // --space-xs below the title's baseline — measured from the text, not the
+  // line box, whose empty descender room would add to the gap; phone: the
+  // fixed row in CSS). As the page scrolls the title goes up with it, and the
+  // chips follow until they reach the top — the nav's line on desktop, just
+  // under the top bar on a phone — where they stay.
   useLayoutEffect(() => {
     const bar = tabsBarRef.current;
-    if (!bar) return;
-    const clear = () => { bar.style.left = ''; bar.style.top = ''; };
-    if (isMobile) { clear(); return; }
+    const page = pageRef.current;
+    if (!bar || !page) return;
+    let baseTop = 0;
+    let stickTop = 0;
+    const getTitle = () => document.querySelector<HTMLElement>('body > h1[class*="titleCol2"]');
+    const pz = () => parseFloat(document.documentElement.style.zoom || '1') || 1;
+    const follow = () => {
+      const y = page.scrollTop;
+      const title = getTitle();
+      if (title) title.style.translate = `0 ${-y}px`;
+      bar.style.top = `${Math.max(stickTop, baseTop - y)}px`;
+    };
     const place = () => {
-      const title = document.querySelector<HTMLElement>('body > h1[class*="titleCol2"]');
+      const title = getTitle();
       if (!title) return;
-      // Rects are screen px under the root's CSS zoom; styles are layout px
-      const pz = parseFloat(document.documentElement.style.zoom || '1') || 1;
-      const spaceXs = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--space-xs')) || 0;
-      const t = title.getBoundingClientRect();
-      const b = bar.getBoundingClientRect();
-      const m = document.createElement('span');
-      m.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
-      title.appendChild(m);
-      const baseline = m.getBoundingClientRect().bottom;
-      m.remove();
-      bar.style.left = `${(t.left + t.width / 2 - b.width / 2) / pz}px`;
-      bar.style.top = `${baseline / pz + spaceXs}px`;
+      const root = getComputedStyle(document.documentElement);
+      // Measure with the title back in place
+      title.style.translate = '';
+      bar.style.top = '';
+      if (isMobile) {
+        bar.style.left = '';
+        baseTop = parseFloat(getComputedStyle(bar).top) || 0;
+        stickTop = parseFloat(root.getPropertyValue('--header-h')) || 0;
+      } else {
+        const spaceXs = parseFloat(root.getPropertyValue('--space-xs')) || 0;
+        const t = title.getBoundingClientRect();
+        const b = bar.getBoundingClientRect();
+        const m = document.createElement('span');
+        m.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
+        title.appendChild(m);
+        const baseline = m.getBoundingClientRect().bottom;
+        m.remove();
+        bar.style.left = `${(t.left + t.width / 2 - b.width / 2) / pz()}px`;
+        baseTop = baseline / pz() + spaceXs;
+        // Centred on the nav row
+        const nav = document.querySelector('nav')?.getBoundingClientRect();
+        stickTop = nav ? (nav.top + (nav.height - b.height) / 2) / pz() : 0;
+      }
+      follow();
     };
     place();
-    const title = document.querySelector<HTMLElement>('body > h1[class*="titleCol2"]');
+    const title = getTitle();
     const ro = new ResizeObserver(place);
     if (title) ro.observe(title);
+    page.addEventListener('scroll', follow, { passive: true });
     window.addEventListener('resize', place);
     document.fonts?.ready.then(place);
-    return () => { ro.disconnect(); window.removeEventListener('resize', place); clear(); };
+    return () => {
+      ro.disconnect();
+      page.removeEventListener('scroll', follow);
+      window.removeEventListener('resize', place);
+      bar.style.left = '';
+      bar.style.top = '';
+    };
   }, [isMobile]);
 
   return (
@@ -671,7 +702,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
                 key={tab.key}
                 data-tab-active={activeTab === tab.key}
                 className={`${s.chip}${activeTab === tab.key ? ` ${s.chipOn}` : ''}`}
-                onClick={() => handleTab(tab.key)}
+                onClick={e => { bounceChips(e.currentTarget); handleTab(tab.key); }}
               >
                 {tab.label}
               </button>
@@ -693,12 +724,12 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
                 pointerEvents: activeTab ? 'auto' : 'none',
               }}
             >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--chip-gap)' }}>
                 {(activeTab ? SUBTABS[activeTab] ?? [] : []).map(sub => (
                   <button
                     key={sub.key}
                     className={`${s.chip}${activeSubs.includes(sub.key) ? ` ${s.chipOn}` : ''}`}
-                    onClick={() => handleSub(sub.key)}
+                    onClick={e => { bounceChips(e.currentTarget); handleSub(sub.key); }}
                   >
                     {sub.label}
                   </button>

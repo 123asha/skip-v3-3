@@ -28,7 +28,9 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
   useEffect(() => {
     const onScroll = () => {
       const el = cardRef.current;
-      if (el) setAtBottom(el.getBoundingClientRect().bottom <= window.innerHeight + 2);
+      // A little before the very end — smooth scrolling takes a while to
+      // settle on the last pixels
+      if (el) setAtBottom(el.getBoundingClientRect().bottom <= window.innerHeight + 60);
     };
     onScroll();
     // Capture: inner pages scroll in their own container, not the window
@@ -195,7 +197,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
         style={{
           // Turns softly grey once the page is scrolled all the way down
           background: atBottom ? 'var(--c-surface)' : '#fff',
-          transition: 'background-color 1.6s ease',
+          transition: 'background-color 0.45s ease',
           justifyContent: 'center',
         }}
       >

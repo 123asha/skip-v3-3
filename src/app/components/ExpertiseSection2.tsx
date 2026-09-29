@@ -4,6 +4,7 @@ import { useMobile } from '../hooks/useMobile';
 import { useRowReveal } from '../hooks/useRowReveal';
 import { H2_STYLE, typo } from '../utils/typography';
 import { PARA_GAP } from './CaseTemplatePage';
+import PillButton from './PillButton';
 import s from '../App.module.css';
 
 interface ServiceItem { text: string; label?: string; hideNumber?: boolean; desc?: string }
@@ -88,11 +89,14 @@ const SERVICES: { category: string; groupLabel?: string; items: ServiceItem[] }[
 export const EXPERTISE_LEVELS = 5;
 export const EXPERTISE_DEFAULT_LEVEL = 2;
 
-export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, showHeading = false }: {
+export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, showHeading = false, onAllServices }: {
   level?: number;
   /** Clicking the level-0 symbols band asks the page to unfold one step */
   onLevel?: (level: number) => void;
   showHeading?: boolean;
+  /** Home: services don't open their descriptions here — instead an «все
+   *  услуги» button under the table leads to the services page */
+  onAllServices?: () => void;
 } = {}) {
   const isMobile = useMobile();
   // Kept so the row code below reads the same as the original component —
@@ -235,7 +239,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
             // Clicking a sub-group label expands its services list (collapsed
             // mode only); clicking a service expands its description in col 5.
             const isCollapsibleLabel = row.isLabel && !showItems;
-            const isExpandableItem = !!row.itemKey && !!row.desc;
+            const isExpandableItem = !!row.itemKey && !!row.desc && !onAllServices;
             const onRowClick = isCollapsibleLabel
               ? () => toggleGroup(row.groupKey)
               : isExpandableItem
@@ -365,6 +369,11 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
           );
         })}
       </div>
+      {onAllServices && (
+        <div style={{ marginTop: 40, display: 'flex', justifyContent: 'center' }}>
+          <PillButton onClick={onAllServices}>все услуги</PillButton>
+        </div>
+      )}
     </div>
   );
 }

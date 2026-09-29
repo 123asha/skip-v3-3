@@ -3,9 +3,9 @@ import { gsap } from 'gsap';
 // Chips in a row are linked like graph nodes (the dotted line across each gap
 // is the chip's ::before, see CasesPage.module.css).
 //
-// settleChips — at rest the chips touch; the selected one pushes the others
-// away from it (a dotted link opens on each side of it), they spring there and
-// stay while it's selected, and close up again when nothing is.
+// settleChips — at rest the chips touch; once one is selected they all spread
+// apart evenly (a dotted link in every gap) and stay so while any is selected;
+// they close up again only when nothing is.
 // bounceChips — the same push, but only for a moment (chips that don't stay
 // selected one at a time).
 
@@ -45,7 +45,12 @@ const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matc
 export function settleChips(row: HTMLElement | null, activeIndex: number, inFlow = false) {
   if (!row) return;
   const chips = Array.from(row.children) as HTMLElement[];
-  const target = pushFrom(row, chips, activeIndex);
+  // Together at rest; once anything is picked, every gap opens by the same
+  // step (a dotted link in each) and stays open — switching the pick moves
+  // nothing, the chips never close up again while one is selected
+  // (spread symmetrically about the row's middle, so a centred row stays centred)
+  const mid = (chips.length - 1) / 2;
+  const target = chips.map((_, i) => (activeIndex >= 0 ? (i - mid) * SPREAD : 0));
   const from = offsets.get(row) ?? chips.map(() => 0);
   const cur = from.slice();
   offsets.set(row, cur);

@@ -191,7 +191,7 @@ export default function CaseCard({
           <p className={`${s.cardMetaText} ${s.cardLink}`} style={{ margin: 0, ...metaStyle }}>{title}</p>
           <div style={{ minWidth: 0 }}>
             <p className={s.cardMetaText} style={{ margin: 0, ...metaStyle }}>{typo(desc)}</p>
-            {services && <p className={s.cardMetaText} style={{ margin: 0, opacity: 'var(--opacity-muted)' as any, ...metaStyle }}>{services}</p>}
+            {services && <p className={s.cardMetaText} style={{ margin: 0, marginTop: 6, opacity: 'var(--opacity-muted)' as any, ...metaStyle }}>{services}</p>}
           </div>
         </div>
       </div>

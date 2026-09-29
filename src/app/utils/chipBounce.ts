@@ -3,10 +3,9 @@ import { gsap } from 'gsap';
 // Chips in a row are linked like graph nodes (the dotted line across each gap
 // is the chip's ::before, see CasesPage.module.css).
 //
-// settleChips — the selected chip pushes its next-door neighbours away until
-// they touch the chip beyond (the whole gap); they spring there and stay while
-// it's selected, and spring back when it isn't. The links stretch and shrink
-// with them.
+// settleChips — at rest the chips touch; the selected one pushes the others
+// away from it (a dotted link opens on each side of it), they spring there and
+// stay while it's selected, and close up again when nothing is.
 // bounceChips — the same push, but only for a moment (chips that don't stay
 // selected one at a time).
 
@@ -24,45 +23,33 @@ function draw(chips: HTMLElement[], dx: number[]) {
   });
 }
 
-function pushFrom(row: HTMLElement, chips: HTMLElement[], at: number) {
-  const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
-  // Only a neighbour with another chip beyond it moves — up against that one
-  return chips.map((_, i) => {
-    const dir = Math.sign(i - at);
-    return at >= 0 && Math.abs(i - at) === 1 && chips[i + dir] ? dir * gap : 0;
-  });
+// How far chips spread from the selected one — also the length of the
+// dotted link that opens up between them (the row itself has no gap at rest)
+const SPREAD = 12;
+
+function pushFrom(_row: HTMLElement, chips: HTMLElement[], at: number) {
+  // Every chip moves away from the selected one by the same step, so the rest
+  // keep touching each other and only the selected chip's links open up
+  return chips.map((_, i) => (at >= 0 ? Math.sign(i - at) * SPREAD : 0));
 }
 
 const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-// A neighbour with nothing beyond it (an end chip) can't be pushed anywhere,
-// so it just hops out this far and springs back
-const HOP = 4;
 
 export function settleChips(row: HTMLElement | null, activeIndex: number) {
   if (!row) return;
   const chips = Array.from(row.children) as HTMLElement[];
   const target = pushFrom(row, chips, activeIndex);
-  const hop = chips.map((_, i) => {
-    const dir = Math.sign(i - activeIndex);
-    return activeIndex >= 0 && Math.abs(i - activeIndex) === 1 && !target[i] ? dir * HOP : 0;
-  });
   const from = offsets.get(row) ?? chips.map(() => 0);
   const cur = from.slice();
   offsets.set(row, cur);
   if (reduced()) { cur.splice(0, cur.length, ...target); draw(chips, cur); return; }
   running.get(row)?.kill();
-  const state = { p: 0, q: 0 };
+  const state = { p: 0 };
   const tick = () => {
-    for (let i = 0; i < chips.length; i++) {
-      cur[i] = from[i] + (target[i] - from[i]) * state.p;
-    }
-    draw(chips, cur.map((x, i) => x + hop[i] * state.q));
+    for (let i = 0; i < chips.length; i++) cur[i] = from[i] + (target[i] - from[i]) * state.p;
+    draw(chips, cur);
   };
-  running.set(row, gsap.timeline({ onUpdate: tick, onComplete: tick })
-    .to(state, { p: 1, duration: 0.55, ease: EASE_OUT }, 0)
-    .to(state, { q: 1, duration: 0.12, ease: 'power2.out' }, 0)
-    .to(state, { q: 0, duration: 0.5, ease: 'power2.inOut' }, 0.12));
+  running.set(row, gsap.to(state, { p: 1, duration: 0.55, ease: EASE_OUT, onUpdate: tick, onComplete: tick }));
 }
 
 export function bounceChips(pressed: HTMLElement) {

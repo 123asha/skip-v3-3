@@ -142,6 +142,37 @@ function MetaRow({
   );
 }
 
+// Full-width case (copy folded away): a vertical picture never stands alone
+// at the page's width — it pairs up with the picture after it in one row. Both
+// get widths in proportion to their aspect ratios, so their heights match.
+const arNum = (ar: string, round: boolean) => {
+  if (round) return 1;
+  const [w, h] = ar.split('/').map(Number);
+  return w / h;
+};
+function pairUp(items: { ar: string; src?: string; round: boolean }[]) {
+  const rows: React.ReactNode[] = [];
+  for (let i = 0; i < items.length; i++) {
+    const a = items[i], b = items[i + 1];
+    const vertical = !a.round && arNum(a.ar, false) < 1;
+    if (vertical && b) {
+      const ra = arNum(a.ar, a.round), rb = arNum(b.ar, b.round);
+      rows.push(
+        <Block key={i}>
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            <div style={{ flex: `${ra} 1 0`, minWidth: 0 }}><Img ar={a.ar} src={a.src} round={a.round} /></div>
+            <div style={{ flex: `${rb} 1 0`, minWidth: 0 }}><Img ar={b.ar} src={b.src} round={b.round} /></div>
+          </div>
+        </Block>,
+      );
+      i++;
+    } else {
+      rows.push(<Block key={i}><Img ar={a.ar} src={a.src} round={a.round} /></Block>);
+    }
+  }
+  return rows;
+}
+
 // Block wrapper — spacing to the NEXT block: 20px normally, +32px (= 52px) when
 // the block ends with a caption.
 function Block({ caption, children }: { caption?: boolean; children: React.ReactNode }) {
@@ -341,11 +372,11 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
   //   1 — the copy folds away to the right and the images take the full width
   const [caseZoom, setCaseZoom] = useState(0);
 
-  // ── Phone: pictures ↔ «о проекте» ────────────────────────────────────
-  // Under the cover the body is two panes side by side: the pictures (shown
-  // first) and the copy with credits and the quote. A horizontal swipe — or
-  // the grey button pinned at the bottom — slides between them; the cover
-  // and meta stay put. The box takes the height of the pane on screen.
+  // ── Phone: the case ↔ «о проекте» ─────────────────────────────────────
+  // Two whole pages side by side: the case itself (cover, meta, pictures —
+  // shown first) and «о проекте» (the copy with credits and the quote). A
+  // horizontal swipe — or the grey button pinned at the bottom — slides the
+  // whole page across; the track takes the height of the page on screen.
   const [aboutPane, setAboutPane] = useState(false);
   const paneBoxRef = useRef<HTMLDivElement>(null);
   const picsPaneRef = useRef<HTMLDivElement>(null);
@@ -367,7 +398,8 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
     if (!isMobileEarly) return;
     const onScroll = () => {
       const box = paneBoxRef.current;
-      if (box) setPaneBtn(box.getBoundingClientRect().top < window.innerHeight * 0.7);
+      // (on «о проекте» it stays: that page has no cover to scroll past)
+      if (box) setPaneBtn(aboutPaneRef.current?.dataset.on === '1' || box.getBoundingClientRect().top < window.innerHeight * 0.7);
     };
     onScroll();
     window.addEventListener('scroll', onScroll, { capture: true, passive: true });
@@ -376,9 +408,8 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
   const showPane = (about: boolean) => {
     if (about === aboutPane) return;
     setAboutPane(about);
-    // Start the other pane from its top if we're already past it
-    const box = paneBoxRef.current;
-    if (box && box.getBoundingClientRect().top < 0) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // The other page starts from its top
+    pageRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
   // Widening the images column reflows every picture below it, so the page's
   // height changes under a fixed scrollTop and whatever was on screen jumps.
@@ -556,9 +587,32 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
     </>
   );
 
+  // Phone: «о проекте» content, filled in while the body renders below
+  let mobileAbout: React.ReactNode = null;
+
   return (
     // No sideways scroll ever — the zoom step's slide-out must not flash a bar
     <div ref={pageRef} className={s.page} style={{ overflowX: 'hidden' }}>
+      {/* Phone: the sliding track — this page, and «о проекте» beside it */}
+      <div
+        style={isMobile ? {
+          position: 'relative',
+          transform: `translateX(${aboutPane ? -100 : 0}%)`,
+          transition: 'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
+          height: paneH, overflowY: 'clip', overflowX: 'visible', touchAction: 'pan-y',
+        } : undefined}
+        onTouchStart={isMobile ? e => { const t = e.touches[0]; swipeStart.current = { x: t.clientX, y: t.clientY }; } : undefined}
+        onTouchEnd={isMobile ? e => {
+          const st = swipeStart.current;
+          swipeStart.current = null;
+          if (!st) return;
+          const t = e.changedTouches[0];
+          const dx = t.clientX - st.x, dy = t.clientY - st.y;
+          // A clear sideways swipe: the page follows the finger
+          if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) showPane(dx < 0);
+        } : undefined}
+      >
+      <div ref={picsPaneRef}>
       {/* ── First screen: cover + intro meta 10px under it. The body below
             keeps its distance so the image blocks still start on the next
             screen. ─────────────────────────────────────────────────────── */}
@@ -632,6 +686,8 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
         {(() => {
           const images: React.ReactNode[] = [];
           const copy: React.ReactNode[] = [];
+          // The same pictures as a flat list — for the full-width layout
+          const flat: { ar: string; src?: string; round: boolean }[] = [];
 
           // One copy entry — heading in the left half of the copy area, its
           // description in the right half. Titled entries collapse like the
@@ -725,9 +781,12 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
               return;
             }
             if (b.kind === 'single') {
+              const rd = nextRound();
+              const ar = b.ar === 'h' ? CASE_AR_H : CASE_AR_V;
+              flat.push({ ar, src: b.src, round: rd });
               images.push(
                 <Block key={i}>
-                  <Img ar={b.ar === 'h' ? CASE_AR_H : CASE_AR_V} src={b.src} round={nextRound()} />
+                  <Img ar={ar} src={b.src} round={rd} />
                 </Block>,
               );
               if (b.caption) pushCopy(`c${i}`, b.caption, b.title);
@@ -738,11 +797,13 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             const rightAr = b.right === 'h' ? CASE_AR_H : CASE_AR_V;
             // Left column is a single stack — a duo's two images simply follow
             // each other vertically instead of sitting side by side.
+            const rdL = nextRound(), rdR = nextRound();
+            flat.push({ ar: leftAr, src: b.leftSrc, round: rdL }, { ar: rightAr, src: b.rightSrc, round: rdR });
             images.push(
               <Block key={i}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <Img ar={leftAr} src={b.leftSrc} round={nextRound()} />
-                  <Img ar={rightAr} src={b.rightSrc} round={nextRound()} />
+                  <Img ar={leftAr} src={b.leftSrc} round={rdL} />
+                  <Img ar={rightAr} src={b.rightSrc} round={rdR} />
                 </div>
               </Block>,
             );
@@ -750,45 +811,25 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             if (b.belowText) pushCopy(`b${i}`, b.belowText, b.belowTitle);
           });
 
-          // Phone: two panes, pictures first — see showPane above
+          // Phone: just the pictures here — the copy, credits and quote form
+          // a whole second page beside this one (see mobileAbout below)
           if (isMobile) {
-            return (
-              <div
-                ref={paneBoxRef}
-                style={{ overflow: 'hidden', height: paneH, transition: 'height 0.4s ease', touchAction: 'pan-y' }}
-                onTouchStart={e => { const t = e.touches[0]; swipeStart.current = { x: t.clientX, y: t.clientY }; }}
-                onTouchEnd={e => {
-                  const st = swipeStart.current;
-                  swipeStart.current = null;
-                  if (!st) return;
-                  const t = e.changedTouches[0];
-                  const dx = t.clientX - st.x, dy = t.clientY - st.y;
-                  // A clear sideways swipe: content follows the finger
-                  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) showPane(dx < 0);
-                }}
-              >
-                <div style={{
-                  display: 'flex', alignItems: 'flex-start', width: '200%',
-                  transform: `translateX(${aboutPane ? -50 : 0}%)`,
-                  transition: 'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
-                }}>
-                  <div ref={picsPaneRef} style={{ width: '50%', flex: 'none' }}>{images}</div>
-                  <div ref={aboutPaneRef} style={{ width: '50%', flex: 'none', paddingLeft: 'var(--pad)', boxSizing: 'border-box' }}>
-                    {copy}
-                    {!!data.links?.length && (
-                      <div style={{ marginTop: 40, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                        {data.links.map(l => (
-                          <PillButton key={l.href} href={l.href}>{l.label}</PillButton>
-                        ))}
-                      </div>
-                    )}
-                    {creditsAndQuote}
-                    {/* Room for the pinned button and the menu under it */}
-                    <div style={{ height: 120 }} />
+            mobileAbout = (
+              <>
+                {copy}
+                {!!data.links?.length && (
+                  <div style={{ marginTop: 40, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                    {data.links.map(l => (
+                      <PillButton key={l.href} href={l.href}>{l.label}</PillButton>
+                    ))}
                   </div>
-                </div>
-              </div>
+                )}
+                {creditsAndQuote}
+                {/* Room for the pinned button and the menu under it */}
+                <div style={{ height: 120 }} />
+              </>
             );
+            return <div ref={paneBoxRef}>{images}</div>;
           }
 
           return (
@@ -805,7 +846,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                   ? `calc(100% + 2 * (var(--pad) - ${SIDE}))`
                   : `calc((100% - 4 * var(--gap)) * 3 / 5 + 2 * var(--gap) + var(--pad) - ${SIDE})`,
                 transition: `width ${ZOOM_EASE}`,
-              }}>{images}</div>
+              }}>{caseZoom ? pairUp(flat) : images}</div>
               {/* Copy sticks 40px under the meta row while the images scroll
                   past; zoomed in, it folds away to the right */}
               <div style={{
@@ -980,6 +1021,22 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
         // No closing strip for now — just room above the fixed footer row
         <div style={{ height: 'var(--space-xl)' }} />
       )}
+      </div>{/* /the case page (picsPaneRef) */}
+      {/* Phone: «о проекте» — a whole page to the right of the case */}
+      {isMobile && (
+        <div
+          ref={aboutPaneRef}
+          data-on={aboutPane ? '1' : '0'}
+          style={{
+            position: 'absolute', top: 0, left: '100%', width: '100%',
+            padding: 'calc(var(--header-h) + var(--space-md)) var(--pad) 0',
+            boxSizing: 'border-box',
+          }}
+        >
+          {mobileAbout}
+        </div>
+      )}
+      </div>{/* /sliding track */}
     </div>
   );
 }

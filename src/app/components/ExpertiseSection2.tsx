@@ -89,6 +89,10 @@ const SERVICES: { category: string; groupLabel?: string; items: ServiceItem[] }[
 export const EXPERTISE_LEVELS = 5;
 export const EXPERTISE_DEFAULT_LEVEL = 2;
 
+// Phone: where a category's name starts (symbol column + its 12px gap) —
+// sub-group names line up on it; services and descriptions step in from it
+const MOB_L1 = 'calc(22.86px + 16px + 12px)';
+
 export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, showHeading = false, onAllServices }: {
   level?: number;
   /** Clicking the level-0 symbols band asks the page to unfold one step */
@@ -301,19 +305,22 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                 {divider}
                 {row.header ? (
                   <div style={{ display: 'flex', gap: 12, alignItems: 'baseline', ...cellFade }}>
-                    <p style={{ ...numberStyle, paddingLeft: '22.86px' }}>{service.groupLabel ?? i + 1}</p>
+                    {/* Fixed-width symbol, so the category name starts at a set
+                        indent (MOB_L1) that the rows below line up with */}
+                    <p style={{ ...numberStyle, paddingLeft: '22.86px', width: 'calc(22.86px + 16px)', flexShrink: 0, boxSizing: 'border-box' }}>{service.groupLabel ?? i + 1}</p>
                     <p style={categoryStyle}>{service.category}</p>
                   </div>
                 ) : row.isLabel ? (
-                  // Sub-group name (Фирменный стиль, Автоматизация…)
-                  <div style={cellFade}>
+                  // Sub-group name (Бренд-стратегия, Фирменный стиль…) — on the
+                  // category name's line
+                  <div style={{ ...cellFade, paddingLeft: MOB_L1 }}>
                     <p style={itemStyle}>{row.itemIndex}</p>
                   </div>
                 ) : (
-                  // A service — indented under its sub-group
-                  <div style={{ ...cellFade, paddingLeft: 'var(--space-xs)' }}>
+                  // A service 20px further in, its description 20px more
+                  <div style={{ ...cellFade, paddingLeft: `calc(${MOB_L1} + 20px)` }}>
                     <p style={itemStyle}>{typo(row.text)}</p>
-                    {descPanel}
+                    <div style={{ paddingLeft: 20 }}>{descPanel}</div>
                   </div>
                 )}
               </div>

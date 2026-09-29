@@ -643,6 +643,26 @@
     left: var(--pad);
     right: var(--pad) !important;
   }
-  /* The links' box takes the row; «Написать» keeps the right end */
-  .navLinks { flex: 1; }
+  /* The links as chips, like the filter chips: outlined pills that touch at
+     rest, the current section's neighbours spreading from it with a dotted
+     link (settleChips, App.tsx) */
+  .navLinks { flex: 1; background: none; padding: 0; gap: 0; height: auto; }
+  .navLinks > span { position: relative; }
+  .navLinks > span + span::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 1px);
+    width: var(--pull, 0px);
+    border-top: 1px dotted var(--c-text-muted);
+    pointer-events: none;
+  }
+  .navLinks .navLink {
+    text-decoration: none;
+    padding: 3px 10px 4px;
+    border: 1px solid var(--c-border);
+    border-radius: 999px;
+    background: var(--c-bg);
+  }
+  .navLinks .navLink[data-current] { border-color: var(--c-text); }
 }

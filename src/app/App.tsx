@@ -27,7 +27,7 @@ import { ToolsSection } from './components/ToolsSection';
 import { MediaSection } from './components/MediaSection';
 import { ExpertiseSection2 } from './components/ExpertiseSection2';
 import LabPage from './components/LabPage';
-import { SiteTitle, ScrollTopArrow } from './components/PageTitle';
+import { SiteTitle } from './components/PageTitle';
 import { FOOTER_SLOT_ID } from './components/ZoomControl';
 import { LANG, LANG_PREFIX, stripLang, otherLangHref, t } from './i18n';
 
@@ -48,6 +48,7 @@ import SoundIcon from './sound/SoundIcon';
 import { sound } from './sound/Sound';
 import PillButton from './components/PillButton';
 import s from './App.module.css';
+import { settleChips } from './utils/chipBounce';
 
 // Telegram + LinkedIn circles for the footer — one definition for the desktop
 // corner and the mobile bar
@@ -928,6 +929,15 @@ function AppInner() {
   // plain text (over a cover it inverts and every link stays white).
   // The nav inverts over everything now (white + difference), so the other
   // sections are dimmed with opacity instead of a grey colour.
+  // The section the menu marks as current
+  const navSection = page === 'expertiza2' ? 'expertiza'
+    : page === 'case-template' || page === 'seniors' ? 'cases' : page;
+  // Phone: the menu links are chips — the current one spreads the others
+  // from it, like the filter chips (utils/chipBounce)
+  const navLinksRef = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    settleChips(navLinksRef.current, isMobile ? ['cases', 'expertiza', 'lab'].indexOf(navSection) : -1);
+  }, [navSection, isMobile]);
   const navLinkStyle = (target: string): React.CSSProperties | undefined => {
     // The /services-2 sandbox counts as the services section
     // Case pages count as the projects section
@@ -1036,19 +1046,19 @@ function AppInner() {
         }}
       >
         {/* The section links share one grey box; «Написать» stands apart */}
-        <span className={s.navLinks}>
+        <span ref={navLinksRef} className={s.navLinks}>
           <span ref={casesLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex' }}>
-            <a href="/cases" className={s.navLink} style={navLinkStyle('cases')} onClick={handleCasesClick}>
+            <a href="/cases" className={s.navLink} data-current={navSection === 'cases' ? '' : undefined} style={navLinkStyle('cases')} onClick={handleCasesClick}>
               <LinkFlip flat>Проекты</LinkFlip>
             </a>
           </span>
           <span ref={expertizaLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex' }}>
-            <a href="/services" className={s.navLink} style={navLinkStyle('expertiza')} onClick={handleExpertizaClick}>
+            <a href="/services" className={s.navLink} data-current={navSection === 'expertiza' ? '' : undefined} style={navLinkStyle('expertiza')} onClick={handleExpertizaClick}>
               <LinkFlip flat>Услуги</LinkFlip>
             </a>
           </span>
           <span ref={labLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex' }}>
-            <a href="/lab" className={s.navLink} style={navLinkStyle('lab')} onClick={handleLabClick}>
+            <a href="/lab" className={s.navLink} data-current={navSection === 'lab' ? '' : undefined} style={navLinkStyle('lab')} onClick={handleLabClick}>
               <LinkFlip flat>Инсайты</LinkFlip>
             </a>
           </span>
@@ -1326,8 +1336,9 @@ function AppInner() {
         }}>
           <a href={otherLangHref(pathname)} style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35, pointerEvents: 'auto' }}>{LANG === 'en' ? '/ru' : '/en'}</a>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center', pointerEvents: 'auto' }}>
-            <SocialLinks />
             <span><MoscowTime /> (GMT+3)</span>
+            {/* Social icons at the far right */}
+            <SocialLinks />
           </div>
         </div>
       )}
@@ -1365,8 +1376,8 @@ function AppInner() {
           releaseAt={page === 'expertiza' ? '[data-title-release]' : undefined}
         />
       )}
-      {/* Inner section pages: an up arrow under the title at the very end */}
-      {sectionTitleFor(pathname) && page !== 'home' && <ScrollTopArrow key={pathname} />}
+      {/* Up arrow at the very end of inner pages — switched off for now
+          (ScrollTopArrow in PageTitle.tsx) */}
       {page === 'policy' && <PolicyPage />}
       {page === 'index2' && <Index2Page />}
       {page === 'case-template' && <CaseTemplatePage onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}

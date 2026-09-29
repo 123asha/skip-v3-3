@@ -49,6 +49,28 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
   const [cv, setCv]             = useState('');
   const [activeTab, setActiveTab] = useState<'discuss' | 'join'>('discuss');
   const [activeFocus, setActiveFocus] = useState<'email' | 'telegram' | 'phone' | 'cv' | null>(null);
+
+  // Phone keyboard: the form is the last thing on the page, so there's nothing
+  // below it to scroll into — the keyboard would cover the field. While it's
+  // open the card grows by the keyboard's height and the field is brought up
+  // to the middle of what's left of the screen.
+  const [kbPad, setKbPad] = useState(0);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!isMobile || !vv) return;
+    const onVV = () => {
+      const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      const next = activeFocus ? kb : 0;
+      setKbPad(next);
+      if (next > 0) {
+        window.setTimeout(() => fieldsRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 50);
+      }
+    };
+    onVV();
+    vv.addEventListener('resize', onVV);
+    return () => vv.removeEventListener('resize', onVV);
+  }, [isMobile, activeFocus]);
+
   const [emailError, setEmailError]       = useState(false);
   const [telegramError, setTelegramError] = useState(false);
   const [phoneError, setPhoneError]       = useState(false);
@@ -197,7 +219,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
       <div
         ref={cardRef}
         className={s.contactCard}
-        style={{ background: '#fff', justifyContent: 'center' }}
+        style={{ background: '#fff', justifyContent: 'center', paddingBottom: kbPad, transition: 'padding-bottom 0.2s ease' }}
       >
         {/* A bit of mischief: scrolled right to the end, the whole screen
             inverts — dark background, white type. One overlay flips the colours
@@ -218,7 +240,9 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
         <div ref={formAreaRef} className={s.contactFormArea} style={{ position: 'relative', zIndex: 1, background: 'transparent', flex: '0 0 auto', paddingTop: 20, paddingBottom: 20,
           // A touch above the middle of the screen: the card centres this
           // block, and the margin below lifts it by half its size
-          marginBottom: 'var(--space-lg)' }}>
+          // (phone: right in the middle — the top bar and the bottom menu
+          // already take about the same room)
+          marginBottom: isMobile ? 0 : 'var(--space-lg)' }}>
 
           {/* Tabs — centered, horizontal. Label of the 2nd tab + the side
               effects (grid + bunny game) depend on the form variant. */}
@@ -316,7 +340,9 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
           <div
             className={s.contactCheckbox}
             style={isMobile
-              ? { gap: 10, justifyContent: 'flex-start', alignItems: 'flex-start', width: '100%', boxSizing: 'border-box' }
+              // Phone: a compact block centred under the field, the text wrapping
+              // on its own left edge next to the box
+              ? { gap: 10, justifyContent: 'center', alignItems: 'flex-start', maxWidth: 300, marginLeft: 'auto', marginRight: 'auto', boxSizing: 'border-box' }
               : { gap: 10, justifyContent: 'center', alignItems: 'flex-start' }}
             onClick={() => setChecked(!checked)}
           >

@@ -635,7 +635,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
       const y = page.scrollTop;
       const title = getTitle();
       if (title) title.style.translate = `0 ${-y}px`;
-      bar.style.top = `${Math.max(stickTop, baseTop - y)}px`;
+      if (!isMobile) bar.style.top = `${Math.max(stickTop, baseTop - y)}px`;
     };
     const place = () => {
       const title = getTitle();
@@ -645,9 +645,11 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
       title.style.translate = '';
       bar.style.top = '';
       if (isMobile) {
+        // Phone: the chips live at the bottom, over the menu (CSS) — only the
+        // title rides up with the page
         bar.style.left = '';
-        baseTop = parseFloat(getComputedStyle(bar).top) || 0;
-        stickTop = parseFloat(root.getPropertyValue('--header-h')) || 0;
+        baseTop = -Infinity;
+        stickTop = -Infinity;
       } else {
         const spaceXs = parseFloat(root.getPropertyValue('--space-xs')) || 0;
         const t = title.getBoundingClientRect();
@@ -691,12 +693,6 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
       {/* Fixed bar — always visible, so it stays out of the scroll-reveal */}
       {/* Portalled to <body>: fixed on screen, it stays put while the page
           itself slides out on a section change */}
-      <ZoomControl
-        minusLabel="Плотнее" plusLabel="Крупнее"
-        minusDisabled={zoom <= ZOOM_MIN} plusDisabled={zoom >= ZOOM_MAX}
-        onMinus={() => setZoom(z => Math.max(ZOOM_MIN, z - 1))}
-        onPlus={() => setZoom(z => Math.min(ZOOM_MAX, z + 1))}
-      />
       {createPortal(
       // data-page-float: leaves with the page on a section change, like the title
       <div ref={tabsBarRef} data-page-float="" className={`${s.tabsBar} ${s.pageFloat}`}>
@@ -755,9 +751,26 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
           + 100px of air. */}
       <div
         className={s.body}
-        // Phone: one more row (the filter chips) between the title and the grid
-        style={{ paddingTop: isMobile ? 'calc(var(--inner-content-top) + var(--space-xs) + var(--text-size) * var(--text-lh) + 9px)' : 'var(--inner-content-top)' }}
+        style={{ paddingTop: 'var(--inner-content-top)' }}
       >
+        {/* ⌘ ⊖ ⊕ — top-left, ~40px above the first row (desktop) */}
+        {!isMobile && (
+          <div style={{
+            position: 'relative', height: 0, zIndex: 2,
+            fontFamily: 'var(--font)', fontSize: 'var(--text-size)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+            lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)', color: 'var(--c-text)',
+          }}>
+            <div style={{ position: 'absolute', left: 'var(--pad)', bottom: 40 }}>
+              <ZoomControl
+                inline
+                minusLabel="Плотнее" plusLabel="Крупнее"
+                minusDisabled={zoom <= ZOOM_MIN} plusDisabled={zoom >= ZOOM_MAX}
+                onMinus={() => setZoom(z => Math.max(ZOOM_MIN, z - 1))}
+                onPlus={() => setZoom(z => Math.min(ZOOM_MAX, z + 1))}
+              />
+            </div>
+          </div>
+        )}
         <div
           ref={gridRef}
           className={s.grid}

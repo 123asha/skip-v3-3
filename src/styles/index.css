@@ -200,7 +200,10 @@
      empty band above the card. The card's own height drives layout instead. */
   [class*="_contactWrap_"] {
     min-height: auto !important;
-    padding-top: var(--space-xl) !important;
+    /* Straight on from «Нам доверяют» — no band kept for the desktop's
+       hover pictures, which phones don't have */
+    margin-top: var(--space-md) !important;
+    padding-top: 0 !important;
     /* The card itself is one screen tall and ends the page (as on desktop) */
     padding-bottom: 0 !important;
   }

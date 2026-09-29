@@ -164,7 +164,7 @@
   top: 50%;
   right: calc(100% + 1px);
   /* --pull: set while a neighbour springs away (utils/chipBounce.ts) */
-  width: calc(var(--chip-gap) + var(--pull, 0px));
+  width: calc(var(--link-gap, var(--chip-gap)) + var(--pull, 0px));
   border-top: 1px dotted var(--c-text-muted);
   pointer-events: none;
 }
@@ -179,7 +179,9 @@
 .tabsBarInner {
   display: flex;
   align-items: center;
-  gap: var(--chip-gap);
+  /* Touching at rest — a selection spreads them (utils/chipBounce) */
+  gap: 0;
+  --link-gap: 0px;
 }
 /* Grid density control — fixed in the bottom-left corner of the viewport. */
 .zoomBtns {
@@ -391,16 +393,24 @@
     top: calc(var(--header-h) + var(--space-xs));
     padding-top: 0 !important;
   }
+  /* The filter chips sit just above the bottom menu, under the thumb */
   .tabsBar {
-    top: calc(var(--header-h) + 2 * var(--space-xs) + var(--heading-size) * var(--heading-lh));
+    top: auto !important;
+    bottom: calc(var(--pad) + var(--text-size) * var(--text-lh) + 17px + 10px);
     height: auto;
     left: 0;
     right: 0;
     padding: 0 var(--pad);
+    animation: chipsUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   .tabsRow { flex-wrap: wrap; padding: 0; row-gap: 5px; }
   .tabsRow, .tabsBarInner { justify-content: center; }
   .subRow  { flex-wrap: wrap; justify-content: center; row-gap: 5px; }
+}
+
+@keyframes chipsUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
 }
 
 /* Body-level parts of a page (see PinnedInvert) fade in with it */

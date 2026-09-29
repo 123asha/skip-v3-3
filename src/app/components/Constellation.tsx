@@ -162,12 +162,17 @@ export default function Constellation({
     const SIDE_PAD = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pad')) || 0;
     // Balls at ~1.5x the size that fits the full word on one row — they
     // land as a heap rather than a line
-    // Phones (≤768px): 1.5× bigger — at the minimum radius they read as
-    // dots on a narrow screen
-    const BALL_SCALE = 1.125 * (WIDTH <= 768 ? 1.5 : 1); // -15% from 1.47, then -10% more
+    // Phones (≤768px): 1.2× bigger — at the minimum radius they read as
+    // dots on a narrow screen; any bigger and fewer than five fit on the
+    // floor, so the heap jams against the walls and the balls squash together
+    const BALL_SCALE = 1.125 * (WIDTH <= 768 ? 1.2 : 1); // -15% from 1.47, then -10% more
     const R = BALL_SCALE * Math.max(R_MIN, Math.min(R_MAX, (WIDTH / WORD_ORDER.length) * 0.484, (WIDTH - 2 * SIDE_PAD) / 21.84));
     // The sphere filter magnifies the middle of a ball by π/2, so the letter
     // is set smaller to keep its apparent size where the eye lands
+    // The word doesn't fit on one row (phones, with the bigger balls): the
+    // landed balls form a heap, so they must stay solid against each other
+    // while falling — no slipping past one another to reach a slot
+    const HEAP = WORD_ORDER.length * 2 * R > WIDTH - 2 * SIDE_PAD;
     const FONT = R * 1.4875; // -15% from the look-see size (was R * 1.17 * 0.72)
 
     // ── Letters printed on a sphere ───────────────────────────────────────────
@@ -955,7 +960,7 @@ export default function Constellation({
           const swapped = gravity > 0 && dragId === null
             && performance.now() - fallStart < CROSS_WINDOW * 3
             && (i.slotX - j.slotX) * (i.x - j.x) < 0;
-          if (crossing || swapped) continue;
+          if (!HEAP && (crossing || swapped)) continue;
 
           // Pushes go along the true line between the two centres — a ball
           // resting on another rolls off into the valley instead of being

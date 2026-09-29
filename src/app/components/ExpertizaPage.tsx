@@ -866,6 +866,13 @@ function TileBlocks() {
   );
 }
 
+// The ⌘ ⊖ ⊕ control's spot above a table/grid: its left edge on the page's
+const ZOOM_ABOVE: React.CSSProperties = {
+  position: 'absolute', left: 'var(--pad)', zIndex: 2,
+  fontFamily: 'var(--font)', fontSize: 'var(--text-size)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+  lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)', color: 'var(--c-text)',
+};
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavigatePolicy?: () => void; onGridMode?: (on: boolean) => void }) {
@@ -1004,20 +1011,23 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
   return (
     <div className={s.page} ref={pageRef}>
 
-      {/* ⌘ ⊖ ⊕ — pinned bottom-left, same place and look as the density
-          hint on the cases page. Folds/unfolds the table below. */}
-      {/* Portalled: stays fixed while the page slides out */}
-      <ZoomControl
-        minusLabel="Свернуть" plusLabel="Развернуть"
-        minusDisabled={level <= 1} plusDisabled={level >= EXPERTISE_LEVELS - 1}
-        onMinus={fold} onPlus={unfold}
-      />
-
       {/* Same table as the home page, but foldable one level at a time. It's
           the first block under the title now, so it carries the title →
           content gap (the title is absolutely positioned) in place of its own
           section spacing. */}
-      <div style={{ display: 'flow-root', marginTop: 'calc(var(--inner-content-top) - var(--space-xl))' }}>
+      <div style={{ display: 'flow-root', position: 'relative', marginTop: 'calc(var(--inner-content-top) - var(--space-xl))' }}>
+        {/* ⌘ ⊖ ⊕ — top-left, ~40px above where the table starts (desktop;
+            phones have no fold control). Folds/unfolds the table below. */}
+        {!isMobile && (
+          <div style={{ ...ZOOM_ABOVE, top: 'calc(var(--space-xl) - 40px - var(--text-size) * var(--text-lh))' }}>
+            <ZoomControl
+              inline
+              minusLabel="Свернуть" plusLabel="Развернуть"
+              minusDisabled={level <= 1} plusDisabled={level >= EXPERTISE_LEVELS - 1}
+              onMinus={fold} onPlus={unfold}
+            />
+          </div>
+        )}
         <ExpertiseSection2 level={level} showHeading={false} />
       </div>
 

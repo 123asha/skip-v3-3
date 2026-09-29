@@ -9,7 +9,7 @@ import { TEXT_STYLE } from '../utils/typography';
 import { asset, videoAsset } from '../utils/asset';
 import { useMobile } from '../hooks/useMobile';
 import { PLACEHOLDER_MEDIA, PLACEHOLDER_COLOR } from '../utils/placeholders';
-import { t } from '../i18n';
+import { t, LANG } from '../i18n';
 
 
 // Sidebar section items hidden for now — keep the export so dependents still
@@ -242,7 +242,8 @@ const HEADLINE_LINES_MOBILE = ['Визуальные системы', 'для б
 
 function ConstellationHero() {
   const isMobile = useMobile();
-  const lines = isMobile ? HEADLINE_LINES_MOBILE : HEADLINE_LINES;
+  // English is shorter: its phone headline keeps the desktop two lines
+  const lines = isMobile && LANG !== 'en' ? HEADLINE_LINES_MOBILE : HEADLINE_LINES;
   return (
     <div
       id="hero"

@@ -6,6 +6,7 @@ import { H2_STYLE, typo } from '../utils/typography';
 import { PARA_GAP } from './CaseTemplatePage';
 import PillButton from './PillButton';
 import s from '../App.module.css';
+import { LANG, t } from '../i18n';
 
 interface ServiceItem { text: string; label?: string; hideNumber?: boolean; desc?: string }
 
@@ -88,6 +89,32 @@ const SERVICES: { category: string; groupLabel?: string; items: ServiceItem[] }[
  *   4 — everything open, service descriptions included */
 export const EXPERTISE_LEVELS = 5;
 export const EXPERTISE_DEFAULT_LEVEL = 2;
+
+// «задать вопрос» under an open service description (services page): opens a
+// Telegram chat with the studio, the message already typed — about this
+// service, in the page's language
+const TELEGRAM = 'skpdsgn';
+function AskButton({ service }: { service: string }) {
+  const name = t(service);
+  const text = LANG === 'en'
+    ? `Hi! I have a question about ${name}`
+    : `Привет! У меня есть вопрос касательно услуги «${name}»`;
+  return (
+    <a
+      href={`https://t.me/${TELEGRAM}?text=${encodeURIComponent(text)}`}
+      target="_blank" rel="noopener noreferrer"
+      onClick={e => e.stopPropagation()}   // not a click on the row
+      style={{
+        display: 'inline-flex', alignItems: 'center', marginTop: 20,
+        // The header pill's size, in grey
+        padding: '8px 14px 9px', borderRadius: 4,
+        background: 'var(--c-surface)', color: 'var(--c-text)', textDecoration: 'none',
+        fontFamily: 'var(--font)', fontSize: 'var(--text-size)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+        lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)', whiteSpace: 'nowrap',
+      }}
+    >задать вопрос</a>
+  );
+}
 
 // Phone: the arrow on a tappable row (no hover on touch) — the desktop's ⤴,
 // always shown, dark while the row is open
@@ -281,6 +308,8 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                         {typo(para)}
                       </p>
                     ))}
+                    {/* Services page only: ask about this very service */}
+                    {!onAllServices && row.text && <AskButton service={row.text} />}
                   </div>
                 </div>
               </div>

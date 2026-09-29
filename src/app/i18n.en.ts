@@ -123,6 +123,7 @@ export const EN: Record<string, string> = {
   'скипнуть': 'skip it',
   'скипнуть описание': 'skip the story',
   'о проекте': 'about the project',
+  'задать вопрос': 'ask a question',
   'Наверх': 'Back to top',
   'все услуги': 'all services',
 

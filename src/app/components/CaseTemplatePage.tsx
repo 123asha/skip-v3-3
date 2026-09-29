@@ -433,8 +433,12 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
   const showPane = (about: boolean) => {
     if (about === aboutPane) return;
     setAboutPane(about);
-    // The other page starts from its top
-    pageRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    // The other page always opens at its very beginning: jump to the top at
+    // once (a smooth scroll gets cut short when the track's height changes
+    // under it), and once more after the new height has laid out
+    const top = () => pageRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+    top();
+    requestAnimationFrame(() => { top(); requestAnimationFrame(top); });
   };
   // Widening the images column reflows every picture below it, so the page's
   // height changes under a fixed scrollTop and whatever was on screen jumps.
@@ -936,10 +940,13 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             transition: 'opacity 0.3s ease, transform 0.3s ease, bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
           }}>
             <PillButton fullWidth onClick={() => showPane(!aboutPane)}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                {aboutPane && <SideArrow left />}
-                {aboutPane ? 'скипнуть описание' : 'о проекте'}
-                {!aboutPane && <SideArrow />}
+              {/* Arrows at the button's own edges — back on the left, forward
+                  on the right; an empty slot of the same width on the other
+                  side keeps the label centred */}
+              <span style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <span style={{ width: 12, display: 'flex' }}>{aboutPane && <SideArrow left />}</span>
+                <span>{aboutPane ? 'скипнуть описание' : 'о проекте'}</span>
+                <span style={{ width: 12, display: 'flex' }}>{!aboutPane && <SideArrow />}</span>
               </span>
             </PillButton>
           </div>,

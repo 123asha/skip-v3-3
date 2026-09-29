@@ -910,9 +910,9 @@ function AppInner() {
   // Phone: the menu links are chips — the current one spreads the others
   // from it, like the filter chips (utils/chipBounce)
   const navLinksRef = useRef<HTMLSpanElement>(null);
-  // Phone: the menu tucks away at the very end of any page, and — on the
-  // projects and case pages — while scrolling down; scrolling up a little
-  // brings it back (index.css, data-nav-hidden)
+  // Phone: on the projects and case pages the menu tucks away while scrolling
+  // down (never at the very end of a page); scrolling up a little brings it
+  // back (index.css, data-nav-hidden)
   useEffect(() => {
     const root = document.documentElement;
     if (!isMobile) { root.removeAttribute('data-nav-hidden'); return; }
@@ -930,7 +930,8 @@ function AppInner() {
       const atEnd = y >= max - 2;
       if (!atEnd && Math.abs(y - last) < 16) return;
       const down = y > last;
-      root.toggleAttribute('data-nav-hidden', atEnd || (hideOnDown && down && y > 80));
+      // At the very end the menu stays: the footer keeps its own room above it
+      root.toggleAttribute('data-nav-hidden', hideOnDown && !atEnd && down && y > 80);
       last = y;
     };
     window.addEventListener('scroll', onScroll, { capture: true, passive: true });

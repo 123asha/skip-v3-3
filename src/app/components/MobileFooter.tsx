@@ -24,8 +24,9 @@ export default function MobileFooter() {
       alignSelf: 'stretch', width: '100%', boxSizing: 'border-box',
       padding: '0 var(--pad)', height: 'var(--m-foot)',
       marginTop: 'var(--space-md)',
-      // Twice the room under it, above the pinned menu
-      marginBottom: 'calc(var(--m-menu-bottom) + var(--m-chip-h) + 2 * var(--space-xs))',
+      // Room for the pinned menu under it, always (its shown position, not
+      // the tucked-away one), plus 3 steps of air — the two never overlap
+      marginBottom: 'calc(var(--pad) + var(--m-chip-h) + 3 * var(--space-xs))',
       fontFamily: 'var(--font)', fontSize: 'var(--text-size)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
       // Grey text; only the social circles are dark
       lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)', color: 'var(--c-text-muted)',

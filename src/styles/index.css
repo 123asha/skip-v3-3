@@ -155,7 +155,7 @@
     --pad:            16px;   /* side margins of the content on phones */
     --hero-h:         85svh;  /* the home hero: 85% of the screen */
     --gap:            16px;   /* the two-column grid's gutter = the margins */
-    --heading-size:   37px;   /* phones: headings 28px → +20% → +10% */
+    --heading-size:   34px;   /* phones: the largest that keeps «мы назначим встречу» on one line (360px screens too) */
     --heading-lh:     0.927;  /* phones: 1.104 −20%, then +5% */
     /* The home hero headline is set like every other heading here */
     --hero-fs:        var(--heading-size);
@@ -280,6 +280,9 @@ html {
   --m-above-menu: var(--pad);
   --m-chips-bottom: var(--pad);
 }
+
+/* No grey flash on tap (iOS/Android) */
+* { -webkit-tap-highlight-color: transparent; }
 
 /* No system focus rings anywhere (the blue frame Safari and Chrome draw
    around a clicked link or card) */

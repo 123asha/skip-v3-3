@@ -682,8 +682,8 @@
   }
   .navLinks .navLink {
     text-decoration: none;
-    /* Bigger chips (the type stays the same); text 1px low of centre */
-    padding: 8px 14px 7px;
+    /* Bigger chips (the type stays the same); 1px more under the text */
+    padding: 7px 14px 8px;
     border: 1px solid var(--c-border);
     border-radius: 999px;
     background: var(--c-bg);

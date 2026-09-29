@@ -31,6 +31,14 @@ for (const type of ['copy', 'cut'] as const) {
   document.addEventListener(type, e => { if (!inField(e.target)) e.preventDefault(); });
 }
 
+// A very light tap of vibration when a link or button is pressed (phones that
+// support it — Android; iOS Safari has no vibration API)
+if ('vibrate' in navigator && window.matchMedia('(pointer: coarse)').matches) {
+  document.addEventListener('click', e => {
+    if (e.target instanceof Element && e.target.closest('a, button')) navigator.vibrate(8);
+  }, { capture: true, passive: true });
+}
+
 installTranslator();
 createRoot(document.getElementById('root')!).render(<App />);
   

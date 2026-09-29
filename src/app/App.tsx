@@ -911,22 +911,27 @@ function AppInner() {
   // Phone: the menu links are chips — the current one spreads the others
   // from it, like the filter chips (utils/chipBounce)
   const navLinksRef = useRef<HTMLSpanElement>(null);
-  // Phone, projects and case pages: the menu tucks away while scrolling down
-  // and comes back on the way up (index.css, data-nav-hidden)
+  // Phone: the menu tucks away at the very end of any page, and — on the
+  // projects and case pages — while scrolling down; scrolling up a little
+  // brings it back (index.css, data-nav-hidden)
   useEffect(() => {
     const root = document.documentElement;
-    const on = isMobile && (page === 'cases' || page === 'case-template' || page === 'seniors');
-    if (!on) { root.removeAttribute('data-nav-hidden'); return; }
+    if (!isMobile) { root.removeAttribute('data-nav-hidden'); return; }
+    const hideOnDown = page === 'cases' || page === 'case-template' || page === 'seniors';
     let last = 0;
     const onScroll = (e: Event) => {
-      const el = e.target instanceof HTMLElement ? e.target : null;
-      if (!el || !el.className.toString().includes('_page_')) return;
-      // iOS rubber-bands past both ends — ignore that, and small moves, or
-      // the menu flips back and forth (it shook)
+      // Inner pages scroll their own layer; the home page scrolls the window
+      const el = e.target instanceof HTMLElement && e.target.className.toString().includes('_page_')
+        ? e.target : (e.target === document || e.target === window ? document.scrollingElement as HTMLElement : null);
+      if (!el) return;
+      // iOS rubber-bands past both ends — clamp, and skip small moves, or
+      // the menu flips back and forth
       const max = el.scrollHeight - el.clientHeight;
       const y = Math.max(0, Math.min(max, el.scrollTop));
-      if (y !== el.scrollTop || Math.abs(y - last) < 16) return;
-      root.toggleAttribute('data-nav-hidden', y > last && y > 80);
+      const atEnd = y >= max - 2;
+      if (!atEnd && Math.abs(y - last) < 16) return;
+      const down = y > last;
+      root.toggleAttribute('data-nav-hidden', atEnd || (hideOnDown && down && y > 80));
       last = y;
     };
     window.addEventListener('scroll', onScroll, { capture: true, passive: true });

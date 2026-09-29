@@ -193,6 +193,13 @@
   .navWrite { order: -1; width: 100%; justify-content: flex-end; }
 }
 
+/* Desktop: the nav is at least one grid column wide, so the links start on
+   the 5th column's left line and «Написать» ends on its right one */
+@media (min-width: 769px) {
+  .nav { min-width: calc((100% - var(--nav-grid-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5); }
+  .navWrite { margin-left: auto; }
+}
+
 /* Nav-sized face of the site's pill button — same 4px corners */
 .navPill {
   align-items: center;
@@ -355,7 +362,8 @@
 /* ── Contact form ── */
 .contactWrap {
   margin-top: var(--space-xl);
-  margin-bottom: 0;
+  /* Room between the form and the fixed footer row */
+  margin-bottom: var(--space-lg);
   /* The grey footer runs edge to edge and down to the bottom of the page */
   padding: 0;
   position: relative;

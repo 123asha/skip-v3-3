@@ -609,46 +609,23 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
     applyFilters(activeTab, next);
   };
 
-  // Desktop: the filter chips follow the page title on its own line — one
-  // --gap after it, their text on the title's baseline. If that would run
-  // into the menu, they take the row under the title instead, at its left
-  // edge. (Phone: fixed rows in CSS.)
+  // Desktop: the filter chips sit centred under the page title, one
+  // --space-xs below it. (Phone: fixed rows in CSS.)
   useLayoutEffect(() => {
     const bar = tabsBarRef.current;
     if (!bar) return;
     const clear = () => { bar.style.left = ''; bar.style.top = ''; };
     if (isMobile) { clear(); return; }
-    const baseline = (el: HTMLElement) => {
-      const m = document.createElement('span');
-      m.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
-      el.appendChild(m);
-      const y = m.getBoundingClientRect().bottom;
-      m.remove();
-      return y;
-    };
     const place = () => {
       const title = document.querySelector<HTMLElement>('body > h1[class*="titleCol2"]');
-      const chip = bar.querySelector<HTMLElement>('button');
-      const nav = document.querySelector<HTMLElement>('nav');
-      if (!title || !chip) return;
+      if (!title) return;
       // Rects are screen px under the root's CSS zoom; styles are layout px
       const pz = parseFloat(document.documentElement.style.zoom || '1') || 1;
-      const root = getComputedStyle(document.documentElement);
-      const gap = parseFloat(root.getPropertyValue('--gap')) || 0;
-      const spaceXs = parseFloat(root.getPropertyValue('--space-xs')) || 0;
+      const spaceXs = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--space-xs')) || 0;
       const t = title.getBoundingClientRect();
       const b = bar.getBoundingClientRect();
-      // Chip text baseline, measured from the bar's own top
-      const chipBase = (baseline(chip) - b.top) / pz;
-      const inline = t.right / pz + gap;
-      const room = nav ? nav.getBoundingClientRect().left / pz - gap : Infinity;
-      if (inline + b.width / pz <= room) {
-        bar.style.left = `${inline}px`;
-        bar.style.top = `${baseline(title) / pz - chipBase}px`;
-      } else {
-        bar.style.left = `${t.left / pz}px`;
-        bar.style.top = `${t.bottom / pz + spaceXs}px`;
-      }
+      bar.style.left = `${(t.left + t.width / 2 - b.width / 2) / pz}px`;
+      bar.style.top = `${t.bottom / pz + spaceXs}px`;
     };
     place();
     const title = document.querySelector<HTMLElement>('body > h1[class*="titleCol2"]');

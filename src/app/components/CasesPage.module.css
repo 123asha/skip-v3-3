@@ -52,16 +52,20 @@
   max-width: 80%;
 }
 
-/* Left edge of the 2nd column of the 5-col page grid */
+/* Centred on the 5-col page grid (the scrollbar gutter excluded) */
 /* Pinned to the screen and inverted against whatever scrolls under it, like
    the nav. Top: the capitals' top edge sits on the logo's top line
    (--logo-top; lowercase starts 0.3265em below the line box). */
 .titleCol2 {
   position: fixed;
   top: calc(var(--logo-top) - 0.3265em + 6px + var(--title-drop));
-  left: calc(var(--pad) + (100% - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap));
+  /* Auto margins centre the max-content box — no transform, so the page-exit
+     tween (y) and the release (translate) keep working on it */
+  left: 0;
+  right: var(--page-sb, 0px);
+  margin: 0 auto;
   transform: none;
-  text-align: left;
+  text-align: center;
   z-index: 199;
   color: #fff;
   mix-blend-mode: difference;
@@ -355,7 +359,6 @@
      (left edge = the page edge), and the filter chips the one after it */
   .title.titleCol2 {
     top: calc(var(--header-h) + var(--space-xs));
-    left: var(--pad);
     padding-top: 0 !important;
   }
   .tabsBar {
@@ -365,7 +368,8 @@
     right: 0;
     padding: 0 var(--pad);
   }
-  .tabsRow { flex-wrap: wrap; justify-content: flex-start; padding: 0; row-gap: 5px; }
+  .tabsRow { flex-wrap: wrap; padding: 0; row-gap: 5px; }
+  .tabsRow, .tabsBarInner { justify-content: center; }
   .subRow  { flex-wrap: wrap; justify-content: center; row-gap: 5px; }
 }
 

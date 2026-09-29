@@ -942,7 +942,12 @@ function AppInner() {
         // one text baseline (the nav aligns its items by baseline), the pill's
         // top on the logo's top line. Inner pages add the scrollbar gutter
         // (see above) so the row sits identically on every page.
-        style={{ right: `calc(var(--pad) + ${page !== 'home' && page !== 'index2' ? scrollbarW : 0}px)`, ['--nav-sb' as any]: `${scrollbarW}px` }}
+        // Desktop: at least one grid column wide (App.module.css)
+        style={{
+          right: `calc(var(--pad) + ${page !== 'home' && page !== 'index2' ? scrollbarW : 0}px)`,
+          ['--nav-grid-sb' as any]: `${page !== 'home' && page !== 'index2' ? scrollbarW : 0}px`,
+          ['--nav-sb' as any]: `${scrollbarW}px`,
+        }}
       >
         <span ref={casesLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex' }}>
           <a href="/cases" className={s.navLink} style={navLinkStyle('cases')} onClick={handleCasesClick}>

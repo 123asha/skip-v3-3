@@ -690,7 +690,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
               }}>
                {/* Fixed-width inner block, so the copy slides out whole
                    instead of reflowing into an ever-narrower column */}
-               <div style={{ width: 'calc((100vw - 2 * var(--pad) - 4 * var(--gap)) * 2 / 5 + var(--gap))' }}>
+               <div style={{ width: 'calc((100vw - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) * 2 / 5 + var(--gap))' }}>
                 {copy}
                 {/* Skip the read-through, plus this case's outbound links */}
                 <div style={{ marginTop: 40, display: 'flex', flexWrap: 'wrap', gap: 10 }}>

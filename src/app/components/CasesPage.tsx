@@ -874,28 +874,6 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
         <ContactForm variant="consult" onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
       </div>
 
-      {/* Privacy link — mobile only, at the bottom of the page */}
-      {isMobile && (
-        <div style={{
-          padding: 'var(--pad)',
-          paddingBottom: 'calc(64px + var(--pad))',
-          textAlign: 'center',
-          opacity: 0.4,
-          fontSize: 'var(--text-size)',
-          fontFamily: 'var(--font)',
-          fontWeight: 'var(--text-weight)',
-          lineHeight: 'var(--text-lh)',
-          letterSpacing: 'var(--text-ls)',
-        }}>
-          <a
-            href="/policy"
-            onClick={e => { e.preventDefault(); onNavigatePolicy?.(); }}
-            style={{ textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px', color: 'inherit' }}
-          >
-            Политика конфиденциальности
-          </a>
-        </div>
-      )}
     </div>
   );
 }

@@ -39,6 +39,11 @@
   --heading-lh: 0.96;
   --heading-ls: -0.024em;
 
+  /* Section page titles grow with the screen above 1440px, up to +20% of
+     the heading size (reached at 2240px — an iMac). Never below
+     --heading-size, so the phone sizes stay as they are. */
+  --page-title-size: max(var(--heading-size), min(var(--heading-size) * 1.2, var(--heading-size) + (100vw - 1440px) * 0.01));
+
   --h2-size: var(--heading-size);
   --h2-weight: 454;
   --h2-lh: var(--heading-lh);

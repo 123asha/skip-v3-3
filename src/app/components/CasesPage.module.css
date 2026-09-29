@@ -43,7 +43,7 @@
   transform: translateX(-50%);
   top: var(--pad);
   font-family: var(--font-display);
-  font-size: var(--heading-size);
+  font-size: var(--page-title-size);
   font-weight: var(--heading-weight);
   line-height: var(--heading-lh);
   letter-spacing: var(--heading-ls);

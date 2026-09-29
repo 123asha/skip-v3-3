@@ -660,7 +660,8 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
         onPlus={() => setZoom(z => Math.min(ZOOM_MAX, z + 1))}
       />
       {createPortal(
-      <div ref={tabsBarRef} className={s.tabsBar}>
+      // data-page-float: leaves with the page on a section change, like the title
+      <div ref={tabsBarRef} data-page-float="" className={`${s.tabsBar} ${s.pageFloat}`}>
         {/* Row — just the categories now; the zoom hint moved to the
             bottom-left corner, beside the language switch */}
         <div className={s.tabsRow}>

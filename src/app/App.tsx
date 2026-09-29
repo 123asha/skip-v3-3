@@ -939,7 +939,7 @@ function AppInner() {
       {/* On a plain (non-inverted) page the current section stays black and
           the other links go grey. */}
       <nav
-        className={s.nav}
+        className={`${s.nav} ${s.navBoxed}`}
         // One row on every page: the section links, then «Написать» — all on
         // one text baseline (the nav aligns its items by baseline), the pill's
         // top on the logo's top line. Inner pages add the scrollbar gutter

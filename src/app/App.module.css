@@ -200,6 +200,23 @@
   .navWrite { margin-left: auto; }
 }
 
+/* Boxed menu: the whole row sits in one grey rectangle, drawn plainly
+   (no difference blend) so the grey reads the same over any page. The box is
+   one grid column wide on desktop — its edges on the 5th column's lines. */
+.navBoxed {
+  mix-blend-mode: normal;
+  background: var(--c-surface);
+  border-radius: 6px;
+  padding: 4px 4px 4px 12px;
+  box-sizing: border-box;
+  /* 4px up, so «Написать» keeps its place on the logo's top line */
+  top: calc(var(--logo-top) + 1px - 4px);
+  /* Plain colours — the grey links use the muted grey itself, not its inverse */
+  --c-text-muted-inv: var(--c-text-muted);
+}
+.navBoxed .navLink { color: var(--c-text); }
+.navBoxed .navPill { background: var(--c-text) !important; color: #fff !important; }
+
 /* Nav-sized face of the site's pill button — same 4px corners */
 .navPill {
   align-items: center;

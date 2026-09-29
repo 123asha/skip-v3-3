@@ -258,10 +258,13 @@ function ConstellationHero() {
       <p className={s.headline} style={{ pointerEvents: 'none',
         // Centred on the screen, at the hero size — capped by the
         // viewport width so the two lines always fit on a phone too
-        top: '45%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', maxWidth: 'none', width: 'max-content', whiteSpace: 'nowrap',
-        fontSize: 'min(var(--hero-size), 7.2vw)', // Its own leading (0.96 × 0.94, then 3% tighter) — kept apart from the
+        // Phone: the heading style's size, wrapping within the margins
+        // (--hero-*, index.css)
+        top: '45%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', maxWidth: 'none',
+        width: 'var(--hero-w, max-content)', whiteSpace: 'var(--hero-ws, nowrap)' as React.CSSProperties['whiteSpace'],
+        fontSize: 'var(--hero-fs, min(var(--hero-size), 7.2vw))', // Its own leading (0.96 × 0.94, then 3% tighter) — kept apart from the
         // heading style's
-        lineHeight: 0.8755,
+        lineHeight: 'var(--hero-lh, 0.8755)',
         // A touch tighter than the heading style (-0.024em) at this size
         letterSpacing: '-0.03em' }}>
         {HEADLINE_LINES.map((line, i) => (

@@ -156,6 +156,11 @@
     --hero-h:         85svh;  /* the home hero: 85% of the screen */
     --gap:            16px;   /* the two-column grid's gutter = the margins */
     --heading-size:   33.6px; /* phones: headings 20% up from 28px */
+    /* The home hero headline is set like every other heading here */
+    --hero-fs:        var(--heading-size);
+    --hero-lh:        var(--heading-lh);
+    --hero-w:         calc(100vw - 2 * var(--pad));
+    --hero-ws:        normal;
     --text-size:      clamp(11px, 3.5vw, 18px);
     --text-lh:        1.38;   /* phones: 15% more leading than 1.2 */
     /* Proportional vertical rhythm — keeps the same ratio as desktop */

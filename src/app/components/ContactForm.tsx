@@ -34,11 +34,14 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
   useEffect(() => {
     if (atBottom) {
       setInvertOn(true);
-      const r = requestAnimationFrame(() => setInvertShown(true));
-      return () => cancelAnimationFrame(r);
+      // Two frames: the layer must be painted at 0 before it can fade in
+      // (one frame was sometimes too few — the switch came abruptly)
+      let r2 = 0;
+      const r1 = requestAnimationFrame(() => { r2 = requestAnimationFrame(() => setInvertShown(true)); });
+      return () => { cancelAnimationFrame(r1); cancelAnimationFrame(r2); };
     }
     setInvertShown(false);
-    const t = window.setTimeout(() => setInvertOn(false), 300);
+    const t = window.setTimeout(() => setInvertOn(false), 550);
     return () => window.clearTimeout(t);
   }, [atBottom]);
   useEffect(() => {
@@ -249,7 +252,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
               position: 'fixed', inset: 0, zIndex: 9990, pointerEvents: 'none',
               backdropFilter: 'invert(1)', WebkitBackdropFilter: 'invert(1)',
               opacity: atBottom && invertShown ? 1 : 0,
-              transition: 'opacity 0.25s ease-out',
+              transition: 'opacity 0.5s ease',
             }}
           />,
           document.body,

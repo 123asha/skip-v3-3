@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useMobile } from '../hooks/useMobile';
 import s from './CasesPage.module.css';
@@ -368,7 +368,6 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
 
   const pageRef = useRef<HTMLDivElement>(null);
   const coverVidRef = useRef<HTMLVideoElement>(null);
-  const [hoveredTeam, setHoveredTeam] = useState<number | null>(null);
   // Copy column behaves like the services table: one entry open at a time,
   // the first one open on load.
   const [openCopy, setOpenCopy] = useState(0);
@@ -556,51 +555,27 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
         {/* ── Credits. Desktop: centred, 40px gap under label, 20px between names.
               Mobile: left-aligned at 1/3 vw, role appears LEFT of the name. ── */}
         <div data-case-credits style={{
-          marginTop: 120,
-          ...(isMobile
-            ? { display: 'flex', flexDirection: 'column', gap: 40, alignItems: 'flex-start', paddingLeft: 'calc(33.333vw - var(--pad) + 4px)', textAlign: 'left' }
-            // Desktop: on the page's 5-column grid, from the 4th column (the
-            // right-hand content's line)
-            : { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', columnGap: 'var(--gap)' }),
+          marginTop: isMobile ? 'var(--space-xl)' : 120,
+          // Desktop: on the page's 5-column grid, the table from the 4th
+          // column; phone: the full width
+          ...(isMobile ? null : { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', columnGap: 'var(--gap)' }),
         }}>
-          {isMobile ? (
-            <>
-              <p style={{ ...textStyle, margin: 0 }}>Над проектом работали</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'flex-start', ...headingStyle, textAlign: 'left' }}>
-                {data.team.map(({ name, role }, i) => (
-                  <p
-                    key={i}
-                    style={{ position: 'relative', margin: 0, fontSize: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                    onMouseEnter={() => { setHoveredTeam(i); sound.play('hover'); }}
-                    onMouseLeave={() => setHoveredTeam(null)}
-                    onTouchStart={() => { setHoveredTeam(hoveredTeam === i ? null : i); sound.play('hover'); }}
-                  >
-                    <LinkFlip flat>{name}</LinkFlip>
-                    {/* role: top-left of the name */}
-                    <span style={{
-                      ...textStyle, lineHeight: 1, position: 'absolute',
-                      right: 'calc(100% + 8px)', bottom: '100%', transform: 'translateY(0.55em)',
-                      whiteSpace: 'nowrap', opacity: hoveredTeam === i ? 1 : 0,
-                      transition: 'opacity 0.2s ease', pointerEvents: 'none',
-                    }}>{role}</span>
-                  </p>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div style={{ gridColumn: '4 / 6' }}>
-              <p style={{ ...headingStyle, margin: 0 }}>Над проектом работали</p>
-              {/* Name in the 4th column, role in the 5th — plain text */}
-              <div style={{ marginTop: 40, display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 'var(--gap)', rowGap: 10 }}>
-                {data.team.map(({ name, role }) => (
-                  <Fragment key={name}>
-                    <p style={{ ...textStyle, margin: 0 }}>{name}</p>
-                    <p style={{ ...textStyle, margin: 0 }}>{role}</p>
-                  </Fragment>
-                ))}
-              </div>
+          <div style={isMobile ? undefined : { gridColumn: '4 / 6' }}>
+            <p style={{ ...headingStyle, margin: 0 }}>Над проектом работали</p>
+            {/* A table like the services one: name | role, a hairline above
+                every row and under the last — same on every screen */}
+            <div style={{ marginTop: isMobile ? 'var(--space-sm)' : 40, borderBottom: '1px solid var(--c-border)' }}>
+              {data.team.map(({ name, role }) => (
+                <div key={name} style={{
+                  display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 'var(--gap)',
+                  padding: '10px 0', borderTop: '1px solid var(--c-border)',
+                }}>
+                  <p style={{ ...textStyle, margin: 0 }}>{name}</p>
+                  <p style={{ ...textStyle, margin: 0 }}>{role}</p>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
         </div>
 
         {/* ── Testimonial — only when the case provides one. Quote is h2; below

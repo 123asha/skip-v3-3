@@ -236,7 +236,12 @@ function kernHeadline(line: string) {
     KERN[part] ? <span key={i} style={{ letterSpacing: KERN[part] }}>{part}</span> : part);
 }
 
+// Phone: the headline in three lines
+const HEADLINE_LINES_MOBILE = ['Визуальные системы', 'для быстрорастущих', 'компаний'];
+
 function ConstellationHero() {
+  const isMobile = useMobile();
+  const lines = isMobile ? HEADLINE_LINES_MOBILE : HEADLINE_LINES;
   return (
     <div
       id="hero"
@@ -267,7 +272,7 @@ function ConstellationHero() {
         lineHeight: 'var(--hero-lh, 0.8755)',
         // A touch tighter than the heading style (-0.024em) at this size
         letterSpacing: '-0.03em' }}>
-        {HEADLINE_LINES.map((line, i) => (
+        {lines.map((line, i) => (
           <span key={i} className={s.heroIntroText} style={{ display: 'block', animationDelay: `${0.35 + i * 0.12}s` }}>{kernHeadline(t(line))}</span>
         ))}
       </p>

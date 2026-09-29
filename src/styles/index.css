@@ -155,7 +155,7 @@
     --pad:            16px;   /* side margins of the content on phones */
     --hero-h:         85svh;  /* the home hero: 85% of the screen */
     --gap:            16px;   /* the two-column grid's gutter = the margins */
-    --heading-size:   33.6px; /* phones: headings 20% up from 28px */
+    --heading-size:   37px;   /* phones: headings 28px → +20% → +10% */
     /* The home hero headline is set like every other heading here */
     --hero-fs:        var(--heading-size);
     --hero-lh:        var(--heading-lh);

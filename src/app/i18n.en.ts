@@ -39,6 +39,11 @@ export const EN: Record<string, string> = {
   // ── Home ─────────────────────────────────────────────────────────────────
   'Визуальные системы для': 'Visual systems from',
   'быстрорастущих компаний': 'strategic ideas',
+  // Phone: the same headline in three lines
+  'Визуальные системы': 'Visual systems',
+  'для быстрорастущих': 'from strategic',
+  'компаний': 'ideas',
+  'Архив': 'Archive',
   'Skip Design — бутиковая студия цифрового дизайна. Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться сути.':
     'Skip Design is a boutique digital design studio. We believe simplicity isn’t about dumbing things down — it’s the courage to skip whatever keeps the essence from showing.',
   'Нам доверяют': 'Trusted by',

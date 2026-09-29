@@ -3,6 +3,7 @@ import s from './CasesPage.module.css';
 import { MediaSection } from './MediaSection';
 import { InsightCards } from './InsightCards';
 import ContactForm from './ContactForm';
+import { H2_STYLE } from '../utils/typography';
 import { useReveal } from '../hooks/useReveal';
 
 export default function LabPage({
@@ -38,6 +39,8 @@ export default function LabPage({
         {/* flushTop — the page body already carries the title → content gap,
             so the section must not add its own on top of it. */}
         <InsightCards />
+        {/* The table below is the archive of every insight */}
+        <h2 style={{ ...H2_STYLE, margin: '0 0 40px' }}>Архив</h2>
         <div style={{ marginLeft: 'calc(-1 * var(--pad))', marginRight: 'calc(-1 * var(--pad))' }}>
           {/* showZoom off here — InsightCards above already carries the
               page's one ⌘ ⊖ ⊕ control */}

@@ -65,6 +65,9 @@ export interface CaseCardProps {
   /** Force round or square instead of the title-hash default — used where a
    *  page needs to control exactly how many/which cards are round */
   round?: boolean;
+  /** Phone, two cards per row: the name sits over the description instead
+   *  of beside it */
+  stackMeta?: boolean;
 }
 
 // Black "what was done" caption that sits 10px above the card image.
@@ -82,7 +85,7 @@ const servicesStyle: React.CSSProperties = {
 };
 
 export default function CaseCard({
-  ar, title, desc, services, showCats, servicesSize, metaSize, image: rawImage, preview, video: rawVideo, onClick, linkLabel = 'Перейти', hideMeta = false, hideImage = false, aspect, scrubVideo, round,
+  ar, title, desc, services, showCats, servicesSize, metaSize, image: rawImage, preview, video: rawVideo, onClick, linkLabel = 'Перейти', hideMeta = false, hideImage = false, aspect, scrubVideo, round, stackMeta,
 }: CaseCardProps) {
   // Per-card caption style — size overridable so it scales with the grid zoom.
   const svcStyle: React.CSSProperties = servicesSize != null
@@ -187,7 +190,7 @@ export default function CaseCard({
         <div className={s.cardImage} style={{ aspectRatio: ar, width: '100%', flex: 'none', ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}>
           {image && <img src={image} alt={title} loading="lazy" />}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(90px, 1fr) minmax(0, 3fr)', gap: 'var(--gap)', alignItems: 'flex-start', paddingTop: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: stackMeta ? '1fr' : 'minmax(90px, 1fr) minmax(0, 3fr)', gap: stackMeta ? 4 : 'var(--gap)', alignItems: 'flex-start', paddingTop: 10 }}>
           <p className={`${s.cardMetaText} ${s.cardLink}`} style={{ margin: 0, ...metaStyle }}>{title}</p>
           <div style={{ minWidth: 0 }}>
             <p className={s.cardMetaText} style={{ margin: 0, ...metaStyle }}>{typo(desc)}</p>

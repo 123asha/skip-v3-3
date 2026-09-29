@@ -10,7 +10,7 @@ export const FOOTER_SLOT_ID = 'footer-left-slot';
  * switch, so it shares that row's gap and text baseline on every page.
  * Desktop only (the row itself isn't rendered on a phone).
  */
-export default function ZoomControl({ onMinus, onPlus, minusDisabled, plusDisabled, minusLabel, plusLabel, inline }: {
+export default function ZoomControl({ onMinus, onPlus, minusDisabled, plusDisabled, minusLabel, plusLabel, inline, noKey }: {
   onMinus: () => void;
   onPlus: () => void;
   minusDisabled?: boolean;
@@ -20,12 +20,14 @@ export default function ZoomControl({ onMinus, onPlus, minusDisabled, plusDisabl
   /** Render right where it's placed (above a table or grid) instead of in
    *  the footer's corner */
   inline?: boolean;
+  /** Without the ⌘ (phones — no keyboard shortcut to hint at) */
+  noKey?: boolean;
 }) {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   useEffect(() => { if (!inline) setSlot(document.getElementById(FOOTER_SLOT_ID)); }, [inline]);
   const pill = (
     <span className="zoomPill">
-      <span aria-hidden="true">⌘</span>
+      {!noKey && <span aria-hidden="true">⌘</span>}
       <button aria-label={minusLabel} disabled={minusDisabled} onClick={onMinus}><CircleSign plus={false} /></button>
       <button aria-label={plusLabel} disabled={plusDisabled} onClick={onPlus}><CircleSign plus /></button>
     </span>

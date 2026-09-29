@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { createPortal } from 'react-dom';
 import CircleInput from './CircleInput';
 import MobileFooter from './MobileFooter';
+import MoscowTime from './MoscowTime';
 import { useMobile } from '../hooks/useMobile';
 import s from '../App.module.css';
 
@@ -306,6 +307,11 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
               <span ref={wordRef}>{word}</span>,<br />мы назначим встречу
             </p>
           )}
+          {/* Studio time — the only place on the site that shows it now */}
+          <p style={{ margin: '10px 0 0', textAlign: 'center', opacity: 'var(--opacity-muted)' as any,
+            fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)' }}>
+            <MoscowTime /> (GMT+3)
+          </p>
 
           {/* Input + consent travel together as one block, centred in the
               form rectangle — the consent reads as the input's own fine

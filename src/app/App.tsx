@@ -1209,7 +1209,6 @@ function AppInner() {
         userSelect: 'none',
       }}>
         <SoundIcon />
-        <span style={{ color: 'inherit' }}><MoscowTime /> (GMT+3)</span>
       </div>}
 
       {/* hi@skip.design — desktop only (on mobile it would overlap the

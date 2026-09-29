@@ -270,9 +270,9 @@ function mobileColSpan(idx: number): string {
 }
 
 // ── ProjectCard ───────────────────────────────────────────────────────────────
-function ProjectCard({ ar, cats, title, desc, image, preview, video, onClick, servicesSize, metaSize, hideMeta, hideImage, round }: Project & { onClick?: () => void; servicesSize?: string | number; metaSize?: string | number; hideMeta?: boolean; hideImage?: boolean; round?: boolean }) {
+function ProjectCard({ ar, cats, title, desc, image, preview, video, onClick, servicesSize, metaSize, hideMeta, hideImage, round, stackMeta }: Project & { onClick?: () => void; servicesSize?: string | number; metaSize?: string | number; hideMeta?: boolean; hideImage?: boolean; round?: boolean; stackMeta?: boolean }) {
   return (
-    <CaseCard ar={ar} title={title} desc={desc} services={catLine(cats)} showCats servicesSize={servicesSize} metaSize={metaSize} hideMeta={hideMeta} hideImage={hideImage} image={image} preview={preview} video={video} onClick={onClick} round={round} />
+    <CaseCard ar={ar} title={title} desc={desc} services={catLine(cats)} showCats servicesSize={servicesSize} metaSize={metaSize} hideMeta={hideMeta} hideImage={hideImage} image={image} preview={preview} video={video} onClick={onClick} round={round} stackMeta={stackMeta} />
   );
 }
 
@@ -287,6 +287,8 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
   const [activeSubs, setActiveSubs] = useState<string[]>([]);
   const [rows, setRows] = useState<Row[]>(() => buildRows(PROJECTS));
   const isMobile = useMobile();
+  // Phone: one card per row or two (⊖ denser, ⊕ bigger)
+  const [mobCols, setMobCols] = useState<1 | 2>(1);
   useEffect(() => {
     // Phone: in-flow, as the row is full width (like the menu)
     settleChips(tabsRowRef.current, TABS.findIndex(t => t.key === activeTab), isMobile);
@@ -784,6 +786,24 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
         className={s.body}
         style={{ paddingTop: 'var(--inner-content-top)' }}
       >
+        {/* Phone: ⊖ ⊕ centred between the title and the grid — one column
+            or two */}
+        {isMobile && (
+          <div style={{ position: 'relative', height: 0, zIndex: 2 }}>
+            <div style={{
+              position: 'absolute', left: 0, right: 0, bottom: 'calc(20px - var(--text-size) * var(--text-lh) / 2)',
+              display: 'flex', justifyContent: 'center',
+              fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)', color: 'var(--c-text)',
+            }}>
+              <ZoomControl
+                inline noKey
+                minusLabel="Одна колонка" plusLabel="Две колонки"
+                minusDisabled={mobCols === 2} plusDisabled={mobCols === 1}
+                onMinus={() => setMobCols(2)} onPlus={() => setMobCols(1)}
+              />
+            </div>
+          </div>
+        )}
         {/* ⌘ ⊖ ⊕ — top-left, ~40px above the first row (desktop) */}
         {!isMobile && (
           <div style={{
@@ -807,7 +827,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
           className={s.grid}
           style={
             isMobile
-              ? { gridTemplateColumns: '1fr', rowGap: 'var(--cases-row-gap)' }
+              ? { gridTemplateColumns: `repeat(${mobCols}, 1fr)`, columnGap: 'var(--gap)', rowGap: 'var(--cases-row-gap)' }
               : {
                   gridTemplateColumns: `repeat(${ZOOM_CFG[zoom].cols}, 1fr)`,
                   rowGap: ZOOM_CFG[zoom].rowGap,
@@ -819,7 +839,8 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
             // Mobile: flat list, layout controlled by mobileLayout toggle
             filteredProjects.map(project => (
               <div key={project.id} data-case-card="" style={{ minWidth: 0 }}>
-                <ProjectCard {...project} onClick={() => onCaseClick?.(project.href)} />
+                {/* Two columns: the caption stacks (name over description) */}
+                <ProjectCard {...project} stackMeta={mobCols === 2} onClick={() => onCaseClick?.(project.href)} />
               </div>
             ))
           ) : (

@@ -37,6 +37,7 @@ function sectionTitleFor(path: string): string | null {
   if (p === '/cases') return 'Проекты Skip Design';
   if (p === '/services' || p === '/services-2' || p === '/expertiza') return 'Услуги Skip Design';
   if (p === '/lab') return 'Инсайты команды';
+  if (p === '') return 'Skip Design';
   return null;
 }
 import DesignSystemPage from './components/DesignSystemPage';
@@ -1001,26 +1002,6 @@ function AppInner() {
         </span>
       </nav>
 
-      {/* Home: the studio line, fixed and centred, on the menu's baseline.
-          Desktop only — on a phone the menu takes the middle of the row. */}
-      {page === 'home' && !isMobile && (
-        <div style={{
-          position: 'fixed',
-          left: '50%',
-          translate: '-50% 0',
-          top: 'calc(var(--logo-top) + 6px)',
-          zIndex: 200,
-          fontFamily: 'var(--font)',
-          fontSize: 'var(--text-size)',
-          fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
-          letterSpacing: 'var(--text-ls)',
-          lineHeight: 'var(--text-lh)',
-          color: '#fff',
-          mixBlendMode: 'difference',
-          whiteSpace: 'nowrap',
-          pointerEvents: 'none',
-        }}>Skip Design</div>
-      )}
 
       <div
         ref={logoRef}
@@ -1278,7 +1259,9 @@ function AppInner() {
         onNavigatePolicy={() => navigateWithExit('/policy')}
         onGridMode={setGridVisible}
       />}
-      {sectionTitleFor(pathname) && (
+      {/* Home: «Skip Design» in the same place and style — desktop only, on
+          a phone the menu takes that row */}
+      {sectionTitleFor(pathname) && !(page === 'home' && isMobile) && (
         <SiteTitle
           key={sectionTitleFor(pathname)!}
           title={sectionTitleFor(pathname)!}

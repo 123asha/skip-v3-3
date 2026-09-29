@@ -472,8 +472,9 @@
 }
 
 .contactTitle {
+  /* Same style as the section page titles */
   font-family: var(--font-display);
-  font-size: var(--heading-size);
+  font-size: var(--page-title-size);
   font-weight: var(--heading-weight);
   line-height: var(--heading-lh);
   letter-spacing: var(--heading-ls);

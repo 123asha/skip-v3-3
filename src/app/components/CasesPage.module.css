@@ -67,7 +67,7 @@
   transform: none;
   text-align: center;
   z-index: 199;
-  color: #fff;
+  color: var(--c-text-inv);
   mix-blend-mode: difference;
   pointer-events: none;
   /* Fades in with its page. `backwards`, not `both`: a held animation would

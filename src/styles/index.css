@@ -19,6 +19,9 @@
   --font-display: 'CoFo Sans VF', -apple-system, sans-serif;
   --font-mono: 'CoFo Sans VF', -apple-system, sans-serif;
   --c-text: #231f20;
+  /* Its inverse: text blended by difference over the light page (the pinned
+     titles, the nav) comes out as --c-text, not pure black */
+  --c-text-inv: #dce0df;
   --c-bg: #ffffff;
   --c-surface: #f6f6f6;
   /* Opaque on purpose: a translucent line changes shade over the grey section

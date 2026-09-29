@@ -784,7 +784,8 @@ function Tile({ index, text, gap }: { index: number; text: string; gap: number }
   return (
     <div
       ref={tileRef}
-      style={{ position: 'relative', aspectRatio: '4/5', background: 'var(--c-surface)', overflow: 'hidden' }}
+      // Phone: square tiles
+      style={{ position: 'relative', aspectRatio: isMobile ? '1/1' : '4/5', background: 'var(--c-surface)', overflow: 'hidden' }}
       onMouseEnter={isMobile ? undefined : () => { setHovered(true); playKnock(0.35); }}
       onMouseLeave={isMobile ? undefined : () => setHovered(false)}
     >
@@ -803,8 +804,9 @@ function Tile({ index, text, gap }: { index: number; text: string; gap: number }
           left: 15,
           bottom: 15,
           margin: 0,
-          // Phone: the caption starts on the grid's second column
-          ...(isMobile ? { left: 'calc(50% + var(--gap) / 2)', width: 'calc(50% - var(--gap) / 2 - 15px)' } : { width: `calc((4 * 100% - ${gap}px) / 5)` }),
+          // Phone: the caption on the grid's second column, level with the
+          // short title at the top
+          ...(isMobile ? { left: 'calc(50% + var(--gap) / 2)', width: 'calc(50% - var(--gap) / 2 - 15px)', top: 15, bottom: 'auto' } : { width: `calc((4 * 100% - ${gap}px) / 5)` }),
           // Two lines everywhere, so a shorter caption still occupies the
           // same block and all four line up.
           minHeight: 'calc(2 * var(--text-size) * var(--text-lh))',

@@ -149,6 +149,11 @@
   /* 16px: iOS Safari zooms the whole page into any field set smaller */
   font-size: 16px;
   opacity: 0;
+  /* iOS still paints its own blinking caret in a transparent field — the
+     dot top-left of the circles; the circles draw the caret themselves */
+  caret-color: transparent;
+  color: transparent;
+  background: transparent;
   width: 1px;
   height: 1px;
   pointer-events: none;

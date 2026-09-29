@@ -18,6 +18,10 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
   const [checked, setChecked]   = useState(false);
   const [email, setEmail]       = useState('');
   const [telegram, setTelegram] = useState('');
+  // The telegram field never runs past three rows of circles: letters that
+  // fit = three rows minus the «@», the caret and the arrow circles.
+  const fieldsRef = useRef<HTMLDivElement>(null);
+  const [tgMax, setTgMax] = useState(32);
   const [phone, setPhone]       = useState('');
   const [cv, setCv]             = useState('');
   const [activeTab, setActiveTab] = useState<'discuss' | 'join'>('discuss');
@@ -118,6 +122,26 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
     );
   }, [animatedWord]);
 
+  useEffect(() => {
+    const el = fieldsRef.current;
+    if (!el) return;
+    const measure = () => {
+      const root = getComputedStyle(document.documentElement);
+      const gap = parseFloat(root.getPropertyValue('--gap')) || 0;
+      const pad = parseFloat(root.getPropertyValue('--pad')) || 0;
+      // Field width: one column of three on desktop, the page width on a phone
+      const width = isMobile ? window.innerWidth - 2 * pad : (el.clientWidth - 2 * gap) / 3;
+      const size = isMobile ? Math.min(40, (window.innerWidth - 2 * pad) / 9.8) : 60;
+      // The circles touch — no gap between them
+      const perRow = Math.max(1, Math.floor(width / size));
+      setTgMax(Math.max(1, Math.min(32, perRow * 3 - 3)));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [isMobile]);
+
   const handleTelegramChange = (v: string) => {
     // Strip any "@" the visitor types — the prefix circle already shows one
     setTelegram(v.replace(/@/g, ''));
@@ -194,7 +218,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
               form rectangle — the consent reads as the input's own fine
               print instead of drifting down to the footer line */}
           <div style={{ marginTop: 'auto', marginBottom: 'auto', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 }}>
-          <div className={s.contactFields} style={{ width: '100%', marginTop: 64 }}>
+          <div ref={fieldsRef} className={s.contactFields} style={{ width: '100%', marginTop: 64 }}>
             {status === 'sent' ? (
               <p className={s.contactTitle} style={{ textAlign: 'center', margin: 0 }}>
                 Спасибо! Скоро напишем вам в Telegram.
@@ -207,7 +231,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
                   prefix="@" placeholder="телеграм" caretAtRest
                   // Phone: the "@" and 8 typed letters fill exactly one row —
                   // 9 circles plus 8 gaps of 0.1 circle = 9.8 diameters
-                  size={isMobile ? 'min(40px, calc((100vw - 2 * var(--pad)) / 9.8))' : 60} maxLength={32}
+                  size={isMobile ? 'min(40px, calc((100vw - 2 * var(--pad)) / 9.8))' : 60} maxLength={tgMax}
                   value={telegram} onChange={v => { handleTelegramChange(v); if (telegramError) setTelegramError(false); if (status === 'error') setStatus('idle'); }}
                   onFocus={() => setActiveFocus('telegram')}
                   onBlur={() => setActiveFocus(null)}

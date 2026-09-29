@@ -39,7 +39,7 @@ export default function CircleInput({ placeholder, value: externalValue, onChang
 
   return (
     <div
-      className={`${s.root} ${isEditing ? s.focused : ''} ${caretAtRest ? s.caretAtRest : ''} ${error ? s.error : ''}`}
+      className={`${s.root} ${isEditing ? s.focused : ''} ${focused ? s.hasFocus : ''} ${caretAtRest ? s.caretAtRest : ''} ${error ? s.error : ''}`}
       style={{
         '--c-size': typeof size === 'number' ? `${size}px` : size,
         opacity: disabled ? 0.35 : 1,

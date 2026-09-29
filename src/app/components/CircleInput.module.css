@@ -92,10 +92,15 @@
   border-color: var(--c-border);
 }
 
-/* Caret at rest: the "@" is outlined dark from the start, like the caret */
+/* Caret at rest: the "@" is outlined dark from the start, like the caret.
+   The circles touch (no gap); wrapped rows centre under each other. */
+.caretAtRest { justify-content: center; gap: 0; }
 .caretAtRest .prefix {
   border-color: var(--c-text);
 }
+/* The caret stands still until the field is clicked, then blinks */
+.caretAtRest .caret { animation: none; }
+.caretAtRest.hasFocus .caret { animation: blink 1.1s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
 .focused .prefix {
   border-color: var(--c-text);

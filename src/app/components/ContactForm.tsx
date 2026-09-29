@@ -28,9 +28,9 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
   useEffect(() => {
     const onScroll = () => {
       const el = cardRef.current;
-      // Once the card is nearly all on screen (its last ~15% still below) —
-      // smooth scrolling takes a while to settle on the very end
-      if (el) setAtBottom(el.getBoundingClientRect().bottom <= window.innerHeight * 1.15);
+      // Only once the page is scrolled right to the end — the card fills the
+      // screen, so its top edge is never seen changing colour
+      if (el) setAtBottom(el.getBoundingClientRect().bottom <= window.innerHeight + 2);
     };
     onScroll();
     // Capture: inner pages scroll in their own container, not the window

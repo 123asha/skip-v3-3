@@ -527,6 +527,21 @@ function AppInner() {
     document.documentElement.style.setProperty('--page-sb', `${probe.offsetWidth - probe.clientWidth}px`);
     probe.remove();
   }, []);
+  // The window's own scrollbar right now (the home page's). While a section
+  // page opens, the home page's scrollbar can linger for a moment next to the
+  // inner page's; fixed items that add the inner page's gutter subtract this,
+  // so they never shift twice and jump back.
+  const [winSb, setWinSb] = useState(0);
+  useLayoutEffect(() => {
+    const el = document.documentElement;
+    const measure = () => setWinSb(Math.max(0, window.innerWidth - el.clientWidth));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener('resize', measure);
+    return () => { ro.disconnect(); window.removeEventListener('resize', measure); };
+  }, []);
+
   // Mobile: track when the hero video phase ends (scroll > 280px) so the button fades
   const [mobileVideoOver, setMobileVideoOver] = useState(false);
   const sRef   = useRef<SVGGElement>(null);
@@ -1016,7 +1031,7 @@ function AppInner() {
         // top on the logo's top line. Inner pages add the scrollbar gutter
         // (see above) so the row sits identically on every page.
         style={{
-          right: `calc(var(--pad) + ${page !== 'home' && page !== 'index2' ? scrollbarW : 0}px)`,
+          right: `calc(var(--pad) + ${page !== 'home' && page !== 'index2' ? Math.max(0, scrollbarW - winSb) : 0}px)`,
           ['--nav-sb' as any]: `${scrollbarW}px`,
         }}
       >
@@ -1089,7 +1104,7 @@ function AppInner() {
           // viewport-fixed logo sits ~scrollbar-width too far right vs the home
           // page. Add the scrollbar width back so it lines up identically.
           ...(page !== 'home' && page !== 'index2'
-            ? { right: `calc(var(--pad) - 10px + ${scrollbarW}px)` }
+            ? { right: `calc(var(--pad) - 10px + ${Math.max(0, scrollbarW - winSb)}px)` }
             : null),
         }}
         onMouseEnter={() => {

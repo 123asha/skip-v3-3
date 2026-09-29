@@ -352,6 +352,16 @@
   flex-shrink: 0;
 }
 
+/* Narrow desktops: a centred title would run into the menu — it starts on
+   the 2nd column's left line instead */
+@media (min-width: 769px) and (max-width: 1100px) {
+  .title.titleCol2 {
+    left: calc(var(--pad) + (100% - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap));
+    right: auto;
+    margin: 0;
+  }
+}
+
 /* ── Mobile overrides (kept last so they win) ── */
 @media (max-width: 768px) {
   .body { padding-bottom: 0; }

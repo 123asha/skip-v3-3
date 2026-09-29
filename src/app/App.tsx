@@ -848,9 +848,10 @@ function AppInner() {
       : page === 'case-template' || page === 'seniors' ? 'cases' : page;
     // Home and other pages with no current section: all three dark
     if (!['cases', 'expertiza', 'lab'].includes(section)) return undefined;
-    // The site's standard muted grey (--c-text-muted) — flat, not the
-    // blend-derived opacity trick, so it reads exactly like other grey text
-    return section === target ? undefined : { color: 'var(--c-text-muted)', mixBlendMode: 'normal' as const };
+    // The site's standard muted grey. The nav blends by difference (white
+    // text lands black on the light page), so the links carry the grey's
+    // inverse — on the page it reads exactly as --c-text-muted.
+    return section === target ? undefined : { color: 'var(--c-text-muted-inv)' };
   };
   // The menu is the page title on inner pages — heading size
   const navItemStyle = (target: string): React.CSSProperties => {

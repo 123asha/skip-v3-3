@@ -89,6 +89,9 @@
   /* Same grey as opacity 0.4 over white, but opaque — for places where the
      shade must not shift with whatever sits underneath. */
   --c-text-muted: #a7a5a6;
+  /* Its inverse (255 − each channel): under mix-blend-mode: difference on the
+     light page it comes out as --c-text-muted */
+  --c-text-muted-inv: #585a59;
 }
 
 /* Muted text helper — matches L2 link opacity */

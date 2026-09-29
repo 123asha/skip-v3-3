@@ -162,8 +162,9 @@
     --hero-lh:        var(--heading-lh);
     --hero-w:         calc(100vw - 2 * var(--pad));
     --hero-ws:        normal;
+    --hero-dy:        15px;   /* a touch lower on the screen */
     --text-size:      clamp(11px, 3.5vw, 18px);
-    --text-lh:        1.38;   /* phones: 15% more leading than 1.2 */
+    --text-lh:        1.242;  /* phones: 1.2 +15%, then −10% */
     /* Proportional vertical rhythm — keeps the same ratio as desktop */
     --space-xl: 80px;
     --space-lg: 48px;

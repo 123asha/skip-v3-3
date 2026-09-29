@@ -266,7 +266,8 @@ function ConstellationHero() {
         // viewport width so the two lines always fit on a phone too
         // Phone: the heading style's size, wrapping within the margins
         // (--hero-*, index.css)
-        top: '45%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', maxWidth: 'none',
+        // (--hero-dy: phones set it 15px lower)
+        top: '45%', left: '50%', transform: 'translate(-50%, calc(-50% + var(--hero-dy, 0px)))', textAlign: 'center', maxWidth: 'none',
         width: 'var(--hero-w, max-content)', whiteSpace: 'var(--hero-ws, nowrap)' as React.CSSProperties['whiteSpace'],
         fontSize: 'var(--hero-fs, min(var(--hero-size), 7.2vw))', // Its own leading (0.96 × 0.94, then 3% tighter) — kept apart from the
         // heading style's

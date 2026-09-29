@@ -9,7 +9,7 @@ import LinkFlip from './LinkFlip';
 import { sound } from '../sound/Sound';
 import { MagneticDivider } from './MagneticDivider';
 import PillButton from './PillButton';
-import MobileFooter from './MobileFooter';
+import ContactForm from './ContactForm';
 import { asset } from '../utils/asset';
 import { usePinchSteps } from '../hooks/usePinchSteps';
 
@@ -725,20 +725,21 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
 
           const pushCopy = (key: string, text: string, title?: string) => {
             const idx = title ? copyIdx++ : -1;
-            const isOpen = idx < 0 || openCopy === idx;
+            // Phone: every entry open — «о проекте» reads straight through
+            const isOpen = isMobile || idx < 0 || openCopy === idx;
             copy.push(
               // Click target is the whole row — padding and the empty half of a
               // collapsed row included.
               <div
                 key={key}
-                onClick={title ? () => setOpenCopy(idx) : undefined}
+                onClick={title && !isMobile ? () => setOpenCopy(idx) : undefined}
                 onMouseEnter={title && !isMobile ? () => setHoveredCopy(idx) : undefined}
                 onMouseLeave={title && !isMobile ? () => setHoveredCopy(-1) : undefined}
                 style={{
                   position: 'relative',
                   paddingTop: 12,
                   paddingBottom: 12,
-                  cursor: title ? 'pointer' : undefined,
+                  cursor: title && !isMobile ? 'pointer' : undefined,
                 }}
               >
                 {idx > 0 && <MagneticDivider flat={isMobile} />}
@@ -1049,7 +1050,9 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
         // No closing strip for now — just room above the fixed footer row
         <div style={{ height: 'var(--space-xl)' }} />
       )}
-      <MobileFooter />
+      {/* The contact form, as at the end of every page (on a phone it also
+          carries the footer line) */}
+      <ContactForm onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
       </div>{/* /the case page (picsPaneRef) */}
       {/* Phone: «о проекте» — a whole page to the right of the case */}
       {isMobile && (

@@ -16,9 +16,12 @@ interface CircleInputProps {
   maxLength?: number;
   /** Circle that always stays first (e.g. "@") — not part of the value */
   prefix?: string;
+  /** At rest show the blinking caret circle instead of the placeholder
+   *  letters (the placeholder stays as the field's aria-label) */
+  caretAtRest?: boolean;
 }
 
-export default function CircleInput({ placeholder, value: externalValue, onChange, onFocus: onFocusProp, onBlur: onBlurProp, size = 120, disabled, action, error, maxLength, prefix }: CircleInputProps) {
+export default function CircleInput({ placeholder, value: externalValue, onChange, onFocus: onFocusProp, onBlur: onBlurProp, size = 120, disabled, action, error, maxLength, prefix, caretAtRest }: CircleInputProps) {
   const isControlled = onChange !== undefined;
   const [ownValue, setOwnValue] = useState('');
   const [focused, setFocused] = useState(false);
@@ -36,7 +39,7 @@ export default function CircleInput({ placeholder, value: externalValue, onChang
 
   return (
     <div
-      className={`${s.root} ${isEditing ? s.focused : ''} ${error ? s.error : ''}`}
+      className={`${s.root} ${isEditing ? s.focused : ''} ${caretAtRest ? s.caretAtRest : ''} ${error ? s.error : ''}`}
       style={{
         '--c-size': typeof size === 'number' ? `${size}px` : size,
         opacity: disabled ? 0.35 : 1,
@@ -54,7 +57,7 @@ export default function CircleInput({ placeholder, value: externalValue, onChang
 
       {/* Placeholder stays mounted and collapses away, so the row of circles
           shrinks smoothly instead of snapping when the field is focused. */}
-      {Array.from(t(placeholder)).map((ch, i) => (
+      {!caretAtRest && Array.from(t(placeholder)).map((ch, i) => (
         <div
           key={`p-${i}`}
           className={`${s.circle} ${s.placeholder} ${isEditing ? s.collapsed : ''}`}
@@ -62,6 +65,11 @@ export default function CircleInput({ placeholder, value: externalValue, onChang
         >{ch}</div>
       ))}
 
+      {caretAtRest && !isEditing && (
+        <div className={`${s.circle} ${s.cursor}`}>
+          <span className={s.caret}>|</span>
+        </div>
+      )}
       {isEditing && (
         <>
           {chars.map((ch, i) => (

@@ -362,8 +362,9 @@
 /* ── Contact form ── */
 .contactWrap {
   margin-top: var(--space-xl);
-  /* Room between the form and the fixed footer row */
-  margin-bottom: var(--space-lg);
+  /* The card is one screen tall and ends the page — its own bottom padding
+     keeps the form clear of the fixed footer row */
+  margin-bottom: 0;
   /* The grey footer runs edge to edge and down to the bottom of the page */
   padding: 0;
   position: relative;
@@ -394,7 +395,8 @@
   background: var(--c-surface);
   /* Full width of the grid container */
   width: 100%;
-  min-height: 600px;
+  /* One screen tall — scrolled to the end, the form fills the viewport */
+  min-height: 100svh;
   position: relative;
   z-index: 2;
   overflow: hidden;

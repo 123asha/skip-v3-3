@@ -92,6 +92,11 @@
   border-color: var(--c-border);
 }
 
+/* Caret at rest: the "@" is outlined dark from the start, like the caret */
+.caretAtRest .prefix {
+  border-color: var(--c-text);
+}
+
 .focused .prefix {
   border-color: var(--c-text);
   transition: border-color 0.3s ease, color 0.3s ease;

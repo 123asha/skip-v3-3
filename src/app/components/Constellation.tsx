@@ -871,6 +871,9 @@ export default function Constellation({
     // the cursor routinely leaves the ball mid-throw, and pointer capture is
     // not reliable on SVG elements across engines.
     nodesLayer.addEventListener('pointerdown', onPointerDown);
+    // Touch on a ball: keep the page from scrolling so the ball can be dragged
+    const onBallTouch = (e: TouchEvent) => { if (e.cancelable) e.preventDefault(); };
+    nodesLayer.addEventListener('touchstart', onBallTouch, { passive: false });
     window.addEventListener('pointermove', onPointerMove, { passive: false });
     window.addEventListener('pointerup', endDrag);
     window.addEventListener('pointercancel', endDrag);
@@ -1200,6 +1203,7 @@ export default function Constellation({
       cancelAnimationFrame(raf);
       detachScroll?.();
       nodesLayer.removeEventListener('pointerdown', onPointerDown);
+      nodesLayer.removeEventListener('touchstart', onBallTouch);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', endDrag);
       window.removeEventListener('pointercancel', endDrag);
@@ -1219,7 +1223,10 @@ export default function Constellation({
         ref={svgRef}
         viewBox={`0 0 ${size.w} ${size.h}`}
         xmlns={NS}
-        style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none' }}
+        // pan-y: a finger on the empty field scrolls the page (the hero is a
+        // full screen — `none` here trapped scrolling on phones). A touch that
+        // starts on a ball is kept for the drag instead (see onBallTouch).
+        style={{ width: '100%', height: '100%', display: 'block', touchAction: 'pan-y' }}
         // The hero underneath navigates on click — grabbing a ball must not
         onClick={e => e.stopPropagation()}
       >

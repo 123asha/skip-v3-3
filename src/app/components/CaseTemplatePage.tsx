@@ -91,12 +91,13 @@ function PinnedInvert({ placeholderRef, children }: { placeholderRef: React.RefO
 }
 
 function MetaRow({
-  col1, col2, num, text, col2IsTitle,
-}: { col1?: React.ReactNode; col2?: string; num?: string; text: string; col2IsTitle?: boolean }) {
+  col1, col2, num, text, col2IsTitle, tags,
+}: { col1?: React.ReactNode; col2?: string; num?: string; text: string; col2IsTitle?: boolean; tags?: string[] }) {
   const mob = useMobile();
   if (mob) {
-    // Phone: the same caption grid as the case cards — name on the left,
-    // the year (grey) and the text on the right
+    // Phone: the same caption grid as the case cards — name on the left;
+    // on the right the text, then the category chips, then the year (grey),
+    // all on the text's left edge
     return (
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(90px, 1fr) minmax(0, 3fr)', gap: 'var(--gap)', alignItems: 'start' }}>
         <div>
@@ -106,10 +107,15 @@ function MetaRow({
             : <p style={{ ...textStyle, margin: 0 }}>{col2}</p>)}
         </div>
         <div style={{ minWidth: 0 }}>
-          {num && <p style={{ ...textStyle, opacity: 'var(--opacity-muted)', margin: 0 }}>{num}</p>}
           {text.split('\n\n').map((para, k) => (
             <p key={k} style={{ ...textStyle, margin: 0, marginTop: k === 0 ? 0 : PARA_GAP }}>{typo(para)}</p>
           ))}
+          {tags && tags.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: PARA_GAP }}>
+              {tags.map(t => <span key={t} className={s.chip}>{t}</span>)}
+            </div>
+          )}
+          {num && <p style={{ ...textStyle, opacity: 'var(--opacity-muted)', margin: 0, marginTop: PARA_GAP }}>{num}</p>}
         </div>
       </div>
     );
@@ -302,6 +308,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
   // exactly this much so all four meta items start on the same line, however
   // many lines the first one wraps to.
   const typesRef = useRef<HTMLDivElement>(null);
+  const chipsRowMobile = useMobile();
   const [typesH, setTypesH] = useState(0);
   // Height of the sticky meta row — the copy column sticks 40px below it.
   const metaRef = useRef<HTMLDivElement>(null);
@@ -314,7 +321,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [chipsRowMobile]);   // the chips row only exists on desktop
 
   useLayoutEffect(() => {
     const el = metaRef.current;
@@ -464,14 +471,15 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
         </div>
       </div>
 
-      {/* Categories — the site's chips, in a row */}
-      <div ref={typesRef} style={{ padding: '0 var(--pad)', marginTop: 10 }}>
+      {/* Categories — the site's chips, in a row (phone: under the intro,
+          inside the meta row) */}
+      {!isMobile && <div ref={typesRef} style={{ padding: '0 var(--pad)', marginTop: 10 }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
           {data.tags.map(t => (
             <span key={t} className={s.chip}>{t}</span>
           ))}
         </div>
-      </div>
+      </div>}
 
       {/* Year + intro — pulled up by one line so all four meta items start on
           the same row under the cover; from there these two stick to the top
@@ -490,7 +498,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
           visibility: isMobile ? 'visible' : 'hidden',
         }}
       >
-        <MetaRow col2={data.title} col2IsTitle num={data.year} text={data.intro} />
+        <MetaRow col2={data.title} col2IsTitle num={data.year} text={data.intro} tags={isMobile ? data.tags : undefined} />
       </div>
       {!isMobile && (
         <PinnedInvert placeholderRef={metaRef}>

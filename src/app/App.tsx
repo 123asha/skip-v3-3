@@ -1273,21 +1273,20 @@ function AppInner() {
         <span id={FOOTER_SLOT_ID} style={{ display: 'contents' }} />
       </div>}
 
-      {/* ── Mobile footer bar — the desktop corners in one row: language on
-          the left, social + time on the right. One text line tall, pinned to
-          the same bottom edge as the desktop footer; every item is centred on
-          that line, so all the text shares one baseline. ── */}
+      {/* ── Mobile top bar — language, social and time in one row at the top
+          right, centred on the logo's line (the menu moved to the bottom of
+          the screen, under the thumb — see .nav in App.module.css). ── */}
       {isMobile && (
         <div style={{
           position: 'fixed',
-          left: 'var(--pad)',
           right: 'var(--pad)',
-          bottom: 'var(--pad)',
-          height: 'calc(var(--text-size) * var(--text-lh))',
+          // Same box as the logo (top 6px, 52px tall), so the row centres on it
+          top: 6,
+          height: 52,
           zIndex: 200,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          gap: 16,
           color: '#fff',
           mixBlendMode: 'difference',
           pointerEvents: 'none',

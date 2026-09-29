@@ -180,7 +180,7 @@ export default function CaseCard({
 
   // ── Mobile: the desktop caption row exactly — name left, description right,
   //    same columns — only the description is always shown (no hover on
-  //    touch), with the grey categories above it. ──
+  //    touch), with the grey categories under it. ──
   if (isMobile) {
     return (
       <div className={s.card} onClick={onClick}>
@@ -190,8 +190,8 @@ export default function CaseCard({
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(90px, 1fr) minmax(0, 3fr)', gap: 'var(--gap)', alignItems: 'flex-start', paddingTop: 10 }}>
           <p className={`${s.cardMetaText} ${s.cardLink}`} style={{ margin: 0, ...metaStyle }}>{title}</p>
           <div style={{ minWidth: 0 }}>
-            {services && <p className={s.cardMetaText} style={{ margin: 0, opacity: 'var(--opacity-muted)' as any, ...metaStyle }}>{services}</p>}
             <p className={s.cardMetaText} style={{ margin: 0, ...metaStyle }}>{typo(desc)}</p>
+            {services && <p className={s.cardMetaText} style={{ margin: 0, opacity: 'var(--opacity-muted)' as any, ...metaStyle }}>{services}</p>}
           </div>
         </div>
       </div>

@@ -193,8 +193,8 @@
    page. Compact on desktop; the full width at the bottom on a phone. */
 .navBoxed {
   mix-blend-mode: normal;
-  /* The links' box, then a gap, then «Написать» on its own */
-  gap: var(--space-xs);
+  /* The links' box, then the smallest gap in use (10px), then «Написать» */
+  gap: 10px;
   /* Plain colours — the grey links use the muted grey itself, not its inverse */
   --c-text-muted-inv: var(--c-text-muted);
 }

@@ -35,7 +35,7 @@ import { LANG, LANG_PREFIX, stripLang, otherLangHref, t } from './i18n';
 function sectionTitleFor(path: string): string | null {
   const p = path.split(/[?#]/)[0].replace(/\/$/, '');
   if (p === '/cases') return 'Проекты Skip Design';
-  if (p === '/services' || p === '/services-2' || p === '/expertiza') return 'Услуги Skip Design';
+  if (p === '/services' || p === '/services-2' || p === '/expertiza') return 'Услуги и решения Skip Design';
   if (p === '/lab') return 'Инсайты команды';
   if (p === '') return 'Skip Design';
   return null;

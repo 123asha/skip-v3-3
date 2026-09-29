@@ -75,6 +75,11 @@
   animation: pageIn 0.35s 0.05s ease backwards;
 }
 
+/* The title steps aside for the up arrow at the very end of a page
+   (ScrollTopArrow) */
+.titleCol2 { transition: opacity 0.3s ease; }
+.titleCol2[data-away] { opacity: 0; }
+
 .body {
   /* Title bottom → first content block: --space-title (200px at 1600) */
   padding-top: calc(var(--pad) + var(--heading-size) * var(--heading-lh) + var(--space-title));

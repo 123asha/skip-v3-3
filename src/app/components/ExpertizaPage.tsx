@@ -256,7 +256,7 @@ const MATCH_POINTS: { sym: React.ReactNode; text: string }[] = [
 
 // ── Intro description ───────────────────────────────────────────────────────
 // Sits under the services table, on the site's 5-col grid: two text columns
-// on the right (cols 4–5), the left three left empty. Stacks on mobile.
+// (cols 3–4), the rest left empty. Stacks on mobile.
 
 function IntroBlock() {
   const isMobile = useMobile();
@@ -292,15 +292,15 @@ function IntroBlock() {
         marginTop: 'var(--space-xl)',
       }}
     >
-      {/* Col 4 — credo + principles */}
-      <div style={{ gridColumn: isMobile ? 'auto' : '4 / 5' }}>
+      {/* Col 3 — credo + principles */}
+      <div style={{ gridColumn: isMobile ? 'auto' : '3 / 4' }}>
         {[CREDO, ...PRINCIPLES].map((para, i) => (
           <p key={i} style={{ ...ts, margin: 0, marginTop: i === 0 ? 0 : P_GAP }}>{typo(para)}</p>
         ))}
       </div>
 
-      {/* Col 5 — the match points: symbol as a bullet, text to its right */}
-      <div style={{ gridColumn: isMobile ? 'auto' : '5 / 6' }}>
+      {/* Col 4 — the match points: symbol as a bullet, text to its right */}
+      <div style={{ gridColumn: isMobile ? 'auto' : '4 / 5' }}>
         {MATCH_POINTS.map(({ sym, text }, i) => (
           <p key={i} style={{ ...ts, margin: 0, marginTop: i === 0 ? 0 : P_GAP, display: 'flex', gap: 10 }}>
             <span aria-hidden="true" style={{ flexShrink: 0 }}>{sym}</span>

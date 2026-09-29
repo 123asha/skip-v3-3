@@ -46,9 +46,9 @@ export function SiteTitle({ title: text, releaseAt }: { title: string; releaseAt
 
 /**
  * Up arrow shown once an inner page is scrolled all the way down; a click
- * glides back to the top. Desktop: in the menu's row, just left of it and as
- * tall as it. Phone (menu at the bottom): centred in the top bar, on the
- * logo's line.
+ * glides back to the top. Centred on the page, in the menu's row (phone:
+ * just above the bottom menu). The section title, which sits in that spot on
+ * some pages, steps aside while the arrow is there.
  */
 export function ScrollTopArrow() {
   const [shown, setShown] = useState(false);
@@ -58,16 +58,23 @@ export function ScrollTopArrow() {
     const check = () => {
       const page = scroller();
       if (!page) { setShown(false); return; }
-      setShown(page.scrollTop + page.clientHeight >= page.scrollHeight - 60);
+      const atEnd = page.scrollTop + page.clientHeight >= page.scrollHeight - 60;
+      setShown(atEnd);
+      const title = document.querySelector<HTMLElement>('body > h1[class*="titleCol2"]');
+      // Desktop only — on a phone the arrow sits at the bottom, clear of it
+      if (title) title.toggleAttribute('data-away', atEnd && window.innerWidth > 768);
+      const pz = parseFloat(document.documentElement.style.zoom || '1') || 1;
+      const sb = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--page-sb')) || 0;
+      // Centre of the page's content width (its own scrollbar excluded)
+      const cx = (document.documentElement.clientWidth / pz - sb) / 2;
       const nav = document.querySelector('nav')?.getBoundingClientRect();
       if (!nav) return;
-      if (window.innerWidth <= 768) {
-        // Top bar: the logo's box is 6px from the top, 52px tall
-        setPos({ top: 6 + (52 - 30) / 2, left: '50%', transform: 'translateX(-50%)' });
-      } else {
-        const pz = parseFloat(document.documentElement.style.zoom || '1') || 1;
-        setPos({ top: nav.top / pz, left: (nav.left / pz) - 10 - nav.height / pz, width: nav.height / pz, height: nav.height / pz });
-      }
+      const h = nav.height / pz;
+      // Phone: the menu is at the bottom — the arrow sits centred 10px above it
+      // (the top bar's middle belongs to the language switch)
+      setPos(window.innerWidth <= 768
+        ? { top: nav.top / pz - 10 - h, left: cx - h / 2, width: h, height: h }
+        : { top: nav.top / pz, left: cx - h / 2, width: h, height: h });
     };
     check();
     window.addEventListener('scroll', check, { capture: true, passive: true });
@@ -75,6 +82,7 @@ export function ScrollTopArrow() {
     return () => {
       window.removeEventListener('scroll', check, { capture: true });
       window.removeEventListener('resize', check);
+      document.querySelector('body > h1[class*="titleCol2"]')?.removeAttribute('data-away');
     };
   }, []);
 
@@ -84,7 +92,7 @@ export function ScrollTopArrow() {
       onClick={() => scroller()?.scrollTo({ top: 0, behavior: 'smooth' })}
       style={{
         position: 'fixed', zIndex: 201,
-        width: 30, height: 30, borderRadius: 4, border: 'none', padding: 0,
+        borderRadius: 4, border: 'none', padding: 0,
         background: 'var(--c-text)', color: '#fff', cursor: 'pointer',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         ...pos,

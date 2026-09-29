@@ -7,6 +7,7 @@ import { typo } from '../utils/typography';
 import { INSIGHTS_LIST } from './MediaSection';
 import cs from './CaseCard.module.css';
 import ZoomControl from './ZoomControl';
+import { driftTo } from '../utils/parallaxInertia';
 
 // Same density steps as the cases grid: 3 columns (biggest, default) down to
 // 6 (densest). Zoom level rises toward the biggest cards, like the cases page.
@@ -112,7 +113,7 @@ export function InsightCards() {
       pics.forEach(img => {
         const r = img.parentElement!.getBoundingClientRect();
         const p = Math.max(-1, Math.min(1, (r.top + r.height / 2 - vh / 2) / vh));
-        img.style.transform = `translate3d(0, ${(p * 26).toFixed(2)}%, 0)`;
+        driftTo(img, p * 26, (el, v) => { el.style.transform = `translate3d(0, ${v.toFixed(2)}%, 0)`; });
       });
     };
     const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };

@@ -10,7 +10,8 @@ import { gsap } from 'gsap';
 // bounceChips — the same push, but only for a moment (chips that don't stay
 // selected one at a time).
 
-const EASE_OUT = 'elastic.out(0.8, 0.35)';   // spring, 20% softer than 1.0
+// A single soft overshoot rather than a wobble
+const EASE_OUT = 'back.out(1)';
 const offsets = new WeakMap<HTMLElement, number[]>();
 const running = new WeakMap<HTMLElement, gsap.core.Tween | gsap.core.Timeline>();
 
@@ -36,7 +37,7 @@ const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matc
 
 // A neighbour with nothing beyond it (an end chip) can't be pushed anywhere,
 // so it just hops out this far and springs back
-const HOP = 6;
+const HOP = 4;
 
 export function settleChips(row: HTMLElement | null, activeIndex: number) {
   if (!row) return;
@@ -59,9 +60,9 @@ export function settleChips(row: HTMLElement | null, activeIndex: number) {
     draw(chips, cur.map((x, i) => x + hop[i] * state.q));
   };
   running.set(row, gsap.timeline({ onUpdate: tick, onComplete: tick })
-    .to(state, { p: 1, duration: 0.9, ease: EASE_OUT }, 0)
+    .to(state, { p: 1, duration: 0.55, ease: EASE_OUT }, 0)
     .to(state, { q: 1, duration: 0.12, ease: 'power2.out' }, 0)
-    .to(state, { q: 0, duration: 0.9, ease: EASE_OUT }, 0.12));
+    .to(state, { q: 0, duration: 0.5, ease: 'power2.inOut' }, 0.12));
 }
 
 export function bounceChips(pressed: HTMLElement) {
@@ -73,5 +74,5 @@ export function bounceChips(pressed: HTMLElement) {
   const apply = () => draw(chips, amp.map(a => a * state.p));
   gsap.timeline({ onUpdate: apply, onComplete: apply })
     .to(state, { p: 1, duration: 0.12, ease: 'power2.out' })
-    .to(state, { p: 0, duration: 0.9, ease: EASE_OUT });
+    .to(state, { p: 0, duration: 0.5, ease: 'power2.inOut' });
 }

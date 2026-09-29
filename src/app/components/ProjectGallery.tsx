@@ -6,6 +6,7 @@ import { PROJECTS, type Project } from './CasesPage';
 import { MagneticDivider } from './MagneticDivider';
 import { asset, arSuffix, videoAsset } from '../utils/asset';
 import { caseCategories } from '../utils/caseCategories';
+import { driftTo } from '../utils/parallaxInertia';
 
 // The same cases as the cases page — one list, so the home cards and the
 // cases page always show (and open) the same projects
@@ -148,7 +149,7 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: (href?: 
       root.querySelectorAll<HTMLElement>('[data-case-card] img').forEach(img => {
         const r = img.parentElement!.getBoundingClientRect();
         const p = Math.max(-1, Math.min(1, (r.top + r.height / 2 - vh / 2) / vh));
-        img.style.translate = `0 ${(p * 20).toFixed(2)}%`;
+        driftTo(img, p * 20, (el, v) => { el.style.translate = `0 ${v.toFixed(2)}%`; });
       });
     };
     const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };

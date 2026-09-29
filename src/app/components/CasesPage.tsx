@@ -14,6 +14,7 @@ function img(path: string): { image: string; ar: AR } {
 }
 import { useReveal } from '../hooks/useReveal';
 import { bounceChips, settleChips } from '../utils/chipBounce';
+import { driftTo } from '../utils/parallaxInertia';
 
 interface Props {
   onBack: () => void;
@@ -359,7 +360,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
       if (!still) page.querySelectorAll<HTMLElement>('[data-case-card] img').forEach(img => {
         const r = img.parentElement!.getBoundingClientRect();
         const p = Math.max(-1, Math.min(1, (r.top + r.height / 2 - vh / 2) / vh));
-        img.style.translate = `0 ${(p * 20).toFixed(2)}%`;
+        driftTo(img, p * 20, (el, v) => { el.style.translate = `0 ${v.toFixed(2)}%`; });
         // The frame stays put against its caption — the gap to the title
         // never changes on scroll
       });

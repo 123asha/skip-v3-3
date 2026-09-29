@@ -283,6 +283,8 @@ CASES.push(GATE_LEGAL, SENIORS_BAR);
 
 export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavigateCase, data = GATE_LEGAL }: { onNavigatePolicy?: () => void; onGridMode?: (on: boolean) => void; onNavigateCase?: (href: string) => void; data?: CaseData }) {
   // The case that follows this one — its meta strip closes the page
+  // Temporarily off: the «next case» strip at the end of a case
+  const SHOW_NEXT_CASE = false;
   const nextCase = CASES[(CASES.findIndex(c => c.title === data.title) + 1) % CASES.length];
   // …and it has to land exactly where that case's own strip sits under its
   // cover, so clicking through leaves it in place and only the cover appears
@@ -829,6 +831,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
       </button>
       )}
 
+      {SHOW_NEXT_CASE ? (<>
       {/* Closing block — the next case starts here: its chips, name, year and
           intro, exactly the strip that sits under a cover, but without the
           cover itself. Clicking it opens that case. */}
@@ -882,6 +885,10 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
       </div>
       {/* Keeps the strip above at the cover's height when scrolled to the end */}
       <div style={{ height: nextPad }} />
+      </>) : (
+        // No closing strip for now — just room above the fixed footer row
+        <div style={{ height: 'var(--space-xl)' }} />
+      )}
     </div>
   );
 }

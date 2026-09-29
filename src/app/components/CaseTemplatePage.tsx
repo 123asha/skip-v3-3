@@ -182,8 +182,10 @@ function pairUp(items: { ar: string; src?: string; round: boolean }[]) {
       rows.push(
         <Block key={i}>
           <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-            <div style={{ flex: `${ra} 1 0`, minWidth: 0 }}><Img ar={a.ar} src={a.src} round={a.round} /></div>
-            <div style={{ flex: `${rb} 1 0`, minWidth: 0 }}><Img ar={b.ar} src={b.src} round={b.round} /></div>
+            {/* In a pair a round picture shows as a square — vertical + square
+                is the usual pairing */}
+            <div style={{ flex: `${ra} 1 0`, minWidth: 0 }}><Img ar={a.round ? '1/1' : a.ar} src={a.src} /></div>
+            <div style={{ flex: `${rb} 1 0`, minWidth: 0 }}><Img ar={b.round ? '1/1' : b.ar} src={b.src} /></div>
           </div>
         </Block>,
       );

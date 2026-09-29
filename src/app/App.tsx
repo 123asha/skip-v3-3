@@ -1377,7 +1377,8 @@ function AppInner() {
       {sectionTitleFor(pathname) && !(page === 'home' && isMobile) && (
         <SiteTitle
           key={sectionTitleFor(pathname)!}
-          title={sectionTitleFor(pathname)!}
+          // Phone: without «Skip Design» — the header already says it
+          title={isMobile ? sectionTitleFor(pathname)!.replace(/\s*Skip Design$/, '') : sectionTitleFor(pathname)!}
           releaseAt={page === 'expertiza' ? '[data-title-release]' : undefined}
         />
       )}

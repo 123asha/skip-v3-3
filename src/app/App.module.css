@@ -199,18 +199,21 @@
   mix-blend-mode: normal;
   /* The links' box, then the smallest gap in use (10px), then «Написать» */
   gap: 10px;
+  /* The box stretches to the button's height — exactly the same top and
+     bottom in every browser (baseline alignment drifted in Safari) */
+  align-items: stretch;
   /* Plain colours — the grey links use the muted grey itself, not its inverse */
   --c-text-muted-inv: var(--c-text-muted);
 }
 .navBoxed .navLink { color: var(--c-text); }
-/* Same height and corners as the «Написать» pill next to it */
+/* Same height (stretched to the row) and corners as the «Написать» pill */
 .navLinks {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--nav-gap);
   background: var(--c-surface);
   border-radius: 4px;
-  padding: 5px 12px 6px;
+  padding: 0 12px;
 }
 .navBoxed .navPill { background: var(--c-text) !important; color: #fff !important; }
 

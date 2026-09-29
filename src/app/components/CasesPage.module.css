@@ -121,7 +121,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 5px;
+  gap: var(--chip-gap);
   /* The tabs row's own bottom padding is the 20px gap between the rows */
   padding: 0;
   transition:
@@ -149,6 +149,19 @@
   transition: color 0.2s, border-color 0.2s;
 }
 
+/* Chips standing side by side are linked like the nodes of a graph: a thin
+   line runs across the gap from each chip to the one before it */
+.chip { position: relative; }
+.chip + .chip::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 1px);
+  width: var(--chip-gap);
+  border-top: 1px solid var(--c-border);
+  pointer-events: none;
+}
+
 .chipOn,
 .chip:hover {
   color: var(--c-text);
@@ -159,7 +172,7 @@
 .tabsBarInner {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--chip-gap);
 }
 /* Grid density control — fixed in the bottom-left corner of the viewport. */
 .zoomBtns {

@@ -111,7 +111,7 @@ function MetaRow({
             <p key={k} style={{ ...textStyle, margin: 0, marginTop: k === 0 ? 0 : PARA_GAP }}>{typo(para)}</p>
           ))}
           {tags && tags.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: PARA_GAP }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--chip-gap)', marginTop: PARA_GAP }}>
               {tags.map(t => <span key={t} className={s.chip}>{t}</span>)}
             </div>
           )}
@@ -581,7 +581,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
       {/* Categories — the site's chips, in a row (phone: under the intro,
           inside the meta row) */}
       {!isMobile && <div ref={typesRef} style={{ padding: '0 var(--pad)', marginTop: 10 }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--chip-gap)' }}>
           {data.tags.map(t => (
             <span key={t} className={s.chip}>{t}</span>
           ))}
@@ -964,7 +964,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
         <div style={{ padding: 'var(--pad)' }}>
           <MetaRow
             col1={
-              <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 5 }}>
+              <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 'var(--chip-gap)' }}>
                 {nextCase.tags.map(t => <span key={t} className={s.chip}>{t}</span>)}
               </span>
             }

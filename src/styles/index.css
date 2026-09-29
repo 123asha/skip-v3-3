@@ -67,6 +67,8 @@
   --header-h: 58px;
   /* Space between the header's menu items (links and «Написать») */
   --nav-gap: 13px;
+  /* Space between neighbouring chips — a thin line links them across it */
+  --chip-gap: 12px;
   /* Inner pages: the menu links sit on the logo line in column 2 and the
      page title drops one menu line below them */
   --title-drop: 0px;

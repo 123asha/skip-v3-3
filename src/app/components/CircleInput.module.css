@@ -106,7 +106,9 @@
   color: #fff !important;
 }
 
-/* The caret stands still until the field is clicked, then blinks */
+/* Until the field is clicked the whole last circle blinks with its caret;
+   once it's focused only the caret does */
+.caretAtRest:not(.hasFocus) .cursor { animation: blink 1.1s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 .caretAtRest .caret { animation: none; }
 .caretAtRest.hasFocus .caret { animation: blink 1.1s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
@@ -144,6 +146,8 @@
   position: absolute;
   left: 0;
   top: 0;
+  /* 16px: iOS Safari zooms the whole page into any field set smaller */
+  font-size: 16px;
   opacity: 0;
   width: 1px;
   height: 1px;

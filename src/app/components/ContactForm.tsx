@@ -48,11 +48,8 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
   useEffect(() => {
     const onScroll = () => {
       const el = cardRef.current;
-      // Only once the page is scrolled right to the end — the card fills the
-      // screen, so its top edge is never seen changing colour
-      // (40px of slack: smooth scrolling crawls over the last few pixels, and
-      // waiting for the exact end made the switch feel late)
-      if (el) setAtBottom(el.getBoundingClientRect().bottom <= window.innerHeight + 40);
+      // As soon as the form block is half way onto the screen
+      if (el) setAtBottom(el.getBoundingClientRect().top <= window.innerHeight / 2);
     };
     onScroll();
     // Capture: inner pages scroll in their own container, not the window
@@ -387,7 +384,8 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
               )}
             </div>
             {/* Phone: the fine print a pixel smaller, so its two lines fit */}
-            <span className={s.checkboxLabel} style={{ textAlign: 'left', ...(isMobile ? { fontSize: 13 } : null) }}>
+            {/* Grey until the box is ticked */}
+            <span className={s.checkboxLabel} style={{ textAlign: 'left', color: checked ? 'var(--c-text)' : 'var(--c-text-muted)', transition: 'color 0.2s', ...(isMobile ? { fontSize: 13 } : null) }}>
               Даю согласие на обработку персональных данных<br />в&nbsp;соответствии с&nbsp;
               <button
                 style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'inherit', letterSpacing: 'inherit', lineHeight: 'inherit', color: 'inherit', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}

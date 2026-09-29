@@ -803,7 +803,8 @@ function Tile({ index, text, gap }: { index: number; text: string; gap: number }
           left: 15,
           bottom: 15,
           margin: 0,
-          width: isMobile ? 'calc(100% - 30px)' : `calc((4 * 100% - ${gap}px) / 5)`,
+          // Phone: the caption starts on the grid's second column
+          ...(isMobile ? { left: 'calc(50% + var(--gap) / 2)', width: 'calc(50% - var(--gap) / 2 - 15px)' } : { width: `calc((4 * 100% - ${gap}px) / 5)` }),
           // Two lines everywhere, so a shorter caption still occupies the
           // same block and all four line up.
           minHeight: 'calc(2 * var(--text-size) * var(--text-lh))',
@@ -853,7 +854,8 @@ function TileBlocks() {
         ref={rowRef}
         style={{
           display: 'grid',
-          gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+          // Phone: one tile per row, across the column
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)',
           // Phone: on the two-column grid (its gutter)
           gap: isMobile ? 'var(--gap)' : GAP,
         }}

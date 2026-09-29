@@ -44,6 +44,7 @@ export const EN: Record<string, string> = {
   'для быстрорастущих': 'from strategic',
   'компаний': 'ideas',
   'Архив': 'Archive',
+  'Проекты студии': 'Studio projects',
   'Skip Design — бутиковая студия цифрового дизайна. Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться сути.':
     'Skip Design is a boutique digital design studio. We believe simplicity isn’t about dumbing things down — it’s the courage to skip whatever keeps the essence from showing.',
   'Нам доверяют': 'Trusted by',

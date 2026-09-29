@@ -62,8 +62,8 @@ const catLine = (cats?: string[]) => (cats ?? []).map(c => CAT_LABEL[c]).filter(
 // Tabs mirror the three categories of the services table.
 const TABS = [
   { key: 'branding',   label: 'Брендинг' },
-  { key: 'web',        label: 'Веб' },
   { key: 'interfaces', label: 'Продукт' },
+  { key: 'web',        label: 'Веб' },
 ];
 
 // "Веб" covers site-ish work; kept as a list so a project tagged with any of
@@ -297,8 +297,8 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
   // Phone: one card per row or two (⊖ denser, ⊕ bigger)
   const [mobCols, setMobCols] = useState<1 | 2>(1);
   useEffect(() => {
-    // Phone: in-flow like the menu (gaps open as margins around the selected)
-    settleChips(tabsRowRef.current, TABS.findIndex(t => t.key === activeTab), isMobile);
+    // Phone: already spaced and linked (CSS) — no spread
+    settleChips(tabsRowRef.current, isMobile ? -1 : TABS.findIndex(t => t.key === activeTab));
   }, [activeTab, isMobile]);
 
   // ── Phone: the category chips come out of «Проекты» ───────────────────

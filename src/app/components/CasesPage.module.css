@@ -413,9 +413,9 @@
   .tabsRow { flex-wrap: wrap; padding: 0; row-gap: 5px; }
   /* Same size as the menu chips under them */
   .tabsBarInner .chip { padding: 7px 14px 8px; }   /* text placed exactly as in the menu chips */
-  /* Centred, each chip its own size; gaps and links as in the menu below:
-     touching at rest, 12px with a dotted link around the selected one */
-  .tabsBarInner { justify-content: center !important; }
+  /* Centred, each chip its own size, 12px apart with a dotted link across
+     every gap from the start */
+  .tabsBarInner { justify-content: center !important; gap: var(--chip-gap) !important; --link-gap: var(--chip-gap) !important; }
   .tabsRow, .tabsBarInner { justify-content: center; }
   .subRow  { flex-wrap: wrap; justify-content: center; row-gap: 5px; }
 }

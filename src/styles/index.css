@@ -38,9 +38,9 @@
   --text-ls: -0.02em;
 
   /* One heading style site-wide — page titles, section headings and large
-     copy alike. 36px up to 1440px, then it grows with the screen, up to +20%
-     (43.2px, reached at 2240px — an iMac). Phones: see the media blocks. */
-  --heading-size: max(36px, min(43.2px, 36px + (100vw - 1440px) * 0.009));
+     copy alike. 32px up to 1440px, then it grows with the screen, up to +20%
+     (38.4px, reached at 2240px — an iMac). Phones: see the media blocks. */
+  --heading-size: max(32px, min(38.4px, 32px + (100vw - 1440px) * 0.008));
   --heading-weight: 450;
   --heading-lh: 0.96;
   --heading-ls: -0.024em;

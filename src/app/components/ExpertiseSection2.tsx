@@ -300,8 +300,14 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                     <p style={{ ...numberStyle, paddingLeft: '22.86px' }}>{service.groupLabel ?? i + 1}</p>
                     <p style={categoryStyle}>{service.category}</p>
                   </div>
-                ) : (
+                ) : row.isLabel ? (
+                  // Sub-group name (Фирменный стиль, Автоматизация…)
                   <div style={cellFade}>
+                    <p style={itemStyle}>{row.itemIndex}</p>
+                  </div>
+                ) : (
+                  // A service — indented under its sub-group
+                  <div style={{ ...cellFade, paddingLeft: 'var(--space-xs)' }}>
                     <p style={itemStyle}>{typo(row.text)}</p>
                     {descPanel}
                   </div>

@@ -765,15 +765,31 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
 function Tile({ index, text, gap }: { index: number; text: string; gap: number }) {
   const isMobile = useMobile();
   const [hovered, setHovered] = useState(false);
+  // Phones have no hover: the balls come in by themselves once the tile is
+  // on screen — tile after tile, quickly
+  const tileRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = tileRef.current;
+    if (!isMobile || !el) return;
+    let timer = 0;
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      timer = window.setTimeout(() => setHovered(true), index * 180);
+    }, { threshold: 0.35 });
+    io.observe(el);
+    return () => { io.disconnect(); window.clearTimeout(timer); };
+  }, [isMobile, index]);
 
   return (
     <div
+      ref={tileRef}
       style={{ position: 'relative', aspectRatio: '4/5', background: 'var(--c-surface)', overflow: 'hidden' }}
       onMouseEnter={isMobile ? undefined : () => { setHovered(true); playKnock(0.35); }}
       onMouseLeave={isMobile ? undefined : () => setHovered(false)}
     >
-      {/* Animated falling balls on hover */}
-      {!isMobile && <TileBalls tileIndex={index} hovered={hovered} />}
+      {/* Animated falling balls — on hover (desktop) or on scroll-in (phone) */}
+      <TileBalls tileIndex={index} hovered={hovered} />
       <span
         style={{ ...ts, position: 'absolute', top: 15, left: 15, display: 'flex', gap: 8, zIndex: 1 }}
       >
@@ -838,7 +854,8 @@ function TileBlocks() {
         style={{
           display: 'grid',
           gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
-          gap: GAP,
+          // Phone: the same gap as the page's side margins
+          gap: isMobile ? 'var(--pad)' : GAP,
         }}
       >
       {TILES.map((text, i) => (
@@ -943,6 +960,8 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
   // ── Table depth — folded/unfolded one level at a time with ⊖ ⊕, same
   //    controls and ⌘+ / ⌘− shortcuts as the density zoom on the cases page.
   const [level, setLevel] = useState(EXPERTISE_DEFAULT_LEVEL);
+  // Phones have no ⊖ ⊕: the table opens straight to the services (level 3)
+  useEffect(() => { if (isMobile) setLevel(3); }, [isMobile]);
   const unfold = () => setLevel(l => Math.min(EXPERTISE_LEVELS - 1, l + 1));
   // Level 0 (the table folded into a band of three symbols) is skipped —
   // folding stops at one row per category

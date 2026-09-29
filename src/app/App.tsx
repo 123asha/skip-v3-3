@@ -1015,31 +1015,32 @@ function AppInner() {
         // one text baseline (the nav aligns its items by baseline), the pill's
         // top on the logo's top line. Inner pages add the scrollbar gutter
         // (see above) so the row sits identically on every page.
-        // Desktop: at least one grid column wide (App.module.css)
         style={{
           right: `calc(var(--pad) + ${page !== 'home' && page !== 'index2' ? scrollbarW : 0}px)`,
-          ['--nav-grid-sb' as any]: `${page !== 'home' && page !== 'index2' ? scrollbarW : 0}px`,
           ['--nav-sb' as any]: `${scrollbarW}px`,
         }}
       >
-        <span ref={casesLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex' }}>
-          <a href="/cases" className={s.navLink} style={navLinkStyle('cases')} onClick={handleCasesClick}>
-            <LinkFlip flat>Проекты</LinkFlip>
-          </a>
-        </span>
-        <span ref={expertizaLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex' }}>
-          <a href="/services" className={s.navLink} style={navLinkStyle('expertiza')} onClick={handleExpertizaClick}>
-            <LinkFlip flat>Услуги</LinkFlip>
-          </a>
-        </span>
-        <span ref={labLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex' }}>
-          <a href="/lab" className={s.navLink} style={navLinkStyle('lab')} onClick={handleLabClick}>
-            <LinkFlip flat>Инсайты</LinkFlip>
-          </a>
-        </span>
-        <span ref={toolsLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'none' }}>
-          <span className={s.navSep}>,</span>
-          <a href="/instruments" className={s.navLink} onClick={handleInstrumentsClick}>Подход</a>
+        {/* The section links share one grey box; «Написать» stands apart */}
+        <span className={s.navLinks}>
+          <span ref={casesLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex' }}>
+            <a href="/cases" className={s.navLink} style={navLinkStyle('cases')} onClick={handleCasesClick}>
+              <LinkFlip flat>Проекты</LinkFlip>
+            </a>
+          </span>
+          <span ref={expertizaLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex' }}>
+            <a href="/services" className={s.navLink} style={navLinkStyle('expertiza')} onClick={handleExpertizaClick}>
+              <LinkFlip flat>Услуги</LinkFlip>
+            </a>
+          </span>
+          <span ref={labLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex' }}>
+            <a href="/lab" className={s.navLink} style={navLinkStyle('lab')} onClick={handleLabClick}>
+              <LinkFlip flat>Инсайты</LinkFlip>
+            </a>
+          </span>
+          <span ref={toolsLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'none' }}>
+            <span className={s.navSep}>,</span>
+            <a href="/instruments" className={s.navLink} onClick={handleInstrumentsClick}>Подход</a>
+          </span>
         </span>
         {/* «Написать» — the word turns into "telegram" on hover, which is
             where it leads */}

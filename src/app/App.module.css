@@ -185,28 +185,29 @@
   mix-blend-mode: difference;
 }
 
-/* Desktop: the nav is at least one grid column wide, so the links start on
-   the 5th column's left line and «Написать» ends on its right one */
-@media (min-width: 769px) {
-  .nav { min-width: calc((100% - var(--nav-grid-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5); }
-  .navWrite { margin-left: auto; }
-}
+/* Desktop: the boxed menu stays compact — just as wide as its items, on the
+   right edge, whatever the screen width */
 
-/* Boxed menu: the whole row sits in one grey rectangle, drawn plainly
-   (no difference blend) so the grey reads the same over any page. The box is
-   one grid column wide on desktop — its edges on the 5th column's lines. */
+/* Boxed menu: the section links sit in a grey rectangle, «Написать» beside
+   it, both drawn plainly (no difference blend) so they read the same over any
+   page. Compact on desktop; the full width at the bottom on a phone. */
 .navBoxed {
   mix-blend-mode: normal;
-  background: var(--c-surface);
-  border-radius: 6px;
-  padding: 4px 4px 4px 12px;
-  box-sizing: border-box;
-  /* 4px up, so «Написать» keeps its place on the logo's top line */
-  top: calc(var(--logo-top) + 1px - 4px);
+  /* The links' box, then a gap, then «Написать» on its own */
+  gap: var(--space-xs);
   /* Plain colours — the grey links use the muted grey itself, not its inverse */
   --c-text-muted-inv: var(--c-text-muted);
 }
 .navBoxed .navLink { color: var(--c-text); }
+/* Same height and corners as the «Написать» pill next to it */
+.navLinks {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--nav-gap);
+  background: var(--c-surface);
+  border-radius: 4px;
+  padding: 5px 12px 6px;
+}
 .navBoxed .navPill { background: var(--c-text) !important; color: #fff !important; }
 
 /* Nav-sized face of the site's pill button — same 4px corners */
@@ -622,7 +623,7 @@
 .nav > * { pointer-events: auto; }
 
 /* Phones: the menu sits at the bottom of the screen, under the thumb — the
-   grey box across the full width, links on the left, «Написать» on the right.
+   links' grey box across the row, «Написать» at its right end.
    (The top row now holds language, social and time — App.tsx.) */
 @media (max-width: 768px) {
   .nav.navBoxed {
@@ -631,5 +632,6 @@
     left: var(--pad);
     right: var(--pad) !important;
   }
-  .navWrite { margin-left: auto; }
+  /* The links' box takes the row; «Написать» keeps the right end */
+  .navLinks { flex: 1; }
 }

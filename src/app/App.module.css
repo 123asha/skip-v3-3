@@ -661,10 +661,10 @@
   /* The links as chips, like the filter chips: outlined pills that touch at
      rest, the current section's neighbours spreading from it with a dotted
      link (settleChips, App.tsx) */
-  /* The chips fill the row, leaving 12px at each end — the room a selection
-     needs to spread them (utils/chipBounce) */
-  .navLinks { flex: none; width: calc(100% - 2 * var(--pad) - 24px); background: none; padding: 0; gap: 0; height: auto; }
-  .navLinks > span { flex: 1; }
+  /* The chips fill the row edge to edge; a selection opens gaps by shrinking
+     them, so «Главная» and «Инсайты» never leave the edges (chipBounce) */
+  .navLinks { flex: none; width: calc(100% - 2 * var(--pad)); background: none; padding: 0; gap: 0; height: auto; }
+  .navLinks > span { flex: 1 1 0; min-width: 0; }
   .navLinks > span > .navLink { width: 100%; justify-content: center; text-align: center; box-sizing: border-box; }
   .navLinks > span { position: relative; }
   .navLinks > span + span::before {
@@ -678,8 +678,8 @@
   }
   .navLinks .navLink {
     text-decoration: none;
-    /* Bigger chips (the type stays the same) */
-    padding: 7px 14px 8px;
+    /* Bigger chips (the type stays the same); text 1px low of centre */
+    padding: 8px 14px 7px;
     border: 1px solid var(--c-border);
     border-radius: 999px;
     background: var(--c-bg);

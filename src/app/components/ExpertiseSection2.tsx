@@ -89,6 +89,17 @@ const SERVICES: { category: string; groupLabel?: string; items: ServiceItem[] }[
 export const EXPERTISE_LEVELS = 5;
 export const EXPERTISE_DEFAULT_LEVEL = 2;
 
+// Phone: the arrow on a tappable row (no hover on touch), turned down while
+// the row is open
+const mobArrow = (open: boolean) => (
+  <span aria-hidden="true" style={{
+    flexShrink: 0, opacity: 'var(--opacity-muted)' as any,
+    display: 'inline-block', transform: open ? 'rotate(90deg)' : 'none',
+    transition: 'transform 0.3s ease',
+    fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)',
+  }}>→</span>
+);
+
 // Phone: where a category's name starts (symbol column + its 12px gap) —
 // sub-group names line up on it; services and descriptions step in from it
 const MOB_L1 = 'calc(22.86px + 16px + 12px)';
@@ -299,7 +310,8 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
             // Dimming lives on the text cells, never on the row box — the
             // divider lines must keep their colour when a group opens.
             const cellFade = { opacity: rowOpacity as any, transition: `opacity ${EXPAND}` };
-            const rowPadding = '8px 0 12px';
+            // Phone: 20% more air, easier to tap
+            const rowPadding = isMobile ? '10px 0 14px' : '8px 0 12px';
             const rowInner = isMobile ? (
               <div data-exp-row="" onClick={onRowClick} style={{ position: 'relative', background: rowBg, padding: rowPadding, cursor: rowCursor }}>
                 {divider}
@@ -312,14 +324,18 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                   </div>
                 ) : row.isLabel ? (
                   // Sub-group name (Бренд-стратегия, Фирменный стиль…) — on the
-                  // category name's line
-                  <div style={{ ...cellFade, paddingLeft: MOB_L1 }}>
+                  // category name's line; a tappable one shows its arrow
+                  <div style={{ ...cellFade, paddingLeft: MOB_L1, display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                     <p style={itemStyle}>{row.itemIndex}</p>
+                    {onRowClick && mobArrow(openGroup === row.groupKey)}
                   </div>
                 ) : (
                   // A service 20px further in, its description 20px more
                   <div style={{ ...cellFade, paddingLeft: `calc(${MOB_L1} + 20px)` }}>
-                    <p style={itemStyle}>{typo(row.text)}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+                      <p style={itemStyle}>{typo(row.text)}</p>
+                      {onRowClick && mobArrow(isItemOpen)}
+                    </div>
                     <div style={{ paddingLeft: 20 }}>{descPanel}</div>
                   </div>
                 )}

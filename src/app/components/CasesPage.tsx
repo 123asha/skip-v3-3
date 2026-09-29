@@ -282,6 +282,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
   // The selected category pushes its neighbours up against the next chip and
   // keeps them there (utils/chipBounce)
   const tabsRowRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     settleChips(tabsRowRef.current, TABS.findIndex(t => t.key === activeTab));
   }, [activeTab]);
@@ -289,6 +290,54 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
   const [activeSubs, setActiveSubs] = useState<string[]>([]);
   const [rows, setRows] = useState<Row[]>(() => buildRows(PROJECTS));
   const isMobile = useMobile();
+
+  // ── Phone: the category chips branch out of «Проекты» ─────────────────
+  // Dotted links run from the «Проекты» chip in the bottom menu up to each
+  // category chip, like the edges of a graph, and on arrival the chips come
+  // out of «Проекты» and travel up to their places along those links.
+  const graphRef = useRef<SVGSVGElement>(null);
+  useEffect(() => {
+    const svg = graphRef.current, row = tabsRowRef.current;
+    if (!isMobile || !svg || !row) return;
+    const chips = Array.from(row.children) as HTMLElement[];
+    const lines = Array.from(svg.querySelectorAll('line'));
+    const hub = () => document.querySelector<HTMLElement>('nav a[href="/cases"]');
+    let raf = 0;
+    const draw = () => {
+      const h = hub()?.getBoundingClientRect();
+      chips.forEach((c, i) => {
+        const l = lines[i];
+        if (!l || !h) return;
+        const r = c.getBoundingClientRect();
+        l.setAttribute('x1', String(h.left + h.width / 2));
+        l.setAttribute('y1', String(h.top));
+        l.setAttribute('x2', String(r.left + r.width / 2));
+        l.setAttribute('y2', String(r.bottom));
+      });
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    // Out of «Проекты»: each chip starts on the hub, small, and rises into place
+    const h = hub()?.getBoundingClientRect();
+    if (h && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      chips.forEach((c, i) => {
+        const r = c.getBoundingClientRect();
+        const dx = h.left + h.width / 2 - (r.left + r.width / 2);
+        const dy = h.top + h.height / 2 - (r.top + r.height / 2);
+        const st = { p: 0 };
+        const apply = () => {
+          const k = 1 - st.p;
+          c.style.translate = `${dx * k}px ${dy * k}px`;
+          c.style.scale = String(0.5 + 0.5 * st.p);
+          c.style.opacity = String(Math.min(1, st.p * 2));
+        };
+        apply();
+        gsap.to(st, { p: 1, duration: 0.6, delay: 0.1 + i * 0.07, ease: 'back.out(1)', onUpdate: apply,
+          onComplete: () => { c.style.translate = ''; c.style.scale = ''; c.style.opacity = ''; } });
+      });
+    }
+    return () => { cancelAnimationFrame(raf); };
+  }, [isMobile]);
 
   const gridRef    = useRef<HTMLDivElement>(null);
   const pageRef    = useRef<HTMLDivElement>(null);
@@ -693,6 +742,16 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
       {/* Fixed bar — always visible, so it stays out of the scroll-reveal */}
       {/* Portalled to <body>: fixed on screen, it stays put while the page
           itself slides out on a section change */}
+      {isMobile && createPortal(
+        // Phone: the dotted links from «Проекты» up to the category chips
+        <svg ref={graphRef} data-page-float="" className={s.pageFloat} aria-hidden="true"
+          style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', zIndex: 167, pointerEvents: 'none' }}>
+          {TABS.map(t => (
+            <line key={t.key} stroke="var(--c-text-muted)" strokeWidth={1} strokeDasharray="1 3" strokeLinecap="round" />
+          ))}
+        </svg>,
+        document.body,
+      )}
       {createPortal(
       // data-page-float: leaves with the page on a section change, like the title
       <div ref={tabsBarRef} data-page-float="" className={`${s.tabsBar} ${s.pageFloat}`}>

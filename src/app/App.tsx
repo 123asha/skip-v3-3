@@ -912,7 +912,8 @@ function AppInner() {
   // from it, like the filter chips (utils/chipBounce)
   const navLinksRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
-    settleChips(navLinksRef.current, isMobile ? ['home', 'cases', 'expertiza', 'lab'].indexOf(navSection) : -1);
+    // In-flow on phones: the row fills the width and its ends stay put
+    settleChips(navLinksRef.current, isMobile ? ['home', 'cases', 'expertiza', 'lab'].indexOf(navSection) : -1, isMobile);
   }, [navSection, isMobile]);
   const navLinkStyle = (target: string): React.CSSProperties | undefined => {
     // The /services-2 sandbox counts as the services section
@@ -1313,6 +1314,16 @@ function AppInner() {
               letterSpacing: 'var(--text-ls)', lineHeight: 'var(--text-lh)',
             }}
           >{LANG === 'en' ? '/ru' : '/en'}</a>
+          {/* Home: «Skip Design» in the middle of the header, on the logo's line */}
+          {page === 'home' && (
+            <div style={{
+              position: 'fixed', zIndex: 200, left: 0, right: 0, top: 6, height: 52,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none',
+              color: '#fff', mixBlendMode: 'difference',
+              fontSize: 'var(--text-size)', fontFamily: 'var(--font)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+              letterSpacing: 'var(--text-ls)', lineHeight: 'var(--text-lh)',
+            }}>Skip Design</div>
+          )}
         </>
       )}
 

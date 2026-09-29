@@ -390,20 +390,22 @@
   /* Phone: the header owns the top row, so the title takes the next one
      (left edge = the page edge), and the filter chips the one after it */
   .title.titleCol2 {
-    top: calc(var(--header-h) + var(--space-xs));
+    top: calc(var(--header-h) + 40px);
     padding-top: 0 !important;
   }
   /* The filter chips sit just above the bottom menu, under the thumb */
   .tabsBar {
     top: auto !important;
-    bottom: var(--m-above-menu);
+    /* High enough over the menu for the dotted links from «Проекты» to read */
+    bottom: calc(var(--m-above-menu) + 36px);
     height: auto;
     left: 0;
     right: 0;
     padding: 0 var(--pad);
-    animation: chipsUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   .tabsRow { flex-wrap: wrap; padding: 0; row-gap: 5px; }
+  /* Same size as the menu chips under them */
+  .tabsBarInner .chip { padding: 8px 14px 7px; }
   .tabsRow, .tabsBarInner { justify-content: center; }
   .subRow  { flex-wrap: wrap; justify-content: center; row-gap: 5px; }
 }

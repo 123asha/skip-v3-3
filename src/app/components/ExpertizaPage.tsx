@@ -967,8 +967,9 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
   // ── Table depth — folded/unfolded one level at a time with ⊖ ⊕, same
   //    controls and ⌘+ / ⌘− shortcuts as the density zoom on the cases page.
   const [level, setLevel] = useState(EXPERTISE_DEFAULT_LEVEL);
-  // Phones have no ⊖ ⊕: the table opens straight to the services (level 3)
-  useEffect(() => { if (isMobile) setLevel(3); }, [isMobile]);
+  // Phones have no ⊖ ⊕: the table shows the sub-groups (level 2); a tap
+  // opens a sub-group's services, another a service's description
+  useEffect(() => { if (isMobile) setLevel(2); }, [isMobile]);
   const unfold = () => setLevel(l => Math.min(EXPERTISE_LEVELS - 1, l + 1));
   // Level 0 (the table folded into a band of three symbols) is skipped —
   // folding stops at one row per category

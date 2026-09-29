@@ -14,12 +14,19 @@ const EASE_OUT = 'back.out(1)';
 const offsets = new WeakMap<HTMLElement, number[]>();
 const running = new WeakMap<HTMLElement, gsap.core.Tween | gsap.core.Timeline>();
 
-function draw(chips: HTMLElement[], dx: number[]) {
+function draw(chips: HTMLElement[], dx: number[], inFlow = false) {
   chips.forEach((c, i) => {
-    c.style.transform = dx[i] ? `translateX(${dx[i]}px)` : '';
     // Its link to the chip before it spans the gap plus the difference in
     // their offsets — so it stays attached at both ends
-    c.style.setProperty('--pull', `${dx[i] - (i > 0 ? dx[i - 1] : 0)}px`);
+    const link = dx[i] - (i > 0 ? dx[i - 1] : 0);
+    c.style.setProperty('--pull', `${link}px`);
+    if (inFlow) {
+      // A fixed-width row (the phone menu): the gap opens as a real margin
+      // and the chips give way by shrinking, so the ends never move
+      c.style.marginLeft = i > 0 && link ? `${link}px` : '';
+    } else {
+      c.style.transform = dx[i] ? `translateX(${dx[i]}px)` : '';
+    }
   });
 }
 
@@ -35,19 +42,19 @@ function pushFrom(_row: HTMLElement, chips: HTMLElement[], at: number) {
 
 const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export function settleChips(row: HTMLElement | null, activeIndex: number) {
+export function settleChips(row: HTMLElement | null, activeIndex: number, inFlow = false) {
   if (!row) return;
   const chips = Array.from(row.children) as HTMLElement[];
   const target = pushFrom(row, chips, activeIndex);
   const from = offsets.get(row) ?? chips.map(() => 0);
   const cur = from.slice();
   offsets.set(row, cur);
-  if (reduced()) { cur.splice(0, cur.length, ...target); draw(chips, cur); return; }
+  if (reduced()) { cur.splice(0, cur.length, ...target); draw(chips, cur, inFlow); return; }
   running.get(row)?.kill();
   const state = { p: 0 };
   const tick = () => {
     for (let i = 0; i < chips.length; i++) cur[i] = from[i] + (target[i] - from[i]) * state.p;
-    draw(chips, cur);
+    draw(chips, cur, inFlow);
   };
   running.set(row, gsap.to(state, { p: 1, duration: 0.55, ease: EASE_OUT, onUpdate: tick, onComplete: tick }));
 }

@@ -71,7 +71,7 @@
      anything pinned over them 10px above; --m-foot is the in-page footer
      line's height (MobileFooter) */
   --m-foot: 24px;
-  --m-head-x: 10px;   /* header side margins */
+  --m-head-x: 16px;   /* header side margins — same as the content's */
   --m-chip-h: calc(var(--text-size) * var(--text-lh) + 16px);
   --m-menu-bottom: var(--pad);
   --m-above-menu: calc(var(--m-menu-bottom) + var(--m-chip-h) + 10px);
@@ -153,6 +153,7 @@
 @media (max-width: 768px) {
   :root {
     --pad:            16px;   /* side margins of the content on phones */
+    --hero-h:         70svh;  /* the home hero: 70% of the screen */
     --gap:            8px;
     --text-size:      clamp(11px, 3.5vw, 18px);
     /* Proportional vertical rhythm — keeps the same ratio as desktop */
@@ -163,7 +164,9 @@
     --space-xs: 12px;
     /* Inner pages: the title gets its own row under the header, and the
        content starts one --space-md below it — the same on every page */
-    --inner-content-top: calc(var(--header-h) + var(--space-xs) + var(--heading-size) * var(--heading-lh) + var(--space-md));
+    /* 40px over the page title and 40px under it; the title's own height is
+       measured (PageTitle), as a long one wraps to two lines */
+    --inner-content-top: calc(var(--header-h) + 40px + var(--m-title-h, calc(var(--heading-size) * var(--heading-lh))) + 40px);
     /* Column counts come from the ≤980 / ≤375 blocks above — only the gaps
        are mobile-specific here. */
     /* Proportional to desktop's 120 px (≈ 40 % shrink, in line with --space-md) */

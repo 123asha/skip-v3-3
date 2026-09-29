@@ -600,7 +600,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
           position: 'relative',
           transform: `translateX(${aboutPane ? -100 : 0}%)`,
           transition: 'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
-          height: paneH, overflowY: 'clip', overflowX: 'visible', touchAction: 'pan-y',
+          touchAction: 'pan-y',
         } : undefined}
         onTouchStart={isMobile ? e => { const t = e.touches[0]; swipeStart.current = { x: t.clientX, y: t.clientY }; } : undefined}
         onTouchEnd={isMobile ? e => {
@@ -613,7 +613,10 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
           if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) showPane(dx < 0);
         } : undefined}
       >
-      <div ref={picsPaneRef}>
+      {/* The page off screen is cut to the height of the one on screen, so
+          the scroll length always fits what's shown (each pane clips itself —
+          the track can't: iOS Safari won't clip one axis only) */}
+      <div ref={picsPaneRef} style={isMobile && aboutPane ? { height: paneH, overflow: 'hidden' } : undefined}>
       {/* ── First screen: cover + intro meta 10px under it. The body below
             keeps its distance so the image blocks still start on the next
             screen. ─────────────────────────────────────────────────────── */}
@@ -1033,6 +1036,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             position: 'absolute', top: 0, left: '100%', width: '100%',
             padding: 'calc(var(--header-h) + var(--space-md)) var(--pad) 0',
             boxSizing: 'border-box',
+            ...(!aboutPane ? { maxHeight: paneH, overflow: 'hidden' } : null),
           }}
         >
           {mobileAbout}

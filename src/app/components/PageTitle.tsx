@@ -14,9 +14,34 @@ import s from './CasesPage.module.css';
 export function SiteTitle({ title: text, releaseAt }: { title: string; releaseAt?: string }) {
   const ref = useRef<HTMLHeadingElement>(null);
 
+  // Phone: publish the title's height (it may wrap), so the content starts
+  // 40px under it (--inner-content-top, index.css)
   useEffect(() => {
     const title = ref.current;
-    if (!releaseAt || !title) return;
+    if (!title) return;
+    const root = document.documentElement;
+    const measure = () => root.style.setProperty('--m-title-h', `${title.offsetHeight}px`);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(title);
+    return () => { ro.disconnect(); root.style.removeProperty('--m-title-h'); };
+  }, []);
+
+  // Phone: the title simply scrolls away with the page (it's pinned at body
+  // level, so it's moved by the page's own scroll)
+  useEffect(() => {
+    const title = ref.current;
+    if (!title || window.innerWidth > 768) return;
+    const page = () => document.querySelector<HTMLElement>('[class*="_page_"]');
+    const follow = () => { title.style.translate = `0 ${-(page()?.scrollTop ?? 0)}px`; };
+    follow();
+    window.addEventListener('scroll', follow, { capture: true, passive: true });
+    return () => window.removeEventListener('scroll', follow, { capture: true });
+  }, []);
+
+  useEffect(() => {
+    const title = ref.current;
+    if (!releaseAt || !title || window.innerWidth <= 768) return;
     const update = () => {
       const block = document.querySelector<HTMLElement>(releaseAt);
       if (!block) return;

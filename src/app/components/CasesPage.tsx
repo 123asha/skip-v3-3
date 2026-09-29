@@ -793,8 +793,9 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
         className={s.body}
         style={{ paddingTop: 'var(--inner-content-top)' }}
       >
-        {/* Phone: one sign between the title and the grid — «+» for two
-            cards a row, then «−» back to one; room above and below it */}
+        {/* Phone: one sign between the title and the grid — a circled «2»
+            switches to two cards a row, a circled «1» back to one; room
+            above and below it */}
         {isMobile && (
           <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 32px' }}>
             <button
@@ -804,7 +805,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
             >
               <svg width="24" height="24" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1" />
-                <path d={mobCols === 1 ? 'M4.5 8h7M8 4.5v7' : 'M4.5 8h7'} stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+                <text x="8" y="8" textAnchor="middle" dominantBaseline="central" fill="currentColor" fontSize="9" fontFamily="var(--font)">{mobCols === 1 ? 2 : 1}</text>
               </svg>
             </button>
           </div>

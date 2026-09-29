@@ -1349,13 +1349,8 @@ function AppInner() {
               letterSpacing: 'var(--text-ls)', lineHeight: 'var(--text-lh)',
             }}
           >
-            {/* Both languages shown: the current one full (white, i.e. dark on
-                the page), the other grey and tappable */}
-            {(['ru', 'en'] as const).map(l => (
-              LANG === l
-                ? <span key={l} style={{ color: 'inherit' }}>/{l}</span>
-                : <a key={l} href={otherLangHref(pathname)} style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35 }}>/{l}</a>
-            ))}
+            {/* Only the language to switch to, grey — as on desktop */}
+            <a href={otherLangHref(pathname)} style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35 }}>{LANG === 'en' ? '/ru' : '/en'}</a>
           </div>
           {/* «Skip Design» in the middle of the header on every page, on the
               logo's line */}

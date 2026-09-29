@@ -131,11 +131,11 @@ function MetaRow({
           {text.split('\n\n').map((para, k) => (
             <p key={k} style={{ ...textStyle, margin: 0, marginTop: k === 0 ? 0 : PARA_GAP }}>{typo(para)}</p>
           ))}
-          {/* The chips, then the year right after them on the same row */}
+          {/* The year, then the chips right after it on the same row */}
           {((tags && tags.length > 0) || num) && (
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--chip-gap)', marginTop: PARA_GAP }}>
-              {tags?.map(t => <TagChip key={t} label={t} />)}
               {num && <span style={{ ...textStyle, opacity: 'var(--opacity-muted)' as any }}>{num}</span>}
+              {tags?.map(t => <TagChip key={t} label={t} />)}
             </div>
           )}
         </div>

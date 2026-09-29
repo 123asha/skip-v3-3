@@ -153,7 +153,7 @@
 @media (max-width: 768px) {
   :root {
     --pad:            16px;   /* side margins of the content on phones */
-    --hero-h:         70svh;  /* the home hero: 70% of the screen */
+    --hero-h:         85svh;  /* the home hero: 85% of the screen */
     --gap:            8px;
     --text-size:      clamp(11px, 3.5vw, 18px);
     /* Proportional vertical rhythm — keeps the same ratio as desktop */

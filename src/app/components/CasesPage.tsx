@@ -793,23 +793,20 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
         className={s.body}
         style={{ paddingTop: 'var(--inner-content-top)' }}
       >
-        {/* Phone: ⊖ ⊕ centred between the title and the grid — one column
-            or two */}
+        {/* Phone: one sign between the title and the grid — «+» for two
+            cards a row, then «−» back to one; room above and below it */}
         {isMobile && (
-          <div style={{ position: 'relative', height: 0, zIndex: 2 }}>
-            <div style={{
-              position: 'absolute', left: 0, right: 0, bottom: 'calc(20px - var(--text-size) * var(--text-lh) / 2)',
-              display: 'flex', justifyContent: 'center',
-              // Bigger signs than the body text — easier to hit with a finger
-              fontFamily: 'var(--font)', fontSize: 24, lineHeight: 1, color: 'var(--c-text)',
-            }} className="zoomPillBig">
-              <ZoomControl
-                inline noKey
-                minusLabel="Одна колонка" plusLabel="Две колонки"
-                minusDisabled={mobCols === 2} plusDisabled={mobCols === 1}
-                onMinus={() => setMobCols(2)} onPlus={() => setMobCols(1)}
-              />
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 32px' }}>
+            <button
+              aria-label={mobCols === 1 ? 'Две колонки' : 'Одна колонка'}
+              onClick={() => setMobCols(c => (c === 1 ? 2 : 1))}
+              style={{ background: 'none', border: 'none', padding: 8, margin: -8, color: 'var(--c-text)', opacity: 0.6, cursor: 'pointer', display: 'flex' }}
+            >
+              <svg width="24" height="24" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1" />
+                <path d={mobCols === 1 ? 'M4.5 8h7M8 4.5v7' : 'M4.5 8h7'} stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+              </svg>
+            </button>
           </div>
         )}
         {/* ⌘ ⊖ ⊕ — top-left, ~40px above the first row (desktop) */}

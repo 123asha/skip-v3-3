@@ -1491,7 +1491,8 @@ function AppInner() {
         </div>
         )}
 
-        <div id="cases" ref={casesRevealRef} style={{ marginTop: 'var(--space-xl)' }}>
+        {/* Phone: half the usual gap under the hero */}
+        <div id="cases" ref={casesRevealRef} style={{ marginTop: isMobile ? 'calc(var(--space-xl) / 2)' : 'var(--space-xl)' }}>
           <ProjectGallery onCaseClick={(href) => navigateWithExit(href || '/case-template')} />
         </div>
 

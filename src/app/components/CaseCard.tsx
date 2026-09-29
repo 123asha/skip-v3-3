@@ -194,7 +194,8 @@ export default function CaseCard({
         <div style={{ display: 'grid', gridTemplateColumns: stackMeta ? '1fr' : 'minmax(90px, 1fr) minmax(0, 3fr)', gap: stackMeta ? 4 : 'var(--gap)', alignItems: 'flex-start', paddingTop: 10 }}>
           <p className={`${s.cardMetaText} ${s.cardLink}`} style={{ margin: 0, ...metaStyle }}>{title}</p>
           <div style={{ minWidth: 0 }}>
-            <p className={s.cardMetaText} style={{ margin: 0, ...metaStyle }}>{typo(desc)}</p>
+            {/* Two per row: no description — just the name and categories */}
+            {!stackMeta && <p className={s.cardMetaText} style={{ margin: 0, ...metaStyle }}>{typo(desc)}</p>}
             {services && <p className={s.cardMetaText} style={{ margin: 0, marginTop: 4, opacity: 'var(--opacity-muted)' as any, ...metaStyle }}>{services}</p>}
           </div>
         </div>

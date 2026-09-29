@@ -246,6 +246,14 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
                   ) : undefined}
                 />
                 </div>
+                {/* Or skip the form and write straight away */}
+                <p className={s.checkboxLabel} style={{ margin: 0, textAlign: 'center' }}>
+                  или напишите нам в{' '}
+                  <a
+                    href="https://t.me/skpdsgn" target="_blank" rel="noopener noreferrer"
+                    style={{ color: 'inherit', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}
+                  >Телеграм</a>
+                </p>
                 {status === 'error' && (
                   <p style={{ margin: 0, fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)', color: '#c0392b', textAlign: 'center' }}>
                     Не отправилось. Попробуйте ещё раз или напишите в{' '}

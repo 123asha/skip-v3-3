@@ -20,7 +20,9 @@
   /* Letter scales with the circle — a fixed size looks lost in a large one */
   font-size: calc(var(--c-size, 120px) * 0.34);
   line-height: 1;
-  padding-bottom: 0.08em;
+  /* Optical centring: the glyph sits a touch high — 2px more bottom padding
+     lifts it one more pixel */
+  padding-bottom: calc(0.08em + 2px);
   font-weight: var(--text-weight);
   color: var(--c-text);
   flex-shrink: 0;

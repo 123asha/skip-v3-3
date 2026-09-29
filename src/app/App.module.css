@@ -189,7 +189,10 @@
    right edge, whatever the screen width — and as far from the top of the
    screen as from its right edge (--pad) */
 @media (min-width: 769px) {
-  .nav.navBoxed { top: var(--pad); }
+  .nav.navBoxed { top: var(--pad); gap: var(--nav-gap); }
+  /* No grey box behind the links on desktop — plain text, and «Написать»
+     one link-gap after the last of them */
+  .navBoxed .navLinks { background: none; padding: 0; }
 }
 
 /* Boxed menu: the section links sit in a grey rectangle, «Написать» beside

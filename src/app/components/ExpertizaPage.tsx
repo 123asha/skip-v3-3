@@ -292,11 +292,6 @@ function IntroBlock() {
         marginTop: 'var(--space-xl)',
       }}
     >
-      {/* Col 3 — section label, plain body text */}
-      <div style={{ gridColumn: isMobile ? 'auto' : '3 / 4' }}>
-        <p style={{ ...ts, margin: 0 }}>Наш подход</p>
-      </div>
-
       {/* Col 4 — credo + principles */}
       <div style={{ gridColumn: isMobile ? 'auto' : '4 / 5' }}>
         {[CREDO, ...PRINCIPLES].map((para, i) => (

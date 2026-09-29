@@ -177,7 +177,6 @@ export const EN: Record<string, string> = {
   'команде — не стыдно за результат, и хочется им поделиться.': 'the team — proud of the result and keen to share it.',
 
   'Решения': 'Solutions',
-  'Наш подход': 'Our approach',
   'Бренд-смыслы и фирменный стиль для цифровых продуктов': 'Brand meaning and identity for digital products',
   'Дизайн-системы и инструменты для маркетинга': 'Design systems and marketing tools',
   'Бренд-стратегия и позиционирование': 'Brand strategy and positioning',

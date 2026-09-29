@@ -21,6 +21,24 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
   // The telegram field never runs past three rows of circles: letters that
   // fit = three rows minus the icon, the caret and the arrow circles.
   const fieldsRef = useRef<HTMLDivElement>(null);
+
+  // The last screen (this card) greys a touch once the page reaches its end
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [atBottom, setAtBottom] = useState(false);
+  useEffect(() => {
+    const onScroll = () => {
+      const el = cardRef.current;
+      if (el) setAtBottom(el.getBoundingClientRect().bottom <= window.innerHeight + 2);
+    };
+    onScroll();
+    // Capture: inner pages scroll in their own container, not the window
+    window.addEventListener('scroll', onScroll, { capture: true, passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll, { capture: true });
+      window.removeEventListener('resize', onScroll);
+    };
+  }, []);
   const [tgMax, setTgMax] = useState(32);
   const [phone, setPhone]       = useState('');
   const [cv, setCv]             = useState('');
@@ -171,7 +189,16 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
     <div ref={wrapRef} className={s.contactWrap}>
 
       {/* Sphere backdrop parked for now — plain white card */}
-      <div className={s.contactCard} style={{ background: '#fff', justifyContent: 'center' }}>
+      <div
+        ref={cardRef}
+        className={s.contactCard}
+        style={{
+          // Turns softly grey once the page is scrolled all the way down
+          background: atBottom ? 'var(--c-surface)' : '#fff',
+          transition: 'background-color 1.6s ease',
+          justifyContent: 'center',
+        }}
+      >
         {/* Form content — centered column */}
         <div ref={formAreaRef} className={s.contactFormArea} style={{ position: 'relative', zIndex: 1, background: 'transparent', flex: '0 0 auto', paddingTop: 20, paddingBottom: 20,
           // A touch above the middle of the screen: the card centres this

@@ -186,7 +186,11 @@
 }
 
 /* Desktop: the boxed menu stays compact — just as wide as its items, on the
-   right edge, whatever the screen width */
+   right edge, whatever the screen width — and as far from the top of the
+   screen as from its right edge (--pad) */
+@media (min-width: 769px) {
+  .nav.navBoxed { top: var(--pad); }
+}
 
 /* Boxed menu: the section links sit in a grey rectangle, «Написать» beside
    it, both drawn plainly (no difference blend) so they read the same over any

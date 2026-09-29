@@ -13,7 +13,7 @@ function img(path: string): { image: string; ar: AR } {
   return { image: asset(path), ar: arSuffix(path) === 'v' ? V : H };
 }
 import { useReveal } from '../hooks/useReveal';
-import { bounceChips } from '../utils/chipBounce';
+import { bounceChips, settleChips } from '../utils/chipBounce';
 
 interface Props {
   onBack: () => void;
@@ -278,6 +278,12 @@ function ProjectCard({ ar, cats, title, desc, image, preview, video, onClick, se
 // ── CasesPage ─────────────────────────────────────────────────────────────────
 export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGridMode, onGridCols }: Props) {
   const [activeTab, setActiveTab] = useState<string | null>(null);
+  // The selected category pushes its neighbours up against the next chip and
+  // keeps them there (utils/chipBounce)
+  const tabsRowRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    settleChips(tabsRowRef.current, TABS.findIndex(t => t.key === activeTab));
+  }, [activeTab]);
   // Sub-tags of the open category — multi-select
   const [activeSubs, setActiveSubs] = useState<string[]>([]);
   const [rows, setRows] = useState<Row[]>(() => buildRows(PROJECTS));
@@ -696,13 +702,13 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
         {/* Row — just the categories now; the zoom hint moved to the
             bottom-left corner, beside the language switch */}
         <div className={s.tabsRow}>
-          <div className={s.tabsBarInner}>
+          <div ref={tabsRowRef} className={s.tabsBarInner}>
             {TABS.map(tab => (
               <button
                 key={tab.key}
                 data-tab-active={activeTab === tab.key}
                 className={`${s.chip}${activeTab === tab.key ? ` ${s.chipOn}` : ''}`}
-                onClick={e => { bounceChips(e.currentTarget); handleTab(tab.key); }}
+                onClick={() => handleTab(tab.key)}
               >
                 {tab.label}
               </button>

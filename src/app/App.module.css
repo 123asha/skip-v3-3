@@ -738,17 +738,17 @@
   :root[data-nav-hidden] .menuBlur { opacity: 0; }
   .menuBlur > div { position: absolute; inset: 0; }
   .menuBlur > div:nth-child(1) {
-    backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(1.4px); -webkit-backdrop-filter: blur(1.4px);
     mask-image: linear-gradient(to top, #000 0%, #000 55%, transparent 100%);
     -webkit-mask-image: linear-gradient(to top, #000 0%, #000 55%, transparent 100%);
   }
   .menuBlur > div:nth-child(2) {
-    backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(3.5px); -webkit-backdrop-filter: blur(3.5px);
     mask-image: linear-gradient(to top, #000 0%, #000 35%, transparent 75%);
     -webkit-mask-image: linear-gradient(to top, #000 0%, #000 35%, transparent 75%);
   }
   .menuBlur > div:nth-child(3) {
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px);
     mask-image: linear-gradient(to top, #000 0%, transparent 50%);
     -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 50%);
   }

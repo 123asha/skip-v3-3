@@ -208,6 +208,9 @@ function interleaveHV(projects: Project[]): Project[] {
 const ROUND_ROW = 1, ROUND_COL = 1;
 
 const LEAD_IDS = [1, 2, 4, 3];
+// Shapes on this page that differ from the case's own: the first case stands
+// vertical, the third is square (the home page keeps their usual shapes)
+const LEAD_AR: Record<number, AR> = { 1: V, 4: H };
 
 function buildScatterRows(projects: Project[], perRow: number, gridCols: number): Row[] {
   // The four lead cases (the ones on the home page) open the page, in their
@@ -232,7 +235,7 @@ function buildScatterRows(projects: Project[], perRow: number, gridCols: number)
 
     // If a V card would land in the same column as last row's V card, reverse
     // the column assignment to move it to the other slot.
-    const vIdx = chunk.findIndex(p => p.ar === V);
+    const vIdx = chunk.findIndex(p => (LEAD_AR[p.id] ?? p.ar) === V);
     if (vIdx >= 0 && lastVCol >= 0 && cols[vIdx] === lastVCol) {
       cols = [...cols].reverse();
     }
@@ -245,7 +248,7 @@ function buildScatterRows(projects: Project[], perRow: number, gridCols: number)
         col: `${cols[j]} / ${cols[j] + 1}`,
         // Second row: vertical · circle · vertical
         round: rows.length === 1 && j === 1,
-        ar: rows.length === 1 && j !== 1 ? V : undefined,
+        ar: LEAD_AR[project.id] ?? (rows.length === 1 && j !== 1 ? V : undefined),
       })),
     });
   }

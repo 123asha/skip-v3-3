@@ -256,7 +256,7 @@ export default function CaseCard({
           <div style={{ minWidth: 0 }}>
             {/* Categories first, then (one per row only) the description */}
             {services && <p className={s.cardMetaText} style={{ margin: 0, opacity: 'var(--opacity-muted)' as any, ...metaStyle }}>{services}</p>}
-            {!stackMeta && <p className={s.cardMetaText} style={{ margin: 0, marginTop: 4, ...metaStyle }}>{typo(desc)}</p>}
+            {!stackMeta && <p className={s.cardMetaText} style={{ margin: 0, marginTop: 4, maxWidth: 520, ...metaStyle }}>{typo(desc)}</p>}
           </div>
         </div>
       </div>
@@ -366,7 +366,8 @@ export default function CaseCard({
             nothing reads as cut off by an invisible box. */}
         {!hideMeta && !hideImage && (
           <div style={{ minWidth: 0 }}>
-            <div style={{ position: 'relative' }}>
+            {/* The description never runs wider than 520px */}
+            <div style={{ position: 'relative', maxWidth: 520 }}>
               {/* At rest the description's spot shows the categories, grey;
                   on hover the description rises in and pushes them up and out */}
               {(SHOW_CATEGORY_TAGS || showCats) && services && (

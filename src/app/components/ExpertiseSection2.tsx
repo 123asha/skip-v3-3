@@ -40,10 +40,10 @@ const SERVICES: { category: string; groupLabel?: string; items: ServiceItem[] }[
       },
       { text: 'Логотипы', hideNumber: true, desc: PLACEHOLDER_DESC },
       {
-        text: 'Шаблоны', label: 'Автоматизация',
+        text: 'Шаблоны и инструменты', label: 'Автоматизация',
         desc: 'Помогаем внедрить систему в повседневные процессы. Разрабатываем шаблоны презентаций, постов, коммерческих предложений и других документов в фирменном стиле.\n\nВ результате новые материалы создаются быстрее, а качество остаётся стабильным.',
       },
-      { text: 'Инструменты', hideNumber: true, desc: PLACEHOLDER_DESC },
+      { text: 'Дизайн-поддержка', hideNumber: true, desc: PLACEHOLDER_DESC },
     ],
   },
   {
@@ -51,6 +51,8 @@ const SERVICES: { category: string; groupLabel?: string; items: ServiceItem[] }[
     groupLabel: '◊',
     items: [
       { text: 'Информационная архитектура', label: 'Информационная архитектура', desc: PLACEHOLDER_DESC },
+      { text: 'Прототипирование', hideNumber: true, desc: PLACEHOLDER_DESC },
+      { text: 'Редактура', hideNumber: true, desc: PLACEHOLDER_DESC },
       { text: 'Лендинги и промо', label: 'Веб-дизайн', desc: SITES_DESC },
       {
         text: 'Спецпроекты', hideNumber: true,

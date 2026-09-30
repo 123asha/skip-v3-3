@@ -276,7 +276,12 @@ export default function Constellation({
       wake();
     };
     const tiltOn = window.matchMedia('(max-width: 768px)').matches && 'DeviceOrientationEvent' in window;
+    // Once the phone's motion is on, the balls stay on the "racket": scrolling
+    // no longer drops them, and a tap throws a ball up at the viewer
+    let racket = false;
     const startTilt = () => {
+      racket = true;
+      scrolled = 0; homePull = 1; gravity = 0;
       window.addEventListener('deviceorientation', onOrient);
       window.addEventListener('devicemotion', onMotion);
     };
@@ -322,8 +327,8 @@ export default function Constellation({
       if (travelUp > 24 && y < window.innerHeight * 0.5) returning = true;   // hero more than half on screen
       else if (travelDown > 24) returning = false;
       if (y <= 0) returning = false;
-      scrolled = returning ? 0 : Math.min(1, y / (window.innerHeight * 0.03));
-      homePull = returning ? 1 : Math.max(0, 1 - y / (window.innerHeight * 0.02));
+      scrolled = racket || returning ? 0 : Math.min(1, y / (window.innerHeight * 0.03));
+      homePull = racket || returning ? 1 : Math.max(0, 1 - y / (window.innerHeight * 0.02));
       const wasFalling = gravity > 0;
       gravity = scrolled * GRAVITY;
       // Any merged pair splits back apart the moment the graph starts moving
@@ -736,6 +741,11 @@ export default function Constellation({
     // when it fell: columns pull again and balls may slip past each other,
     // so the word sorts itself back into the heap it landed as
     const endDrag = () => {
+      // Racket mode: a quick tap on a ball throws it up at you
+      if (racket && dragId !== null && performance.now() - lastTime < 250) {
+        const h = nodes[dragId] as any;
+        if (h) { h.hopV = 0.2 + Math.random() * 0.05; wake(); }
+      }
       if (dragId !== null && gravity > 0) { fallStart = performance.now(); wake(); }
       dragId = null;
     };

@@ -57,7 +57,7 @@ export const PROJECTS: Project[] = [
 // Grey category line in each card's description spot (gives way on hover): the case's filter categories, one or
 // two, comma-separated
 const CAT_LABEL: Record<string, string> = { branding: 'Брендинг', sites: 'Веб', interfaces: 'Продукт' };
-const catLine = (cats?: string[]) => (cats ?? []).map(c => CAT_LABEL[c]).filter(Boolean).slice(0, 2).join(', ');
+export const catLine = (cats?: string[]) => (cats ?? []).map(c => CAT_LABEL[c]).filter(Boolean).slice(0, 2).join(', ');
 
 // Tabs mirror the three categories of the services table.
 const TABS = [

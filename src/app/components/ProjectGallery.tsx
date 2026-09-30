@@ -2,10 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useMobile } from '../hooks/useMobile';
 import s from './ProjectGallery.module.css';
 import CaseCard, { CASE_AR_H as H, CASE_AR_V as V, type CaseCardAR as AR, isCaseRound } from './CaseCard';
-import { PROJECTS, type Project } from './CasesPage';
+import { PROJECTS, catLine, type Project } from './CasesPage';
 import { MagneticDivider } from './MagneticDivider';
 import { asset, arSuffix, videoAsset } from '../utils/asset';
-import { caseCategories } from '../utils/caseCategories';
 import { driftTo } from '../utils/parallaxInertia';
 
 // The same cases as the cases page — one list, so the home cards and the
@@ -89,7 +88,9 @@ function ProjectCard({ project, onClick, aspect, scrubVideo, shape }: { project:
       scrubVideo={scrubVideo}
       title={project.title}
       desc={project.desc}
-      services={caseCategories(project.cats)}
+      // Same grey category line as on the cases page
+      services={catLine(project.cats)}
+      showCats
       image={project.image}
       preview={project.preview}
       video={project.video}

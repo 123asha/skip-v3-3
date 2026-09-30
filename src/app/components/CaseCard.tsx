@@ -241,7 +241,9 @@ export default function CaseCard({
   //    touch), with the grey categories under it. ──
   if (isMobile) {
     return (
-      <div className={s.card} onClick={onClick}>
+      // Not clipped: the picture bleeds half the side padding past the card
+      // (index.css, --m-bleed), and the card's own overflow would cut that off
+      <div className={s.card} onClick={onClick} style={{ overflow: 'visible' }}>
         {/* Two per row: every picture 4:5, so the rows line up */}
         <div className={`${s.cardImage}${stackMeta || tall ? ` ${s.cardTall}` : ''}`} style={{ aspectRatio: ar, width: '100%', flex: 'none', ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}>
           {slides && slides.length > 1 ? (

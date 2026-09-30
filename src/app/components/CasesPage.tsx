@@ -42,8 +42,8 @@ export interface Project {
 }
 
 export const PROJECTS: Project[] = [
-  { id: 1, preview: asset('/preview-case1.webp'), subs: ['strategy', 'design', 'uxui'], cats: ['branding', 'sites', 'interfaces'],       ...img('/case1-h.webp'), title: 'AEPlatform',     year: '2025', desc: 'Страница, которая приводит партнёров AliExpress' },
-  { id: 2, preview: asset('/preview-case2.webp'), subs: ['strategy', 'design', 'architecture'], cats: ['branding', 'sites', 'instruments'],      ...img('/case2-v.webp'), title: 'Gate Legal',     year: '2024', desc: 'Помогли запуститься: от платформы бренда до сайта — за полтора месяца.' },
+  { id: 1, preview: asset('/preview-case2.webp'), subs: ['strategy', 'design', 'uxui'], cats: ['branding', 'sites', 'interfaces'],       ...img('/case1-h.webp'), title: 'AEPlatform',     year: '2025', desc: 'Страница, которая приводит партнёров AliExpress' },
+  { id: 2, preview: asset('/preview-case1.webp'), subs: ['strategy', 'design', 'architecture'], cats: ['branding', 'sites', 'instruments'],      ...img('/case2-v.webp'), title: 'Gate Legal',     year: '2024', desc: 'Помогли запуститься: от платформы бренда до сайта — за полтора месяца.' },
   { id: 3, preview: asset('/preview-case3.webp'),  subs: ['design', 'tools', 'uxui'], cats: ['branding', 'interfaces', 'instruments'], ...img('/case3-h.webp'), title: 'AEPlatform',     year: '2025', desc: 'Браузерное расширение для отображения affiliate-данных прямо на AliExpress' },
   { id: 4, preview: asset('/preview-case4.png'),  subs: ['design', 'nocode'], cats: ['branding', 'sites'],                     ...img('/case4-v.webp'), title: "Kon' Ogon'",    year: '2025', desc: 'Новогодний спецпроект для команды и комьюнити' },
   { id: 5, preview: asset('/preview-keys.jpg'),  subs: ['strategy', 'design', 'uxui'], cats: ['branding', 'sites', 'interfaces'],       ...img('/case5-v.webp'), title: 'Крипто', year: '2026', desc: 'Подготовили бренд-систему для запуска крипто-стартапа' },

@@ -361,7 +361,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
   const nextCase = CASES[(CASES.findIndex(c => c.title === data.title) + 1) % CASES.length];
   // …and it has to land exactly where that case's own strip sits under its
   // cover, so clicking through leaves it in place and only the cover appears
-  // above it. The cover is 84vh (70vh on mobile), so the strip's top must be
+  // above it. The cover is 84vh (75vh on mobile), so the strip's top must be
   // that far down the screen once the page is scrolled to the end — which
   // means leaving the remainder of the screen below it as padding.
 
@@ -656,7 +656,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             keeps its distance so the image blocks still start on the next
             screen. ─────────────────────────────────────────────────────── */}
       <div>
-        <div style={{ position: 'relative', width: '100%', height: isMobile ? '70vh' : '84vh', overflow: 'hidden' }}>
+        <div style={{ position: 'relative', width: '100%', height: isMobile ? '75vh' : '84vh', overflow: 'hidden' }}>
           {data.coverVideo ? (
             <video
               ref={coverVidRef}

@@ -8,9 +8,10 @@ const R = 100;
  * above, bounces to rest and then hovers there, its ground shadow breathing
  * with it. Shaded like the footer ball (bright, soft, no letter). The motion
  * is plain CSS (see `svcBall*` in styles/index.css); reduced-motion users get
- * the ball standing still.
+ * the ball standing still. `leaving` — the row is closing: the ball flies back
+ * up the way it came.
  */
-export function ServiceBall() {
+export function ServiceBall({ leaving = false }: { leaving?: boolean }) {
   const id = useId().replace(/:/g, '');
   // A knock on each landing — timed to the drop keyframes (svcBallDrop, 1.1s:
   // the first hit at 45%, the smaller second bounce at 84%). Same sound as the
@@ -22,7 +23,7 @@ export function ServiceBall() {
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
   return (
-    <div className="svcBall" aria-hidden="true">
+    <div className={`svcBall${leaving ? ' svcBallLeaving' : ''}`} aria-hidden="true">
       <svg className="svcBallShadow" viewBox="-100 -20 200 40">
         <defs>
           <radialGradient id={`${id}-drop`} cx="50%" cy="50%" r="50%">

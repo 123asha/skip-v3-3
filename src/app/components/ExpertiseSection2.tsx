@@ -6,6 +6,7 @@ import { H2_STYLE, typo } from '../utils/typography';
 import { PARA_GAP } from './CaseTemplatePage';
 import PillButton from './PillButton';
 import { ServiceBall } from './ServiceBall';
+import { CircleArrow } from './CircleArrow';
 import s from '../App.module.css';
 import { LANG, t } from '../i18n';
 
@@ -124,7 +125,7 @@ function AskButton({ service }: { service: string }) {
 
 // Phone: the arrow on a tappable row (no hover on touch) — the desktop's ⤴,
 // always shown, dark while the row is open
-const mobArrow = (open: boolean, glyph = '⤴') => (
+const mobArrow = (open: boolean, glyph: React.ReactNode = '⤴') => (
   <span aria-hidden="true" style={{
     flexShrink: 0, opacity: open ? 1 : 'var(--opacity-muted)' as any,
     transition: 'opacity 0.3s ease',
@@ -188,7 +189,18 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
     setOpenGroup(prev => (prev === key ? null : key));
     setOpenItem(null);
   };
-  const toggleItem = (key: string) => setOpenItem(prev => (prev === key ? null : key));
+  // The service just closed — its ball stays a moment longer to fly back up
+  const [leavingItem, setLeavingItem] = useState<string | null>(null);
+  const leaveTimer = useRef(0);
+  useEffect(() => () => clearTimeout(leaveTimer.current), []);
+  const toggleItem = (key: string) => {
+    if (openItem) {
+      setLeavingItem(openItem);
+      clearTimeout(leaveTimer.current);
+      leaveTimer.current = window.setTimeout(() => setLeavingItem(null), 500);
+    }
+    setOpenItem(prev => (prev === key ? null : key));
+  };
 
   const numberStyle: React.CSSProperties = {
     margin: 0,
@@ -368,7 +380,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                   pointerEvents: 'none',
                   flexShrink: 0,
                 }}
-              >{onAllServices ? '↗' : '⤴'}</span>
+              >{onAllServices ? <CircleArrow style={{ verticalAlign: '-0.15em' }} /> : '⤴'}</span>
             );
             // Dimming lives on the text cells, never on the row box — the
             // divider lines must keep their colour when a group opens.
@@ -390,14 +402,14 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                   // category name's line; a tappable one shows its arrow
                   <div style={{ ...cellFade, paddingLeft: MOB_L1, display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                     <p style={itemStyle}>{row.itemIndex}</p>
-                    {onRowClick && mobArrow(openGroup === row.groupKey, onAllServices ? '↗' : undefined)}
+                    {onRowClick && mobArrow(openGroup === row.groupKey, onAllServices ? <CircleArrow style={{ verticalAlign: '-0.15em' }} /> : undefined)}
                   </div>
                 ) : (
                   // A service 20px further in, its description 20px more
                   <div style={{ ...cellFade, paddingLeft: `calc(${MOB_L1} + 20px)` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                       <p style={itemStyle}>{typo(row.text)}</p>
-                      {onRowClick && mobArrow(isItemOpen, onAllServices ? '↗' : undefined)}
+                      {onRowClick && mobArrow(isItemOpen, onAllServices ? <CircleArrow style={{ verticalAlign: '-0.15em' }} /> : undefined)}
                     </div>
                     <div style={{ paddingLeft: 20 }}>{descPanel}</div>
                   </div>
@@ -442,7 +454,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                 {/* Services page: a ball drops into the empty middle of an opened
                     service (columns 3–4, beside its description) and hovers.
                     Mounted only while open, so every opening drops it anew. */}
-                {!onAllServices && isItemOpen && openItem === row.itemKey && (
+                {!onAllServices && !!row.itemKey && (openItem === row.itemKey || leavingItem === row.itemKey) && (
                   <div style={{
                     position: 'absolute', pointerEvents: 'none',
                     left: 'calc((100% - 4 * var(--gap)) / 5 * 2 + 2 * var(--gap))',
@@ -450,7 +462,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                     top: 'calc(var(--text-size) * var(--text-lh) + 28px)', bottom: 44,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <ServiceBall />
+                    <ServiceBall leaving={openItem !== row.itemKey} />
                   </div>
                 )}
               </div>

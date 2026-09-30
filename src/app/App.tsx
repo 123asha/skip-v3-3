@@ -26,6 +26,7 @@ import ContactForm from './components/ContactForm';
 import { ToolsSection } from './components/ToolsSection';
 import { MediaSection } from './components/MediaSection';
 import { ExpertiseSection2 } from './components/ExpertiseSection2';
+import { CircleArrow } from './components/CircleArrow';
 import LabPage from './components/LabPage';
 import { SiteTitle } from './components/PageTitle';
 import { FOOTER_SLOT_ID } from './components/ZoomControl';
@@ -510,7 +511,14 @@ function AppInner() {
   const [winSb, setWinSb] = useState(0);
   useLayoutEffect(() => {
     const el = document.documentElement;
-    const measure = () => setWinSb(Math.max(0, window.innerWidth - el.clientWidth));
+    const measure = () => {
+      const w = Math.max(0, window.innerWidth - el.clientWidth);
+      // Also as a CSS variable, written right here: the observer runs before
+      // the frame is painted, while a state update lands a frame later — and
+      // for that one frame the header would sit a scrollbar's width off
+      el.style.setProperty('--win-sb', `${w}px`);
+      setWinSb(w);
+    };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
@@ -1012,7 +1020,7 @@ function AppInner() {
 
   // Right-hand gutter of the page grid that fixed header items must add: the
   // inner pages' own scrollbar gutter, minus any window scrollbar still there
-  const navSb = page !== 'home' && page !== 'index2' ? Math.max(0, scrollbarW - winSb) : 0;
+  const navSb = page !== 'home' && page !== 'index2' ? `max(0px, ${scrollbarW}px - var(--win-sb, 0px))` : '0px';
 
   return (
     <>
@@ -1052,10 +1060,10 @@ function AppInner() {
         // top on the logo's top line. Inner pages add the scrollbar gutter
         // (see above) so the row sits identically on every page.
         style={{
-          right: `calc(var(--pad) + ${navSb}px)`,
+          right: `calc(var(--pad) + ${navSb})`,
           // The gutter the page grid leaves on the right — the same amount the
           // row is shifted by, so its width is exactly the 5th column
-          ['--nav-sb' as any]: `${navSb}px`,
+          ['--nav-sb' as any]: navSb,
         }}
       >
         {/* The section links share one grey box; «Написать» stands apart */}
@@ -1103,11 +1111,7 @@ function AppInner() {
               style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'baseline', gap: '0.3em', whiteSpace: 'nowrap' }}
             >
               <LinkFlip flat>Написать</LinkFlip>
-              {/* → in a filled circle — the footer's round icons, at text size */}
-              <svg aria-hidden="true" viewBox="0 0 16 16" style={{ width: '1.05em', height: '1.05em', alignSelf: 'center', flexShrink: 0 }}>
-                <circle cx="8" cy="8" r="8" fill="currentColor" />
-                <path d="M4.4 8h7M8.6 5l3 3-3 3" fill="none" stroke="var(--c-bg, #fff)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <CircleArrow style={{ alignSelf: 'center' }} />
             </a>
           ) : (
           <a
@@ -1155,7 +1159,7 @@ function AppInner() {
           // viewport-fixed logo sits ~scrollbar-width too far right vs the home
           // page. Add the scrollbar width back so it lines up identically.
           ...(page !== 'home' && page !== 'index2'
-            ? { right: `calc(var(--pad) - 10px + ${Math.max(0, scrollbarW - winSb)}px)` }
+            ? { right: `calc(var(--pad) - 10px + ${navSb})` }
             : null),
         }}
         onMouseEnter={() => {

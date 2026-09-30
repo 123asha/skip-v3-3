@@ -264,6 +264,10 @@
   cursor: pointer;
 }
 
+/* Desktop: the logo 3px higher than its base position (set by eye) */
+@media (min-width: 769px) {
+  .logo { top: 3px; }
+}
 .logo svg {
   display: block;
   width: 52.5px;

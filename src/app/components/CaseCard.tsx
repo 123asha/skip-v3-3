@@ -193,10 +193,14 @@ export default function CaseCard({
     const box = cardRef.current;
     if (!vid || !box) return;
     vid.pause();
-    let frame = 0, busy = false, want = -1;
+    let frame = 0, busy = false, want = -1, since = 0;
     const seek = () => {
-      if (busy || want < 0 || Math.abs(vid.currentTime - want) < 0.03) return;
-      busy = true;
+      const now = performance.now();
+      // A seek that never reports back (a stalled download, say) must not
+      // freeze the clip for good — give up on it after a quarter second
+      if (busy && now - since < 250) return;
+      if (want < 0 || Math.abs(vid.currentTime - want) < 0.03) { busy = false; return; }
+      busy = true; since = now;
       try { vid.currentTime = want; } catch { busy = false; }
     };
     const onSeeked = () => { busy = false; seek(); };

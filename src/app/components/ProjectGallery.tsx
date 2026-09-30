@@ -110,17 +110,12 @@ type Shape = 'vertical' | 'square';
 interface Slot { project: Project; col: string; row: number; aspect?: string; scrubVideo?: string; shape?: Shape }
 
 function buildHomeLayout(projects: Project[]): Slot[] {
-  const pick = shuffle(projects);
-  // Take the first project of the wanted orientation (any, if none left), so
-  // each shape gets a shot that suits it
-  const take = (ar?: AR) => {
-    const i = ar ? pick.findIndex(p => p.ar === ar) : 0;
-    return pick.splice(i < 0 ? 0 : i, 1)[0];
-  };
-  // The wide slot reads best with a horizontal shot
-  const wide = take(H);
-  // Fixed shape order: square, vertical · wide 16:9 · vertical, square
-  const b = take(V), c = take(V), a = take(H), d = take(H);
+  // The first four cases, in order: the top pair, then (under the wide one)
+  // the closing pair. The wide slot takes a horizontal shot from the rest.
+  const byId = (id: number) => projects.find(p => p.id === id)!;
+  const a = byId(1), b = byId(2), c = byId(3), d = byId(4);
+  const rest = shuffle(projects.filter(p => ![1, 2, 3, 4].includes(p.id)));
+  const wide = rest.find(p => p.ar === H) ?? rest[0];
   return [
     { project: a, col: '1 / 3', row: 1, shape: 'square' },
     { project: b, col: '3 / 5', row: 1, shape: 'vertical' },   // right next to the first, no empty column between

@@ -58,7 +58,7 @@
    (--logo-top; lowercase starts 0.3265em below the line box). */
 .titleCol2 {
   position: fixed;
-  top: calc(var(--logo-top) - 0.3265em + 6px + var(--title-drop));
+  top: calc(var(--logo-top) - 0.3265em + 4px + var(--title-drop));
   /* Auto margins centre the max-content box — no transform, so the page-exit
      tween (y) and the release (translate) keep working on it */
   left: 0;

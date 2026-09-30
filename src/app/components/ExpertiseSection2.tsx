@@ -354,9 +354,12 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
             // Level 4 opens every description; below that, the clicked one
             const isItemOpen = !!row.itemKey && (level >= 4 || openItem === row.itemKey);
             const rowCursor = onRowClick ? 'pointer' : undefined;
-            // An open group no longer greys out the other categories — every
-            // row stays black
-            const rowOpacity = 1;
+            // While a block is open (a sub-group, or a service's description),
+            // its category stays black and the other two categories — every
+            // row and link in them — go grey. Only the text: the lines keep
+            // their colour (see cellFade)
+            const openCat = (openGroup ?? openItem)?.split('-')[0];
+            const rowOpacity = openCat !== undefined && openCat !== String(i) ? 'var(--opacity-muted)' : 1;
             // Description panel — expands on click, in the 5th column. It
             // starts one line below the service title (same offset pattern the
             // sub-group labels use) and keeps a spacing-token gap underneath.

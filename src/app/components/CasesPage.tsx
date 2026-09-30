@@ -39,6 +39,9 @@ export interface Project {
   desc: string;
   year: string;   // shown above the card
   href?: string; // own case page (defaults to the generic template)
+  /** Pictures to flip through inside the preview on the biggest (two-column)
+   *  grid — only cases that have them; the first is the preview itself */
+  slides?: string[];
 }
 
 export const PROJECTS: Project[] = [
@@ -48,7 +51,7 @@ export const PROJECTS: Project[] = [
   { id: 4, preview: asset('/preview-case4.webp'), subs: ['design', 'nocode'], cats: ['branding', 'sites'],                     ...img('/case4-v.webp'), title: "Kon' Ogon'",    year: '2025', desc: 'Новогодний спецпроект для команды и комьюнити' },
   { id: 5, preview: asset('/preview-keys.jpg'),  subs: ['strategy', 'design', 'uxui'], cats: ['branding', 'sites', 'interfaces'],       ...img('/case5-v.webp'), title: 'Крипто', year: '2026', desc: 'Подготовили бренд-систему для запуска крипто-стартапа' },
   { id: 6, preview: asset('/preview-app.jpg'),  subs: ['tools', 'architecture', 'uxui'], cats: ['sites', 'interfaces', 'instruments'],    ...img('/case6-h.webp'), title: 'Gate Legal',     year: '2024', desc: 'Конструктор баннеров для ускорения разработки креативов к ежедневным постам' },
-  { id: 7, preview: asset('/preview-storefront.webp'),  subs: ['strategy', 'design', 'tools'], cats: ['branding', 'sites', 'instruments'],      ...img('/case1-h.webp'), title: 'Senior*s bar',   year: '2025', desc: 'Бар своей среды. Визуальный язык для офлайна и онлайна', href: '/Seniorsbar' },
+  { id: 7, preview: asset('/preview-storefront.webp'), slides: ['/preview-storefront.webp', '/cases/seniors/1.webp', '/cases/seniors/2.webp', '/cases/seniors/4.webp', '/cases/seniors/5.webp', '/cases/seniors/6.webp'].map(asset),  subs: ['strategy', 'design', 'tools'], cats: ['branding', 'sites', 'instruments'],      ...img('/case1-h.webp'), title: 'Senior*s bar',   year: '2025', desc: 'Бар своей среды. Визуальный язык для офлайна и онлайна', href: '/Seniorsbar' },
   { id: 8, preview: asset('/preview-pocket.avif'),  subs: ['design', 'uxui', 'productStrategy'], cats: ['sites', 'interfaces'],                   ...img('/case2-v.webp'), title: 'Magic Moon',     year: '2024', desc: 'Трекер целей от Юрия Мурадяна, в котором визуал поддерживает философию продукта', video: asset('/magic-moon.mp4') },
   { id: 9, preview: asset('/preview-phone.webp'),  subs: ['tools', 'uxui'], cats: ['interfaces', 'instruments'],             ...img('/case3-h.webp'), title: 'AliExpress',     year: '2026', desc: 'Тысячи партнёров AliExpress в одном дашборде' },
   { id: 10, preview: asset('/preview-coffee.webp'), subs: ['architecture', 'nocode', 'uxui'], cats: ['sites', 'interfaces', 'instruments'],    ...img('/case4-v.webp'), title: 'Binaroom',       year: '2025', desc: '3D-проекты превращаются в сметы и КП за минуту' },
@@ -278,9 +281,9 @@ function mobileColSpan(idx: number): string {
 }
 
 // ── ProjectCard ───────────────────────────────────────────────────────────────
-function ProjectCard({ ar, cats, title, desc, image, preview, video, onClick, servicesSize, metaSize, hideMeta, hideImage, round, stackMeta, hideCats, tall }: Project & { hideCats?: boolean; tall?: boolean; onClick?: () => void; servicesSize?: string | number; metaSize?: string | number; hideMeta?: boolean; hideImage?: boolean; round?: boolean; stackMeta?: boolean }) {
+function ProjectCard({ ar, cats, title, desc, image, preview, video, slides, onClick, servicesSize, metaSize, hideMeta, hideImage, round, stackMeta, hideCats, tall, slider }: Project & { slider?: boolean; hideCats?: boolean; tall?: boolean; onClick?: () => void; servicesSize?: string | number; metaSize?: string | number; hideMeta?: boolean; hideImage?: boolean; round?: boolean; stackMeta?: boolean }) {
   return (
-    <CaseCard ar={ar} title={title} desc={desc} services={hideCats ? undefined : catLine(cats)} showCats servicesSize={servicesSize} metaSize={metaSize} hideMeta={hideMeta} hideImage={hideImage} image={image} preview={preview} video={video} onClick={onClick} round={round} stackMeta={stackMeta} tall={tall} />
+    <CaseCard ar={ar} title={title} desc={desc} services={hideCats ? undefined : catLine(cats)} showCats servicesSize={servicesSize} metaSize={metaSize} hideMeta={hideMeta} hideImage={hideImage} image={image} preview={preview} video={video} onClick={onClick} round={round} stackMeta={stackMeta} tall={tall} slides={slider ? slides : undefined} />
   );
 }
 
@@ -888,7 +891,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
                   data-id={item.project.id}
                   style={{ gridColumn: item.col, gridRow: rowIdx + 1, minWidth: 0 }}
                 >
-                  <ProjectCard {...item.project} ar={item.ar ?? item.project.ar} round={item.round} servicesSize={ZOOM_CFG[zoom].cap} metaSize={ZOOM_CFG[zoom].cap} hideMeta={!ZOOM_CFG[zoom].showMeta} hideImage={ZOOM_CFG[zoom].imagesOff} onClick={() => onCaseClick?.(item.project.href)} />
+                  <ProjectCard {...item.project} ar={item.ar ?? item.project.ar} round={item.round} servicesSize={ZOOM_CFG[zoom].cap} metaSize={ZOOM_CFG[zoom].cap} hideMeta={!ZOOM_CFG[zoom].showMeta} hideImage={ZOOM_CFG[zoom].imagesOff} slider={zoom === ZOOM_MAX} onClick={() => onCaseClick?.(item.project.href)} />
                 </div>
               ))
             )

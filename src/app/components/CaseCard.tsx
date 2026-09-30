@@ -62,6 +62,9 @@ export interface CaseCardProps {
    *  through the viewport maps onto the clip's timeline, so it opens up as the
    *  page moves. Desktop only; touch gets plain autoplay. */
   scrubVideo?: string;
+  /** Several pictures to flip through inside the preview (desktop) — the
+   *  first is the preview itself */
+  slides?: string[];
   /** Phone: a 4:5 frame even one per row (the default there is a square) */
   tall?: boolean;
   /** Force round or square instead of the title-hash default — used where a
@@ -87,7 +90,7 @@ const servicesStyle: React.CSSProperties = {
 };
 
 export default function CaseCard({
-  ar, title, desc, services, showCats, servicesSize, metaSize, image: rawImage, preview, video: rawVideo, onClick, linkLabel = 'Перейти', hideMeta = false, hideImage = false, aspect, scrubVideo, round, stackMeta, tall,
+  ar, title, desc, services, showCats, servicesSize, metaSize, image: rawImage, preview, video: rawVideo, onClick, linkLabel = 'Перейти', hideMeta = false, hideImage = false, aspect, scrubVideo, round, stackMeta, tall, slides,
 }: CaseCardProps) {
   // Per-card caption style — size overridable so it scales with the grid zoom.
   const svcStyle: React.CSSProperties = servicesSize != null
@@ -100,6 +103,8 @@ export default function CaseCard({
   const image = preview ?? (PLACEHOLDER_PREVIEWS ? undefined : rawImage);
   const video = PLACEHOLDER_PREVIEWS ? undefined : rawVideo;
   const [hovered, setHovered]  = useState(false);
+  const [slide, setSlide] = useState(0);
+  useEffect(() => { setSlide(0); }, [slides]);
   const isMobile = useMobile();
   const cardRef     = useRef<HTMLDivElement>(null);
   const titleRef    = useRef<HTMLParagraphElement>(null);
@@ -292,7 +297,39 @@ export default function CaseCard({
             />
           )}
           {/* No hover video: the preview never swaps to another picture */}
-          {image && (
+          {slides && slides.length > 1 ? (
+            <>
+              {/* The biggest grid: the preview is a small slider — the case's
+                  own pictures cross-fade, flipped with the arrows at its sides
+                  (shown on hover); a click anywhere else still opens the case */}
+              {slides.map((src, k) => (
+                <img key={src} src={src} alt={k === 0 ? title : ''} loading={k === 0 ? 'lazy' : 'eager'}
+                  style={{ objectPosition: 'center', opacity: k === slide ? 1 : 0, transition: 'opacity 0.35s ease' }} />
+              ))}
+              {([-1, 1] as const).map(dir => (
+                <button
+                  key={dir}
+                  aria-label={dir < 0 ? 'Предыдущая картинка' : 'Следующая картинка'}
+                  onClick={e => { e.stopPropagation(); setSlide(v => (v + dir + slides.length) % slides.length); }}
+                  style={{
+                    position: 'absolute', top: '50%', [dir < 0 ? 'left' : 'right']: 12, translate: '0 -50%', zIndex: 2,
+                    width: 36, height: 36, borderRadius: '50%', border: 'none', padding: '0 0 2px', cursor: 'pointer',
+                    background: 'var(--c-bg)', color: 'var(--c-text)',
+                    fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 1,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    opacity: hovered ? 1 : 0, transition: 'opacity 0.25s ease',
+                  }}
+                >{dir < 0 ? '←' : '→'}</button>
+              ))}
+              {/* Which picture of how many — bottom centre, same fade */}
+              <span style={{
+                position: 'absolute', left: '50%', bottom: 12, translate: '-50% 0', zIndex: 2, pointerEvents: 'none',
+                padding: '3px 10px 4px', borderRadius: 999, background: 'var(--c-bg)', color: 'var(--c-text)',
+                fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)', whiteSpace: 'nowrap',
+                opacity: hovered ? 1 : 0, transition: 'opacity 0.25s ease',
+              }}>{slide + 1} / {slides.length}</span>
+            </>
+          ) : image && (
             <img
               src={image}
               alt={title}

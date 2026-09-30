@@ -81,6 +81,7 @@ function buildRows(projects: Project[]): Row[] {
 }
 
 function ProjectCard({ project, onClick, aspect, scrubVideo, shape }: { project: Project; onClick?: () => void; aspect?: string; scrubVideo?: string; shape?: Shape }) {
+  const isMobile = useMobile();
   return (
     <CaseCard
       ar={shape === 'vertical' ? V : shape ? H : project.ar}
@@ -88,8 +89,8 @@ function ProjectCard({ project, onClick, aspect, scrubVideo, shape }: { project:
       scrubVideo={scrubVideo}
       title={project.title}
       desc={project.desc}
-      // Same grey category line as on the cases page
-      services={catLine(project.cats)}
+      // Same grey category line as on the cases page (desktop only)
+      services={isMobile ? undefined : catLine(project.cats)}
       showCats
       image={project.image}
       preview={project.preview}

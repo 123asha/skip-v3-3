@@ -10,8 +10,10 @@ import { sound } from '../sound/Sound';
  * App.module.css), so hovering any button on the site feels identical.
  */
 export default function PillButton({
-  children, variant = 'secondary', href, onClick, icon, style, fullWidth,
+  children, variant = 'secondary', href, onClick, icon, style, fullWidth, compact,
 }: {
+  /** The smaller pill (one text line + 8px / 9px) — same flip, less height */
+  compact?: boolean;
   /** Stretch to the full width of its container */
   fullWidth?: boolean;
   children: React.ReactNode;
@@ -27,10 +29,11 @@ export default function PillButton({
   const face: React.CSSProperties = {
     background: primary ? 'var(--c-text)' : 'var(--c-surface)',
     color: primary ? '#fff' : 'var(--c-text)',
-    height: 44,
-    paddingLeft: icon ? 0 : 16,
-    paddingRight: 16,
-    paddingBottom: 3,
+    height: compact ? undefined : 44,
+    paddingLeft: icon ? 0 : compact ? 14 : 16,
+    paddingRight: compact ? 14 : 16,
+    paddingTop: compact ? 8 : undefined,
+    paddingBottom: compact ? 9 : 3,
     borderRadius: 4,
     display: 'inline-flex',
     alignItems: 'center',
@@ -46,7 +49,8 @@ export default function PillButton({
         <span
           key={f}
           className={f === 0 ? s.newProjectFace : `${s.newProjectFace} ${s.newProjectFaceBottom}`}
-          style={face}
+          // Cube depth = half the pill's height (the CSS default suits 32px)
+          style={compact ? { ...face, transform: f === 0 ? 'translateZ(18px)' : 'rotateX(-90deg) translateZ(18px)' } : face}
         >
           {icon && (
             <span style={{ width: 44, height: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

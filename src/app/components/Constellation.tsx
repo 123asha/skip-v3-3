@@ -259,6 +259,15 @@ export default function Constellation({
     const onMotion = (e: DeviceMotionEvent) => {
       const a = e.acceleration;
       if (!a || a.x == null || a.y == null) return;
+      // Swung up and down like a racket: the balls leave the tray towards
+      // the viewer and knock back down on it — each a little differently
+      const az = Math.abs(a.z ?? 0);
+      if (az > 7) {
+        Object.values(nodes).forEach((n: any) => {
+          if ((n.hop ?? 0) < 0.05) n.hopV = Math.min(0.14, az * 0.009) * (0.7 + Math.random() * 0.6);
+        });
+        wake();
+      }
       // A sharp move of the phone kicks the balls the other way (inertia)
       const jx = -(a.x ?? 0), jy = (a.y ?? 0);
       if (Math.hypot(jx, jy) < 6) return;
@@ -615,7 +624,9 @@ export default function Constellation({
       const STRETCH_SMOOTHING = 0.15;
       Object.keys(nodes).forEach(id => {
         const n = nodes[id];
-        n.el.setAttribute('transform', `translate(${n.x},${n.y})`);
+        // A hop towards the viewer (phone swung up and down) — a touch bigger
+        const hop = (n as any).hop ?? 0;
+        n.el.setAttribute('transform', hop > 0.001 ? `translate(${n.x},${n.y}) scale(${1 + hop * 0.22})` : `translate(${n.x},${n.y})`);
 
         n.dispVx += (n.vx - n.dispVx) * STRETCH_SMOOTHING;
         n.dispVy += (n.vy - n.dispVy) * STRETCH_SMOOTHING;
@@ -1137,6 +1148,18 @@ export default function Constellation({
           n.vx *= damp; n.vy *= damp;
         }
 
+        {
+          const h = n as any;
+          if (h.hopV || h.hop) {
+            h.hopV = (h.hopV ?? 0) - 0.012;
+            h.hop = (h.hop ?? 0) + h.hopV;
+            if (h.hop <= 0) {
+              h.hop = 0;
+              // Lands with a knock and a smaller rebound, then rests
+              if (h.hopV < -0.02) { playKnock(Math.min(1, -h.hopV * 8)); h.hopV = -h.hopV * 0.4; } else h.hopV = 0;
+            }
+          }
+        }
         n.x += n.vx;
         n.y += n.vy;
         n.vx *= FRICTION;
@@ -1216,7 +1239,8 @@ export default function Constellation({
 
       const allSettled = dragId === null
         && Object.keys(nodes).every(id => nodes[id].vx === 0 && nodes[id].vy === 0
-          && nodes[id].rollX === 0 && nodes[id].rollY === 0);
+          && nodes[id].rollX === 0 && nodes[id].rollY === 0
+          && !(nodes[id] as any).hop && !(nodes[id] as any).hopV);
       if (allSettled) {
         // Snap the squash/stretch back to neutral before freezing — otherwise
         // the last frame's smoothing lag could lock in a faint, permanent

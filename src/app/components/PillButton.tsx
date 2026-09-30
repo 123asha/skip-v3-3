@@ -28,7 +28,7 @@ export default function PillButton({
   const primary = variant === 'primary';
 
   const face: React.CSSProperties = {
-    background: primary ? 'var(--c-text)' : 'var(--c-surface)',
+    background: primary ? 'var(--c-text)' : 'var(--c-button)',
     color: primary ? '#fff' : 'var(--c-text)',
     height: compact ? undefined : 44,
     paddingLeft: icon ? 0 : compact ? 14 : 16,

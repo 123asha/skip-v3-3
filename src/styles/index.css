@@ -24,6 +24,8 @@
   --c-text-inv: #dce0df;
   --c-bg: #ffffff;
   --c-surface: #f6f6f6;
+  /* The grey buttons' face — the home hero block's own grey */
+  --c-button: #eaeaea;
   /* Opaque on purpose: a translucent line changes shade over the grey section
      bands, so dividers on white and on --c-surface would not match. This is
      rgba(35,31,32,0.12) flattened onto white. */

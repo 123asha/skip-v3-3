@@ -1,4 +1,5 @@
-import { useId } from 'react';
+import { useEffect, useId } from 'react';
+import { playKnock } from '../utils/knock';
 
 const R = 100;
 
@@ -11,6 +12,15 @@ const R = 100;
  */
 export function ServiceBall() {
   const id = useId().replace(/:/g, '');
+  // A knock on each landing — timed to the drop keyframes (svcBallDrop, 1.1s:
+  // the first hit at 45%, the smaller second bounce at 84%). Same sound as the
+  // balls in the service tiles.
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const t1 = window.setTimeout(() => playKnock(0.8), 495);
+    const t2 = window.setTimeout(() => playKnock(0.25), 924);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
   return (
     <div className="svcBall" aria-hidden="true">
       <svg className="svcBallShadow" viewBox="-100 -20 200 40">

@@ -511,25 +511,32 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         const vx = (pseudoRandom(seed + 0.67) - 0.5) * 200;
         const vy = -100 - pseudoRandom(seed + 0.9) * 50;
 
-        // Barely-there shading lit from above — same formula as the hero
+        // Shaded like the ball in an opened service (ServiceBall) and the
+        // footer ball: a bright soft base, a glint up-left, a faint rim
+        // shadow down-right. All three are tied to the shape's own box, so
+        // they fit any radius and stretch with the balloon as it squashes.
         const shadeId = `${filterIdRef.current}-shade-${i}`;
-        const shade = document.createElementNS(NS, 'radialGradient');
-        shade.setAttribute('id', shadeId);
-        if (tileIndex === 1) {
-          // The same light as every other ball, but tied to the shape's box
-          // so it stretches with the balloon as it squashes
-          shade.setAttribute('gradientUnits', 'objectBoundingBox');
-          shade.setAttribute('cx', '0.5'); shade.setAttribute('cy', '0.325');
-          shade.setAttribute('r', '0.725');
-        } else {
-          shade.setAttribute('gradientUnits', 'userSpaceOnUse');
-          shade.setAttribute('cx', '0'); shade.setAttribute('cy', String(-r * 0.35));
-          shade.setAttribute('r', String(r * 1.45));
-        }
-        for (const [o, col] of [['0', '#ffffff'], ['0.62', '#ffffff'], ['1', 'color-mix(in srgb, #ffffff 95.4%, #000)']]) {
-          const st = document.createElementNS(NS, 'stop');
-          st.setAttribute('offset', o); st.setAttribute('stop-color', col);
-          shade.appendChild(st);
+        const mkGrad = (id: string, cx: string, cy: string, rr: string, stops: [string, string, string?][]) => {
+          const g = document.createElementNS(NS, 'radialGradient');
+          g.setAttribute('id', id);
+          g.setAttribute('gradientUnits', 'objectBoundingBox');
+          g.setAttribute('cx', cx); g.setAttribute('cy', cy); g.setAttribute('r', rr);
+          for (const [o, col, op] of stops) {
+            const st = document.createElementNS(NS, 'stop');
+            st.setAttribute('offset', o); st.setAttribute('stop-color', col);
+            if (op) st.setAttribute('stop-opacity', op);
+            g.appendChild(st);
+          }
+          return g;
+        };
+        const shade = mkGrad(shadeId, '0.425', '0.4', '0.65', [['0', '#fdfdfd'], ['0.6', '#f4f4f4'], ['1', '#e9e9e9']]);
+        const specId = `${filterIdRef.current}-spec`, rimId = `${filterIdRef.current}-rim`;
+        const defs = svg.querySelector('defs')!;
+        if (!defs.querySelector(`#${specId}`)) {
+          defs.append(
+            mkGrad(specId, '0.3', '0.26', '0.35', [['0', '#ffffff', '0.85'], ['1', '#ffffff', '0']]),
+            mkGrad(rimId, '0.725', '0.75', '0.475', [['0', '#000000', '0.10'], ['0.75', '#000000', '0.02'], ['1', '#000000', '0']]),
+          );
         }
         svg.querySelector('defs')!.appendChild(shade);
 
@@ -568,7 +575,19 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
 
         const group = document.createElementNS(NS, 'g');
         group.setAttribute('transform', `translate(${x},${y})`);
-        group.append(circle, face);
+        // Glint and rim shadow over the base (round balls only — the balloon
+        // redraws its outline every frame and keeps just the base shading)
+        const lights: SVGElement[] = [];
+        if (tileIndex !== 1) {
+          for (const gid of [specId, rimId]) {
+            const c = document.createElementNS(NS, 'circle');
+            c.setAttribute('cx', '0'); c.setAttribute('cy', '0'); c.setAttribute('r', String(r));
+            c.setAttribute('fill', `url(#${gid})`);
+            c.style.pointerEvents = 'none';
+            lights.push(c);
+          }
+        }
+        group.append(circle, ...lights, face);
         svg.appendChild(group);
 
         ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group, lockX, floatX: float ? x : undefined, floatY: float ? H * 0.42 : undefined, text, spin: 0, drawnX: x, shape });

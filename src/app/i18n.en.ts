@@ -137,6 +137,7 @@ export const EN: Record<string, string> = {
   // ── Services ─────────────────────────────────────────────────────────────
   'Бренд-стратегия': 'Brand strategy',
   'Фирменный стиль': 'Brand identity',
+  'Визуальная система': 'Visual system',
   'Автоматизация': 'Automation',
   'Информационная архитектура': 'Information architecture',
   'Веб-дизайн': 'Web design',

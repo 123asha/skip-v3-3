@@ -151,6 +151,7 @@ const INSIGHTS: Insight[] = [
     date: '16.09.2026',
     source: 'Дизайн-кабак',
     slug: 'raznica-mezhdu-product-vision-i-brand-vision',
+    cover: asset('/media/insights/brand-product-vision.mp4'),
     body: [
       'Их легко перепутать, потому что оба говорят о будущем. Но отвечают на разные вопросы.',
       'Brand vision — куда мы хотим прийти как бренд через 2–5 лет. Product vision — каким должен стать продукт, чтобы это будущее стало возможным.',

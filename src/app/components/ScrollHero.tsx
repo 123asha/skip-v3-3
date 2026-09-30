@@ -249,7 +249,7 @@ function ConstellationHero() {
       id="hero"
       style={{
         position: 'relative',
-        height: 'var(--hero-h, 100svh)',   // phones: 80% of the screen (index.css)
+        height: 'var(--hero-h, 100svh)',   // phones: 70% of the screen (index.css)
         width: '100%',
         background: HERO_BG,
         // The balls knock their letters out in the background colour, so the

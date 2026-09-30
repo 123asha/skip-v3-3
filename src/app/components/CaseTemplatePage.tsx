@@ -569,21 +569,36 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
         }}>
           <div style={isMobile ? undefined : { gridColumn: '4 / 6' }}>
             <p style={{ ...headingStyle, margin: 0 }}>Спасибо команде</p>
-            {/* A table like the services one: name | role, a hairline above
-                every row and under the last — same on every screen */}
-            <div style={{ marginTop: isMobile ? 'var(--space-sm)' : 40, borderBottom: '1px solid var(--c-border)' }}>
-              {data.team.map(({ name, role }) => (
+            {/* A table like the services one: a grey header band (name | role),
+                then the rows with a hairline between them — none above the
+                first row or under the last */}
+            {/* 40px under the heading on every screen — the heading-to-content
+                gap used across the site («Решения» → its tiles) */}
+            <div style={{ marginTop: 40 }}>
+              <div style={{
+                display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 'var(--gap)',
+                padding: '8px 10px 12px', margin: '0 -10px', background: 'var(--c-surface)',
+              }}>
+                <p style={{ ...textStyle, margin: 0 }}>Имя</p>
+                <p style={{ ...textStyle, margin: 0 }}>Роль</p>
+              </div>
+              {data.team.map(({ name, role }, k) => (
                 <div key={name} style={{
                   display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 'var(--gap)',
-                  padding: '10px 0', borderTop: '1px solid var(--c-border)',
+                  padding: '10px 0', borderTop: k === 0 ? 'none' : '1px solid var(--c-border)',
                 }}>
                   <p style={{ ...textStyle, margin: 0 }}>{name}</p>
                   <p style={{ ...textStyle, margin: 0 }}>{role}</p>
                 </div>
               ))}
-              {/* The table always closes with the client's own team */}
-              <div style={{ padding: '10px 0', borderTop: '1px solid var(--c-border)' }}>
+              {/* The table always closes with the client's own team — a heart
+                  where the role would be (\uFE0E keeps it a text glyph) */}
+              <div style={{
+                display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 'var(--gap)',
+                padding: '10px 0', borderTop: '1px solid var(--c-border)',
+              }}>
                 <p style={{ ...textStyle, margin: 0 }}>{LANG === 'en' ? `${data.title} team` : `Команда ${data.title}`}</p>
+                <p aria-label="спасибо" style={{ ...textStyle, margin: 0 }}>{'\u2665\uFE0E'}</p>
               </div>
             </div>
           </div>

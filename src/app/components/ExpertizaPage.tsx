@@ -401,6 +401,8 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
     drawnX: number;
     /** дизайн: drawn as a rect so it can inflate into a flat panel */
     shape?: SVGPathElement;
+    /** Glint + rim-shadow circles over the base — resized with a growing ball */
+    lights?: SVGElement[];
   }>>([]);
   const rafRef = useRef<number>();
 
@@ -575,10 +577,9 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
 
         const group = document.createElementNS(NS, 'g');
         group.setAttribute('transform', `translate(${x},${y})`);
-        // Glint and rim shadow over the base (round balls only — the balloon
-        // redraws its outline every frame and keeps just the base shading)
+        // Glint and rim shadow over the base
         const lights: SVGElement[] = [];
-        if (tileIndex !== 1) {
+        {
           for (const gid of [specId, rimId]) {
             const c = document.createElementNS(NS, 'circle');
             c.setAttribute('cx', '0'); c.setAttribute('cy', '0'); c.setAttribute('r', String(r));
@@ -590,7 +591,7 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         group.append(circle, ...lights, face);
         svg.appendChild(group);
 
-        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group, lockX, floatX: float ? x : undefined, floatY: float ? H * 0.42 : undefined, text, spin: 0, drawnX: x, shape });
+        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group, lockX, floatX: float ? x : undefined, floatY: float ? H * 0.42 : undefined, text, spin: 0, drawnX: x, shape, lights });
       }
     } else if (!hovered && ballsRef.current.length > 0) {
       ballsRef.current.forEach(b => {
@@ -626,13 +627,11 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
     // physics step — speed their fall/settle up without touching the rest.
     const SPEED = tileIndex === 2 ? 2 : tileIndex === 1 ? 1.5 : 1;
 
-    // дизайн: once the two balls have landed they blow up like two balloons
-    // in a box — stacked if they landed one on the other, side by side if they
-    // rolled apart. Each keeps to its half: it swells round, goes flat against
-    // the walls and its neighbour, then the pressure pushes it into the
-    // corners until the two fill the tile, corners soft (see balloonPath).
+    // дизайн: once the two balls have landed they swell — stacked if they
+    // landed one on the other, side by side if they rolled apart. Each keeps
+    // to its half of the tile and stays round: it grows until it touches the
+    // walls of that half.
     const INFLATE_MS = 1700 / SPEED;
-    const N_END = 7;                   // corner pressure at the end — soft cushion corners
     let inflateAt: number | null = null;
     let inflateDone = false;
     let restFrames = 0;
@@ -659,17 +658,14 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
       plan.forEach(({ b, x0, y0, r0, cell }) => {
         // Air goes in fast, then slower as it presses on the walls
         const grow = 1 - (1 - Math.min(1, t / 0.6)) ** 2.2;
-        const R = r0 + (Math.max(cell.w, cell.h) / 2 - r0) * grow;
-        // Flat against whatever it touches: the walls and its neighbour
-        const a = Math.min(R, cell.w / 2), bb = Math.min(R, cell.h / 2);
-        // Then the pressure fills the corners, with a small springy wobble
-        const q = clamp((t - 0.35) / 0.65, 0, 1);
-        const n = (2 + (N_END - 2) * (1 - (1 - q) ** 3)) * (1 + 0.06 * Math.sin(t * Math.PI * 6) * (1 - t));
-        // Stays where it landed until the walls push it to the middle
-        const cx = clamp(x0, cell.l + a, cell.l + cell.w - a);
-        const cy = clamp(y0, cell.t + bb, cell.t + cell.h - bb);
+        // …but it stays a ball: it grows to the biggest circle its half of
+        // the tile holds and settles in the middle of that half
+        const R = r0 + (Math.min(cell.w, cell.h) / 2 - r0) * grow;
+        const cx = clamp(x0 + (cell.l + cell.w / 2 - x0) * grow, cell.l + R, cell.l + cell.w - R);
+        const cy = clamp(y0 + (cell.t + cell.h / 2 - y0) * grow, cell.t + R, cell.t + cell.h - R);
         b.group.setAttribute('transform', `translate(${cx},${cy})`);
-        b.shape!.setAttribute('d', balloonPath(a, bb, Math.max(2, n)));
+        b.shape!.setAttribute('d', balloonPath(R, R, 2));
+        b.lights?.forEach(c => c.setAttribute('r', String(R)));
       });
       if (t >= 1) { inflateDone = true; playKnock(0.5); }
       return true;

@@ -196,10 +196,12 @@ export default function CaseCard({
     let frame = 0, busy = false, want = -1, since = 0;
     const seek = () => {
       const now = performance.now();
+      if (want < 0 || Math.abs(vid.currentTime - want) < 0.03) { busy = false; return; }
       // A seek that never reports back (a stalled download, say) must not
       // freeze the clip for good — give up on it after a quarter second
       if (busy && now - since < 250) return;
-      if (want < 0 || Math.abs(vid.currentTime - want) < 0.03) { busy = false; return; }
+      // At most ~25 seeks a second — plenty for the eye, half the decoding
+      if (now - since < 40) { if (!frame) frame = requestAnimationFrame(update); return; }
       busy = true; since = now;
       try { vid.currentTime = want; } catch { busy = false; }
     };
@@ -312,7 +314,7 @@ export default function CaseCard({
           description column is dropped, since the card gets too narrow.
           Without a preview the card is a plain entry — no hover copy, and the
           year sits right above the title. */}
-      {!aspect && <div style={{ display: 'grid', gridTemplateColumns: hideMeta || hideImage ? '1fr' : 'minmax(90px, 1fr) minmax(0, 3fr)', gap: 'var(--gap)', alignItems: 'flex-start', paddingTop: hideImage ? 0 : 10, flexShrink: 0 }}>
+      {!aspect && <div data-card-meta="" style={{ display: 'grid', gridTemplateColumns: hideMeta || hideImage ? '1fr' : 'minmax(90px, 1fr) minmax(0, 3fr)', gap: 'var(--gap)', alignItems: 'flex-start', paddingTop: hideImage ? 0 : 10, flexShrink: 0 }}>
         <p ref={titleRef} className={`${s.cardMetaText} ${s.cardLink}`} style={{ margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', ...metaStyle }}>{title}</p>
         {/* Space is always reserved — only the words fade/slide in on hover
             (see the GSAP effect above), so nothing around this shifts. */}

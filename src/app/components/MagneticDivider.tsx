@@ -50,10 +50,16 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
       return `M0,${cy} Q${lw / 2},${cy + p1.current.y} ${lw},${cy}`;
     };
 
+    let lastD = '';
     const render = () => {
       const d = getD();
-      path.setAttribute('d', d);
-      hit.setAttribute('d', d);
+      // Written only when it changed — a fresh `d` every frame dirties the
+      // layout, and the next divider's measurement then pays for it
+      if (d !== lastD) {
+        lastD = d;
+        path.setAttribute('d', d);
+        hit.setAttribute('d', d);
+      }
       // At rest the line is drawn as a plain 1px block, not as an SVG stroke:
       // the page scales itself with `zoom`, and a scaled stroke lands on ~1.6
       // device pixels, which the rasteriser rounds differently line by line —
@@ -100,9 +106,30 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
       };
     }
 
-    gsap.ticker.add(render);
+    // Per-frame work only while the line is actually moving (the cursor has
+    // it, or the elastic is settling). At rest it is re-measured on scroll and
+    // resize alone — dozens of dividers each measuring themselves every frame
+    // made the whole page heavy to scroll.
+    let ticking = false;
+    const tickRender = () => {
+      render();
+      if (!live.current && Math.abs(p1.current.y) < 0.01 && !gsap.isTweening(p1.current)) {
+        gsap.ticker.remove(tickRender);
+        ticking = false;
+      }
+    };
+    const wake = () => { if (!ticking) { ticking = true; gsap.ticker.add(tickRender); } };
+    let restFrame = 0;
+    const onRestScroll = () => {
+      if (ticking || restFrame) return;
+      restFrame = requestAnimationFrame(() => { restFrame = 0; render(); });
+    };
+    render();
+    window.addEventListener('scroll', onRestScroll, { passive: true, capture: true });
+    window.addEventListener('resize', onRestScroll);
 
     const onMove = (e: PointerEvent) => {
+      wake();
       const rect = svg.getBoundingClientRect();
       const svgY = e.clientY - rect.top;
 
@@ -119,13 +146,17 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
     const onLeave = () => {
       live.current = false;
       gsap.to(p1.current, { y: 0, duration: 0.9, ease: 'elastic.out(1, 0.3)' });
+      wake();
     };
 
     svg.addEventListener('pointermove', onMove as EventListener);
     svg.addEventListener('pointerleave', onLeave);
 
     return () => {
-      gsap.ticker.remove(render);
+      gsap.ticker.remove(tickRender);
+      if (restFrame) cancelAnimationFrame(restFrame);
+      window.removeEventListener('scroll', onRestScroll, true);
+      window.removeEventListener('resize', onRestScroll);
       svg.removeEventListener('pointermove', onMove as EventListener);
       svg.removeEventListener('pointerleave', onLeave);
     };

@@ -204,7 +204,7 @@ function interleaveHV(projects: Project[]): Project[] {
 // which would scatter more circles).
 const ROUND_ROW = 1, ROUND_COL = 1;
 
-const LEAD_IDS = [1, 2, 3, 4];
+const LEAD_IDS = [1, 2, 4, 3];
 
 function buildScatterRows(projects: Project[], perRow: number, gridCols: number): Row[] {
   // The four lead cases (the ones on the home page) open the page, in their
@@ -258,6 +258,8 @@ function buildScatterRows(projects: Project[], perRow: number, gridCols: number)
 // One step past the densest grid the previews go too: level 0 drops the images
 // and leaves the list as plain text.
 const ZOOM_CFG: Record<number, { cols: number; perRow: number; rowGap: number | string; cap: string; showMeta: boolean; imagesOff?: boolean }> = {
+  // The biggest view: two cases a row
+  6: { cols: 2, perRow: 2, rowGap: 'var(--cases-row-gap, 120px)', cap: 'var(--text-size)', showMeta: true },
   5: { cols: 3, perRow: 3, rowGap: 'var(--cases-row-gap, 120px)', cap: 'var(--text-size)', showMeta: true },
   4: { cols: 4, perRow: 4, rowGap: 100, cap: 'var(--text-size)', showMeta: true },
   3: { cols: 5, perRow: 5, rowGap: 80,  cap: 'var(--text-size)', showMeta: false },
@@ -265,7 +267,7 @@ const ZOOM_CFG: Record<number, { cols: number; perRow: number; rowGap: number | 
   1: { cols: 7, perRow: 7, rowGap: 48,  cap: 'var(--text-size)', showMeta: false },
   0: { cols: 8, perRow: 8, rowGap: 24,  cap: 'var(--text-size)', showMeta: true, imagesOff: true },
 };
-const ZOOM_MAX = 5;
+const ZOOM_MAX = 6;
 const ZOOM_MIN = 3; // one step denser than the default 4-col floor
 
 // ── Mobile mixed-grid helper ─────────────────────────────────────────────────
@@ -589,14 +591,28 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
       const was = prev.get(el.dataset.id ?? '');
       gsap.killTweensOf(el);
       if (!was) {
+        const m = el.querySelector<HTMLElement>('[data-card-meta]');
+        if (m) m.style.scale = '';
         gsap.fromTo(el, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out', clearProps: 'transform,opacity' });
         return;
       }
       const now = el.getBoundingClientRect();
+      // The card is scaled from its old width, which would blow the caption's
+      // type up (or shrink it) and then snap it back. The caption carries the
+      // inverse scale all the way, so its type stays the size it ends up at.
+      const meta = el.querySelector<HTMLElement>('[data-card-meta]');
+      const keepType = () => {
+        if (!meta) return;
+        const sc = Number(gsap.getProperty(el, 'scaleX')) || 1;
+        meta.style.transformOrigin = '0 0';
+        meta.style.scale = String(1 / sc);
+      };
       gsap.fromTo(el,
         { x: (was.left - now.left) / pz, y: (was.top - now.top) / pz, scale: was.width / now.width, transformOrigin: '0 0' },
-        { x: 0, y: 0, scale: 1, duration: 0.7, ease: 'power3.inOut', clearProps: 'transform' },
+        { x: 0, y: 0, scale: 1, duration: 0.7, ease: 'power3.inOut', clearProps: 'transform', onUpdate: keepType,
+          onComplete: () => { if (meta) { meta.style.scale = ''; meta.style.transformOrigin = ''; } } },
       );
+      keepType();
     });
   }, [zoom]);
 

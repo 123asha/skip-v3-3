@@ -8,7 +8,8 @@ const KEY = 'cookie-consent';
 /**
  * The cookie notice, shown on a visitor's first visit until «Хорошо» is
  * pressed — the only way to close it. A white block with a grey outline:
- * above the menu on a phone, at the bottom centre on a desktop.
+ * above the menu on a phone, at the bottom centre on a desktop, three
+ * grid columns wide.
  */
 export default function CookieNotice({ onPolicy }: { onPolicy?: () => void }) {
   const isMobile = useMobile();
@@ -30,7 +31,8 @@ export default function CookieNotice({ onPolicy }: { onPolicy?: () => void }) {
         position: 'fixed', zIndex: 300,
         ...(isMobile
           ? { left: 'var(--pad)', right: 'var(--pad)', bottom: 'var(--m-above-menu)', transition: 'bottom var(--m-menu-move)' }
-          : { left: '50%', bottom: 'calc(var(--pad) + 40px)', transform: 'translateX(-50%)', width: 'min(560px, calc(100vw - 2 * var(--pad)))' }),
+          // Desktop: the three middle columns of the page grid
+          : { left: 'calc(50% - var(--page-sb, 0px) / 2)', bottom: 'calc(var(--pad) + 40px)', transform: 'translateX(-50%)', width: 'calc((100vw - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5 * 3 + 2 * var(--gap))' }),
         background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 4,
         padding: 16, boxSizing: 'border-box',
         display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-end', gap: 16,

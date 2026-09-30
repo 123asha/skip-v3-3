@@ -1152,9 +1152,8 @@ function AppInner() {
               onMouseEnter={() => sound.play('hover')}
               style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'baseline', gap: '0.3em', whiteSpace: 'nowrap' }}
             >
-              {/* The arrow first, then the word. 1px below the box's centre —
-                  the optical centre of the lowercase line */}
-              <CircleArrow style={{ alignSelf: 'center', position: 'relative', top: 1 }} />
+              {/* The arrow first, then the word — centred on the box */}
+              <CircleArrow style={{ alignSelf: 'center', position: 'relative', top: 0 }} />
               <LinkFlip flat>Написать</LinkFlip>
             </a>
           ) : (

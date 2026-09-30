@@ -846,6 +846,9 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                     ))}
                   </div>
                 )}
+                {/* The team and the client's words here too — they also close
+                    the pictures page; the repeat is intended */}
+                {creditsAndQuote}
                 {/* Room for the pinned button and the menu under it */}
                 <div style={{ height: 120 }} />
               </>

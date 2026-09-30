@@ -712,10 +712,38 @@ export default function Constellation({
       return pt.matrixTransform(svg.getScreenCTM()!.inverse());
     };
 
+    // Touch: a ball is caught only by a long press, so a swipe across the
+    // balls still scrolls the page. Until then nothing is held.
+    const TOUCH = window.matchMedia('(pointer: coarse)').matches;
+    const HOLD_MS = 380, HOLD_SLOP = 8;
+    let hold: { timer: number; x: number; y: number } | null = null;
+    const cancelHold = () => { if (hold) { clearTimeout(hold.timer); hold = null; } };
+
     const onPointerDown = (evt: PointerEvent) => {
       ensureAudio();
       const g = (evt.target as Element).closest('.constellation-node');
       if (!g) return;
+      if (TOUCH && evt.pointerType !== 'mouse') {
+        cancelHold();
+        const x0 = evt.clientX, y0 = evt.clientY, pid = evt.pointerId;
+        hold = {
+          x: x0, y: y0,
+          timer: window.setTimeout(() => {
+            hold = null;
+            const id = g.getAttribute('data-id')!;
+            if (!nodes[id]) return;
+            dragId = id;
+            wake();
+            lastPoint = getSVGPoint({ clientX: x0, clientY: y0 } as PointerEvent);
+            lastTime = performance.now();
+            grabbedUntil[id] = lastTime + GRAB_GRACE;
+            nodes[id].vx = 0; nodes[id].vy = 0;
+            try { (g as SVGGElement).setPointerCapture(pid); } catch { /* window listeners carry it */ }
+            playKnock(0.4);
+          }, HOLD_MS),
+        };
+        return;
+      }
       // The hero behind this reacts to clicks — a grab is not one. preventDefault
       // also stops the browser starting its own text/image drag.
       evt.stopPropagation();
@@ -735,6 +763,8 @@ export default function Constellation({
     };
 
     const onPointerMove = (evt: PointerEvent) => {
+      // A finger that moves before the hold completes is scrolling — let it
+      if (hold && Math.hypot(evt.clientX - hold.x, evt.clientY - hold.y) > HOLD_SLOP) cancelHold();
       if (!dragId) return;
       const n = nodes[dragId];
       if (!n || !lastPoint) return;
@@ -763,11 +793,7 @@ export default function Constellation({
     // when it fell: columns pull again and balls may slip past each other,
     // so the word sorts itself back into the heap it landed as
     const endDrag = () => {
-      // Racket mode: a quick tap on a ball throws it up at you
-      if ((racket || window.matchMedia('(max-width: 768px)').matches) && dragId !== null && performance.now() - lastTime < 250) {
-        const h = nodes[dragId] as any;
-        if (h && !h.hop && !h.hopV) { h.hopV = 0.3; toFront(h); wake(); }
-      }
+      cancelHold();
       if (dragId !== null && gravity > 0) { fallStart = performance.now(); wake(); }
       dragId = null;
     };
@@ -971,8 +997,11 @@ export default function Constellation({
     // not reliable on SVG elements across engines.
     nodesLayer.addEventListener('pointerdown', onPointerDown);
     // Touch on a ball: keep the page from scrolling so the ball can be dragged
-    const onBallTouch = (e: TouchEvent) => { if (e.cancelable) e.preventDefault(); };
+    // Touch: the page scrolls freely; only a caught ball (long press) stops it
+    const onBallTouch = (e: TouchEvent) => { if (!TOUCH && e.cancelable) e.preventDefault(); };
+    const onTouchMove = (e: TouchEvent) => { if (dragId !== null && e.cancelable) e.preventDefault(); };
     nodesLayer.addEventListener('touchstart', onBallTouch, { passive: false });
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
     window.addEventListener('pointermove', onPointerMove, { passive: false });
     window.addEventListener('pointerup', endDrag);
     window.addEventListener('pointercancel', endDrag);
@@ -1324,6 +1353,8 @@ export default function Constellation({
       nodesLayer.removeEventListener('touchstart', onBallTouch);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', endDrag);
+      window.removeEventListener('touchmove', onTouchMove);
+      cancelHold();
       window.removeEventListener('pointercancel', endDrag);
       window.removeEventListener('pointerdown', onFirstGesture, true);
       window.removeEventListener('keydown', onFirstGesture, true);

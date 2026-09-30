@@ -1,5 +1,6 @@
 import s from '../App.module.css';
 import { sound } from '../sound/Sound';
+import { goTo, siteHref } from '../utils/siteNav';
 
 /**
  * The site has exactly two buttons:
@@ -84,14 +85,19 @@ export default function PillButton({
 
   const hover = () => sound.play('hover');
 
+  // A site path ("/insights/…") opens in place; anything else in a new tab
+  const internal = !!href && href.startsWith('/');
   return href ? (
     <a
       className={s.newProjectBtn}
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
+      href={internal ? siteHref(href) : href}
+      target={internal ? undefined : '_blank'}
+      rel={internal ? undefined : 'noopener noreferrer'}
       onMouseEnter={hover}
-      onClick={e => e.stopPropagation()}
+      onClick={e => {
+        e.stopPropagation();
+        if (internal && !e.metaKey && !e.ctrlKey) { e.preventDefault(); goTo(href); }
+      }}
       style={shared}
     >{inner}</a>
   ) : (

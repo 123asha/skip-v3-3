@@ -14,8 +14,8 @@
   justify-content: flex-start;
   align-items: center;
   padding: var(--pad) var(--pad) 0;
-  /* Same gap to the cards as under «Решения» on the services page */
-  margin-bottom: 40px;
+  /* A roomier gap to the cards than the section headings' usual 40px */
+  margin-bottom: var(--space-md);
   line-height: var(--text-lh);
   letter-spacing: var(--text-ls);
 }

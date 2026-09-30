@@ -6,6 +6,8 @@ import { typo } from '../utils/typography';
 import PillButton from './PillButton';
 import { useMobile } from '../hooks/useMobile';
 import { useRowReveal } from '../hooks/useRowReveal';
+import { INSIGHTS_LIST as tools, shownDate } from '../content/insights';
+export { INSIGHTS_LIST } from '../content/insights';
 
 // Placeholder body shown when a row is expanded — two short paragraphs (one per
 // column), roughly three lines each. Replace per-item via the optional `body`
@@ -27,136 +29,7 @@ const FULL_PLACEHOLDER = [
   'Короткий финальный абзац рыбы.',
 ];
 
-// `date` — publication date, DD.MM.YYYY. The ones below are placeholders
-// until the real dates are filled in.
-type Insight = { name: string; desc: string; year?: string; date?: string; source?: string; href?: string; body?: [string, string]; full?: string[] };
 
-// DD.MM.YYYY (or just the year) → sortable number
-const dateKey = (t: Insight) => {
-  const [d, m, y] = (t.date ?? `01.01.${t.year ?? '0'}`).split('.').map(Number);
-  return y * 10000 + m * 100 + d;
-};
-
-// Shown date: the current year is dropped (03.06), other years keep two
-// digits (12.11.25)
-const shownDate = (t: Insight) => {
-  if (!t.date) return t.year;
-  const [d, m, y] = t.date.split('.');
-  return Number(y) === new Date().getFullYear() ? `${d}.${m}` : `${d}.${m}.${y.slice(-2)}`;
-};
-
-// Listed newest first, whatever order they're written in below
-const INSIGHTS: Insight[] = [
-  {
-    name: 'Статья',
-    desc: 'Зачем стартапу стратегия, если всё постоянно меняется',
-    date: '27.09.2026',
-    source: 'Дизайн-кабак',
-    href: 'https://designpub.ru/zachem-startapu-strategiya-yesli-vsyo-postoyanno-menyayetsya-5538434cc1da',
-    body: [
-      '«Рано думать о стратегии, давайте проверять гипотезы» — так думает почти каждый стартап.',
-      'Сейчас запустить продукт просто: за пару недель навайбкодить MVP, запустить рекламу и даже получить первых пользователей. И на этом этапе может казаться, что о стратегии думать рано.',
-    ],
-  },
-  {
-    name: 'Статья',
-    desc: 'Как смыслы бренда становятся продуктовыми решениями',
-    date: '23.09.2026',
-    source: 'Дизайн-кабак',
-    href: 'https://designpub.ru/kak-smysly-brenda-stanovyatsya-produktovymi-resheniyami-aa0b46964c37',
-    body: [
-      'Компания потратила несколько месяцев и бюджет на ребрендинг. Сделали красивую презентацию с миссией, видением, ценностями.',
-      'Все полюбовались и отдали в отдел маркетинга. А продукт живёт своей жизнью.',
-    ],
-  },
-  {
-    name: 'Статья',
-    desc: 'В чём разница между product vision и brand vision',
-    date: '16.09.2026',
-    source: 'Дизайн-кабак',
-    href: 'https://designpub.ru/v-chyom-raznitsa-mezhdu-product-vision-i-brand-vision-7f649efe1c57',
-    body: [
-      'Их легко перепутать, потому что оба говорят о будущем. Но отвечают на разные вопросы.',
-      'Brand vision — куда мы хотим прийти как бренд через 2–5 лет. Product vision — каким должен стать продукт, чтобы это будущее стало возможным.',
-    ],
-  },
-  {
-    name: 'Статья',
-    desc: 'Что должно измениться в жизни человека благодаря вашему продукту?',
-    date: '16.09.2026',
-    source: 'Дизайн-кабак',
-    href: 'https://designpub.ru/chto-dolzhno-izmenitsya-v-zhizni-cheloveka-blagodarya-vashemu-produktu-ec1f871c1d98',
-    body: [
-      'На этот вопрос поможет ответить product vision.',
-      'Product vision полезен даже маленьким командам: он помогает сверяться с целью, держать фокус и расставлять приоритеты.',
-    ],
-  },
-  {
-    name: 'Фреймворк',
-    desc: 'Конструктор миссии',
-    year: '2026',
-    date: '12.03.2026',
-    source: 'VC',
-    href: 'https://vc.ru/marketing/2205037-konstruktor-missii-dlya-brenda',
-    body: [
-      'В основе конструктора — идея, что к ответу на вопрос «Почему мы этим занимаемся?» можно прийти четырьмя разными путями.',
-      'Поиск миссии бренда часто превращается в гонку за идеальной фразой, как у Nike или Apple. Команды попадают в ловушку: штурмят, креативят, запираются в переговорках, чтобы найти те самые вдохновляющие слова.',
-    ],
-  },
-  {
-    name: 'Статья',
-    desc: 'Критерии для проверки идей',
-    year: '2026',
-    date: '02.04.2026',
-    source: 'Workspace',
-    href: 'https://workspace.ru/blog/prompt-dlya-proverki-metafory-s-pomoschyu-ii/',
-    body: [
-      'Когда нет метафоры, любая концепция рассыпается. Получается набор приёмов, которые не держат форму.',
-      'В Skip Design мы используем собственную методологию. Каждый критерий — вопрос, который проверяет метафору по шкале от 1 до 5.',
-    ],
-  },
-  {
-    name: 'Статья',
-    desc: 'Как ИИ генерирует метафоры',
-    year: '2026',
-    date: '21.04.2026',
-    source: 'Workspace',
-    href: 'https://workspace.ru/blog/kak-ii-generiruet-metafory/',
-    body: [
-      '5 нейросетей, 3 индустрии, 150 метафор — выясняем, почему повсюду архитекторы, дирижёры и навигаторы.',
-      'В этой статье мы говорим «метафора», но не как средство языка и приём в тексте на лендинге, а шире. Метафора помогает быстро передать суть через знакомый образ и задаёт фрейм — рамку, которая определяет, как мы воспринимаем реальность и принимаем решения.',
-    ],
-  },
-  {
-    name: 'Памятка',
-    desc: 'Памятка по юридическим документам',
-    year: '2026',
-    date: '15.05.2026',
-    source: 'VC',
-    href: 'https://vc.ru/marketing/2784990-yuridicheskie-dokumenty-dlya-saytov-i-prilozheniy',
-    body: [
-      'Получилась практическая памятка для продуктовых команд, дизайнеров и фаундеров.',
-      'Когда запускают сайт, приложение или бота, про юридическую часть часто вспоминают в последнюю очередь — уже после релиза.',
-    ],
-  },
-  {
-    name: 'Статья',
-    desc: 'Почему не все бренды могут использовать ИИ',
-    year: '2026',
-    date: '03.06.2026',
-    source: 'Workspace',
-    href: 'https://workspace.ru/blog/pochemu-odni-brendy-mogut-ispolzovat-ii-drugie-net/',
-    body: [
-      'Объясняем на примере трёх классических ограничений «быстро — качественно — дёшево», почему одни бренды могут использовать ИИ, а другие — нет.',
-      'Если переложить модель на терминологию брендинга, она помогает понять, на чём бренд делает главный акцент и что именно обещает своим клиентам.',
-    ],
-  },
-];
-
-const tools = [...INSIGHTS].sort((a, b) => dateKey(b) - dateKey(a));
-
-/** Insights newest first, with their shown date — for the card grid on the insights page */
-export const INSIGHTS_LIST = tools.map(i => ({ ...i, shown: shownDate(i) }));
 
 export function ToolsList({ toolsRowsRef, showZoom = false, bandHeader = false }: {
   toolsRowsRef?: React.RefObject<HTMLDivElement> | null;

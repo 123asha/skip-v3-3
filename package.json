@@ -4,8 +4,8 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "build:beget": "VITE_BASE=/ vite build --outDir dist-beget",
+    "build": "vite build && node scripts/prerender.mjs dist",
+    "build:beget": "VITE_BASE=/ vite build --outDir dist-beget && VITE_BASE=/ node scripts/prerender.mjs dist-beget",
     "dev": "vite --host"
   },
   "dependencies": {

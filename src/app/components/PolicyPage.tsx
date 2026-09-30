@@ -115,7 +115,11 @@ export default function PolicyPage() {
 
   return (
     <div className={s.page} ref={pageRef}>
-      <div className={s.body} style={{ paddingLeft: 20, paddingRight: 20, paddingBottom: 200, paddingTop: 'calc(var(--pad) + var(--text-size) * var(--text-lh) + 20px)' }}>
+      <div className={s.body} style={{
+        paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 200,
+        // Phone: clear of the header row (logo, language, «Написать»)
+        paddingTop: isMobile ? 'calc(var(--header-h) + 40px)' : 'calc(var(--pad) + var(--text-size) * var(--text-lh) + 20px)',
+      }}>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, 1fr)', gap: 20, alignItems: 'start' }}>
           {/* Heading — cols 1–2 on desktop, full width on mobile */}
           <h1
@@ -124,6 +128,14 @@ export default function PolicyPage() {
               position: 'static',
               left: 'auto',
               top: 'auto',
+              // .title centres itself (translate −50%, centred max-content
+              // box); here it sits in the flow, so that is all undone —
+              // otherwise the heading slid half its width to the left
+              transform: 'none',
+              width: 'auto',
+              maxWidth: 'none',
+              textAlign: 'left',
+              margin: 0,
               gridColumn: isMobile ? 'auto' : '1 / 3',
             }}
           >

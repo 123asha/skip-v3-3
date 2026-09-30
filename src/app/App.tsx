@@ -28,6 +28,10 @@ import { MediaSection } from './components/MediaSection';
 import { ExpertiseSection2 } from './components/ExpertiseSection2';
 import { CircleArrow } from './components/CircleArrow';
 import LabPage from './components/LabPage';
+import InsightPage from './components/InsightPage';
+import { insightBySlug } from './content/insights';
+import { pageMetaFor } from './content/seo';
+import { applyPageMeta } from './utils/pageMeta';
 import { SiteTitle } from './components/PageTitle';
 import { FOOTER_SLOT_ID } from './components/ZoomControl';
 import { LANG, LANG_PREFIX, stripLang, otherLangHref, t } from './i18n';
@@ -37,7 +41,7 @@ function sectionTitleFor(path: string): string | null {
   const p = path.split(/[?#]/)[0].replace(/\/$/, '');
   if (p === '/cases') return 'Проекты Skip Design';
   if (p === '/services' || p === '/services-2' || p === '/expertiza') return 'Услуги и решения студии';
-  if (p === '/lab') return 'Инсайты команды';
+  if (p === '/insights' || p === '/lab') return 'Инсайты команды';
   if (p === '') return 'Skip Design';
   return null;
 }
@@ -450,7 +454,7 @@ function AppInner() {
   });
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
-  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/services-2', '/policy', '/index2', '/case-template', '/Seniorsbar', '/guide', '/lab', '/system', '/brand', '/visual', '/digital'];
+  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/services-2', '/policy', '/index2', '/case-template', '/Seniorsbar', '/guide', '/lab', '/insights', '/system', '/brand', '/visual', '/digital'];
   const page = pathname === '/cases' ? 'cases'
              : pathname === '/instruments' ? 'instruments'
              : (pathname === '/expertiza' || pathname === '/services') ? 'expertiza'
@@ -461,7 +465,10 @@ function AppInner() {
              : pathname === '/case-template' ? 'case-template'
              : pathname === '/Seniorsbar' ? 'seniors'
              : pathname === '/guide' ? 'guide'
-             : pathname === '/lab' ? 'lab'
+             // /lab is the old address of the insights page — still opens it
+             : pathname === '/insights' || pathname === '/lab' ? 'lab'
+             // An insight's own article page (unknown slugs fall through to 404)
+             : pathname.startsWith('/insights/') && insightBySlug(pathname.slice(10)) ? 'insight'
              : pathname === '/system' ? 'system'
              : pathname === '/brand' ? 'svc-brand'
              : pathname === '/visual' ? 'svc-visual'
@@ -469,6 +476,9 @@ function AppInner() {
              : pathname === '/' ? 'home'
              : pathname === '/404' || !KNOWN_PATHS.includes(pathname) ? 'notfound'
              : 'home';
+
+  // Search / share tags for the page on screen (content/seo.ts)
+  useEffect(() => { applyPageMeta(pageMetaFor(pathname)); }, [pathname]);
 
   const navigate = useCallback((path: string) => {
     window.history.pushState({}, '', _BASE + LANG_PREFIX + path);
@@ -945,7 +955,7 @@ function AppInner() {
   // sections are dimmed with opacity instead of a grey colour.
   // The section the menu marks as current
   const navSection = page === 'expertiza2' ? 'expertiza'
-    : page === 'case-template' || page === 'seniors' ? 'cases' : page;
+    : page === 'case-template' || page === 'seniors' ? 'cases' : page === 'insight' ? 'lab' : page;
   // Phone: the menu links are chips — the current one spreads the others
   // from it, like the filter chips (utils/chipBounce)
   const navLinksRef = useRef<HTMLSpanElement>(null);
@@ -955,7 +965,7 @@ function AppInner() {
   useEffect(() => {
     const root = document.documentElement;
     if (!isMobile) { root.removeAttribute('data-nav-hidden'); return; }
-    const hideOnDown = page === 'cases' || page === 'case-template' || page === 'seniors';
+    const hideOnDown = page === 'cases' || page === 'case-template' || page === 'seniors' || page === 'insight';
     let last = 0;
     const onScroll = (e: Event) => {
       // Inner pages scroll their own layer; the home page scrolls the window
@@ -985,7 +995,7 @@ function AppInner() {
     // The /services-2 sandbox counts as the services section
     // Case pages count as the projects section
     const section = page === 'expertiza2' ? 'expertiza'
-      : page === 'case-template' || page === 'seniors' ? 'cases' : page;
+      : page === 'case-template' || page === 'seniors' ? 'cases' : page === 'insight' ? 'lab' : page;
     // Home and other pages with no current section: all three dark
     if (!['cases', 'expertiza', 'lab'].includes(section)) return undefined;
     // The site's standard muted grey. The nav blends by difference (white
@@ -1018,8 +1028,8 @@ function AppInner() {
 
   const handleLabClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (labLinkRef.current) flyToTitle('Skip Design', labLinkRef.current, '/lab');
-    else navigate('/lab');
+    if (labLinkRef.current) flyToTitle('Skip Design', labLinkRef.current, '/insights');
+    else navigate('/insights');
   };
 
   const handleExpertizaClick = (e: React.MouseEvent) => {
@@ -1036,7 +1046,7 @@ function AppInner() {
   useEffect(() => {
     const was = prevPath.current;
     prevPath.current = pathname;
-    if (pathname === '/' && (was === '/cases' || was === '/instruments' || was === '/expertiza' || was === '/services' || was === '/policy' || was === '/case-template' || was === '/Seniorsbar' || was === '/guide' || was === '/lab')) {
+    if (pathname === '/' && (was === '/cases' || was === '/instruments' || was === '/expertiza' || was === '/services' || was === '/policy' || was === '/case-template' || was === '/Seniorsbar' || was === '/guide' || was === '/lab' || was === '/insights' || was.startsWith('/insights/'))) {
       requestAnimationFrame(() => {
         if (casesLinkRef.current) gsap.set(casesLinkRef.current, { opacity: 1 });
         if (toolsLinkRef.current) gsap.set(toolsLinkRef.current, { opacity: 1 });
@@ -1118,7 +1128,7 @@ function AppInner() {
             </a>
           </span>
           <span ref={labLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'inline-flex' }}>
-            <a href="/lab" className={s.navLink} data-current={navSection === 'lab' ? '' : undefined} style={navLinkStyle('lab')} onClick={handleLabClick}>
+            <a href="/insights" className={s.navLink} data-current={navSection === 'lab' ? '' : undefined} style={navLinkStyle('lab')} onClick={handleLabClick}>
               <LinkFlip flat>Инсайты</LinkFlip>
             </a>
           </span>
@@ -1446,6 +1456,12 @@ function AppInner() {
         onNavigatePolicy={() => navigateWithExit('/policy')}
         onGridMode={setGridVisible}
       />}
+      {page === 'insight' && <InsightPage
+        key={pathname}
+        slug={pathname.slice(10)}
+        onNavigatePolicy={() => navigateWithExit('/policy')}
+        onGridMode={setGridVisible}
+      />}
       {page === 'lab' && <LabPage
         onNavigatePolicy={() => navigateWithExit('/policy')}
         onGridMode={setGridVisible}
@@ -1491,7 +1507,7 @@ function AppInner() {
           skipVideoPhase={VIDEO_PRELOADER}
           onNavigateExpertiza={(anchor) => navigateWithExit('/services' + (anchor ? '#' + anchor : ''))}
           onNavigateCases={() => navigateWithExit('/cases')}
-          onNavigateLab={() => navigateWithExit('/lab')}
+          onNavigateLab={() => navigateWithExit('/insights')}
         />
 
         {/* HeroBranches removed — ScrollHero now runs on every viewport and
@@ -1659,7 +1675,7 @@ function AppInner() {
               ))}
             </div>
           </div>
-          {/* Hovered client's picture — a circle one grid column wide just
+          {/* Hovered client's picture — a circle 70% of a grid column wide just
               under the names. Zero-height anchor, so it never moves the page. */}
           {!isMobile && (
             <div style={{ position: 'relative', width: '100%', height: 0 }}>
@@ -1667,7 +1683,8 @@ function AppInner() {
                 aria-hidden="true"
                 style={{
                   position: 'absolute', top: 0, left: '50%',
-                  width: 'calc((100vw - 2 * var(--pad) - 4 * var(--gap)) / 5)',
+                  // 70% of one grid column
+                  width: 'calc((100vw - 2 * var(--pad) - 4 * var(--gap)) / 5 * 0.7)',
                   aspectRatio: '1 / 1',
                   borderRadius: '50%',
                   overflow: 'hidden',

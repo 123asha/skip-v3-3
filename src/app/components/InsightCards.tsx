@@ -3,7 +3,8 @@ import { gsap } from 'gsap';
 import { useMobile } from '../hooks/useMobile';
 import { asset } from '../utils/asset';
 import { typo } from '../utils/typography';
-import { INSIGHTS_LIST } from './MediaSection';
+import { INSIGHTS_LIST, isInternal } from '../content/insights';
+import { goTo, siteHref } from '../utils/siteNav';
 import cs from './CaseCard.module.css';
 import { driftTo } from '../utils/parallaxInertia';
 
@@ -11,7 +12,7 @@ import { driftTo } from '../utils/parallaxInertia';
 const COLS = 5;
 
 // Stand-in pictures until each article has its own — cycled over the cards
-const PICS = [
+export const INSIGHT_PICS = [
   '/preview-phone.webp', '/preview-pocket.avif', '/preview-ultra.webp', '/preview-keys.jpg',
   '/preview-app.jpg', '/preview-storefront.webp', '/preview-coffee.webp', '/preview-stickers.webp',
 ].map(asset);
@@ -23,8 +24,20 @@ const PICS = [
  * page moves (a light parallax). The date sits centred, grey, above the ring;
  * the caption underneath only shows on hover, also centred.
  */
-export function InsightCards() {
+export function InsightCards({ exclude, limit, flushBottom }: {
+  /** Leave this article out (the one being read) */
+  exclude?: string;
+  /** Only the first N (newest) */
+  limit?: number;
+  /** No room of its own under the grid (the page adds it) */
+  flushBottom?: boolean;
+} = {}) {
   const isMobile = useMobile();
+  // Each card keeps its place in the full list, so its picture (and the first
+  // one's clip) stays the same wherever the cards are shown
+  const items = INSIGHTS_LIST.map((it, i) => ({ it, i }))
+    .filter(({ it }) => !exclude || it.slug !== exclude)
+    .slice(0, limit ?? Infinity);
   const gridRef = useRef<HTMLDivElement>(null);
   const cols = isMobile ? 2 : COLS;
 
@@ -134,24 +147,25 @@ export function InsightCards() {
         columnGap: 'var(--gap)',
         rowGap: isMobile ? 40 : 80,
         alignItems: 'start',
-        marginBottom: 'var(--space-xl)',
+        marginBottom: flushBottom ? 0 : 'var(--space-xl)',
       }}
     >
-      {INSIGHTS_LIST.map((it, i) => (
+      {items.map(({ it, i }) => (
         <a
           key={it.href ?? i}
           data-insight-card=""
           data-id={it.href ?? String(i)}
-          href={it.href}
-          target="_blank"
-          rel="noopener noreferrer"
+          // Our own articles open in place; outside ones in a new tab
+          href={isInternal(it.href) ? siteHref(it.href!) : it.href}
+          target={isInternal(it.href) ? undefined : '_blank'}
+          rel={isInternal(it.href) ? undefined : 'noopener noreferrer'}
+          onClick={isInternal(it.href) ? e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); goTo(it.href!); } : undefined}
           className="insightCard"
           onMouseEnter={e => { e.currentTarget.querySelector('video')?.play().catch(() => {}); }}
           onMouseLeave={e => { e.currentTarget.querySelector('video')?.pause(); }}
           style={{ display: 'block', color: 'inherit', textDecoration: 'none', textAlign: 'center' }}
         >
           <div>
-            <p className={cs.cardMetaText} style={{ margin: '0 0 10px', textAlign: 'center', opacity: 'var(--opacity-muted)' as any }}>{it.shown}</p>
             <div style={{ position: 'relative', aspectRatio: '1 / 1', borderRadius: '50%', overflow: 'hidden', background: 'var(--c-surface)' }}>
               {i === 0 ? (
                 // First insight: a looping clip instead of a still — it plays
@@ -165,14 +179,16 @@ export function InsightCards() {
               ) : (
                 <img
                   data-parallax=""
-                  src={PICS[i % PICS.length]}
+                  src={it.cover ?? INSIGHT_PICS[i % INSIGHT_PICS.length]}
                   alt=""
                   loading="lazy"
                   style={{ position: 'absolute', left: '-30%', top: '-30%', width: '160%', height: '160%', objectFit: 'cover', willChange: 'transform' }}
                 />
               )}
             </div>
-            <p className={`${cs.cardMetaText} insightCardCaption`} style={{ margin: '10px auto 0',
+            {/* The date in grey, between the circle and the title */}
+            <p className={cs.cardMetaText} style={{ margin: '10px 0 0', textAlign: 'center', opacity: 'var(--opacity-muted)' as any }}>{it.shown}</p>
+            <p className={`${cs.cardMetaText} insightCardCaption`} style={{ margin: '4px auto 0',
               // At most 360px, centred under the circle, 20px in from each side
               // (phone: 4px — the two-up column is narrow)
               maxWidth: 360, padding: isMobile ? '0 4px' : '0 20px', boxSizing: 'border-box',

@@ -916,7 +916,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                <div style={{ width: 'calc((100vw - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) * 2 / 5 + var(--gap))' }}>
                 {copy}
                 {/* Skip the read-through, plus this case's outbound links */}
-                <div style={{ marginTop: 40, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                <div style={{ marginTop: 40, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
                   <PillButton
                     onClick={() => {
                       const el = document.querySelector('[data-case-credits]') as HTMLElement | null;
@@ -926,6 +926,13 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                   {data.links?.map(l => (
                     <PillButton key={l.href} href={l.href}>{l.label}</PillButton>
                   ))}
+                  {/* ⊖ ⊕ on the right edge of the column (the table's right
+                      line): fold the copy away for the pictures alone, and
+                      back — the same control the other pages carry */}
+                  <span className={s.zoomKeys} style={{ marginLeft: 'auto' }}>
+                    <button className={s.zoomKey} aria-label="Описание" onClick={zoomOut}>⊖</button>
+                    <button className={s.zoomKey} aria-label="Только картинки" onClick={zoomIn}>⊕</button>
+                  </span>
                 </div>
                </div>
               </div>
@@ -979,7 +986,9 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
 
         {/* ⌘ ⊖ ⊕ — bottom-left, same control as on the other pages. Switched
             off for now (flip SHOW_CASE_ZOOM to bring it back) */}
-        {!isMobile && SHOW_CASE_ZOOM && (
+        {/* While the copy (and the ⊖ ⊕ in its button row) is folded away,
+            the control waits bottom-left so the way back is always there */}
+        {!isMobile && (SHOW_CASE_ZOOM || caseZoom > 0) && (
           <span className={s.zoomHint}>
             <button className={s.zoomKey} aria-label="Описание" onClick={zoomOut}>⊖</button>
             <button className={s.zoomKey} aria-label="Только картинки" onClick={zoomIn}>⊕</button>

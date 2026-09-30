@@ -227,6 +227,13 @@
 /* One flat grey for the whole hint; the two keys go black on hover */
 .zoomHintLabel { color: inherit; }
 
+/* ⊖ ⊕ inline in a row of buttons (case page) — grey, darkening on hover */
+.zoomKeys {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font); font-size: var(--text-size); line-height: var(--text-lh);
+  color: var(--c-text-muted);
+}
+
 .zoomKey {
   font: inherit;
   color: inherit;
@@ -435,10 +442,14 @@
   to   { opacity: 1; transform: none; }
 }
 
-/* Body-level parts of a page (see PinnedInvert) fade in with it */
+/* Body-level parts of a page (see PinnedInvert) fade in with it. The
+   pinned row spans the page's width: clicks pass through it (the category
+   chips sit right under it), except on its own links and buttons */
 .pageFloat {
   animation: pageIn 0.35s 0.05s ease backwards;
+  pointer-events: none;
 }
+.pageFloat a, .pageFloat button { pointer-events: auto; }
 
 /* Hover focus on the cases grid: every preview but the hovered one fades to
    its grey frame (see CasesPage) */

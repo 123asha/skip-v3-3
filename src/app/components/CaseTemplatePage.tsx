@@ -76,16 +76,6 @@ function TagChip({ label }: { label: string }) {
  * body-level copy tracks it: at its place until it reaches `top`, then held
  * there — the same inversion the nav and section titles use.
  */
-// A small sideways arrow in the text colour — for the phone's «о проекте»
-// button, which slides the page left/right
-function SideArrow({ left }: { left?: boolean }) {
-  return (
-    <svg width="12" height="10" viewBox="0 0 12 10" fill="none" aria-hidden="true" style={{ transform: left ? 'scaleX(-1)' : undefined, flexShrink: 0 }}>
-      <path d="M1 5h10M6 1l4 4-4 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 function PinnedInvert({ placeholderRef, children }: { placeholderRef: React.RefObject<HTMLDivElement>; children: React.ReactNode }) {
   const floatRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -931,7 +921,8 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             transition: 'opacity 0.3s ease, transform 0.3s ease, bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
           }}>
             {/* A tab the width of the menu row below it, drawn like the menu's
-                chips: an arrow at each edge, the one you can go by dark, the
+                chips: an arrow at each edge (the typeface's own ← →, as
+                elsewhere on the site), the one you can go by dark, the
                 other greyed out — forward from the pictures, back from the copy */}
             <button
               onClick={() => showPane(!aboutPane)}
@@ -939,15 +930,20 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                 pointerEvents: formInView ? 'none' : 'auto',
                 width: 'calc(100% - 2 * var(--pad))', boxSizing: 'border-box',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '7px 14px 8px', border: '1px solid var(--c-border)', borderRadius: 999,
+                // Exactly a menu chip's height (one text line + 7px / 8px + the
+                // 1px border each side), set outright: iOS gives a <button> its
+                // own minimum size and padding otherwise
+                height: 'calc(var(--text-size) * var(--text-lh) + 17px)', minHeight: 0, margin: 0,
+                appearance: 'none', WebkitAppearance: 'none',
+                padding: '0 14px 1px', border: '1px solid var(--c-border)', borderRadius: 999,
                 background: 'var(--c-bg)', color: 'var(--c-text)', cursor: 'pointer',
                 fontFamily: 'var(--font)', fontSize: 'var(--text-size)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
                 lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)',
               }}
             >
-              <span aria-hidden="true" style={{ display: 'flex', color: aboutPane ? 'var(--c-text)' : 'var(--c-border)', transition: 'color 0.3s ease' }}><SideArrow left /></span>
-              <span>{aboutPane ? 'скипнуть описание' : 'о проекте'}</span>
-              <span aria-hidden="true" style={{ display: 'flex', color: aboutPane ? 'var(--c-border)' : 'var(--c-text)', transition: 'color 0.3s ease' }}><SideArrow /></span>
+              <span aria-hidden="true" style={{ display: 'flex', color: aboutPane ? 'var(--c-text)' : 'var(--c-border)', transition: 'color 0.3s ease' }}>←</span>
+              <span>{aboutPane ? 'Скипнуть описание' : 'О проекте'}</span>
+              <span aria-hidden="true" style={{ display: 'flex', color: aboutPane ? 'var(--c-border)' : 'var(--c-text)', transition: 'color 0.3s ease' }}>→</span>
             </button>
           </div>,
           document.body,

@@ -169,10 +169,17 @@
   pointer-events: none;
 }
 
-.chipOn,
-.chip:hover {
+.chipOn {
   color: var(--c-text);
   border-color: var(--c-text);
+}
+/* Hover only where there is one — on a touch screen it sticks to the chip
+   after a tap, so a chip tapped off would still look picked */
+@media (hover: hover) {
+  .chip:hover {
+    color: var(--c-text);
+    border-color: var(--c-text);
+  }
 }
 
 

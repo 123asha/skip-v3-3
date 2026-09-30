@@ -239,6 +239,52 @@ export default function Constellation({
     let scrolled = 0;   // 0 at the top … 1 once scrolled away
     let homePull = 1;   // 1 at the very top … 0 as soon as the page moves
     let gravity = 0;
+    // Phone: tilting the phone tilts the tray — the balls roll that way and
+    // bounce off the edges, as if held on a racket; a flick throws them up.
+    // Level again, they drift back home. (tiltX/Y in px/frame², 0 at rest)
+    let tiltX = 0, tiltY = 0, tiltAmt = 0;
+    let baseBeta: number | null = null;
+    const TILT_G = GRAVITY * 1.2, TILT_DEAD = 4, TILT_FULL = 18; // degrees
+    const onOrient = (e: DeviceOrientationEvent) => {
+      if (e.gamma == null || e.beta == null) return;
+      // Whatever angle the phone is first held at counts as level
+      if (baseBeta === null) baseBeta = e.beta;
+      const gx = e.gamma, gy = e.beta - baseBeta;
+      const mag = Math.hypot(gx, gy);
+      tiltAmt = Math.min(1, Math.max(0, (mag - TILT_DEAD) / (TILT_FULL - TILT_DEAD)));
+      tiltX = Math.sin((Math.max(-60, Math.min(60, gx)) * Math.PI) / 180) * TILT_G * tiltAmt;
+      tiltY = Math.sin((Math.max(-60, Math.min(60, gy)) * Math.PI) / 180) * TILT_G * tiltAmt;
+      if (tiltAmt > 0) wake();
+    };
+    const onMotion = (e: DeviceMotionEvent) => {
+      const a = e.acceleration;
+      if (!a || a.x == null || a.y == null) return;
+      // A sharp move of the phone kicks the balls the other way (inertia)
+      const jx = -(a.x ?? 0), jy = (a.y ?? 0);
+      if (Math.hypot(jx, jy) < 6) return;
+      Object.values(nodes).forEach(n => { n.vx += jx * 0.6; n.vy += jy * 0.6 - 4; });
+      wake();
+    };
+    const tiltOn = window.matchMedia('(max-width: 768px)').matches && 'DeviceOrientationEvent' in window;
+    const startTilt = () => {
+      window.addEventListener('deviceorientation', onOrient);
+      window.addEventListener('devicemotion', onMotion);
+    };
+    let askTilt: (() => void) | null = null;
+    if (tiltOn) {
+      const DOE = (window as any).DeviceOrientationEvent;
+      if (typeof DOE?.requestPermission === 'function') {
+        // iOS: the sensors need the visitor's say-so, asked on a first tap
+        askTilt = () => {
+          document.removeEventListener('touchend', askTilt!);
+          Promise.all([
+            DOE.requestPermission(),
+            (window as any).DeviceMotionEvent?.requestPermission?.() ?? 'granted',
+          ]).then(([o]: string[]) => { if (o === 'granted') startTilt(); }).catch(() => {});
+        };
+        document.addEventListener('touchend', askTilt, { once: true });
+      } else startTilt();
+    }
     let wasHome = true; // starts at the top, where the page loads
     // When the drop began — balls may slip past each other only while it lasts
     let fallStart = 0;
@@ -1077,14 +1123,17 @@ export default function Constellation({
             else if (Math.abs(n.vx) < settleSpeed()) n.vx = 0;
           }
         }
-        if (homePull > 0) {
+        // Phone tilt: roll with it; the pull home lets go while tilted
+        if (tiltAmt > 0 && !gravity) { n.vx += tiltX; n.vy += tiltY; }
+        const pull = homePull * (1 - tiltAmt);
+        if (pull > 0) {
           // Spring home — takes over as gravity fades on the way back up.
           // Extra damping keeps it near-critical: the balls glide in and
           // settle instead of overshooting and swinging round their spot.
-          const k = HOME_K * homePull;
+          const k = HOME_K * pull;
           n.vx += (n.homeX - n.x) * k;
           n.vy += (n.homeY - n.y) * k;
-          const damp = 1 - 0.18 * homePull;
+          const damp = 1 - 0.18 * pull;
           n.vx *= damp; n.vy *= damp;
         }
 
@@ -1212,6 +1261,9 @@ export default function Constellation({
     return () => {
       cancelAnimationFrame(raf);
       detachScroll?.();
+      window.removeEventListener('deviceorientation', onOrient);
+      window.removeEventListener('devicemotion', onMotion);
+      if (askTilt) document.removeEventListener('touchend', askTilt);
       nodesLayer.removeEventListener('pointerdown', onPointerDown);
       nodesLayer.removeEventListener('touchstart', onBallTouch);
       window.removeEventListener('pointermove', onPointerMove);

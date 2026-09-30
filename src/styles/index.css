@@ -164,7 +164,7 @@
 @media (max-width: 768px) {
   :root {
     --pad:            16px;   /* side margins of the content on phones */
-    --hero-h:         70svh;  /* the home hero: 70% of the screen */
+    --hero-h:         80svh;  /* the home hero: 80% of the screen */
     --gap:            16px;   /* the two-column grid's gutter = the margins */
     --heading-size:   34px;   /* phones: the largest that keeps «мы назначим встречу» on one line (360px screens too) */
     --h3-size:        20px;

@@ -245,7 +245,7 @@ export default function Constellation({
     // Level again, they drift back home. (tiltX/Y in px/frame², 0 at rest)
     let tiltX = 0, tiltY = 0, tiltAmt = 0;
     let baseBeta: number | null = null;
-    const TILT_G = GRAVITY * 1.2, TILT_DEAD = 4, TILT_FULL = 18; // degrees
+    const TILT_G = GRAVITY * 2.2, TILT_DEAD = 2, TILT_FULL = 10; // degrees — a small tilt already rolls them
     const onOrient = (e: DeviceOrientationEvent) => {
       if (e.gamma == null || e.beta == null) return;
       // Whatever angle the phone is first held at counts as level
@@ -259,9 +259,17 @@ export default function Constellation({
     };
     // A ball tossed towards the viewer is drawn over the others while it flies
     const toFront = (n: any) => { const el = n.el as Element | undefined; el?.parentNode?.appendChild(el); };
+    // Some phones only report acceleration with gravity in it: take the
+    // gravity out with a quick low-pass, so a swing still reads instantly
+    let gAvg: { x: number; y: number; z: number } | null = null;
     const onMotion = (e: DeviceMotionEvent) => {
-      const a = e.acceleration;
-      if (!a || a.x == null || a.y == null) return;
+      let a: { x: number | null; y: number | null; z: number | null } | null = e.acceleration;
+      if (!a || a.x == null || a.y == null) {
+        const g = e.accelerationIncludingGravity;
+        if (!g || g.x == null || g.y == null || g.z == null) return;
+        gAvg = gAvg ? { x: gAvg.x * 0.9 + g.x * 0.1, y: gAvg.y * 0.9 + g.y * 0.1, z: gAvg.z * 0.9 + g.z * 0.1 } : { x: g.x, y: g.y, z: g.z };
+        a = { x: g.x - gAvg.x, y: g.y - gAvg.y, z: g.z - gAvg.z };
+      }
       // Swung sharply like a racket (up out of the screen): the balls fly up
       // at the viewer — big — and knock back down on it, each a bit differently
       const az = Math.abs(a.z ?? 0);

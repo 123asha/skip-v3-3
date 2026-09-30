@@ -861,6 +861,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
         <div
           ref={gridRef}
           className={s.grid}
+          data-mob-cols={isMobile ? mobCols : undefined}
           style={
             isMobile
               ? { gridTemplateColumns: `repeat(${mobCols}, 1fr)`, columnGap: 'var(--gap)', rowGap: 'var(--cases-row-gap)', alignItems: 'start' }

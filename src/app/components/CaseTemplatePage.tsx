@@ -784,6 +784,9 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                           10px apart (PARA_GAP). */}
                       <div style={{
                         marginTop: isMobile ? 0 : 'calc(var(--text-size) * var(--text-lh))',
+                        // Phone: the text steps in 20px from its heading — the
+                        // same step the services table uses for a level
+                        paddingLeft: isMobile ? 20 : 0,
                         // Desktop: twice the room under an opened description
                         paddingBottom: isMobile ? 8 : 16,
                       }}>

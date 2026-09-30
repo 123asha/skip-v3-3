@@ -799,6 +799,7 @@ function Tile({ index, text, gap }: { index: number; text: string; gap: number }
   return (
     <div
       ref={tileRef}
+      data-svc-tile=""
       // Phone: square tiles
       style={{ position: 'relative', aspectRatio: isMobile ? '1/1' : '4/5', background: 'var(--c-surface)', overflow: 'hidden' }}
       onMouseEnter={isMobile ? undefined : () => { setHovered(true); playKnock(0.35); }}

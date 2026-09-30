@@ -245,6 +245,11 @@ export default function CaseCard({
         {/* Two per row: every picture 4:5, so the rows line up */}
         <div className={`${s.cardImage}${stackMeta || tall ? ` ${s.cardTall}` : ''}`} style={{ aspectRatio: ar, width: '100%', flex: 'none', ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}>
           {image && <img src={image} alt={title} loading="lazy" />}
+          {/* The flagship's clip simply loops on a phone (no scroll scrub) */}
+          {scrubVideo && (
+            <video src={scrubVideo} muted playsInline autoPlay loop preload="metadata"
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1 }} />
+          )}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: stackMeta ? '1fr' : 'minmax(90px, 1fr) minmax(0, 3fr)', gap: stackMeta ? 0 : 'var(--gap)', alignItems: 'flex-start', paddingTop: 10 }}>
           <p className={`${s.cardMetaText} ${s.cardLink}`} style={{ margin: 0, ...metaStyle }}>{title}</p>

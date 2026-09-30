@@ -180,6 +180,9 @@
        the gap that follows it (--space-xl), so the button clearly belongs to
        the block above — without sticking to it */
     --space-btn: calc(var(--space-xl) / 2);
+    /* Pictures reach past the text column: half of the side padding on
+       each side (case previews, the service tiles' grey, the flagship clip) */
+    --m-bleed: calc(var(--pad) / 2);
     /* Inner pages: the title gets its own row under the header, and the
        content starts one --space-md below it — the same on every page */
     /* 40px over the page title and 40px under it; the title's own height is
@@ -422,4 +425,27 @@ input::placeholder {
 @keyframes svcBallShadowOut { from { opacity: 0.8; transform: scale(0.9); } to { opacity: 0; transform: scale(0.4); } }
 @media (prefers-reduced-motion: reduce) {
   .svcBallBody, .svcBallShadow { animation: none; }
+}
+
+/* ── Phone: pictures bleed half the side padding (--m-bleed) past the text ── */
+@media (max-width: 768px) {
+  [data-case-card] [class*="cardImage"] {
+    margin-left: calc(-1 * var(--m-bleed));
+    margin-right: calc(-1 * var(--m-bleed));
+    width: calc(100% + 2 * var(--m-bleed)) !important;
+  }
+  /* Two a row: only the outer edge of each picture moves out */
+  [data-mob-cols="2"] > [data-case-card]:nth-child(odd) [class*="cardImage"] {
+    margin-right: 0;
+    width: calc(100% + var(--m-bleed)) !important;
+  }
+  [data-mob-cols="2"] > [data-case-card]:nth-child(even) [class*="cardImage"] {
+    margin-left: 0;
+    width: calc(100% + var(--m-bleed)) !important;
+  }
+  /* A tile's grey, widened without moving what's inside it (a shadow is not
+     clipped by the tile's own overflow) */
+  [data-svc-tile] {
+    box-shadow: var(--m-bleed) 0 0 var(--c-surface), calc(-1 * var(--m-bleed)) 0 0 var(--c-surface);
+  }
 }

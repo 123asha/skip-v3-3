@@ -595,7 +595,12 @@ export default function Constellation({
 
     // The home page stays mounted under the inner pages (they open over it):
     // while one is open, the hero is out of sight — silent and unmoved
-    const coveredByPage = () => !!document.querySelector('[class*="_page_"]');
+    // (read from the address: the home page is "/" or "/en", with the base)
+    const coveredByPage = () => {
+      const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+      const p = location.pathname.slice(location.pathname.startsWith(base) ? base.length : 0).replace(/^\/en(?=\/|$)/, '').replace(/\/$/, '');
+      return p !== '';
+    };
     function playKnock(strength: number) {
       if (coveredByPage()) return;
       if (!audioCtx && sound) audioCtx = sharedAudio();

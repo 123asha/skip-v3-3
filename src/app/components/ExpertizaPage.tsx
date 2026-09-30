@@ -14,7 +14,6 @@ import { PARA_GAP } from './CaseTemplatePage';
 import { usePinchSteps } from '../hooks/usePinchSteps';
 import { playKnock } from '../utils/knock';
 import DownRightArrow from './DownRightArrow';
-import PillButton from './PillButton';
 
 // ── Service data ──────────────────────────────────────────────────────────────
 
@@ -318,13 +317,12 @@ function IntroBlock() {
 // and is exactly one grid column wide: with tiles at (row − 3·gap)/4 and
 // columns at (row − 4·gap)/5, one column === (4·tile − gap)/5.
 
-// Kept to a similar length on purpose — each caption fills exactly two lines
-// at one column wide, so the four tiles read as one row.
+// The four solutions: what it is, and who it's for
 const TILES = [
-  'Бренд-смыслы и фирменный стиль для цифровых продуктов',
-  'Дизайн-системы и инструменты для маркетинга',
-  'Быстрый аудит: бренд, сайт, соцсети',
-  'UX/UI поддержка цифрового продукта',
+  { title: 'От смысла до фирменного стиля', who: 'Стартапам и новым продуктам' },
+  { title: 'Дизайн-система для всего маркетинга', who: 'Маркетинговым командам' },
+  { title: 'Аудит бренда, сайта и соцсетей', who: 'Бизнесу перед ребрендингом' },
+  { title: 'UX/UI-поддержка цифрового продукта', who: 'Продуктовым командам' },
 ];
 
 // Step markers, top-left of each tile — just the numerals
@@ -773,7 +771,7 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
   );
 }
 
-function Tile({ index, text, gap }: { index: number; text: string; gap: number }) {
+function Tile({ index, tile }: { index: number; tile: { title: string; who: string } }) {
   const isMobile = useMobile();
   const [hovered, setHovered] = useState(false);
   // Phones have no hover: the balls come in by themselves once the tile is
@@ -803,34 +801,14 @@ function Tile({ index, text, gap }: { index: number; text: string; gap: number }
     >
       {/* Animated falling balls — on hover (desktop) or on scroll-in (phone) */}
       <TileBalls tileIndex={index} hovered={hovered} />
-      <span aria-hidden="true" style={{ ...ts, position: 'absolute', top: 15, left: 15, zIndex: 1 }}>{TILE_MARKS[index]}</span>
-      {isMobile ? (
-        // Phone: the caption on the grid's second column, level with the
-        // numeral at the top
-        <p style={{ ...ts, position: 'absolute', margin: 0, left: 'calc(50% + var(--gap) / 2)', width: 'calc(50% - var(--gap) / 2 - 15px)', top: 15, minHeight: 'calc(2 * var(--text-size) * var(--text-lh))' }}>
-          {typo(text)}
+      {/* Top-left: the numeral and who it's for (grey), the solution under them */}
+      <div style={{ position: 'absolute', top: 15, left: 15, right: 15, zIndex: 1 }}>
+        <p style={{ ...ts, margin: 0, display: 'flex', gap: 8 }}>
+          <span aria-hidden="true">{TILE_MARKS[index]}</span>
+          <span style={{ color: 'var(--c-text-muted)' }}>{typo(tile.who)}</span>
         </p>
-      ) : (
-        <>
-          {/* Desktop: the caption at the bottom — two lines everywhere, so a
-              shorter one still occupies the same block and all four line up */}
-          <p style={{ ...ts, position: 'absolute', left: 15, bottom: 15, margin: 0, zIndex: 1, width: `calc((4 * 100% - ${gap}px) / 5)`, minHeight: 'calc(2 * var(--text-size) * var(--text-lh))' }}>
-            {typo(text)}
-          </p>
-          {/* On hover a black «Узнать подробнее» rises into the middle of the tile */}
-          <div style={{
-            position: 'absolute', left: '50%', top: '50%', zIndex: 2,
-            transform: `translate(-50%, -50%) translateY(${hovered ? 0 : 12}px)`,
-            opacity: hovered ? 1 : 0,
-            pointerEvents: hovered ? 'auto' : 'none',
-            transition: 'opacity 0.3s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)',
-          }}>
-            <PillButton variant="primary" compact onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
-              Узнать подробнее
-            </PillButton>
-          </div>
-        </>
-      )}
+        <p style={{ ...ts, margin: '4px 0 0' }}>{typo(tile.title)}</p>
+      </div>
     </div>
   );
 }
@@ -879,8 +857,8 @@ function TileBlocks() {
           gap: isMobile ? 'var(--gap)' : GAP,
         }}
       >
-      {TILES.map((text, i) => (
-        <Tile key={i} index={i} text={text} gap={GAP} />
+      {TILES.map((tile, i) => (
+        <Tile key={i} index={i} tile={tile} />
       ))}
       </div>
     </div>

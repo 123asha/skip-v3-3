@@ -14,6 +14,7 @@ import { PARA_GAP } from './CaseTemplatePage';
 import { usePinchSteps } from '../hooks/usePinchSteps';
 import { playKnock } from '../utils/knock';
 import DownRightArrow from './DownRightArrow';
+import PillButton from './PillButton';
 
 // ── Service data ──────────────────────────────────────────────────────────────
 
@@ -326,13 +327,8 @@ const TILES = [
   'UX/UI поддержка цифрового продукта',
 ];
 
-// Step markers with their labels, top-left of each tile
-const TILE_MARKS = [
-  { sym: '①', label: 'стратегия' },
-  { sym: '②', label: 'дизайн' },
-  { sym: '③', label: 'система' },
-  { sym: '④', label: 'инструменты' },
-];
+// Step markers, top-left of each tile — just the numerals
+const TILE_MARKS = ['①', '②', '③', '④'];
 
 // Deterministic pseudo-random 0…1, seeded — same scatter every render/reload
 function pseudoRandom(seed: number): number {
@@ -780,6 +776,19 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
 function Tile({ index, text, gap }: { index: number; text: string; gap: number }) {
   const isMobile = useMobile();
   const [hovered, setHovered] = useState(false);
+  // How far the caption block sits lowered at rest: the button's height plus
+  // the tile's 15px margin, so the button hides just below the edge
+  const btnRef = useRef<HTMLDivElement>(null);
+  const [liftPx, setLiftPx] = useState(60);
+  useLayoutEffect(() => {
+    const el = btnRef.current;
+    if (!el) return;
+    const measure = () => setLiftPx(el.offsetHeight + 15);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [isMobile]);
   // Phones have no hover: the balls come in by themselves once the tile is
   // on screen — tile after tile, quickly
   const tileRef = useRef<HTMLDivElement>(null);
@@ -807,29 +816,32 @@ function Tile({ index, text, gap }: { index: number; text: string; gap: number }
     >
       {/* Animated falling balls — on hover (desktop) or on scroll-in (phone) */}
       <TileBalls tileIndex={index} hovered={hovered} />
-      <span
-        style={{ ...ts, position: 'absolute', top: 15, left: 15, display: 'flex', gap: 8, zIndex: 1 }}
-      >
-        <span aria-hidden="true">{TILE_MARKS[index].sym}</span>
-        <span>{TILE_MARKS[index].label}</span>
-      </span>
-      <p
-        style={{
-          ...ts,
-          position: 'absolute',
-          left: 15,
-          bottom: 15,
-          margin: 0,
-          // Phone: the caption on the grid's second column, level with the
-          // short title at the top
-          ...(isMobile ? { left: 'calc(50% + var(--gap) / 2)', width: 'calc(50% - var(--gap) / 2 - 15px)', top: 15, bottom: 'auto' } : { width: `calc((4 * 100% - ${gap}px) / 5)` }),
-          // Two lines everywhere, so a shorter caption still occupies the
-          // same block and all four line up.
-          minHeight: 'calc(2 * var(--text-size) * var(--text-lh))',
-        }}
-      >
-        {typo(text)}
-      </p>
+      <span aria-hidden="true" style={{ ...ts, position: 'absolute', top: 15, left: 15, zIndex: 1 }}>{TILE_MARKS[index]}</span>
+      {isMobile ? (
+        // Phone: the caption on the grid's second column, level with the
+        // numeral at the top
+        <p style={{ ...ts, position: 'absolute', margin: 0, left: 'calc(50% + var(--gap) / 2)', width: 'calc(50% - var(--gap) / 2 - 15px)', top: 15, minHeight: 'calc(2 * var(--text-size) * var(--text-lh))' }}>
+          {typo(text)}
+        </p>
+      ) : (
+        // Desktop: the caption at the bottom; on hover a black «Узнать
+        // подробнее» rides up from under the tile's edge and lifts it
+        <div style={{
+          position: 'absolute', left: 15, bottom: 15, zIndex: 1,
+          width: `calc((4 * 100% - ${gap}px) / 5)`,
+          transform: hovered ? 'none' : `translateY(${liftPx}px)`,
+          transition: 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)',
+        }}>
+          {/* Two lines everywhere, so a shorter caption still occupies the
+              same block and all four line up */}
+          <p style={{ ...ts, margin: 0, minHeight: 'calc(2 * var(--text-size) * var(--text-lh))' }}>{typo(text)}</p>
+          <div ref={btnRef} style={{ paddingTop: 15 }}>
+            <PillButton variant="primary" compact onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+              Узнать подробнее
+            </PillButton>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

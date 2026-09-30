@@ -1103,10 +1103,10 @@ function AppInner() {
               style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'baseline', gap: '0.3em', whiteSpace: 'nowrap' }}
             >
               <LinkFlip flat>Написать</LinkFlip>
-              {/* ↑ in a filled circle — the footer's round icons, at text size */}
+              {/* → in a filled circle — the footer's round icons, at text size */}
               <svg aria-hidden="true" viewBox="0 0 16 16" style={{ width: '1.05em', height: '1.05em', alignSelf: 'center', flexShrink: 0 }}>
                 <circle cx="8" cy="8" r="8" fill="currentColor" />
-                <path d="M8 11.6V4.6M5 7.4l3-3 3 3" fill="none" stroke="var(--c-bg, #fff)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M4.4 8h7M8.6 5l3 3-3 3" fill="none" stroke="var(--c-bg, #fff)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </a>
           ) : (

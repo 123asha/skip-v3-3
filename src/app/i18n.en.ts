@@ -303,6 +303,7 @@ export const EN: Record<string, string> = {
   'телефон': 'phone',
   'ссылку': 'link',
   'Спасибо! Скоро напишем вам в Telegram.': 'Thank you! We’ll message you on Telegram soon.',
+  'Ник в Telegram — только латиница': 'Telegram usernames use Latin letters only',
   'Даю согласие на обработку персональных данных': 'I agree to the processing of my personal data',
   'в соответствии с': 'in accordance with the',
   'Политикой конфиденциальности': 'Privacy Policy',

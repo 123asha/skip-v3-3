@@ -203,9 +203,20 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
     return () => ro.disconnect();
   }, [isMobile]);
 
+  // A Telegram handle is Latin letters, digits and «_» only. Anything else
+  // never reaches the field; Cyrillic most likely means the keyboard is on
+  // the Russian layout, so a hint under the field says so for a moment.
+  const [layoutHint, setLayoutHint] = useState(false);
+  const layoutHintTimer = useRef<number>(0);
+  useEffect(() => () => window.clearTimeout(layoutHintTimer.current), []);
   const handleTelegramChange = (v: string) => {
-    // Strip any "@" the visitor types — the prefix circle already shows one
-    setTelegram(v.replace(/@/g, ''));
+    if (/[а-яё]/i.test(v)) {
+      setLayoutHint(true);
+      window.clearTimeout(layoutHintTimer.current);
+      layoutHintTimer.current = window.setTimeout(() => setLayoutHint(false), 2500);
+    }
+    // The "@" goes too — the prefix circle already shows one
+    setTelegram(v.replace(/[^a-zA-Z0-9_]/g, ''));
   };
 
   const tabStyle = (active: boolean): React.CSSProperties => ({
@@ -357,6 +368,17 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
                     )}</button>
                   ) : undefined}
                 />
+                </div>
+                {/* Typed in Cyrillic — the letters were dropped, this says why */}
+                {/* Takes no room (no gap either): it floats over the space
+                    under the field, so nothing below ever shifts */}
+                <div style={{ position: 'relative', width: '100%', height: 0, marginTop: -10 }}>
+                  <p aria-live="polite" style={{
+                    position: 'absolute', left: 0, right: 0, top: 10,
+                    margin: 0, fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)',
+                    color: 'var(--c-text-muted)', textAlign: 'center', pointerEvents: 'none', whiteSpace: 'nowrap',
+                    opacity: layoutHint && status !== 'error' ? 1 : 0, transition: 'opacity 0.25s ease',
+                  }}>Ник в Telegram — только латиница</p>
                 </div>
                 {status === 'error' && (
                   <p style={{ margin: 0, fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)', color: '#c0392b', textAlign: 'center' }}>

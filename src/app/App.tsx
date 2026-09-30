@@ -919,10 +919,16 @@ function AppInner() {
 
   // Lock body scroll when an inner page overlay is open so iOS Safari
   // directs touch-scroll to the overlay's own overflow container.
-  useEffect(() => {
+  // A layout effect, and the window's scrollbar re-measured on the spot: the
+  // header's right edge depends on both, and done after paint the home
+  // scrollbar vanished one frame before --win-sb caught up — the menu jumped
+  // a scrollbar's width and back.
+  useLayoutEffect(() => {
     const isInner = page !== 'home' && page !== 'index2';
-    document.documentElement.style.overflow = isInner ? 'hidden' : '';
+    const el = document.documentElement;
+    el.style.overflow = isInner ? 'hidden' : '';
     document.body.style.overflow = isInner ? 'hidden' : '';
+    el.style.setProperty('--win-sb', `${Math.max(0, window.innerWidth - el.clientWidth)}px`);
     return () => {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';

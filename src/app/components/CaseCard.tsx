@@ -256,7 +256,8 @@ export default function CaseCard({
           <div style={{ minWidth: 0 }}>
             {/* Categories first, then (one per row only) the description */}
             {services && <p className={s.cardMetaText} style={{ margin: 0, opacity: 'var(--opacity-muted)' as any, ...metaStyle }}>{services}</p>}
-            {!stackMeta && <p className={s.cardMetaText} style={{ margin: 0, marginTop: 4, maxWidth: 520, ...metaStyle }}>{typo(desc)}</p>}
+            {/* Level with the name — the 4px only parts it from categories above */}
+            {!stackMeta && <p className={s.cardMetaText} style={{ margin: 0, marginTop: services ? 4 : 0, maxWidth: 520, ...metaStyle }}>{typo(desc)}</p>}
           </div>
         </div>
       </div>

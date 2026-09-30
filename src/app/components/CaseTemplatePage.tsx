@@ -4,7 +4,9 @@ import { useMobile } from '../hooks/useMobile';
 import s from './CasesPage.module.css';
 import app from '../App.module.css';
 import { TEXT_STYLE as textStyle, H2_STYLE as h2Style, typo } from '../utils/typography';
-import { CASE_AR_H, CASE_AR_V } from './CaseCard';
+import { CASE_AR_V } from './CaseCard';
+// Case pages show squares and verticals only: an 'h' picture is cropped square
+const CASE_AR_SQ = '1/1';
 import LinkFlip from './LinkFlip';
 import { sound } from '../sound/Sound';
 import { MagneticDivider } from './MagneticDivider';
@@ -361,7 +363,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
   const nextCase = CASES[(CASES.findIndex(c => c.title === data.title) + 1) % CASES.length];
   // …and it has to land exactly where that case's own strip sits under its
   // cover, so clicking through leaves it in place and only the cover appears
-  // above it. The cover is 84vh (75vh on mobile), so the strip's top must be
+  // above it. The cover is 84vh (70svh on mobile), so the strip's top must be
   // that far down the screen once the page is scrolled to the end — which
   // means leaving the remainder of the screen below it as padding.
 
@@ -656,7 +658,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             keeps its distance so the image blocks still start on the next
             screen. ─────────────────────────────────────────────────────── */}
       <div>
-        <div style={{ position: 'relative', width: '100%', height: isMobile ? '75vh' : '84vh', overflow: 'hidden' }}>
+        <div style={{ position: 'relative', width: '100%', height: isMobile ? '70svh' : '84vh', overflow: 'hidden' }}>
           {data.coverVideo ? (
             <video
               ref={coverVidRef}
@@ -826,7 +828,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             }
             if (b.kind === 'single') {
               const rd = nextRound();
-              const ar = b.ar === 'h' ? CASE_AR_H : CASE_AR_V;
+              const ar = b.ar === 'h' ? CASE_AR_SQ : CASE_AR_V;
               flat.push({ ar, src: b.src, round: rd });
               images.push(
                 <Block key={i}>
@@ -837,8 +839,8 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
               return;
             }
             // duo — its two images, stacked like every other block
-            const leftAr  = b.left  === 'h' ? CASE_AR_H : CASE_AR_V;
-            const rightAr = b.right === 'h' ? CASE_AR_H : CASE_AR_V;
+            const leftAr  = b.left  === 'h' ? CASE_AR_SQ : CASE_AR_V;
+            const rightAr = b.right === 'h' ? CASE_AR_SQ : CASE_AR_V;
             // Left column is a single stack — a duo's two images simply follow
             // each other vertically instead of sitting side by side.
             const rdL = nextRound(), rdR = nextRound();

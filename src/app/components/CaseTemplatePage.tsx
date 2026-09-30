@@ -97,7 +97,13 @@ function PinnedInvert({ placeholderRef, children }: { placeholderRef: React.RefO
       const r = ph.getBoundingClientRect();
       fl.style.left = `${r.left / pz}px`;
       fl.style.width = `${r.width / pz}px`;
-      fl.style.top = `${Math.max(pad, r.top / pz)}px`;
+      // Desktop: held on the header menu's own line (the top of its text), so
+      // the row and the menu read as one line. Phone (menu at the bottom): --pad.
+      const navLink = window.innerWidth > 768 ? document.querySelector<HTMLElement>('nav a') : null;
+      const navTop = navLink?.offsetParent ? navLink.getBoundingClientRect().top / pz : 0;
+      const pin = navTop > 0 && navTop < 120 ? navTop : pad;
+      document.documentElement.style.setProperty('--meta-pin', `${pin}px`);
+      fl.style.top = `${Math.max(pin, r.top / pz)}px`;
     };
     update();
     window.addEventListener('scroll', update, { capture: true, passive: true });
@@ -874,7 +880,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                 pointerEvents: caseZoom ? 'none' : undefined,
                 transition: `width ${ZOOM_EASE}, margin-left ${ZOOM_EASE}, opacity 0.35s ease, transform ${ZOOM_EASE}`,
                 position: 'sticky',
-                top: `calc(var(--pad) + ${metaH}px + 40px)`,
+                top: `calc(var(--meta-pin, var(--pad)) + ${metaH}px + 40px)`,
                 alignSelf: 'flex-start',
               }}>
                {/* Fixed-width inner block, so the copy slides out whole

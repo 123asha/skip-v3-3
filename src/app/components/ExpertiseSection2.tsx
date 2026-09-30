@@ -180,6 +180,23 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
   // Row under the cursor — drives the ⤴ affordance in the column before the text
   const [hoverRow, setHoverRow] = useState<string | null>(null);
 
+  // Phone: a tapped row stays where the finger is. Opening one closes another
+  // above it, and the rows would slide up under the tap — so while the
+  // lists fold and unfold, the page is scrolled to hold the tapped row still
+  // and the new list simply opens downward from it.
+  const holdInPlace = (el: HTMLElement) => {
+    let sc: HTMLElement | null = el.parentElement;
+    while (sc && !/(auto|scroll)/.test(getComputedStyle(sc).overflowY)) sc = sc.parentElement;
+    const scroller = sc ?? (document.scrollingElement as HTMLElement);
+    const top0 = el.getBoundingClientRect().top;
+    const until = performance.now() + 900;
+    const step = () => {
+      const d = el.getBoundingClientRect().top - top0;
+      if (Math.abs(d) >= 0.5) scroller.scrollTop += d;
+      if (performance.now() < until) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
   const toggleGroup = (key: string) => {
     setOpenGroup(prev => (prev === key ? null : key));
     setOpenItem(null);
@@ -398,7 +415,8 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                 aria-hidden="true"
                 style={{
                   ...itemStyle,
-                  opacity: hoverRow === `${i}-${j}` ? 1 : 0,
+                  // Home: always shown — it says the row leads to another page
+                  opacity: onAllServices || hoverRow === `${i}-${j}` ? 1 : 0,
                   transition: 'opacity 0.2s ease',
                   pointerEvents: 'none',
                   flexShrink: 0,
@@ -411,7 +429,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
             // Phone: 20% more air, easier to tap
             const rowPadding = isMobile ? '10px 0 14px' : '8px 0 12px';
             const rowInner = isMobile ? (
-              <div data-exp-row="" data-group-key={row.isLabel ? row.groupKey : undefined} onClick={onRowClick} style={{ position: 'relative', background: rowBg, padding: rowPadding, cursor: rowCursor }}>
+              <div data-exp-row="" data-group-key={row.isLabel ? row.groupKey : undefined} onClick={onRowClick ? e => { if (!onAllServices) holdInPlace(e.currentTarget); onRowClick(); } : undefined} style={{ position: 'relative', background: rowBg, padding: rowPadding, cursor: rowCursor }}>
                 {divider}
                 {row.header ? (
                   <div style={{ display: 'flex', gap: 12, alignItems: 'baseline', ...cellFade }}>
@@ -423,8 +441,10 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                 ) : row.isLabel ? (
                   // Sub-group name (Бренд-стратегия, Фирменный стиль…) — on the
                   // category name's line; a tappable one shows its arrow
-                  <div style={{ ...cellFade, paddingLeft: MOB_L1, display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+                  <div style={{ ...cellFade, paddingLeft: MOB_L1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                     <p style={itemStyle}>{row.itemIndex}</p>
+                    {/* Home: → at the row's end — it opens the services page */}
+                    {onAllServices && <span aria-hidden="true" style={{ ...itemStyle, display: 'inline-flex' }}><CircleArrow /></span>}
                   </div>
                 ) : (
                   // A service 20px further in, its description 20px more

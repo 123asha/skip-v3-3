@@ -260,12 +260,12 @@ export default function Constellation({
     const onMotion = (e: DeviceMotionEvent) => {
       const a = e.acceleration;
       if (!a || a.x == null || a.y == null) return;
-      // Swung up and down like a racket: the balls leave the tray towards
-      // the viewer and knock back down on it — each a little differently
+      // Swung sharply like a racket (up out of the screen): the balls fly up
+      // at the viewer — big — and knock back down on it, each a bit differently
       const az = Math.abs(a.z ?? 0);
-      if (az > 7) {
+      if (az > 4) {
         Object.values(nodes).forEach((n: any) => {
-          if ((n.hop ?? 0) < 0.05) n.hopV = Math.min(0.14, az * 0.009) * (0.7 + Math.random() * 0.6);
+          if ((n.hop ?? 0) < 0.1) n.hopV = Math.min(0.32, 0.08 + az * 0.018) * (0.75 + Math.random() * 0.5);
         });
         wake();
       }
@@ -631,7 +631,7 @@ export default function Constellation({
         const n = nodes[id];
         // A hop towards the viewer (phone swung up and down) — a touch bigger
         const hop = (n as any).hop ?? 0;
-        n.el.setAttribute('transform', hop > 0.001 ? `translate(${n.x},${n.y}) scale(${1 + hop * 0.22})` : `translate(${n.x},${n.y})`);
+        n.el.setAttribute('transform', hop > 0.001 ? `translate(${n.x},${n.y}) scale(${1 + hop * 0.3})` : `translate(${n.x},${n.y})`);
 
         n.dispVx += (n.vx - n.dispVx) * STRETCH_SMOOTHING;
         n.dispVy += (n.vy - n.dispVy) * STRETCH_SMOOTHING;
@@ -742,9 +742,9 @@ export default function Constellation({
     // so the word sorts itself back into the heap it landed as
     const endDrag = () => {
       // Racket mode: a quick tap on a ball throws it up at you
-      if (racket && dragId !== null && performance.now() - lastTime < 250) {
+      if ((racket || window.matchMedia('(max-width: 768px)').matches) && dragId !== null && performance.now() - lastTime < 250) {
         const h = nodes[dragId] as any;
-        if (h) { h.hopV = 0.2 + Math.random() * 0.05; wake(); }
+        if (h) { h.hopV = 0.28 + Math.random() * 0.05; wake(); }
       }
       if (dragId !== null && gravity > 0) { fallStart = performance.now(); wake(); }
       dragId = null;
@@ -1308,7 +1308,7 @@ export default function Constellation({
       nodesLayer.replaceChildren();
       svg.querySelectorAll(`[id^="${sphereId}-shade-"]`).forEach(el => el.remove());
       edgesLayer.replaceChildren();
-      audioCtx?.close();
+      // The audio context is the whole site's (sound/Sound.ts) — never closed here
     };
     // A resize rebuilds the constellation, so the box always holds it whole
   }, [sound, size.w, size.h]);

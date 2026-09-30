@@ -175,8 +175,8 @@
 /* Oversized so the scroll parallax never uncovers a grey edge — same fix as
    the cases grid */
 .root [data-case-card] [class*="cardImage"] img {
-  left: -25% !important;
-  top: -25% !important;
-  width: 150% !important;
-  height: 150% !important;
+  left: -10% !important;
+  top: -10% !important;
+  width: 120% !important;
+  height: 120% !important;
 }

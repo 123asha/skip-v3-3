@@ -1,4 +1,4 @@
-import { SOUND_BUS } from '../sound/Sound';
+import { SOUND_BUS, sharedAudio } from '../sound/Sound';
 
 /** Ball-hit sound — the same tone as the site's button hover (sound.play
  *  'hover'): a sine around 594Hz (10% under the hover tap) with a small random spread, sliding down in
@@ -25,16 +25,11 @@ export function knock(ctx: AudioContext, strength: number) {
   osc.stop(now + decay + 0.02);
 }
 
-let shared: AudioContext | null = null;
-/** One context for the whole page. Browsers keep it silent until the first
- *  click or key press on the page; after that every call is heard. */
+/** The site's one audio context (sound/Sound.ts) — kept awake by every tap. */
 export function playKnock(strength: number) {
-  if (!shared) {
-    const Ctx = window.AudioContext || (window as any).webkitAudioContext;
-    if (!Ctx) return;
-    shared = new Ctx();
-  }
-  if (shared.state === 'suspended') shared.resume();
-  if (shared.state !== 'running') return;
-  knock(shared, strength);
+  const ctx = sharedAudio();
+  if (!ctx) return;
+  if (ctx.state !== 'running') ctx.resume().catch(() => {});
+  if (ctx.state !== 'running') return;
+  knock(ctx, strength);
 }

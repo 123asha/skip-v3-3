@@ -61,6 +61,27 @@ class SoundBus {
 
 export const SOUND_BUS = new SoundBus();
 
+// ── One audio context for the whole site ────────────────────────────────────
+// Browsers keep audio silent until a user gesture, and iOS may suspend it
+// again (tab switched, screen locked, a call). So every tap, click or key
+// press — and every return to the tab — brings it back, not just the first
+// one; and on iOS 17+ the session is set to "playback", so the ring/silent
+// switch doesn't mute it. Every sound on the site uses this one context.
+let SHARED: AudioContext | null = null;
+export function sharedAudio(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  if (SHARED) return SHARED;
+  const Ctor = (window.AudioContext ?? (window as any).webkitAudioContext) as (typeof AudioContext) | undefined;
+  if (!Ctor) return null;
+  try { (navigator as any).audioSession && ((navigator as any).audioSession.type = 'playback'); } catch { /* not supported */ }
+  SHARED = new Ctor();
+  const wake = () => { if (SHARED && SHARED.state !== 'running') SHARED.resume().catch(() => {}); };
+  ['pointerdown', 'touchstart', 'touchend', 'keydown'].forEach(ev =>
+    window.addEventListener(ev, wake, { capture: true, passive: true }));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
+  return SHARED;
+}
+
 class SoundEngine {
   private ctx: AudioContext | null = null;
   private lastByType: Record<string, number> = {};
@@ -68,13 +89,7 @@ class SoundEngine {
   private epic: { lastBounce: number } | null = null;
 
   private getCtx(): AudioContext | null {
-    if (typeof window === 'undefined') return null;
-    if (this.ctx) return this.ctx;
-    const Ctor = (window.AudioContext ?? (window as any).webkitAudioContext) as
-      | (typeof AudioContext)
-      | undefined;
-    if (!Ctor) return null;
-    this.ctx = new Ctor();
+    if (!this.ctx) this.ctx = sharedAudio();
     return this.ctx;
   }
 
@@ -86,7 +101,7 @@ class SoundEngine {
   unlock() {
     const ctx = this.getCtx();
     if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    if (ctx.state !== 'running') ctx.resume().catch(() => {});
   }
 
   /** Read saved preference on app boot. Default ON; only an explicit "0"

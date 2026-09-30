@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { knock } from '../utils/knock';
+import { sharedAudio } from '../sound/Sound';
 
 /**
  * Draggable letter constellation — the SKP DSGN balls hanging on dotted
@@ -569,15 +570,14 @@ export default function Constellation({
     let audioCtx: AudioContext | null = null;
     function ensureAudio() {
       if (!sound) return;
-      if (!audioCtx) {
-        const Ctx = window.AudioContext || (window as any).webkitAudioContext;
-        if (Ctx) audioCtx = new Ctx();
-      }
-      if (audioCtx?.state === 'suspended') audioCtx.resume();
+      // The site's one context (sound/Sound.ts), woken by any tap
+      if (!audioCtx) audioCtx = sharedAudio();
+      if (audioCtx && audioCtx.state !== 'running') audioCtx.resume().catch(() => {});
     }
 
     function playKnock(strength: number) {
-      if (audioCtx) knock(audioCtx, strength);
+      if (!audioCtx && sound) audioCtx = sharedAudio();
+      if (audioCtx && audioCtx.state === 'running') knock(audioCtx, strength);
     }
 
     // Under gravity a resting ball is re-pressed into the floor every frame and

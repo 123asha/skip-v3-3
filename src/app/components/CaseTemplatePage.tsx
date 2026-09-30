@@ -614,7 +614,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             {data.testimonial.quote}
           </p>
           {/* Name, then the position in grey — centred under the quote */}
-          <div style={{ marginTop: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+          <div style={{ marginTop: isMobile ? 24 : 40, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
             <p style={{ ...textStyle, margin: 0 }}>{data.testimonial.name}</p>
             <p style={{ ...textStyle, margin: 0, opacity: 'var(--opacity-muted)' }}>{data.testimonial.role}</p>
           </div>
@@ -871,8 +871,9 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                 {/* The team and the client's words here too — they also close
                     the pictures page; the repeat is intended */}
                 {creditsAndQuote}
-                {/* Room for the pinned button and the menu under it */}
-                <div style={{ height: 120 }} />
+                {/* Room for the pinned button and the menu under it, plus air
+                    so the quote's byline doesn't sit right on the button */}
+                <div style={{ height: 180 }} />
               </>
             );
             return <div ref={paneBoxRef}>{images}</div>;

@@ -204,8 +204,14 @@ function interleaveHV(projects: Project[]): Project[] {
 // which would scatter more circles).
 const ROUND_ROW = 1, ROUND_COL = 1;
 
+const LEAD_IDS = [1, 2, 3, 4];
+
 function buildScatterRows(projects: Project[], perRow: number, gridCols: number): Row[] {
-  const items = interleaveHV(projects);
+  // The four lead cases (the ones on the home page) open the page, in their
+  // own order; the rest follow as interleaved
+  const mixed = interleaveHV(projects);
+  const lead = LEAD_IDS.map(id => mixed.find(p => p.id === id)).filter((p): p is Project => !!p);
+  const items = [...lead, ...mixed.filter(p => !LEAD_IDS.includes(p.id))];
   const rows: Row[] = [];
   let lastVCol = -1; // which absolute column held a V card in the previous row
   for (let i = 0; i < items.length; i += perRow) {

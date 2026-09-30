@@ -5,6 +5,7 @@ import { useRowReveal } from '../hooks/useRowReveal';
 import { H2_STYLE, typo } from '../utils/typography';
 import { PARA_GAP } from './CaseTemplatePage';
 import PillButton from './PillButton';
+import { ServiceBall } from './ServiceBall';
 import s from '../App.module.css';
 import { LANG, t } from '../i18n';
 
@@ -438,6 +439,20 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                 </div>
                 <p style={{ ...itemStyle, gridColumn: '4 / 5', ...cellFade }}>{row.header ? '' : typo(row.text)}</p>
                 <div style={{ gridColumn: '5 / 6', ...cellFade }}>{descPanel}</div>
+                {/* Services page: a ball drops into the empty middle of an opened
+                    service (columns 3–4, beside its description) and hovers.
+                    Mounted only while open, so every opening drops it anew. */}
+                {!onAllServices && isItemOpen && openItem === row.itemKey && (
+                  <div style={{
+                    position: 'absolute', pointerEvents: 'none',
+                    left: 'calc((100% - 4 * var(--gap)) / 5 * 2 + 2 * var(--gap))',
+                    width: 'calc((100% - 4 * var(--gap)) / 5 * 2 + var(--gap))',
+                    top: 'calc(var(--text-size) * var(--text-lh) + 28px)', bottom: 44,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <ServiceBall />
+                  </div>
+                )}
               </div>
             );
             // Every row can fold now — categories, sub-groups and services —

@@ -198,7 +198,8 @@
     /* Plain text now (no pill), so it follows the header rule: its lowercase
        sits on the logo's top line (--logo-top), which puts the capitals 20px
        from the top — the same 20px as the side margin */
-    top: calc(var(--logo-top) - 0.4465 * var(--text-size));
+    /* + 2px: set by eye */
+    top: calc(var(--logo-top) - 0.4465 * var(--text-size) + 2px);
     gap: var(--nav-gap);
     min-width: calc((100% - var(--nav-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5);
   }

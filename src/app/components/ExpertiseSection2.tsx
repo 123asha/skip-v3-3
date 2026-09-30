@@ -127,13 +127,16 @@ function AskButton({ service }: { service: string }) {
 
 // Phone: the arrow on a tappable row (no hover on touch) — the desktop's ⤴,
 // always shown, dark while the row is open
-const mobArrow = (open: boolean) => (
+const mobArrow = (open: boolean, glyph = '⤴') => (
   <span aria-hidden="true" style={{
     flexShrink: 0, opacity: open ? 1 : 'var(--opacity-muted)' as any,
     transition: 'opacity 0.3s ease',
     fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)',
-  }}>⤴</span>
+  }}>{glyph}</span>
 );
+
+/** Home → services: the sub-group clicked on the home table, opened on arrival */
+const OPEN_KEY = 'svc-open';
 
 // Phone: where a category's name starts (symbol column + its 12px gap) —
 // sub-group names line up on it; services and descriptions step in from it
@@ -144,9 +147,10 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
   /** Clicking the level-0 symbols band asks the page to unfold one step */
   onLevel?: (level: number) => void;
   showHeading?: boolean;
-  /** Home: services don't open their descriptions here — instead an «все
-   *  услуги» button under the table leads to the services page */
-  onAllServices?: () => void;
+  /** Home: nothing unfolds here — a sub-group (or the «все услуги» button
+   *  under the table) leads to the services page, where a clicked sub-group
+   *  arrives already open */
+  onAllServices?: (groupKey?: string) => void;
 } = {}) {
   const isMobile = useMobile();
   // Kept so the row code below reads the same as the original component —
@@ -162,6 +166,24 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [openItem, setOpenItem] = useState<string | null>(null);
   useEffect(() => { setOpenGroup(null); setOpenItem(null); }, [level]);
+  // Services page: open the sub-group picked on the home table and bring it
+  // into view (after the page transition has settled)
+  useEffect(() => {
+    if (onAllServices) return;
+    let key: string | null = null;
+    try { key = sessionStorage.getItem(OPEN_KEY); sessionStorage.removeItem(OPEN_KEY); } catch { /* storage blocked */ }
+    if (!key) return;
+    setOpenGroup(key);
+    const t = window.setTimeout(() => {
+      const el = rootRef.current?.querySelector<HTMLElement>(`[data-group-key="${key}"]`);
+      if (!el) return;
+      const y = el.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.25;
+      const lenis = (window as any).__lenis;
+      if (lenis?.scrollTo) lenis.scrollTo(y, { duration: 1.2 });
+      else window.scrollTo({ top: y, behavior: 'smooth' });
+    }, 700);
+    return () => clearTimeout(t);
+  }, []);
   // Row under the cursor — drives the ⤴ affordance in the column before the text
   const [hoverRow, setHoverRow] = useState<string | null>(null);
 
@@ -289,9 +311,13 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
               : level >= 3 || (level === 2 && openGroup === row.groupKey);
             // Clicking a sub-group label expands its services list (collapsed
             // mode only); clicking a service expands its description in col 5.
-            const isCollapsibleLabel = row.isLabel && !showItems;
+            // Home: a sub-group leads to the services page instead of unfolding
+            const isCollapsibleLabel = row.isLabel && !showItems && !onAllServices;
+            const isLinkLabel = row.isLabel && !!onAllServices;
             const isExpandableItem = !!row.itemKey && !!row.desc && !onAllServices;
-            const onRowClick = isCollapsibleLabel
+            const onRowClick = isLinkLabel
+              ? () => { try { sessionStorage.setItem(OPEN_KEY, row.groupKey); } catch { /* storage blocked */ } onAllServices!(row.groupKey); }
+              : isCollapsibleLabel
               ? () => toggleGroup(row.groupKey)
               : isExpandableItem
                 ? () => toggleItem(row.itemKey!)
@@ -343,7 +369,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                   pointerEvents: 'none',
                   flexShrink: 0,
                 }}
-              >⤴</span>
+              >{onAllServices ? '↗' : '⤴'}</span>
             );
             // Dimming lives on the text cells, never on the row box — the
             // divider lines must keep their colour when a group opens.
@@ -351,7 +377,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
             // Phone: 20% more air, easier to tap
             const rowPadding = isMobile ? '10px 0 14px' : '8px 0 12px';
             const rowInner = isMobile ? (
-              <div data-exp-row="" onClick={onRowClick} style={{ position: 'relative', background: rowBg, padding: rowPadding, cursor: rowCursor }}>
+              <div data-exp-row="" data-group-key={row.isLabel ? row.groupKey : undefined} onClick={onRowClick} style={{ position: 'relative', background: rowBg, padding: rowPadding, cursor: rowCursor }}>
                 {divider}
                 {row.header ? (
                   <div style={{ display: 'flex', gap: 12, alignItems: 'baseline', ...cellFade }}>
@@ -365,14 +391,14 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                   // category name's line; a tappable one shows its arrow
                   <div style={{ ...cellFade, paddingLeft: MOB_L1, display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                     <p style={itemStyle}>{row.itemIndex}</p>
-                    {onRowClick && mobArrow(openGroup === row.groupKey)}
+                    {onRowClick && mobArrow(openGroup === row.groupKey, onAllServices ? '↗' : undefined)}
                   </div>
                 ) : (
                   // A service 20px further in, its description 20px more
                   <div style={{ ...cellFade, paddingLeft: `calc(${MOB_L1} + 20px)` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                       <p style={itemStyle}>{typo(row.text)}</p>
-                      {onRowClick && mobArrow(isItemOpen)}
+                      {onRowClick && mobArrow(isItemOpen, onAllServices ? '↗' : undefined)}
                     </div>
                     <div style={{ paddingLeft: 20 }}>{descPanel}</div>
                   </div>
@@ -381,6 +407,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
             ) : (
               <div
                 data-exp-row=""
+                data-group-key={row.isLabel ? row.groupKey : undefined}
                 onClick={onRowClick}
                 style={{
                   position: 'relative',
@@ -435,7 +462,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
         // from the last line of text; the last row adds its own 12px padding).
         // Phone: nearer the table than the next block
         <div style={{ marginTop: isMobile ? 'var(--space-sm)' : 64, display: 'flex', justifyContent: isMobile ? 'center' : 'flex-start' }}>
-          <PillButton onClick={onAllServices}>все услуги</PillButton>
+          <PillButton onClick={() => onAllServices()}>все услуги</PillButton>
         </div>
       )}
     </div>

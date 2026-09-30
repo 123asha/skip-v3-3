@@ -144,7 +144,9 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
         // thickness. A scaled box (or an SVG stroke) rounds per element and
         // the lines start to look uneven.
         borderTop: `1px solid ${active ? 'var(--c-text)' : color}`,
-        transition: 'border-color 0.2s ease, opacity 0.12s linear',
+        // No opacity fade on the hand-over to the SVG stroke: mid cross-fade
+        // both layers sit at half strength and the line flashes lighter
+        transition: 'border-color 0.2s ease',
         pointerEvents: 'none',
       }}
     />
@@ -171,7 +173,7 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
         fill="none"
         strokeLinecap={dotted ? 'round' : undefined}
         strokeDasharray={dotted ? '0.1 4' : undefined}
-        style={{ stroke: active ? 'var(--c-text)' : color, strokeWidth: '1', opacity: 0, transition: 'stroke 0.2s ease, opacity 0.12s linear' }}
+        style={{ stroke: active ? 'var(--c-text)' : color, strokeWidth: '1', opacity: 0, transition: 'stroke 0.2s ease' }}
       />
       <path ref={hitRef}  d="" fill="none" stroke="transparent" strokeWidth={20} />
     </svg>

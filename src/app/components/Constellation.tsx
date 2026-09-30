@@ -611,7 +611,9 @@ export default function Constellation({
     // bounces back just hard enough to clear the knock threshold — which made
     // the stack rattle forever while scrolling. Anything slower than the pull
     // itself counts as resting: no knock, and the bounce is dropped.
-    const restSpeed = () => (gravity > 0 ? gravity * 2.5 : 0.6);
+    // (the phone's tilt presses a heap into a corner the same way — its
+    // steady nudge is resting too, not a knock)
+    const restSpeed = () => Math.max(gravity > 0 ? gravity * 2.5 : 0.6, Math.hypot(tiltX, tiltY) * 2.5);
     // Only the jitter gravity itself causes is zeroed — a real shove from a
     // dragged neighbour is far faster than this and survives, so the landed
     // row still reacts to being pushed. Has to clear a full frame's worth of
@@ -633,7 +635,8 @@ export default function Constellation({
       if (speed < restSpeed()) return;
       const now = performance.now();
       if (grabbedUntil[idA] > now || grabbedUntil[idB] > now) return;
-      if (lastBallHit[key] && now - lastBallHit[key] < HIT_COOLDOWN) return;
+      // Tilted, a heap keeps touching: each pair knocks once, not on and on
+      if (lastBallHit[key] && now - lastBallHit[key] < (tiltAmt > 0 ? 1500 : HIT_COOLDOWN)) return;
       lastBallHit[key] = now;
       playKnock(Math.min(speed / 18, 1));
     }
@@ -642,7 +645,7 @@ export default function Constellation({
       if (speed < restSpeed()) return;
       const now = performance.now();
       if (grabbedUntil[id] > now) return;
-      if (lastWallHit[id] && now - lastWallHit[id] < HIT_COOLDOWN) return;
+      if (lastWallHit[id] && now - lastWallHit[id] < (tiltAmt > 0 ? 1500 : HIT_COOLDOWN)) return;
       lastWallHit[id] = now;
       playKnock(Math.min(speed / 18, 1));
     }

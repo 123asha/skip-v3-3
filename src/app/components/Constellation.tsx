@@ -263,9 +263,9 @@ export default function Constellation({
       // Swung sharply like a racket (up out of the screen): the balls fly up
       // at the viewer — big — and knock back down on it, each a bit differently
       const az = Math.abs(a.z ?? 0);
-      if (az > 4) {
+      if (az > 3) {
         Object.values(nodes).forEach((n: any) => {
-          if ((n.hop ?? 0) < 0.1) n.hopV = Math.min(0.32, 0.08 + az * 0.018) * (0.75 + Math.random() * 0.5);
+          if ((n.hop ?? 0) < 0.1) n.hopV = Math.min(0.42, 0.18 + az * 0.03) * (0.8 + Math.random() * 0.4);
         });
         wake();
       }
@@ -637,7 +637,7 @@ export default function Constellation({
         const n = nodes[id];
         // A hop towards the viewer (phone swung up and down) — a touch bigger
         const hop = (n as any).hop ?? 0;
-        n.el.setAttribute('transform', hop > 0.001 ? `translate(${n.x},${n.y}) scale(${1 + hop * 0.3})` : `translate(${n.x},${n.y})`);
+        n.el.setAttribute('transform', hop > 0.001 ? `translate(${n.x},${n.y}) scale(${1 + hop * 0.6})` : `translate(${n.x},${n.y})`);
 
         n.dispVx += (n.vx - n.dispVx) * STRETCH_SMOOTHING;
         n.dispVy += (n.vy - n.dispVy) * STRETCH_SMOOTHING;
@@ -750,7 +750,7 @@ export default function Constellation({
       // Racket mode: a quick tap on a ball throws it up at you
       if ((racket || window.matchMedia('(max-width: 768px)').matches) && dragId !== null && performance.now() - lastTime < 250) {
         const h = nodes[dragId] as any;
-        if (h) { h.hopV = 0.28 + Math.random() * 0.05; wake(); }
+        if (h) { h.hopV = 0.38 + Math.random() * 0.04; wake(); }
       }
       if (dragId !== null && gravity > 0) { fallStart = performance.now(); wake(); }
       dragId = null;
@@ -1167,12 +1167,12 @@ export default function Constellation({
         {
           const h = n as any;
           if (h.hopV || h.hop) {
-            h.hopV = (h.hopV ?? 0) - 0.012;
+            h.hopV = (h.hopV ?? 0) - 0.03;
             h.hop = (h.hop ?? 0) + h.hopV;
             if (h.hop <= 0) {
               h.hop = 0;
               // Lands with a knock and a smaller rebound, then rests
-              if (h.hopV < -0.02) { playKnock(Math.min(1, -h.hopV * 8)); h.hopV = -h.hopV * 0.4; } else h.hopV = 0;
+              if (h.hopV < -0.05) { playKnock(Math.min(1, -h.hopV * 3)); h.hopV = -h.hopV * 0.35; } else h.hopV = 0;
             }
           }
         }

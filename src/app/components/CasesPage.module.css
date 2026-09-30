@@ -7,7 +7,9 @@
   z-index: 160;
   overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  /* Vertical only: contained horizontally too, it switched off the
+     trackpad's two-finger back / forward swipe */
+  overscroll-behavior-y: contain;
   touch-action: pan-y;
   animation: pageIn 0.35s 0.05s ease both;
   scrollbar-gutter: stable;

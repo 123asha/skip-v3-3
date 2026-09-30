@@ -763,7 +763,10 @@ function AppInner() {
       smoothWheel: !reduce,
       smoothTouch: false,
       prevent: (node: Element) => !!node.closest('[data-lenis-prevent]'),
-    });
+      // A mostly sideways swipe is the browser's (the trackpad's two-finger
+      // back / forward) — Lenis leaves it alone
+      virtualScroll: (d: { deltaX: number; deltaY: number }) => Math.abs(d.deltaX) <= Math.abs(d.deltaY),
+    } as any);
     (window as any).__lenis = lenis;
     const raf = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(raf);

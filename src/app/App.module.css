@@ -233,6 +233,10 @@
 }
 
 .navBoxed .navPill { background: var(--c-text) !important; color: #fff !important; padding: 8px 14px 9px; }
+/* Desktop: «Написать» a slim pill — just a little air round the word */
+@media (min-width: 769px) {
+  .navBoxed .navPill { padding: 1.5px 7px 1.5px; }
+}
 
 /* Nav-sized face of the site's pill button — same 4px corners */
 .navPill {

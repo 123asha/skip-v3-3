@@ -181,6 +181,48 @@ export default function CaseCard({
     });
   }, [hovered]);
 
+  // ── Scroll-scrubbed preview ───────────────────────────────────────────────
+  // The clip's timeline follows the card through the viewport: it starts as
+  // the card enters from the bottom and finishes once it leaves at the top.
+  // One seek at a time (the next waits for `seeked`), and the clip is encoded
+  // all-keyframe, so a seek is cheap. Phones just loop — iOS paints seeks badly.
+  const scrubRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    if (!scrubVideo || isMobile) return;
+    const vid = scrubRef.current;
+    const box = cardRef.current;
+    if (!vid || !box) return;
+    vid.pause();
+    let frame = 0, busy = false, want = -1;
+    const seek = () => {
+      if (busy || want < 0 || Math.abs(vid.currentTime - want) < 0.03) return;
+      busy = true;
+      try { vid.currentTime = want; } catch { busy = false; }
+    };
+    const onSeeked = () => { busy = false; seek(); };
+    const update = () => {
+      frame = 0;
+      const dur = vid.duration;
+      if (!dur || !isFinite(dur)) return;
+      const r = box.getBoundingClientRect();
+      const p = Math.max(0, Math.min(1, (window.innerHeight - r.top) / (window.innerHeight + r.height)));
+      want = p * (dur - 0.05);
+      seek();
+    };
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
+    vid.addEventListener('seeked', onSeeked);
+    window.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    window.addEventListener('resize', onScroll);
+    if (vid.readyState >= 1) update();
+    else vid.addEventListener('loadedmetadata', update, { once: true });
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      vid.removeEventListener('seeked', onSeeked);
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [scrubVideo, isMobile]);
+
   // ── Mobile: the desktop caption row exactly — name left, description right,
   //    same columns — only the description is always shown (no hover on
   //    touch), with the grey categories under it. ──
@@ -228,19 +270,17 @@ export default function CaseCard({
           className={`${s.cardImage}${isRound ? ` ${s.cardRound}` : ''}${aspect ? ` ${s.cardWide}` : ''}${!isRound && !aspect && !isHorizontal ? ` ${s.cardTall}` : ''}`}
           style={{ aspectRatio: aspect ?? (isHorizontal ? '4/3' : '4/5'), width: '100%', flexShrink: 0, ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}
         >
-          {scrubVideo && !PLACEHOLDER_PREVIEWS && (
+          {scrubVideo && (
             <video
+              ref={scrubRef}
               src={scrubVideo}
               muted
               playsInline
               preload="auto"
-              autoPlay
-              loop
-              // Above the still: the looping clip is the preview here.
-              // Sized the same 12%-oversize as the still image below it (see
-              // .cardImage img in the CSS module) so it fully covers that
-              // image — same edges, nothing of the still peeking round it.
-              style={{ position: 'absolute', left: '-6%', top: '-6%', width: '112%', height: '112%', objectFit: 'cover', zIndex: 1 }}
+              // Desktop: driven by the scroll (see above). Phone: just loops.
+              autoPlay={isMobile}
+              loop={isMobile}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1 }}
             />
           )}
           {/* No hover video: the preview never swaps to another picture */}

@@ -104,7 +104,8 @@ function ProjectCard({ project, onClick, aspect, scrubVideo, shape }: { project:
 // screen.
 const WIDE_ASPECT = '16/9';
 // The wide card carries the flower, opening up as the page scrolls past it
-const WIDE_VIDEO = '/flower2.mp4';
+// All-keyframe encode of flower2.mp4, so scroll seeks stay smooth
+const WIDE_VIDEO = '/flower2-scrub.mp4';
 
 type Shape = 'vertical' | 'square';
 interface Slot { project: Project; col: string; row: number; aspect?: string; scrubVideo?: string; shape?: Shape }

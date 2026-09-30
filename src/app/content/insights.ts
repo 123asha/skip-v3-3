@@ -1,5 +1,18 @@
 import { asset } from '../utils/asset';
 import { ARTICLES } from './insightArticles';
+import { ARTICLES_EN } from './insightArticles.en';
+
+// The English site (/en/…) reads the articles in English. Worked out here
+// rather than taken from i18n, which needs a browser — the prerender runs
+// this file without one.
+const IS_EN = (() => {
+  try {
+    const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+    const stashed = sessionStorage.getItem('ghpages_redirect');
+    const full = stashed ? new URL(stashed, location.origin).pathname : location.pathname;
+    return /^\/en(\/|$)/.test(base && full.startsWith(base) ? full.slice(base.length) : full);
+  } catch { return false; }
+})();
 
 /**
  * Insights — the articles on the «Инсайты» page (cards + archive table).
@@ -236,6 +249,8 @@ for (const i of INSIGHTS) {
   // (the article's own first picture isn't used as the cover — cards without
   // a cover set here show the logo placeholder)
   if (a) { i.blocks = a.blocks; }
+  const en = IS_EN && i.slug ? ARTICLES_EN[i.slug] : undefined;
+  if (en) { i.blocks = en.blocks; i.desc = en.title; i.body = en.body; }
 }
 
 const SORTED = [...INSIGHTS]

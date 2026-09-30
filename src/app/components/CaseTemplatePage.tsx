@@ -918,7 +918,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             transform: `translateY(${formInView ? 12 : 0}px)`,
             opacity: formInView ? 0 : 1,
             pointerEvents: 'none',
-            transition: 'opacity 0.3s ease, transform 0.3s ease, bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
+            transition: 'opacity 0.3s ease, transform 0.3s ease, bottom var(--m-menu-move)',
           }}>
             {/* A tab the width of the menu row below it, drawn like the menu's
                 chips: an arrow at each edge (the typeface's own ← →, as

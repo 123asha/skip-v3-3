@@ -74,6 +74,9 @@
   --m-head-x: 16px;   /* header side margins — same as the content's */
   --m-chip-h: calc(var(--text-size) * var(--text-lh) + 16px);
   --m-menu-bottom: var(--pad);
+  /* How the phone menu (and what rides above it) slides away and back:
+     a soft start and a soft stop, a little unhurried */
+  --m-menu-move: 0.65s cubic-bezier(0.45, 0, 0.2, 1);
   --m-above-menu: calc(var(--m-menu-bottom) + var(--m-chip-h) + 10px);
   /* Space between neighbouring chips — a thin line links them across it */
   --chip-gap: 12px;

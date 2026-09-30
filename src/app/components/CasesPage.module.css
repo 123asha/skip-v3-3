@@ -412,7 +412,7 @@
        menu, --m-above-menu); down on the bottom edge while the menu is
        tucked away (App: data-nav-hidden) */
     bottom: var(--m-chips-bottom, calc(var(--m-menu-bottom) + var(--m-chip-h) + 10px));
-    transition: bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+    transition: bottom var(--m-menu-move), opacity 0.25s ease;
     height: auto;
     left: 0;
     right: 0;

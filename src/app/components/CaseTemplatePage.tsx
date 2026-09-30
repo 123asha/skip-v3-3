@@ -31,11 +31,13 @@ const TEAM: { name: string; role: string }[] = [
 
 // ── Image (real src) or grey placeholder. A .mp4/.webm src plays as a muted
 //    looping video (used for converted GIFs). ──────────────────────────────────
-function Img({ ar, src, style, round }: { ar: string; src?: string; style?: React.CSSProperties; round?: boolean }) {
+/** `n` — the picture's number down the case, the same in both layouts, so the
+ *  zoom switch can find «the picture that was on screen» again */
+function Img({ ar, src, style, round, n }: { ar: string; src?: string; style?: React.CSSProperties; round?: boolean; n?: number }) {
   const isVideo = !!src && /\.(mp4|webm)$/i.test(src);
   const fill: React.CSSProperties = { width: '100%', height: '100%', objectFit: 'cover', display: 'block' };
   return (
-    <div data-case-img="" style={{ aspectRatio: round ? '1 / 1' : ar, borderRadius: round ? '50%' : undefined, background: 'var(--c-surface)', width: '100%', overflow: 'hidden', ...style }}>
+    <div data-case-img={n ?? ''} style={{ aspectRatio: round ? '1 / 1' : ar, borderRadius: round ? '50%' : undefined, background: 'var(--c-surface)', width: '100%', overflow: 'hidden', ...style }}>
       {src && (isVideo
         ? <video src={src} autoPlay muted loop playsInline style={fill} />
         : <img src={src} alt="" loading="lazy" style={fill} />)}
@@ -200,14 +202,14 @@ function pairUp(items: { ar: string; src?: string; round: boolean }[]) {
         <Block key={i}>
           <div style={{ display: 'flex', gap: 4, alignItems: 'flex-start' }}>
             {/* In a pair a round picture shows as a square */}
-            <div style={{ flex: '1 1 0', minWidth: 0 }}><Img ar={a.round ? '1/1' : a.ar} src={a.src} /></div>
-            <div style={{ flex: '1 1 0', minWidth: 0 }}><Img ar={b.round ? '1/1' : b.ar} src={b.src} /></div>
+            <div style={{ flex: '1 1 0', minWidth: 0 }}><Img n={i} ar={a.round ? '1/1' : a.ar} src={a.src} /></div>
+            <div style={{ flex: '1 1 0', minWidth: 0 }}><Img n={i + 1} ar={b.round ? '1/1' : b.ar} src={b.src} /></div>
           </div>
         </Block>,
       );
       i++;
     } else {
-      rows.push(<Block key={i}><Img ar={a.ar} src={a.src} round={a.round} /></Block>);
+      rows.push(<Block key={i}><Img n={i} ar={a.ar} src={a.src} round={a.round} /></Block>);
     }
   }
   return rows;
@@ -462,15 +464,23 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
       if (d < bestDist) { bestDist = d; anchor = el; }
     }
     const before = anchor?.getBoundingClientRect().top;
+    // The two layouts are different trees (full width pairs pictures up), so
+    // the element itself is replaced — find the same picture by its number
+    const n = anchor?.dataset.caseImg;
     setCaseZoom(next);
-    if (!anchor || before == null || !page) return;
+    if (!anchor || before == null || !page || !n) return;
     const start = performance.now();
     const tick = () => {
-      const now = anchor!.getBoundingClientRect().top;
-      const delta = now - before;
-      if (Math.abs(delta) > 0.5) page.scrollTop += delta;
-      if (performance.now() - start < 650) requestAnimationFrame(tick);
+      const el = page.querySelector<HTMLElement>(`[data-case-img="${n}"]`);
+      if (el) {
+        // Rects are screen px; scrollTop is layout px under the page's zoom
+        const pz = parseFloat(document.documentElement.style.zoom || '1') || 1;
+        const delta = el.getBoundingClientRect().top - before;
+        if (Math.abs(delta) > 0.5) page.scrollTop += delta / pz;
+      }
+      if (performance.now() - start < 750) requestAnimationFrame(tick);
     };
+    tick();
     requestAnimationFrame(tick);
   };
   const zoomIn  = () => holdInView(1);
@@ -808,7 +818,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
               flat.push({ ar, src: b.src, round: rd });
               images.push(
                 <Block key={i}>
-                  <Img ar={ar} src={b.src} round={rd} />
+                  <Img n={flat.length - 1} ar={ar} src={b.src} round={rd} />
                 </Block>,
               );
               if (b.caption) pushCopy(`c${i}`, b.caption, b.title);
@@ -824,8 +834,8 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             images.push(
               <Block key={i}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <Img ar={leftAr} src={b.leftSrc} round={rdL} />
-                  <Img ar={rightAr} src={b.rightSrc} round={rdR} />
+                  <Img n={flat.length - 2} ar={leftAr} src={b.leftSrc} round={rdL} />
+                  <Img n={flat.length - 1} ar={rightAr} src={b.rightSrc} round={rdR} />
                 </div>
               </Block>,
             );

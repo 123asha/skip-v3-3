@@ -24,10 +24,9 @@ export type PageMeta = {
 };
 
 const SITE = 'Skip Design';
-const DEFAULT_DESC = 'Skip Design — студия цифрового дизайна. Бренд-стратегия, визуальные системы и цифровой дизайн для быстрорастущих компаний.';
 
 const SECTIONS: PageMeta[] = [
-  { path: '/', title: 'Skip Design — студия цифрового дизайна', description: DEFAULT_DESC },
+  { path: '/', title: 'Skip Design. Дизайн, как правила игры.', description: 'Бренд-стратегия, визуальные системы и цифровой дизайн для быстрорастущих компаний.' },
   { path: '/cases', title: `Проекты — ${SITE}`, description: 'Проекты студии Skip Design: брендинг, сайты и цифровые продукты — от стратегии до визуальной системы.' },
   { path: '/services', title: `Услуги и решения — ${SITE}`, description: 'Исследования, платформа бренда, нейминг, визуальные системы, сайты и продуктовый дизайн: что делает студия Skip Design и как.' },
   { path: '/insights', title: `Инсайты — ${SITE}`, description: 'Статьи, фреймворки и памятки студии Skip Design о бренд-стратегии, продукте, метафорах и ИИ в дизайне.' },

@@ -881,7 +881,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
               <div key={project.id} data-case-card="" style={{ minWidth: 0 }}>
                 {/* Two columns: the caption stacks (name over description) */}
                 {/* Phone: every preview 4:5, one or two a row; no category line */}
-                <ProjectCard {...project} ar={V} tall hideCats stackMeta={mobCols === 2} onClick={() => onCaseClick?.(project.href)} />
+                <ProjectCard {...project} ar={V} tall hideCats stackMeta={mobCols === 2} slider={mobCols === 1} onClick={() => onCaseClick?.(project.href)} />
               </div>
             ))
           ) : (

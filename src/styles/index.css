@@ -439,14 +439,25 @@ input::placeholder {
     margin-right: calc(-1 * var(--m-bleed));
     width: calc(100% + 2 * var(--m-bleed)) !important;
   }
-  /* Two a row: only the outer edge of each picture moves out */
-  [data-mob-cols="2"] > [data-case-card]:nth-child(odd) [class*="cardImage"] {
-    margin-right: 0;
-    width: calc(100% + var(--m-bleed)) !important;
-  }
-  [data-mob-cols="2"] > [data-case-card]:nth-child(even) [class*="cardImage"] {
+  /* Two a row: no bleed — the pictures keep to the text's width */
+  [data-mob-cols="2"] > [data-case-card] [class*="cardImage"] {
     margin-left: 0;
-    width: calc(100% + var(--m-bleed)) !important;
+    margin-right: 0;
+    width: 100% !important;
+  }
+  /* A card's swipeable strip: each picture one frame wide, in the flow (not
+     the oversized, drifting single preview), snapping into place */
+  [data-slides]::-webkit-scrollbar { display: none; }
+  /* (doubled attribute: outranks the oversized-preview rules on the cases page) */
+  [data-case-card] [class*="cardImage"] [data-slides][data-slides] > img {
+    position: static !important;
+    flex: 0 0 100%;
+    width: 100% !important;
+    height: 100% !important;
+    transform: none !important;
+    translate: none !important;
+    object-fit: cover;
+    scroll-snap-align: start;
   }
   /* A tile's grey, widened without moving what's inside it (a shadow is not
      clipped by the tile's own overflow) */

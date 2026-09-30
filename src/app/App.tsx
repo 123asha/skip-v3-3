@@ -28,6 +28,7 @@ import { MediaSection } from './components/MediaSection';
 import { ExpertiseSection2 } from './components/ExpertiseSection2';
 import { CircleArrow } from './components/CircleArrow';
 import LabPage from './components/LabPage';
+import CookieNotice from './components/CookieNotice';
 import InsightPage from './components/InsightPage';
 import { insightBySlug } from './content/insights';
 import { pageMetaFor } from './content/seo';
@@ -1481,6 +1482,8 @@ function AppInner() {
       {/* Up arrow at the very end of inner pages — switched off for now
           (ScrollTopArrow in PageTitle.tsx) */}
       {page === 'policy' && <PolicyPage />}
+      {/* First visit: the cookie notice, until «Хорошо» */}
+      <CookieNotice onPolicy={() => navigateWithExit('/policy')} />
       {page === 'index2' && <Index2Page />}
       {page === 'case-template' && <CaseTemplatePage onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}
       {page === 'seniors' && <CaseTemplatePage data={SENIORS_BAR} onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}

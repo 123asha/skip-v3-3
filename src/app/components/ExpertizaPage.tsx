@@ -807,8 +807,10 @@ function Tile({ index, tile }: { index: number; tile: { title: string; who: stri
           <span aria-hidden="true">{TILE_MARKS[index]}</span>
           <span style={{ color: 'var(--c-text-muted)' }}>{typo(tile.who)}</span>
         </p>
-        <p style={{ ...ts, margin: '4px 0 0' }}>{typo(tile.title)}</p>
       </div>
+      {/* The solution itself — heading size, bottom-left, the same margin
+          from the left and the bottom edges */}
+      <p style={{ ...H2_STYLE, position: 'absolute', left: 15, right: 15, bottom: 15, margin: 0, zIndex: 1 }}>{typo(tile.title)}</p>
     </div>
   );
 }

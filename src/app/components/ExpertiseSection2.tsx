@@ -415,8 +415,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                 aria-hidden="true"
                 style={{
                   ...itemStyle,
-                  // Home: always shown — it says the row leads to another page
-                  opacity: onAllServices || hoverRow === `${i}-${j}` ? 1 : 0,
+                  opacity: hoverRow === `${i}-${j}` ? 1 : 0,
                   transition: 'opacity 0.2s ease',
                   pointerEvents: 'none',
                   flexShrink: 0,

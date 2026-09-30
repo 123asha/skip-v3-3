@@ -233,7 +233,9 @@ const INSIGHTS: Insight[] = [
 // Each carried-over article: its blocks and first picture from ARTICLES
 for (const i of INSIGHTS) {
   const a = i.slug ? ARTICLES[i.slug] : undefined;
-  if (a) { i.blocks = a.blocks; i.cover = i.cover ?? a.cover; }
+  // (the article's own first picture isn't used as the cover — cards without
+  // a cover set here show the logo placeholder)
+  if (a) { i.blocks = a.blocks; }
 }
 
 const SORTED = [...INSIGHTS]

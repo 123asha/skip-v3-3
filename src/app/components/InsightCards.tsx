@@ -177,9 +177,13 @@ export function InsightCards({ exclude, limit, flushBottom }: {
                   style={{ position: 'absolute', left: '-30%', top: '-30%', width: '160%', height: '160%', objectFit: 'cover', willChange: 'transform' }}
                 />
               ) : (
-                <img
+                !it.cover ? (
+                  // No picture of its own yet: our placeholder — the grey
+                  // circle with the logo in the middle
+                  <img src={asset('/logo-skp.svg')} alt="" style={{ position: 'absolute', left: '50%', top: '50%', width: '30%', translate: '-50% -50%' }} />
+                ) : <img
                   data-parallax=""
-                  src={it.cover ?? INSIGHT_PICS[i % INSIGHT_PICS.length]}
+                  src={it.cover}
                   alt=""
                   loading="lazy"
                   style={{ position: 'absolute', left: '-30%', top: '-30%', width: '160%', height: '160%', objectFit: 'cover', willChange: 'transform' }}

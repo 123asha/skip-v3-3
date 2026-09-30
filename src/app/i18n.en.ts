@@ -10,7 +10,7 @@ export const EN: Record<string, string> = {
   'Проекты': 'Projects',
   'Услуги': 'Services',
   'Инсайты': 'Insights',
-  'Написать': 'Contact',
+  'Написать': 'Let’s talk',
   'Телеграм': 'Telegram',
   'Подход': 'Approach',
   'Инструменты': 'Tools',

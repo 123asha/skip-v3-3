@@ -380,7 +380,7 @@ input::placeholder {
 
 /* ── Service ball (ServiceBall.tsx) — drops into an opened service row, then
       hovers. The box is the ball's diameter; the shadow lies under it. ── */
-.svcBall { position: relative; width: clamp(88px, 9vw, 150px); aspect-ratio: 1; }
+.svcBall { position: relative; width: clamp(62px, 6.3vw, 105px); aspect-ratio: 1; }
 .svcBallBody { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible;
   animation: svcBallDrop 1.1s cubic-bezier(0.3, 0, 0.7, 1) both, svcBallFloat 3.6s ease-in-out 1.1s infinite; }
 .svcBallShadow { position: absolute; left: 0; top: 100%; width: 100%; height: 20%; overflow: visible;

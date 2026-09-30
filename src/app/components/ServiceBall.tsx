@@ -16,7 +16,7 @@ export function ServiceBall() {
       <svg className="svcBallShadow" viewBox="-100 -20 200 40">
         <defs>
           <radialGradient id={`${id}-drop`} cx="50%" cy="50%" r="50%">
-            <stop offset="0" stopColor="#000" stopOpacity="0.14" />
+            <stop offset="0" stopColor="#000" stopOpacity="0.07" />
             <stop offset="1" stopColor="#000" stopOpacity="0" />
           </radialGradient>
         </defs>

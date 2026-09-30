@@ -719,3 +719,37 @@
   }
   .navLinks .navLink[data-current] { border-color: var(--c-text); }
 }
+
+/* Phone: a progressive blur under the bottom menu, so it stands out from
+   whatever scrolls behind it — strongest at the screen's edge, fading out
+   above the chips. Three layers of growing blur, each masked to its own
+   band. Leaves with the menu when it tucks away. */
+.menuBlur { display: none; }
+@media (max-width: 768px) {
+  .menuBlur {
+    display: block;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    height: calc(var(--pad) + var(--m-bottom-lift, 0px) + var(--m-chip-h) + 36px);
+    z-index: 199;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  :root[data-nav-hidden] .menuBlur { opacity: 0; }
+  .menuBlur > div { position: absolute; inset: 0; }
+  .menuBlur > div:nth-child(1) {
+    backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+    mask-image: linear-gradient(to top, #000 0%, #000 55%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to top, #000 0%, #000 55%, transparent 100%);
+  }
+  .menuBlur > div:nth-child(2) {
+    backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+    mask-image: linear-gradient(to top, #000 0%, #000 35%, transparent 75%);
+    -webkit-mask-image: linear-gradient(to top, #000 0%, #000 35%, transparent 75%);
+  }
+  .menuBlur > div:nth-child(3) {
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    mask-image: linear-gradient(to top, #000 0%, transparent 50%);
+    -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 50%);
+  }
+}

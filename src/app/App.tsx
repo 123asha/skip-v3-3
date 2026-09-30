@@ -1095,6 +1095,8 @@ function AppInner() {
           gutter is the same width. */}
       {/* On a plain (non-inverted) page the current section stays black and
           the other links go grey. */}
+      {/* Phone: progressive blur under the bottom menu (App.module.css) */}
+      <div className={s.menuBlur} aria-hidden="true"><div /><div /><div /></div>
       <nav
         className={`${s.nav} ${s.navBoxed}`}
         // One row on every page: the section links, then «Написать» — all on

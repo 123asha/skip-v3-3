@@ -19,6 +19,9 @@
   -webkit-backface-visibility: hidden;
   transform: translateZ(16px);
 }
+.pillLabel { display: inline-block; }
+.pillLabel::first-letter { text-transform: uppercase; }
+
 .newProjectFaceBottom {
   position: absolute;
   left: 0;

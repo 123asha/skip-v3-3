@@ -58,7 +58,9 @@ export default function PillButton({
               {icon}
             </span>
           )}
-          {children}
+          {/* Every button label starts with a capital — in either language
+              (a style, not the text: the English copy is swapped in later) */}
+          <span className={s.pillLabel}>{children}</span>
         </span>
       ))}
     </span>

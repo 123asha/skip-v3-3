@@ -153,6 +153,8 @@ export const EN: Record<string, string> = {
   'Дизайн-поддержка': 'Design support',
   'Прототипирование': 'Prototyping',
   'Редактура': 'Editing',
+  'Запуск и поддержка': 'Launch and support',
+  'Поддержка': 'Support',
   'Лендинги и промо': 'Landing pages and promo',
   'Спецпроекты': 'Special projects',
   'Корпоративные сайты': 'Corporate websites',

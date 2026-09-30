@@ -59,7 +59,9 @@ const SERVICES: { category: string; groupLabel?: string; items: ServiceItem[] }[
         desc: 'Разрабатываем нестандартные digital-форматы: промо-сайты, интерактивные истории и игровые механики.\n\nСобираем под каждую задачу отдельную систему визуальных и интерактивных решений, которая помогает выделиться и решить конкретную бизнес-задачу. Особое внимание уделяем нарративу.',
       },
       { text: 'Корпоративные сайты', hideNumber: true, desc: SITES_DESC },
-      { text: 'Разработка и поддержка', label: 'No-code, vibe coding', desc: PLACEHOLDER_DESC },
+      { text: 'No-code', label: 'Запуск и поддержка', desc: PLACEHOLDER_DESC },
+      { text: 'Vibe-code', hideNumber: true, desc: PLACEHOLDER_DESC },
+      { text: 'Поддержка', hideNumber: true, desc: PLACEHOLDER_DESC },
     ],
   },
   {

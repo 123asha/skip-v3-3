@@ -818,7 +818,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
         {/* Phone: both column counts under the title, circled «1» and «2» —
             the current one dark, the other grey; tap to switch */}
         {isMobile && (
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 12, margin: '0 0 32px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 6, margin: '0 0 32px' }}>
             {([1, 2] as const).map(n => (
               <button
                 key={n}

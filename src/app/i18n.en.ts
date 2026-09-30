@@ -54,7 +54,7 @@ export const EN: Record<string, string> = {
   'Экспертиза': 'Expertise',
   // Two lines on the page (a <br /> between them), so two text nodes
   'Готовим бренд к&nbsp;росту. Собираем системы.': 'We get brands ready to grow. We build systems.',
-  'Готовим бренд к\u00A0росту: от\u00A0стратегической идеи до\u00A0визуальной системы.': 'We get brands ready to grow: from the strategic idea to the visual system.',
+  'Готовим бренд к\u00A0росту: от\u00A0стратегической идеи до\u00A0визуальной системы': 'We get brands ready to grow: from the strategic idea to the visual system',
   'Передаем правила, по&nbsp;которым они работают.': 'We hand over the rules they run on.',
 
   // ── Cases ────────────────────────────────────────────────────────────────

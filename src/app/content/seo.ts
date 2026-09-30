@@ -55,7 +55,7 @@ const articleMeta = (i: Insight): PageMeta => ({
   title: `${i.desc} — ${SITE}`,
   description: lead(i),
   // Site path of the cover (strip the build's base, the page adds its own)
-  image: i.cover?.replace(import.meta.env.BASE_URL, '/'),
+  image: i.cover && !i.cover.endsWith('.mp4') ? i.cover.replace(import.meta.env.BASE_URL, '/') : undefined,
   type: 'article',
   published: iso(i.date),
   noindex: i.draft,

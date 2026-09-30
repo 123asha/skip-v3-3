@@ -167,12 +167,12 @@ export function InsightCards({ exclude, limit, flushBottom }: {
         >
           <div>
             <div style={{ position: 'relative', aspectRatio: '1 / 1', borderRadius: '50%', overflow: 'hidden', background: 'var(--c-surface)' }}>
-              {i === 0 ? (
-                // First insight: a looping clip instead of a still — it plays
-                // only while the card is hovered
+              {it.cover?.endsWith('.mp4') ? (
+                // A clip instead of a still when an insight's cover is a video
+                // — it plays only while hovered
                 <video
                   data-parallax=""
-                  src={asset('/brand-balls.mp4')}
+                  src={it.cover}
                   muted loop playsInline preload="auto"
                   style={{ position: 'absolute', left: '-30%', top: '-30%', width: '160%', height: '160%', objectFit: 'cover', willChange: 'transform' }}
                 />

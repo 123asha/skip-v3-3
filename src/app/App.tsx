@@ -701,6 +701,31 @@ function AppInner() {
     return () => window.removeEventListener('scroll', onScroll);
   }, [isMobile, page]);
 
+  // Phone home page: no pinch zoom (and no double-tap zoom). The viewport
+  // meta covers Android; iOS Safari ignores user-scalable=no, so its gesture
+  // events and two-finger moves are cancelled as well. Restored on leaving.
+  useEffect(() => {
+    if (!isMobile || page !== 'home') return;
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+    const prev = meta?.getAttribute('content') ?? null;
+    meta?.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    const html = document.documentElement;
+    const prevTouch = html.style.touchAction;
+    html.style.touchAction = 'pan-x pan-y';
+    const stopGesture = (e: Event) => e.preventDefault();
+    const stopTwoFinger = (e: TouchEvent) => { if (e.touches.length > 1) e.preventDefault(); };
+    document.addEventListener('gesturestart', stopGesture, { passive: false } as any);
+    document.addEventListener('gesturechange', stopGesture, { passive: false } as any);
+    document.addEventListener('touchmove', stopTwoFinger, { passive: false });
+    return () => {
+      if (meta && prev !== null) meta.setAttribute('content', prev);
+      html.style.touchAction = prevTouch;
+      document.removeEventListener('gesturestart', stopGesture);
+      document.removeEventListener('gesturechange', stopGesture);
+      document.removeEventListener('touchmove', stopTwoFinger);
+    };
+  }, [isMobile, page]);
+
 
   // Sound is wired directly at the elements that use it: logo hover, client
   // hover ("нам доверяют"). No global listeners.

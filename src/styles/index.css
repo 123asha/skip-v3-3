@@ -73,7 +73,9 @@
   --m-foot: 24px;
   --m-head-x: 16px;   /* header side margins — same as the content's */
   --m-chip-h: calc(var(--text-size) * var(--text-lh) + 16px);
-  --m-menu-bottom: var(--pad);
+  /* The whole bottom stack sits this much above the side padding */
+  --m-bottom-lift: 6px;
+  --m-menu-bottom: calc(var(--pad) + var(--m-bottom-lift));
   /* How the phone menu (and what rides above it) slides away and back:
      a soft start and a soft stop, a little unhurried */
   --m-menu-move: 0.65s cubic-bezier(0.45, 0, 0.2, 1);
@@ -294,8 +296,8 @@ html {
    bottom edge, and scrolling up brings the menu back */
 :root[data-nav-hidden] {
   --m-menu-bottom: calc(-1 * var(--m-chip-h) - 20px);
-  --m-above-menu: var(--pad);
-  --m-chips-bottom: var(--pad);
+  --m-above-menu: calc(var(--pad) + var(--m-bottom-lift));
+  --m-chips-bottom: calc(var(--pad) + var(--m-bottom-lift));
 }
 
 /* Phone ⊖ ⊕ (projects): bigger signs, spaced, with room around each tap */

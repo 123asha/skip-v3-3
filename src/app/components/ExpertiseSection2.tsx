@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { gsap } from 'gsap';
 import { MagneticDivider } from './MagneticDivider';
 import { useMobile } from '../hooks/useMobile';
 import { useRowReveal } from '../hooks/useRowReveal';
@@ -123,15 +124,9 @@ function AskButton({ service }: { service: string }) {
   );
 }
 
-// Phone: the arrow on a tappable row (no hover on touch) — the desktop's ⤴,
-// always shown, dark while the row is open
-const mobArrow = (open: boolean, glyph: React.ReactNode = '⤴') => (
-  <span aria-hidden="true" style={{
-    flexShrink: 0, opacity: open ? 1 : 'var(--opacity-muted)' as any,
-    transition: 'opacity 0.3s ease',
-    fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)',
-  }}>{glyph}</span>
-);
+// The home heading over the table (non-breaking spaces keep the short words
+// with their neighbours)
+const HEADING = 'Готовим бренд к\u00A0росту: от\u00A0стратегической идеи до\u00A0визуальной системы.';
 
 /** Home → services: the sub-group clicked on the home table, opened on arrival */
 const OPEN_KEY = 'svc-open';
@@ -232,17 +227,41 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
   const rootRef = useRef<HTMLDivElement>(null);
   useRowReveal(rootRef, '[data-exp-row]');
 
+  // The heading's words rise in once, when it scrolls into view
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    const h = headingRef.current;
+    if (!h) return;
+    const words = Array.from(h.querySelectorAll<HTMLElement>('[data-h-word]'));
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { gsap.set(words, { opacity: 1 }); return; }
+    gsap.set(words, { opacity: 0, y: 18 });
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      gsap.to(words, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out', stagger: 0.05, clearProps: 'transform,willChange' });
+    }, { threshold: 0.4 });
+    io.observe(h);
+    return () => io.disconnect();
+  }, [showHeading]);
+
   return (
     <div ref={rootRef} className={s.section} style={{ marginTop: 'var(--space-xl)' }}>
       {showHeading && (
-        <h2 style={{
+        <h2 ref={headingRef} style={{
           ...H2_STYLE,
           margin: 0,
           marginBottom: isMobile ? 40 : 60,
           maxWidth: isMobile ? '100%' : '50vw',
           textAlign: isMobile ? 'center' : undefined,
         }}>
-          Готовим бренд к&nbsp;росту. Собираем системы.<br />Передаем правила, по&nbsp;которым они работают.
+          {/* Word by word, rising in as the heading scrolls into view — on the
+              phone too. Translated first: the words are split after that. */}
+          {t(HEADING).split(' ').map((w, k, arr) => (
+            <span key={k}>
+              <span data-h-word="" style={{ display: 'inline-block', opacity: 0, willChange: 'transform, opacity' }}>{w}</span>
+              {k < arr.length - 1 ? ' ' : ''}
+            </span>
+          ))}
         </h2>
       )}
 
@@ -402,14 +421,12 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                   // category name's line; a tappable one shows its arrow
                   <div style={{ ...cellFade, paddingLeft: MOB_L1, display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                     <p style={itemStyle}>{row.itemIndex}</p>
-                    {onRowClick && mobArrow(openGroup === row.groupKey, onAllServices ? <CircleArrow style={{ verticalAlign: '-0.15em' }} /> : undefined)}
                   </div>
                 ) : (
                   // A service 20px further in, its description 20px more
                   <div style={{ ...cellFade, paddingLeft: `calc(${MOB_L1} + 20px)` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                       <p style={itemStyle}>{typo(row.text)}</p>
-                      {onRowClick && mobArrow(isItemOpen, onAllServices ? <CircleArrow style={{ verticalAlign: '-0.15em' }} /> : undefined)}
                     </div>
                     <div style={{ paddingLeft: 20 }}>{descPanel}</div>
                   </div>
@@ -486,7 +503,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
         // Same visible gap as above «больше проектов» on the home page (76px
         // from the last line of text; the last row adds its own 12px padding).
         // Phone: nearer the table than the next block
-        <div style={{ marginTop: isMobile ? 'var(--space-sm)' : 64, display: 'flex', justifyContent: isMobile ? 'center' : 'flex-start' }}>
+        <div style={{ marginTop: isMobile ? 'var(--space-btn)' : 64, display: 'flex', justifyContent: isMobile ? 'center' : 'flex-start' }}>
           <PillButton onClick={() => onAllServices()}>все услуги</PillButton>
         </div>
       )}

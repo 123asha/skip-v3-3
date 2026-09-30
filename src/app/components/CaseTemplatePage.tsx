@@ -915,14 +915,13 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
           );
         })()}
 
-        {/* Phone: grey button over the menu — «о проекте →» from the pictures,
-            «← скипнуть описание» back from the copy (the arrow says the page
+        {/* Phone: a tab over the menu — «о проекте» from the pictures,
+            «скипнуть описание» back from the copy (the arrows say the page
             slides sideways, as a swipe does). Shown all the way down, until
             the contact form comes up */}
         {isMobile && createPortal(
           <div style={{
-            // The regular button (as «больше проектов»), centred on the screen;
-            // the wrapper passes taps through around it
+            // A full-width tab, centred; the wrapper passes taps through around it
             position: 'fixed', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 205,
             // 10px above the bottom menu
             bottom: 'var(--m-above-menu)',
@@ -931,16 +930,25 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             pointerEvents: 'none',
             transition: 'opacity 0.3s ease, transform 0.3s ease, bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
           }}>
-            <PillButton style={{ pointerEvents: formInView ? 'none' : 'auto' }} onClick={() => showPane(!aboutPane)}>
-              {/* Arrows at the button's own edges — back on the left, forward
-                  on the right; an empty slot of the same width on the other
-                  side keeps the label centred */}
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-                <span style={{ width: 12, display: 'flex' }}>{aboutPane && <SideArrow left />}</span>
-                <span>{aboutPane ? 'скипнуть описание' : 'о проекте'}</span>
-                <span style={{ width: 12, display: 'flex' }}>{!aboutPane && <SideArrow />}</span>
-              </span>
-            </PillButton>
+            {/* A tab the width of the menu row below it, drawn like the menu's
+                chips: an arrow at each edge, the one you can go by dark, the
+                other greyed out — forward from the pictures, back from the copy */}
+            <button
+              onClick={() => showPane(!aboutPane)}
+              style={{
+                pointerEvents: formInView ? 'none' : 'auto',
+                width: 'calc(100% - 2 * var(--pad))', boxSizing: 'border-box',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '7px 14px 8px', border: '1px solid var(--c-border)', borderRadius: 999,
+                background: 'var(--c-bg)', color: 'var(--c-text)', cursor: 'pointer',
+                fontFamily: 'var(--font)', fontSize: 'var(--text-size)', fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+                lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)',
+              }}
+            >
+              <span aria-hidden="true" style={{ display: 'flex', color: aboutPane ? 'var(--c-text)' : 'var(--c-border)', transition: 'color 0.3s ease' }}><SideArrow left /></span>
+              <span>{aboutPane ? 'скипнуть описание' : 'о проекте'}</span>
+              <span aria-hidden="true" style={{ display: 'flex', color: aboutPane ? 'var(--c-border)' : 'var(--c-text)', transition: 'color 0.3s ease' }}><SideArrow /></span>
+            </button>
           </div>,
           document.body,
         )}

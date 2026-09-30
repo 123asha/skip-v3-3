@@ -173,6 +173,10 @@
     --space-md: 32px;
     --space-sm: 20px;
     --space-xs: 12px;
+    /* Above a block's closing button («больше проектов», «все услуги»): half
+       the gap that follows it (--space-xl), so the button clearly belongs to
+       the block above — without sticking to it */
+    --space-btn: calc(var(--space-xl) / 2);
     /* Inner pages: the title gets its own row under the header, and the
        content starts one --space-md below it — the same on every page */
     /* 40px over the page title and 40px under it; the title's own height is

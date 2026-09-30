@@ -62,6 +62,8 @@ export interface CaseCardProps {
    *  through the viewport maps onto the clip's timeline, so it opens up as the
    *  page moves. Desktop only; touch gets plain autoplay. */
   scrubVideo?: string;
+  /** Phone: a 4:5 frame even one per row (the default there is a square) */
+  tall?: boolean;
   /** Force round or square instead of the title-hash default — used where a
    *  page needs to control exactly how many/which cards are round */
   round?: boolean;
@@ -85,7 +87,7 @@ const servicesStyle: React.CSSProperties = {
 };
 
 export default function CaseCard({
-  ar, title, desc, services, showCats, servicesSize, metaSize, image: rawImage, preview, video: rawVideo, onClick, linkLabel = 'Перейти', hideMeta = false, hideImage = false, aspect, scrubVideo, round, stackMeta,
+  ar, title, desc, services, showCats, servicesSize, metaSize, image: rawImage, preview, video: rawVideo, onClick, linkLabel = 'Перейти', hideMeta = false, hideImage = false, aspect, scrubVideo, round, stackMeta, tall,
 }: CaseCardProps) {
   // Per-card caption style — size overridable so it scales with the grid zoom.
   const svcStyle: React.CSSProperties = servicesSize != null
@@ -236,7 +238,7 @@ export default function CaseCard({
     return (
       <div className={s.card} onClick={onClick}>
         {/* Two per row: every picture 4:5, so the rows line up */}
-        <div className={`${s.cardImage}${stackMeta ? ` ${s.cardTall}` : ''}`} style={{ aspectRatio: ar, width: '100%', flex: 'none', ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}>
+        <div className={`${s.cardImage}${stackMeta || tall ? ` ${s.cardTall}` : ''}`} style={{ aspectRatio: ar, width: '100%', flex: 'none', ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}>
           {image && <img src={image} alt={title} loading="lazy" />}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: stackMeta ? '1fr' : 'minmax(90px, 1fr) minmax(0, 3fr)', gap: stackMeta ? 0 : 'var(--gap)', alignItems: 'flex-start', paddingTop: 10 }}>

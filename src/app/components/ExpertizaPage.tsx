@@ -591,7 +591,7 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
         group.append(circle, ...lights, face);
         svg.appendChild(group);
 
-        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group, lockX, floatX: float ? x : undefined, floatY: float ? H * 0.42 : undefined, text, spin: 0, drawnX: x, shape, lights });
+        ballsRef.current.push({ num: i + 1, x, y, vx, vy, r, group, lockX, floatX: float ? x : undefined, floatY: float ? H * (window.innerWidth <= 768 ? 0.5 : 0.42) : undefined, text, spin: 0, drawnX: x, shape, lights });
       }
     } else if (!hovered && ballsRef.current.length > 0) {
       ballsRef.current.forEach(b => {

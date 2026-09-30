@@ -1532,8 +1532,8 @@ function AppInner() {
         {/* Straight to the full list — same pill as «написать нам», in grey.
             100px under the last row of cases; the section below keeps the
             usual --space-xl gap of its own. */}
-        {/* Phone: nearer the cases than the next block */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: isMobile ? 'var(--space-sm)' : 100 }}>
+        {/* Phone: --space-btn — half the gap to the next block (see index.css) */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: isMobile ? 'var(--space-btn)' : 100 }}>
           <PillButton onClick={() => navigateWithExit('/cases')}>больше проектов</PillButton>
         </div>
 

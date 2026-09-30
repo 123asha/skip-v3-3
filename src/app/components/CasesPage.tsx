@@ -278,9 +278,9 @@ function mobileColSpan(idx: number): string {
 }
 
 // ── ProjectCard ───────────────────────────────────────────────────────────────
-function ProjectCard({ ar, cats, title, desc, image, preview, video, onClick, servicesSize, metaSize, hideMeta, hideImage, round, stackMeta }: Project & { onClick?: () => void; servicesSize?: string | number; metaSize?: string | number; hideMeta?: boolean; hideImage?: boolean; round?: boolean; stackMeta?: boolean }) {
+function ProjectCard({ ar, cats, title, desc, image, preview, video, onClick, servicesSize, metaSize, hideMeta, hideImage, round, stackMeta, hideCats, tall }: Project & { hideCats?: boolean; tall?: boolean; onClick?: () => void; servicesSize?: string | number; metaSize?: string | number; hideMeta?: boolean; hideImage?: boolean; round?: boolean; stackMeta?: boolean }) {
   return (
-    <CaseCard ar={ar} title={title} desc={desc} services={catLine(cats)} showCats servicesSize={servicesSize} metaSize={metaSize} hideMeta={hideMeta} hideImage={hideImage} image={image} preview={preview} video={video} onClick={onClick} round={round} stackMeta={stackMeta} />
+    <CaseCard ar={ar} title={title} desc={desc} services={hideCats ? undefined : catLine(cats)} showCats servicesSize={servicesSize} metaSize={metaSize} hideMeta={hideMeta} hideImage={hideImage} image={image} preview={preview} video={video} onClick={onClick} round={round} stackMeta={stackMeta} tall={tall} />
   );
 }
 
@@ -829,7 +829,9 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
               >
                 <svg width="24" height="24" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                   <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1" />
-                  <text x="8" y="8" textAnchor="middle" dominantBaseline="central" fill="currentColor" fontSize="9" fontFamily="var(--font)">{n}</text>
+                  {/* Centred by a fixed shift (dy), not dominant-baseline — iOS Safari
+                      places «central» differently and the digit sat off-centre */}
+                  <text x="8" y="8" dy="0.35em" textAnchor="middle" fill="currentColor" fontSize="7.5" fontFamily="var(--font)" style={{ fontVariantNumeric: 'lining-nums tabular-nums' }}>{n}</text>
                 </svg>
               </button>
             ))}
@@ -871,7 +873,8 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
             filteredProjects.map(project => (
               <div key={project.id} data-case-card="" style={{ minWidth: 0 }}>
                 {/* Two columns: the caption stacks (name over description) */}
-                <ProjectCard {...project} stackMeta={mobCols === 2} onClick={() => onCaseClick?.(project.href)} />
+                {/* Phone: every preview 4:5, one or two a row; no category line */}
+                <ProjectCard {...project} ar={V} tall hideCats stackMeta={mobCols === 2} onClick={() => onCaseClick?.(project.href)} />
               </div>
             ))
           ) : (

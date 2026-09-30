@@ -9,6 +9,7 @@ import LinkFlip from './LinkFlip';
 import { sound } from '../sound/Sound';
 import { MagneticDivider } from './MagneticDivider';
 import PillButton from './PillButton';
+import { LANG } from '../i18n';
 import ContactForm from './ContactForm';
 import { asset } from '../utils/asset';
 import { usePinchSteps } from '../hooks/usePinchSteps';
@@ -567,7 +568,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
           ...(isMobile ? null : { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', columnGap: 'var(--gap)' }),
         }}>
           <div style={isMobile ? undefined : { gridColumn: '4 / 6' }}>
-            <p style={{ ...headingStyle, margin: 0 }}>Над проектом работали</p>
+            <p style={{ ...headingStyle, margin: 0 }}>Спасибо команде</p>
             {/* A table like the services one: name | role, a hairline above
                 every row and under the last — same on every screen */}
             <div style={{ marginTop: isMobile ? 'var(--space-sm)' : 40, borderBottom: '1px solid var(--c-border)' }}>
@@ -580,12 +581,16 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                   <p style={{ ...textStyle, margin: 0 }}>{role}</p>
                 </div>
               ))}
+              {/* The table always closes with the client's own team */}
+              <div style={{ padding: '10px 0', borderTop: '1px solid var(--c-border)' }}>
+                <p style={{ ...textStyle, margin: 0 }}>{LANG === 'en' ? `${data.title} team` : `Команда ${data.title}`}</p>
+              </div>
             </div>
           </div>
         </div>
 
         {/* ── Testimonial — only when the case provides one. Quote is h2; below
-              it a small avatar circle + name/role + one phrase. ── */}
+              it the name and the role — no photo on any screen. ── */}
         {data.testimonial && (
         <div style={{ marginTop: 120, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
           {/* The size of the home headline; phones: the heading size */}
@@ -594,8 +599,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             {data.testimonial.quote}
           </p>
           {/* Name, then the position in grey — centred under the quote */}
-          <div style={{ marginTop: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? 12 : 4 }}>
-            {isMobile && <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--c-surface)' }} />}
+          <div style={{ marginTop: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
             <p style={{ ...textStyle, margin: 0 }}>{data.testimonial.name}</p>
             <p style={{ ...textStyle, margin: 0, opacity: 'var(--opacity-muted)' }}>{data.testimonial.role}</p>
           </div>

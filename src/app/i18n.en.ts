@@ -89,6 +89,7 @@ export const EN: Record<string, string> = {
   'Описание': 'Description',
   'Только картинки': 'Images only',
   'Над проектом работали:': 'Team:',
+  'Спасибо команде': 'Thanks to the team',
   'новый проект': 'new project',
   'сайт': 'website',
   'Финтех': 'Fintech',

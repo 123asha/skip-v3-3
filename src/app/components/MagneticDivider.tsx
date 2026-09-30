@@ -51,6 +51,7 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
     };
 
     let lastD = '';
+    let onStroke = false;
     const render = () => {
       const d = getD();
       // Written only when it changed — a fresh `d` every frame dirties the
@@ -66,10 +67,13 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
       // that is what made neighbouring dividers read as different greys. A
       // block element goes through one and the same rounding everywhere. The
       // stroke takes over only while the cursor bends the line.
-      // Hand over to the SVG stroke only once the line is visibly bent. Both
-      // layers cross-fade (see their CSS transition), so the divider never
-      // blinks out while the elastic settles back to straight.
-      const bent = Math.abs(p1.current.y) > 0.5;
+      // Hand over to the SVG stroke once the line is visibly bent, and back
+      // only when it has fully come to rest — not every time the elastic
+      // swings through straight, or the two layers trade places several times
+      // in a row and the divider blinks.
+      if (Math.abs(p1.current.y) > 0.5) onStroke = true;
+      else if (onStroke && !live.current && Math.abs(p1.current.y) < 0.01 && !gsap.isTweening(p1.current)) onStroke = false;
+      const bent = onStroke;
       if (line) {
         line.style.opacity = bent ? '0' : '1';
         path.style.opacity = bent ? '1' : '0';

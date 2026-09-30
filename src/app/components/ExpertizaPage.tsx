@@ -776,19 +776,6 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
 function Tile({ index, text, gap }: { index: number; text: string; gap: number }) {
   const isMobile = useMobile();
   const [hovered, setHovered] = useState(false);
-  // How far the caption block sits lowered at rest: the button's height plus
-  // the tile's 15px margin, so the button hides just below the edge
-  const btnRef = useRef<HTMLDivElement>(null);
-  const [liftPx, setLiftPx] = useState(60);
-  useLayoutEffect(() => {
-    const el = btnRef.current;
-    if (!el) return;
-    const measure = () => setLiftPx(el.offsetHeight + 15);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [isMobile]);
   // Phones have no hover: the balls come in by themselves once the tile is
   // on screen — tile after tile, quickly
   const tileRef = useRef<HTMLDivElement>(null);
@@ -824,23 +811,25 @@ function Tile({ index, text, gap }: { index: number; text: string; gap: number }
           {typo(text)}
         </p>
       ) : (
-        // Desktop: the caption at the bottom; on hover a black «Узнать
-        // подробнее» rides up from under the tile's edge and lifts it
-        <div style={{
-          position: 'absolute', left: 15, bottom: 15, zIndex: 1,
-          width: `calc((4 * 100% - ${gap}px) / 5)`,
-          transform: hovered ? 'none' : `translateY(${liftPx}px)`,
-          transition: 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)',
-        }}>
-          {/* Two lines everywhere, so a shorter caption still occupies the
-              same block and all four line up */}
-          <p style={{ ...ts, margin: 0, minHeight: 'calc(2 * var(--text-size) * var(--text-lh))' }}>{typo(text)}</p>
-          <div ref={btnRef} style={{ paddingTop: 15 }}>
+        <>
+          {/* Desktop: the caption at the bottom — two lines everywhere, so a
+              shorter one still occupies the same block and all four line up */}
+          <p style={{ ...ts, position: 'absolute', left: 15, bottom: 15, margin: 0, zIndex: 1, width: `calc((4 * 100% - ${gap}px) / 5)`, minHeight: 'calc(2 * var(--text-size) * var(--text-lh))' }}>
+            {typo(text)}
+          </p>
+          {/* On hover a black «Узнать подробнее» rises into the middle of the tile */}
+          <div style={{
+            position: 'absolute', left: '50%', top: '50%', zIndex: 2,
+            transform: `translate(-50%, -50%) translateY(${hovered ? 0 : 12}px)`,
+            opacity: hovered ? 1 : 0,
+            pointerEvents: hovered ? 'auto' : 'none',
+            transition: 'opacity 0.3s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)',
+          }}>
             <PillButton variant="primary" compact onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
               Узнать подробнее
             </PillButton>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

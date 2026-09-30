@@ -441,6 +441,12 @@ input::placeholder {
     margin-right: calc(-1 * var(--m-bleed));
     width: calc(100% + 2 * var(--m-bleed)) !important;
   }
+  /* A case page's pictures: the same bleed as the previews */
+  [data-case-img] {
+    margin-left: calc(-1 * var(--m-bleed));
+    margin-right: calc(-1 * var(--m-bleed));
+    width: calc(100% + 2 * var(--m-bleed)) !important;
+  }
   /* Two a row: no bleed — the pictures keep to the text's width */
   [data-mob-cols="2"] > [data-case-card] [class*="cardImage"] {
     margin-left: 0;

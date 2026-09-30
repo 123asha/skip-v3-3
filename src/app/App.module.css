@@ -693,6 +693,18 @@
      between each, the row edge to edge — the current one just outlined dark */
   .navLinks { flex: none; width: calc(100% - 2 * var(--pad)); background: none; padding: 0; gap: 10px; height: auto; }
   .navLinks > span { flex: 1 1 0; min-width: 0; }
+  /* A light dotted line links neighbouring chips across the gap — as the
+     filter chips on the projects page (Брендинг · Продукт · Веб) */
+  .navLinks > span { position: relative; }
+  .navLinks > span + span::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 100%;
+    width: 10px;
+    border-top: 1px dotted var(--c-text-muted);
+    pointer-events: none;
+  }
   .navLinks > span > .navLink { width: 100%; justify-content: center; text-align: center; box-sizing: border-box; }
   .navLinks .navLink {
     text-decoration: none;

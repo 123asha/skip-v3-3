@@ -1091,6 +1091,21 @@ function AppInner() {
         {/* «Написать» — the word turns into "telegram" on hover, which is
             where it leads */}
         <span className={s.navWrite} style={{ display: 'inline-flex' }}>
+          {/* Desktop: a plain link like its neighbours, the ↗ saying it
+              leaves the site. Phone keeps the black pill. */}
+          {!isMobile ? (
+            <a
+              href="https://t.me/skpdsgn"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={s.navLink}
+              onMouseEnter={() => sound.play('hover')}
+              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'baseline', gap: '0.3em', whiteSpace: 'nowrap' }}
+            >
+              <LinkFlip flat>Написать</LinkFlip>
+              <span aria-hidden="true">↗</span>
+            </a>
+          ) : (
           <a
             href="https://t.me/skpdsgn"
             target="_blank"
@@ -1117,6 +1132,7 @@ function AppInner() {
               ))}
             </span>
           </a>
+          )}
         </span>
       </nav>
 

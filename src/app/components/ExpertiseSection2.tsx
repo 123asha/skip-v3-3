@@ -355,7 +355,9 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
             const divider = showDivider ? (
               <MagneticDivider flat={isMobile} />
             ) : showItemDivider ? (
-              <MagneticDivider flat={isMobile} />
+              // A service's line starts where its sub-group's name does (the
+              // third column; on a phone the name's indent), not at the edge
+              <MagneticDivider flat={isMobile} inset={isMobile ? MOB_L1 : 'calc((100% - 4 * var(--gap)) / 5 * 2 + 2 * var(--gap))'} />
             ) : null;
             // Hover affordance for a clickable row — placed by the caller, one
             // column to the left of whatever words the row carries.

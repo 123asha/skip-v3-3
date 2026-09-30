@@ -1,7 +1,8 @@
 import { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 
-export function MagneticDivider({ color = 'var(--c-border)', active = false, dotted = false, flat = false }: { color?: string; active?: boolean; dotted?: boolean; flat?: boolean }) {
+/** `inset` — where the line starts, as a CSS length from the row's left edge */
+export function MagneticDivider({ color = 'var(--c-border)', active = false, dotted = false, flat = false, inset }: { color?: string; active?: boolean; dotted?: boolean; flat?: boolean; inset?: string }) {
   const svgRef  = useRef<SVGSVGElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
   const hitRef  = useRef<SVGPathElement>(null);
@@ -31,11 +32,22 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
       return CY + (aligned - screenY) / scale;
     };
 
+    // The bent stroke has to cover exactly the device pixels the resting 1px
+    // border does, or the line visibly thins the moment the cursor picks it
+    // up. A border is snapped down to whole device pixels (never below one)
+    // and hangs below the row's top edge; a stroke is centred on its path and
+    // keeps its fractional width. So: same whole-pixel thickness, and the
+    // path lowered by half of it.
+    let strokeW = 1;
     const getD = () => {
       const r = svg.getBoundingClientRect();
-      const w = r.width || 800;
-      const cy = snap(r);
-      return `M0,${cy} Q${w / 2},${cy + p1.current.y} ${w},${cy}`;
+      const w = (r.width || 800);
+      const dpr = window.devicePixelRatio || 1;
+      const scale = r.height ? r.height / 20 : 1;
+      strokeW = Math.max(1, Math.floor(scale * dpr + 1e-3)) / (scale * dpr);
+      const lw = w / scale;
+      const cy = snap(r) + strokeW / 2;
+      return `M0,${cy} Q${lw / 2},${cy + p1.current.y} ${lw},${cy}`;
     };
 
     const render = () => {
@@ -55,12 +67,7 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
       if (line) {
         line.style.opacity = bent ? '0' : '1';
         path.style.opacity = bent ? '1' : '0';
-        if (bent) {
-          // Match the stroke to the resting border, or the line visibly thins
-          // out the moment the cursor picks it up.
-          const bw = getComputedStyle(line).borderTopWidth;
-          if (bw) path.style.strokeWidth = bw;
-        }
+        if (bent) path.style.strokeWidth = `${strokeW}`;
         if (!bent) {
           // Only the position is snapped here — the thickness is a plain 1px
           // CSS border (see the element below), which the browser rounds the
@@ -136,8 +143,8 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
         display: 'block',
         position: 'absolute',
         top: 0,
-        left: 0,
-        width: '100%',
+        left: inset ?? 0,
+        width: inset ? `calc(100% - ${inset})` : '100%',
         height: 0,
         // 1px CSS border, not a 1px box: with the page's `zoom` the browser
         // rounds border widths uniformly, so every divider ends up the same
@@ -158,8 +165,8 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
         // itself — the next row's divider never steals clicks from this one.
         position: 'absolute',
         top: 0,
-        left: 0,
-        width: '100%',
+        left: inset ?? 0,
+        width: inset ? `calc(100% - ${inset})` : '100%',
         height: 20,
         overflow: 'visible',
         pointerEvents: flat ? 'none' : 'all',
@@ -173,6 +180,10 @@ export function MagneticDivider({ color = 'var(--c-border)', active = false, dot
         fill="none"
         strokeLinecap={dotted ? 'round' : undefined}
         strokeDasharray={dotted ? '0.1 4' : undefined}
+        // Whole device pixels, like the resting border: an anti-aliased curve
+        // spreads the same ink over more rows and the line reads thinner and
+        // lighter the moment it bends
+        shapeRendering={dotted ? undefined : 'crispEdges'}
         style={{ stroke: active ? 'var(--c-text)' : color, strokeWidth: '1', opacity: 0, transition: 'stroke 0.2s ease' }}
       />
       <path ref={hitRef}  d="" fill="none" stroke="transparent" strokeWidth={20} />

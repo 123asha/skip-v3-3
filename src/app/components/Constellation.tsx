@@ -310,6 +310,8 @@ export default function Constellation({
     let travelUp = 0, travelDown = 0;
     let returning = false;
     const readScroll = () => {
+      // An inner page's own scroll isn't the hero's business
+      if (coveredByPage()) return;
       wake();
       const el = scrollSource?.();
       const y = el ? el.scrollTop : (window.scrollY || document.documentElement.scrollTop || 0);
@@ -580,7 +582,11 @@ export default function Constellation({
       if (audioCtx && audioCtx.state !== 'running') audioCtx.resume().catch(() => {});
     }
 
+    // The home page stays mounted under the inner pages (they open over it):
+    // while one is open, the hero is out of sight — silent and unmoved
+    const coveredByPage = () => !!document.querySelector('[class*="_page_"]');
     function playKnock(strength: number) {
+      if (coveredByPage()) return;
       if (!audioCtx && sound) audioCtx = sharedAudio();
       if (audioCtx && audioCtx.state === 'running') knock(audioCtx, strength);
     }

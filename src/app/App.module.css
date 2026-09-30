@@ -195,14 +195,17 @@
      the left rather than squeezing them. --nav-sb: the inner pages'
      scrollbar gutter, which their grid doesn't include. */
   .nav.navBoxed {
-    top: var(--pad);
+    /* Plain text now (no pill), so it follows the header rule: its lowercase
+       sits on the logo's top line (--logo-top), which puts the capitals 20px
+       from the top — the same 20px as the side margin */
+    top: calc(var(--logo-top) - 0.4465 * var(--text-size));
     gap: var(--nav-gap);
     min-width: calc((100% - var(--nav-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5);
   }
   .navBoxed .navWrite { margin-left: auto; }
   /* No grey box behind the links on desktop — plain text, and «Написать»
      one link-gap after the last of them */
-  .navBoxed .navLinks { background: none; padding: 0; }
+  .navBoxed .navLinks { background: none; padding: 0; height: auto; }
 }
 
 /* Boxed menu: the section links sit in a grey rectangle, «Написать» beside

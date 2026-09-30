@@ -126,7 +126,7 @@ function AskButton({ service }: { service: string }) {
 
 // The home heading over the table (non-breaking spaces keep the short words
 // with their neighbours)
-const HEADING = 'Готовим бренд к\u00A0росту: от\u00A0стратегической идеи до\u00A0визуальной системы.';
+const HEADING = 'Готовим бренд к\u00A0росту: от\u00A0стратегической идеи до\u00A0визуальной системы';
 
 /** Home → services: the sub-group clicked on the home table, opened on arrival */
 const OPEN_KEY = 'svc-open';

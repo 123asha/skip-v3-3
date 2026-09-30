@@ -1111,7 +1111,8 @@ function AppInner() {
               style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'baseline', gap: '0.3em', whiteSpace: 'nowrap' }}
             >
               <LinkFlip flat>Написать</LinkFlip>
-              <CircleArrow style={{ alignSelf: 'center' }} />
+              {/* 1px below the box's centre — the optical centre of the lowercase line */}
+              <CircleArrow style={{ alignSelf: 'center', position: 'relative', top: 1 }} />
             </a>
           ) : (
           <a

@@ -768,7 +768,8 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
             bottom-left corner, beside the language switch */}
         <div className={s.tabsRow}>
           <div ref={tabsRowRef} className={s.tabsBarInner}>
-            {TABS.map(tab => (
+            {/* Phone: Веб before Продукт */}
+            {(isMobile ? [TABS[0], TABS[2], TABS[1]] : TABS).map(tab => (
               <button
                 key={tab.key}
                 data-tab-active={activeTab === tab.key}

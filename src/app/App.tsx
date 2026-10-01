@@ -478,6 +478,17 @@ function AppInner() {
              : pathname === '/404' || !KNOWN_PATHS.includes(pathname) ? 'notfound'
              : 'home';
 
+  // Phone: a tap on any link or button (menu, «Написать», pills…) clicks
+  // with the same sound a desktop hover gets
+  useEffect(() => {
+    const onTap = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return;
+      if ((e.target as Element | null)?.closest?.('a, button')) sound.play('hover');
+    };
+    window.addEventListener('pointerdown', onTap, { capture: true, passive: true });
+    return () => window.removeEventListener('pointerdown', onTap, true);
+  }, []);
+
   // Search / share tags for the page on screen (content/seo.ts)
   useEffect(() => { applyPageMeta(pageMetaFor(pathname)); }, [pathname]);
 

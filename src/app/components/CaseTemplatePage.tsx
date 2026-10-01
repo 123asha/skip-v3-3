@@ -182,7 +182,7 @@ function MetaRow({
       {num && <p style={{ ...textStyle, opacity: 'var(--opacity-muted)', position: 'absolute', left: '50%', top: 0, margin: 0, transform: 'translateX(-50%)', whiteSpace: 'nowrap', color: 'inherit' }}>{num}</p>}
       {/* Exactly one column wide — no loose max-width that straddles the grid.
           Narrow desktops: a step down, clear of the menu on this line */}
-      <div style={{ gridColumn: '4 / 5', marginTop: narrow ? 'calc(var(--text-size) * var(--text-lh) + 24px)' : 0 }}>
+      <div style={{ gridColumn: narrow ? '4 / 6' : '4 / 5', marginTop: narrow ? 'calc(var(--text-size) * var(--text-lh) + 24px)' : 0 }}>
         {text.split('\n\n').map((para, k) => (
           <p key={k} style={{ ...textStyle, margin: 0, marginTop: k === 0 ? 0 : PARA_GAP, color: 'inherit' }}>{typo(para)}</p>
         ))}

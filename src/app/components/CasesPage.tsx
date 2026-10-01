@@ -831,7 +831,17 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
                 key={n}
                 aria-label={n === 1 ? 'Одна колонка' : 'Две колонки'}
                 aria-pressed={mobCols === n}
-                onClick={() => setMobCols(n)}
+                onClick={() => {
+                  if (n === mobCols) return;
+                  // Soft switch: the grid fades out, re-lays itself, fades back in
+                  const grid = document.querySelector<HTMLElement>('[data-mob-cols]');
+                  if (!grid) { setMobCols(n); return; }
+                  gsap.killTweensOf(grid);
+                  gsap.to(grid, { opacity: 0, y: 10, duration: 0.18, ease: 'power2.in', onComplete: () => {
+                    setMobCols(n);
+                    requestAnimationFrame(() => gsap.fromTo(grid, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out', clearProps: 'transform' }));
+                  } });
+                }}
                 style={{ background: 'none', border: 'none', padding: 4, margin: -4, color: mobCols === n ? 'var(--c-text)' : 'var(--c-text-muted)', cursor: 'pointer', display: 'flex', transition: 'color 0.2s' }}
               >
                 <svg width="24" height="24" viewBox="0 0 16 16" fill="none" aria-hidden="true">

@@ -1435,9 +1435,9 @@ function AppInner() {
               letterSpacing: 'var(--text-ls)', lineHeight: 'var(--text-lh)',
             }}
           >
-            {/* Only the language to switch to, grey — as on desktop. A bigger
-                tap area (12px all round), the text where it was */}
-            <a href={otherLangHref(pathname)} style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35, padding: 12, margin: -12, display: 'inline-block' }}>{LANG === 'en' ? '/ru' : '/en'}</a>
+            {/* The sound switch beside the logo (the language moved to the
+                page's last line, MobileFooter) */}
+            <SoundIcon />
           </div>
           {/* «Skip Design» in the middle of the header on every page, on the
               logo's line */}

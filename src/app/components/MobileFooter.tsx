@@ -1,10 +1,9 @@
 import SocialLinks from './SocialLinks';
-import SoundIcon from '../sound/SoundIcon';
 import { useMobile } from '../hooks/useMobile';
-import { LANG_PREFIX } from '../i18n';
+import { LANG, LANG_PREFIX, otherLangHref, stripLang } from '../i18n';
 
 /**
- * Phone footer — the sound switch and the privacy policy on the left, social
+ * Phone footer — the language switch and the privacy policy on the left, social
  * on the right, as the page's last line (it scrolls with the page, not
  * pinned). The space under it keeps it clear of the menu chips pinned at the
  * bottom of the screen.
@@ -32,7 +31,8 @@ export default function MobileFooter() {
       lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)', color: 'var(--c-text-muted)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <SoundIcon />
+        {/* The language to switch to (the sound switch sits in the header) */}
+        <a href={otherLangHref(stripLang(location.pathname.replace(import.meta.env.BASE_URL.replace(/\/$/, ''), '').replace(/\/$/, '') || '/'))} style={{ color: 'inherit', textDecoration: 'none', padding: 10, margin: -10 }}>{LANG === 'en' ? '/ru' : '/en'}</a>
         <a href="/policy" onClick={toPolicy} style={{ color: 'inherit', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}>
           Политика конфиденциальности
         </a>

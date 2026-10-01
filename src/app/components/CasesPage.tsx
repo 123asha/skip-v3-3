@@ -55,6 +55,7 @@ export const PROJECTS: Project[] = [
   { id: 8, preview: asset('/preview-pocket.avif'),  subs: ['design', 'uxui', 'productStrategy'], cats: ['branding', 'sites', 'instruments'],                   ...img('/case2-v.webp'), title: 'Gate Legal',     year: '2024', desc: 'Помогли запуститься: от платформы бренда до сайта — за полтора месяца.' },
   { id: 9, preview: asset('/preview-phone.webp'),  subs: ['tools', 'uxui'], cats: ['interfaces', 'instruments'],             ...img('/case3-h.webp'), title: 'AliExpress',     year: '2026', desc: 'Тысячи партнёров AliExpress в одном дашборде' },
   { id: 10, preview: asset('/preview-coffee.webp'), subs: ['architecture', 'nocode', 'uxui'], cats: ['sites', 'interfaces', 'instruments'],    ...img('/case4-v.webp'), title: 'Binaroom',       year: '2025', desc: '3D-проекты превращаются в сметы и КП за минуту' },
+  { id: 11, preview: asset('/preview-case4.webp'), subs: ['design', 'nocode'], cats: ['branding', 'sites'], ...img('/case4-v.webp'), title: "Kon' Ogon'", year: '2025', desc: 'Новогодний спецпроект Конь Огонь от студии Skip Design' },
 ];
 
 // Grey category line in each card's description spot (gives way on hover): the case's filter categories, one or
@@ -211,8 +212,8 @@ const LEAD_IDS = [1, 2, 4, 3];
 // Always last on the page
 const LAST_IDS = [10];
 // Cases pinned to a place in the list (1-based): Senior*s bar fifth,
-// Gate Legal sixth
-const FIXED_POS: Record<number, number> = { 7: 5, 8: 6 };
+// Gate Legal sixth, Kon' Ogon' eighth
+const FIXED_POS: Record<number, number> = { 7: 5, 8: 6, 11: 8 };
 // The page order: lead cases first, the rest, Binaroom last, pinned ones in their place
 function orderCases<T extends { id: number }>(list: T[]): T[] {
   const out = [...list.filter(p => !LAST_IDS.includes(p.id)), ...list.filter(p => LAST_IDS.includes(p.id))];

@@ -50,6 +50,7 @@ export const EN: Record<string, string> = {
     'Skip Design is a boutique digital design studio. We believe simplicity isn’t about dumbing things down — it’s the courage to skip whatever keeps the essence from showing.',
   'Нам доверяют': 'Trusted by',
   'Недавние проекты': 'Recent projects',
+  'Новогодний спецпроект Конь Огонь от студии Skip Design': 'The Kon’ Ogon’ New Year special project by Skip Design studio',
   'Брендинг и конструктор фирменной графики для социального проекта': 'Branding and a brand-graphics builder for a social project',
   'Брендинг для приложения по трекингу целей и медитаций': 'Branding for a goal-tracking and meditation app',
   'Тысячи партнёров AliExpress в одной B2B-платформе': 'Thousands of AliExpress partners on one B2B platform',

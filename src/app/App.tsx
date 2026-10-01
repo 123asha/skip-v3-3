@@ -1077,6 +1077,14 @@ function AppInner() {
 
   // Right-hand gutter of the page grid that fixed header items must add: the
   // inner pages' own scrollbar gutter, minus any window scrollbar still there
+  // Monitors 1720px and wider: «Написать» as a black button
+  const [wideDesk, setWideDesk] = useState(() => window.innerWidth >= 1720);
+  useEffect(() => {
+    const on = () => setWideDesk(window.innerWidth >= 1720);
+    window.addEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);
+  }, []);
+
   const navSb = page !== 'home' && page !== 'index2' ? `max(0px, ${scrollbarW}px - var(--win-sb, 0px))` : '0px';
 
   return (
@@ -1165,9 +1173,11 @@ function AppInner() {
               href="https://t.me/skpdsgn"
               target="_blank"
               rel="noopener noreferrer"
-              className={s.navLink}
+              className={`${s.navLink} ${s.writeLink}`}
               onMouseEnter={() => sound.play('hover')}
-              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'baseline', gap: '0.3em', whiteSpace: 'nowrap' }}
+              // Wide monitors (1720px+): a black button
+              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'baseline', gap: '0.3em', whiteSpace: 'nowrap',
+                ...(wideDesk ? { background: 'var(--c-text)', color: '#fff', padding: '8px 14px 9px', borderRadius: 4, alignItems: 'center' } : null) }}
             >
               {/* The arrow first, then the word — centred on the box */}
               <CircleArrow style={{ alignSelf: 'center', position: 'relative', top: 0 }} />

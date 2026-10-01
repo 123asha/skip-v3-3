@@ -756,3 +756,7 @@
     -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 50%);
   }
 }
+
+/* «Написать»: on hover the arrow inside its circle nudges 2px to the right */
+.writeLink svg path { transition: transform 0.2s ease; }
+.writeLink:hover svg path { transform: translateX(2px); }

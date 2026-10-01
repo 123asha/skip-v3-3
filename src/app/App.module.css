@@ -683,6 +683,7 @@
   /* «Написать» goes up to the header's right corner, on the logo's line */
   .navWrite {
     position: fixed;
+    z-index: 200;
     top: calc(6px + (52px - (var(--text-size) * var(--text-lh) + 17px)) / 2);
     right: var(--m-head-x);
   }

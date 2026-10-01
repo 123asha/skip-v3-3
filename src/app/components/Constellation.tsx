@@ -603,6 +603,9 @@ export default function Constellation({
     };
     function playKnock(strength: number) {
       if (coveredByPage()) return;
+      // Scrolled away: balls out of sight make no sound
+      const box = svg.getBoundingClientRect();
+      if (box.bottom <= 0 || box.top >= window.innerHeight) return;
       if (!audioCtx && sound) audioCtx = sharedAudio();
       if (audioCtx && audioCtx.state === 'running') knock(audioCtx, strength);
     }

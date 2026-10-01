@@ -1,4 +1,5 @@
 import { useRef, useEffect, useLayoutEffect, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useMobile } from './hooks/useMobile';
 import { gsap } from 'gsap';
 import Lenis from 'lenis';
@@ -1156,7 +1157,7 @@ function AppInner() {
         </span>
         {/* «Написать» — the word turns into "telegram" on hover, which is
             where it leads */}
-        <span className={s.navWrite} style={{ display: 'inline-flex' }}>
+        {(() => { const writeEl = (<span className={s.navWrite} style={{ display: 'inline-flex' }}>
           {/* Desktop: a plain link like its neighbours, the ↗ saying it
               leaves the site. Phone keeps the black pill. */}
           {!isMobile ? (
@@ -1191,7 +1192,9 @@ function AppInner() {
                   style={{
                     // Black pill with white type. The nav inverts itself
                     // (difference), so these are the pre-blend colours.
-                    background: '#fff', color: '#000',
+                    // (on a phone it lives outside the menu: its own colours)
+                    background: isMobile ? 'var(--c-text)' : '#fff', color: isMobile ? '#fff' : '#000',
+                    ...(isMobile ? { padding: '8px 14px 9px' } : null),
                     // Cube depth = half the pill's height
                     transform: f ? 'rotateX(-90deg) translateZ(18px)' : 'translateZ(18px)',
                   }}
@@ -1200,7 +1203,10 @@ function AppInner() {
             </span>
           </a>
           )}
-        </span>
+        </span>);
+          // Phone: rendered at body level, not inside the bottom menu — a fixed
+          // element inside the moving (tucking) menu jittered on iOS while scrolling
+          return isMobile ? createPortal(writeEl, document.body) : writeEl; })()}
       </nav>
 
 

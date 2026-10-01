@@ -278,6 +278,13 @@ function ConstellationHero() {
         {lines.map((line, i) => (
           <span key={i} className={s.heroIntroText} style={{ display: 'block', animationDelay: `${0.35 + i * 0.12}s` }}>{kernHeadline(t(line))}</span>
         ))}
+        {/* Phone: a line of plain text under the headline */}
+        {isMobile && (
+          <span className={s.heroIntroText} style={{
+            display: 'block', marginTop: 16, animationDelay: `${0.35 + lines.length * 0.12}s`,
+            fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)', letterSpacing: 'var(--text-ls)', fontWeight: 'var(--text-weight)' as any,
+          }}>{t('Дизайн как правила игры')}</span>
+        )}
       </p>
 
       {/* The playing field is the hero itself — the balls live behind the copy */}

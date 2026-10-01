@@ -50,6 +50,7 @@ export const EN: Record<string, string> = {
     'Skip Design is a boutique digital design studio. We believe simplicity isn’t about dumbing things down — it’s the courage to skip whatever keeps the essence from showing.',
   'Нам доверяют': 'Trusted by',
   'Недавние проекты': 'Recent projects',
+  'Дизайн как правила игры': 'Design as the rules of the game',
   'Сайт использует куки-файлы (текстовые файлы с данными) для обеспечения функционирования, анализа посещаемости и повышения качества сервиса. Продолжая работу с сайтом, вы подтверждаете согласие использования куки-файлов на условиях':
     'This site uses cookies (small text files with data) to work, to analyse traffic and to improve the service. By continuing to use the site you agree to the use of cookies under the',
   'Политики конфиденциальности': 'Privacy Policy',

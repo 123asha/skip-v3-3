@@ -451,7 +451,8 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                       <p style={itemStyle}>{typo(row.text)}</p>
                     </div>
-                    <div style={{ paddingLeft: 20 }}>{descPanel}</div>
+                    {/* Level with the service's own name — no extra indent */}
+                    <div>{descPanel}</div>
                   </div>
                 )}
               </div>

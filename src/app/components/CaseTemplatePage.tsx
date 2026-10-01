@@ -811,7 +811,8 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                           table; blank lines in the copy become paragraphs
                           10px apart (PARA_GAP). */}
                       <div style={{
-                        marginTop: isMobile ? 0 : 'calc(var(--text-size) * var(--text-lh))',
+                        // Level with its heading — no step down
+                        marginTop: 0,
                         // Phone: the text steps in 20px from its heading — the
                         // same step the services table uses for a level
                         paddingLeft: isMobile ? 20 : 0,

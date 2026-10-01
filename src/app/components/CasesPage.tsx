@@ -210,6 +210,19 @@ const ROUND_ROW = 1, ROUND_COL = 1;
 const LEAD_IDS = [1, 2, 4, 3];
 // Always last on the page
 const LAST_IDS = [10];
+// Cases pinned to a place in the list (1-based): Gate Legal sixth
+const FIXED_POS: Record<number, number> = { 8: 6 };
+// The page order: lead cases first, the rest, Binaroom last, pinned ones in their place
+function orderCases<T extends { id: number }>(list: T[]): T[] {
+  const out = [...list.filter(p => !LAST_IDS.includes(p.id)), ...list.filter(p => LAST_IDS.includes(p.id))];
+  Object.entries(FIXED_POS).forEach(([id, pos]) => {
+    const i = out.findIndex(p => p.id === Number(id));
+    if (i < 0) return;
+    const [p] = out.splice(i, 1);
+    out.splice(Math.min(pos - 1, out.length), 0, p);
+  });
+  return out;
+}
 // Shapes on this page that differ from the case's own: the first case stands
 // vertical, the third is square (the home page keeps their usual shapes)
 const LEAD_AR: Record<number, AR> = { 1: V, 4: H };
@@ -221,7 +234,7 @@ function buildScatterRows(projects: Project[], perRow: number, gridCols: number)
   const lead = LEAD_IDS.map(id => mixed.find(p => p.id === id)).filter((p): p is Project => !!p);
   const rest = mixed.filter(p => !LEAD_IDS.includes(p.id));
   // Binaroom closes the list
-  const items = [...lead, ...rest.filter(p => !LAST_IDS.includes(p.id)), ...rest.filter(p => LAST_IDS.includes(p.id))];
+  const items = orderCases([...lead, ...rest]);
   const rows: Row[] = [];
   let lastVCol = -1; // which absolute column held a V card in the previous row
   for (let i = 0; i < items.length; i += perRow) {
@@ -892,7 +905,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
         >
           {isMobile ? (
             // Mobile: flat list, layout controlled by mobileLayout toggle
-            [...filteredProjects.filter(p => !LAST_IDS.includes(p.id)), ...filteredProjects.filter(p => LAST_IDS.includes(p.id))].map(project => (
+            orderCases(filteredProjects).map(project => (
               <div key={project.id} data-case-card="" style={{ minWidth: 0 }}>
                 {/* Two columns: the caption stacks (name over description) */}
                 {/* Phone: every preview 4:5, one or two a row; no category line */}

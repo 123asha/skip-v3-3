@@ -9,6 +9,7 @@ import { CASE_AR_V } from './CaseCard';
 const CASE_AR_SQ = '1/1';
 import LinkFlip from './LinkFlip';
 import { sound } from '../sound/Sound';
+import ZoomControl from './ZoomControl';
 import { MagneticDivider } from './MagneticDivider';
 import PillButton from './PillButton';
 import { LANG } from '../i18n';
@@ -941,9 +942,9 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                   {/* ⊖ ⊕ on the right edge of the column (the table's right
                       line): fold the copy away for the pictures alone, and
                       back — the same control the other pages carry */}
-                  <span className={s.zoomKeys} style={{ marginLeft: 'auto' }}>
-                    <button className={s.zoomKey} aria-label="Описание" onClick={zoomOut}>⊖</button>
-                    <button className={s.zoomKey} aria-label="Только картинки" onClick={zoomIn}>⊕</button>
+                  <span style={{ marginLeft: 'auto' }}>
+                    {/* The services page's own ⌘ ⊖ ⊕ */}
+                    <ZoomControl inline minusLabel="Описание" plusLabel="Только картинки" onMinus={zoomOut} onPlus={zoomIn} />
                   </span>
                 </div>
                </div>

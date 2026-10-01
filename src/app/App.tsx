@@ -1180,7 +1180,10 @@ function AppInner() {
                 ...(wideDesk ? { background: 'var(--c-text)', color: '#fff', padding: '8px 14px 9px', borderRadius: 4, alignItems: 'center' } : null) }}
             >
               {/* The arrow first, then the word — centred on the box */}
-              <CircleArrow style={{ alignSelf: 'center', position: 'relative', top: 0 }} />
+              {/* Wide monitors' black button: a plain arrow, no circle */}
+              {wideDesk
+                ? <span aria-hidden="true" className={s.writeArrow}>→</span>
+                : <CircleArrow style={{ alignSelf: 'center', position: 'relative', top: 0 }} />}
               <LinkFlip flat>Написать</LinkFlip>
             </a>
           ) : (

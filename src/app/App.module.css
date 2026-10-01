@@ -760,3 +760,5 @@
 /* «Написать»: on hover the arrow inside its circle nudges 2px to the right */
 .writeLink svg path { transition: transform 0.2s ease; }
 .writeLink:hover svg path { transform: translateX(2px); }
+.writeArrow { display: inline-block; transition: transform 0.2s ease; }
+.writeLink:hover .writeArrow { transform: translateX(2px); }

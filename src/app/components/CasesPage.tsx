@@ -45,8 +45,8 @@ export interface Project {
 }
 
 export const PROJECTS: Project[] = [
-  { id: 1, preview: asset('/preview-case2.webp'), subs: ['strategy', 'design', 'uxui'], cats: ['branding'],       ...img('/case1-h.webp'), title: 'Magic Moon App',     year: '2025', desc: 'Брендинг для приложения по трекингу целей и медитаций' },
-  { id: 2, preview: asset('/preview-case1.webp'), subs: ['strategy', 'design', 'architecture'], cats: ['interfaces'],      ...img('/case2-v.webp'), title: 'Magic Moon',     year: '2024', desc: 'Трекер целей от Юрия Мурадяна, в котором визуал поддерживает философию продукта', video: asset('/magic-moon.mp4') },
+  { id: 1, preview: asset('/preview-case2.webp'), subs: ['strategy', 'design', 'uxui'], cats: ['branding'],       ...img('/case1-h.webp'), title: 'Magic Moon',     year: '2025', desc: 'Брендинг для приложения по трекингу целей и медитаций' },
+  { id: 2, preview: asset('/preview-case1.webp'), subs: ['strategy', 'design', 'architecture'], cats: ['interfaces'],      ...img('/case2-v.webp'), title: 'Magic Moon App',     year: '2024', desc: 'Трекер целей от Юрия Мурадяна, в котором визуал поддерживает философию продукта', video: asset('/magic-moon.mp4') },
   { id: 3, preview: asset('/preview-case3.webp'),  subs: ['design', 'tools', 'uxui'], cats: ['interfaces'], ...img('/case3-h.webp'), title: 'AE Platform',     year: '2025', desc: 'Тысячи партнёров AliExpress в одной B2B-платформе' },
   { id: 4, preview: asset('/preview-case4.webp'), subs: ['design', 'nocode'], cats: ['interfaces'],                     ...img('/case4-v.webp'), title: 'AEPlatform',    year: '2025', desc: 'Браузерное расширение для отображения affiliate-данных прямо на AliExpress' },
   { id: 5, preview: asset('/preview-keys.jpg'),  subs: ['strategy', 'design', 'uxui'], cats: ['branding', 'sites', 'interfaces'],       ...img('/case5-v.webp'), title: 'Крипто', year: '2026', desc: 'Подготовили бренд-систему для запуска крипто-стартапа' },

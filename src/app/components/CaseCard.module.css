@@ -40,6 +40,10 @@
 .cardTall {
   aspect-ratio: 4 / 5 !important;
 }
+/* Desktop: vertical previews 10% shorter (8:9 instead of 4:5) */
+@media (min-width: 769px) {
+  .cardTall { aspect-ratio: 8 / 9 !important; }
+}
 
 /* Hover hop: the frame hops over a stationary picture, squashing from its
    bottom edge. A little picture past the top and bottom edge keeps the

@@ -123,9 +123,23 @@ function PinnedInvert({ placeholderRef, children }: { placeholderRef: React.RefO
   );
 }
 
+// Desktop under 1640px: the case page's copy gets out of the menu's way
+// (the intro drops below the menu line, entries stack heading over text)
+function useNarrowDesktop() {
+  const get = () => typeof window !== 'undefined' && window.innerWidth > 768 && window.innerWidth < 1640;
+  const [narrow, setNarrow] = useState(get);
+  useEffect(() => {
+    const on = () => setNarrow(get());
+    window.addEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);
+  }, []);
+  return narrow;
+}
+
 function MetaRow({
   col1, col2, num, text, col2IsTitle, tags,
 }: { col1?: React.ReactNode; col2?: string; num?: string; text: string; col2IsTitle?: boolean; tags?: string[] }) {
+  const narrow = useNarrowDesktop();
   const mob = useMobile();
   if (mob) {
     // Phone: the same caption grid as the case cards — name on the left;
@@ -166,8 +180,9 @@ function MetaRow({
         : <p style={{ ...textStyle, gridColumn: '2', margin: 0, color: 'inherit' }}>{col2}</p>)}
       {/* Year — always centred on the page, whatever else the row carries */}
       {num && <p style={{ ...textStyle, opacity: 'var(--opacity-muted)', position: 'absolute', left: '50%', top: 0, margin: 0, transform: 'translateX(-50%)', whiteSpace: 'nowrap', color: 'inherit' }}>{num}</p>}
-      {/* Exactly one column wide — no loose max-width that straddles the grid */}
-      <div style={{ gridColumn: '4 / 5' }}>
+      {/* Exactly one column wide — no loose max-width that straddles the grid.
+          Narrow desktops: a step down, clear of the menu on this line */}
+      <div style={{ gridColumn: '4 / 5', marginTop: narrow ? 'calc(var(--text-size) * var(--text-lh) + 24px)' : 0 }}>
         {text.split('\n\n').map((para, k) => (
           <p key={k} style={{ ...textStyle, margin: 0, marginTop: k === 0 ? 0 : PARA_GAP, color: 'inherit' }}>{typo(para)}</p>
         ))}
@@ -410,6 +425,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
   //   0 — images on the left, the copy column on the right (default)
   //   1 — the copy folds away to the right and the images take the full width
   const [caseZoom, setCaseZoom] = useState(0);
+  const narrowDesk = useNarrowDesktop();
 
   // ── Phone: the case ↔ «о проекте» ─────────────────────────────────────
   // Two whole pages side by side: the case itself (cover, meta, pictures —
@@ -768,9 +784,10 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                    // Narrow desktops too: the text under its heading, full width
+                    gridTemplateColumns: isMobile || narrowDesk ? '1fr' : '1fr 1fr',
                     columnGap: 'var(--gap)',
-                    rowGap: isMobile ? 8 : 0,
+                    rowGap: isMobile || narrowDesk ? 8 : 0,
                     alignItems: 'start',
                   }}
                 >

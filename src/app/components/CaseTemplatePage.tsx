@@ -477,7 +477,14 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
     tick();
     requestAnimationFrame(tick);
   };
-  const zoomIn  = () => holdInView(1);
+  // Where the in-row ⌘ ⊖ ⊕ sat on screen when the copy was folded away
+  const zoomSpotRef = useRef<HTMLSpanElement>(null);
+  const [zoomSpot, setZoomSpot] = useState<{ left: number; top: number } | null>(null);
+  const zoomIn  = () => {
+    const r = zoomSpotRef.current?.getBoundingClientRect();
+    if (r && caseZoom === 0) setZoomSpot({ left: r.left, top: r.top });
+    holdInView(1);
+  };
   const zoomOut = () => holdInView(0);
   usePinchSteps(zoomIn, zoomOut, !isMobile);
   useEffect(() => {
@@ -931,7 +938,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                   {/* ⊖ ⊕ on the right edge of the column (the table's right
                       line): fold the copy away for the pictures alone, and
                       back — the same control the other pages carry */}
-                  <span style={{ marginLeft: 'auto' }}>
+                  <span ref={zoomSpotRef} style={{ marginLeft: 'auto', visibility: caseZoom > 0 ? 'hidden' : undefined }}>
                     {/* The services page's own ⌘ ⊖ ⊕ */}
                     <ZoomControl inline minusLabel="Описание" plusLabel="Только картинки" onMinus={zoomOut} onPlus={zoomIn} />
                   </span>
@@ -990,11 +997,13 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             off for now (flip SHOW_CASE_ZOOM to bring it back) */}
         {/* While the copy (and the ⊖ ⊕ in its button row) is folded away,
             the control waits bottom-left so the way back is always there */}
-        {!isMobile && (SHOW_CASE_ZOOM || caseZoom > 0) && (
-          <span className={s.zoomHint}>
-            <button className={s.zoomKey} aria-label="Описание" onClick={zoomOut}>⊖</button>
-            <button className={s.zoomKey} aria-label="Только картинки" onClick={zoomIn}>⊕</button>
-          </span>
+        {/* Copy folded away: the same ⌘ ⊖ ⊕ stays on screen right where it
+            was pressed, over the pictures — the way back is under the cursor */}
+        {!isMobile && caseZoom > 0 && zoomSpot && createPortal(
+          <span style={{ position: 'fixed', left: zoomSpot.left, top: zoomSpot.top, zIndex: 210 }}>
+            <ZoomControl inline minusLabel="Описание" plusLabel="Только картинки" onMinus={zoomOut} onPlus={zoomIn} />
+          </span>,
+          document.body,
         )}
 
         {/* Credits + testimonial — always at the end of the case, phones too

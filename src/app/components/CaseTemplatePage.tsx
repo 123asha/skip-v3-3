@@ -97,18 +97,7 @@ function PinnedInvert({ placeholderRef, children }: { placeholderRef: React.RefO
       // the row and the menu read as one line. Phone (menu at the bottom): --pad.
       const navLink = window.innerWidth > 768 ? document.querySelector<HTMLElement>('nav a') : null;
       const navTop = navLink?.offsetParent ? navLink.getBoundingClientRect().top / pz : 0;
-      let pin = navTop > 0 && navTop < 120 ? navTop : pad;
-      // Narrow desktops: if the row's copy would run into the menu, hold it
-      // just under the menu instead of on its line
-      if (navLink && pin === navTop) {
-        const navBox = (navLink.closest('nav') ?? navLink).getBoundingClientRect();
-        // Measured on the text itself (its line boxes), not the blocks around it
-        const range = document.createRange();
-        range.selectNodeContents(fl);
-        const clash = Array.from(range.getClientRects()).some(b =>
-          b.width > 0 && b.right > navBox.left - 16 && b.left < navBox.right);
-        if (clash) pin = navBox.bottom / pz + 24;
-      }
+      const pin = navTop > 0 && navTop < 120 ? navTop : pad;
       document.documentElement.style.setProperty('--meta-pin', `${pin}px`);
       fl.style.top = `${Math.max(pin, r.top / pz)}px`;
     };

@@ -56,7 +56,7 @@ export const PROJECTS: Project[] = [
   { id: 7, preview: asset('/preview-seniors.webp'), slides: ['/preview-seniors.webp', '/cases/seniors/1.webp', '/cases/seniors/2.webp', '/cases/seniors/4.webp', '/cases/seniors/5.webp', '/cases/seniors/6.webp'].map(asset),  subs: ['strategy', 'design', 'tools'], cats: ['branding', 'sites', 'instruments'],      ...img('/case1-h.webp'), title: 'Senior*s bar',   year: '2025', desc: 'Бар своей среды. Визуальный язык для офлайна и онлайна', href: '/Seniorsbar' },
   { id: 8, preview: asset('/preview-gate-legal.avif'),  subs: ['design', 'uxui', 'productStrategy'], cats: ['branding', 'sites', 'instruments'],                   ...img('/case2-v.webp'), title: 'Gate Legal',     year: '2024', desc: 'Помогли запуститься' },
   { id: 9, preview: asset('/preview-phone.webp'),  subs: ['tools', 'uxui'], cats: ['interfaces', 'instruments'],             ...img('/case3-h.webp'), title: 'AliExpress',     year: '2026', desc: 'Тысячи партнёров AliExpress в одном дашборде' },
-  { id: 10, preview: asset('/preview-coffee.webp'), subs: ['architecture', 'nocode', 'uxui'], cats: ['sites', 'interfaces', 'instruments'],    ...img('/case4-v.webp'), title: 'Binaroom',       year: '2025', desc: '3D-проекты превращаются в сметы и КП за минуту' },
+  { id: 10, preview: asset('/preview-binaroom.avif'), subs: ['architecture', 'nocode', 'uxui'], cats: ['sites', 'interfaces', 'instruments'],    ...img('/case4-v.webp'), title: 'Binaroom',       year: '2025', desc: '3D-проекты превращаются в сметы и КП за минуту' },
   { id: 11, preview: asset('/preview-case4.webp'), subs: ['design', 'nocode'], cats: ['branding', 'sites'], ...img('/case4-v.webp'), title: "Kon' Ogon'", year: '2025', desc: 'Новогодний спецпроект Конь Огонь от студии Skip Design' },
 ];
 

@@ -265,9 +265,12 @@ function buildScatterRows(projects: Project[], perRow: number, gridCols: number)
       items: chunk.map((project, j) => ({
         project,
         col: `${cols[j]} / ${cols[j] + 1}`,
-        // Second row: vertical · circle · vertical
-        round: rows.length === 1 && j === 1,
-        ar: LEAD_AR[project.id] ?? (rows.length === 1 && j !== 1 ? V : undefined),
+        // A card's shape belongs to the card, not to the grid: it is worked out
+        // from its place in the list (three to a row — the reference layout:
+        // second row vertical · circle · vertical), so the same card keeps
+        // its proportions at every number of columns
+        round: Math.floor((i + j) / 3) === 1 && (i + j) % 3 === 1,
+        ar: LEAD_AR[project.id] ?? (Math.floor((i + j) / 3) === 1 && (i + j) % 3 !== 1 ? V : undefined),
       })),
     });
   }

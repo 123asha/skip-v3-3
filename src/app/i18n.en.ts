@@ -55,7 +55,7 @@ export const EN: Record<string, string> = {
   'Новогодний спецпроект Конь Огонь от студии Skip Design': 'The Kon’ Ogon’ New Year special project by Skip Design studio',
   'Брендинг и конструктор фирменной графики для социального проекта': 'Branding and a brand-graphics builder for a social project',
   'Брендинг для приложения по трекингу целей и медитаций': 'Branding for a goal-tracking and meditation app',
-  'Тысячи партнёров AliExpress в одной B2B-платформе': 'Thousands of AliExpress partners on one B2B platform',
+  'Тысячи партнёров AliExpress в одной B2B-платформе AE Platform': 'Thousands of AliExpress partners on one B2B platform AE Platform',
   'Дизайн как правила игры': 'Design as the rules of the game',
   'Сайт использует куки-файлы (текстовые файлы с данными) для обеспечения функционирования, анализа посещаемости и повышения качества сервиса. Продолжая работу с сайтом, вы подтверждаете согласие использования куки-файлов на условиях':
     'This site uses cookies (small text files with data) to work, to analyse traffic and to improve the service. By continuing to use the site you agree to the use of cookies under the',

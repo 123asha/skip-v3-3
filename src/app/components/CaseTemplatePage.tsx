@@ -404,8 +404,69 @@ export const BINAROOM: CaseData = {
   // testimonial omitted — none for this case.
 };
 
+// The three AliExpress cases — descriptions from the studio's earlier pages
+// (skip.design/ae-platform-plugin.html, /ae-platform.html, /ae-pllatforn-landing.html)
+const AE_TEAM = {
+  anna:  { name: 'Анна Головина',   role: 'продуктовый дизайнер' },
+  senya: { name: 'Сеня Синица',     role: 'руководитель продакшена' },
+  asha:  { name: 'Аша Саакян',      role: 'арт-директор' },
+  alina: { name: 'Алина Калистрина', role: 'диджитал-дизайнер' },
+};
+
+export const AE_PLUGIN: CaseData = {
+  href: '/plugin-aliexpress',
+  title: 'Плагин AliExpress',
+  year: '2025',
+  tags: ['Продукт'],
+  industry: '',
+  intro: 'Обновили дизайн плагина AE Platform, который упрощает работу с креативами для продавцов-участников партнёрской программы AliExpress',
+  blocks: [
+    { kind: 'text', title: 'С помощью плагина можно', text: [
+      'Проверить, участвует ли товар в партнёрской программе;',
+      'Посмотреть размер вознаграждения за продажу товара;',
+      'Добавлять до 6 собственных меток (SubID) для отслеживания эффективности каналов и кампаний;',
+      'Копировать и перезапускать креативы;',
+      'Работать без лишнего — мы почистили функционал и избавились от артефактов',
+    ].join('\n\n') },
+  ],
+  team: [AE_TEAM.anna, AE_TEAM.senya],
+};
+
+export const AE_PLATFORM: CaseData = {
+  href: '/ae-platform',
+  title: 'AE Platform',
+  year: '2025',
+  tags: ['Продукт'],
+  industry: '',
+  intro: 'Обновили дизайн платформы AE Platform для продавцов-участников партнёрской программы AliExpress',
+  blocks: [
+    { kind: 'text', title: 'Что сделали', text: [
+      'Адаптировали продукт под задачи B2B-аудитории и сохранили визуальную целостность с основным брендом.',
+      'Добавили дашборд и перераспределили функционал между страницами, чтобы ключевые действия выполнялись быстрее.',
+      'Дополнили дизайн-систему необходимыми компонентами и состояниями.',
+    ].join('\n\n') },
+  ],
+  team: [AE_TEAM.senya, AE_TEAM.anna, AE_TEAM.asha],
+};
+
+export const AE_LANDING: CaseData = {
+  href: '/aliexpress-landing',
+  title: 'Лендинг AliExpress',
+  year: '2025',
+  tags: ['Брендинг', 'Веб'],
+  industry: '',
+  intro: 'Разработали дизайн лендинга для B2B-платформы, который презентует продукт, показывает его преимущества и формирует доверие к бренду',
+  blocks: [
+    { kind: 'text', title: 'Подход', text: [
+      'При работе с визуальной частью опирались на существующие константы бренда AliExpress и свежий дизайн AE Platform.',
+      'Это позволило сохранить узнаваемость и преемственность с материнским брендом, а также обеспечить цельность с самим продуктом — лендинг органично продолжает его визуальный язык и создаёт ощущение бесшовного перехода в интерфейс платформы.',
+    ].join('\n\n') },
+  ],
+  team: [AE_TEAM.alina, AE_TEAM.anna, AE_TEAM.senya, AE_TEAM.asha],
+};
+
 // Reading order of the cases — the last block of one case shows the next one
-CASES.push(GATE_LEGAL, SENIORS_BAR, BINAROOM);
+CASES.push(GATE_LEGAL, SENIORS_BAR, BINAROOM, AE_PLUGIN, AE_PLATFORM, AE_LANDING);
 
 export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavigateCase, data = GATE_LEGAL }: { onNavigatePolicy?: () => void; onGridMode?: (on: boolean) => void; onNavigateCase?: (href: string) => void; data?: CaseData }) {
   // The case that follows this one — its meta strip closes the page

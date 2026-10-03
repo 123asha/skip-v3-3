@@ -18,7 +18,15 @@ import ExpertizaPage2 from './components/ExpertizaPage2';
 import MindMapBlock from './components/MindMapBlock';
 import PolicyPage from './components/PolicyPage';
 import Index2Page from './components/Index2Page';
-import CaseTemplatePage, { SENIORS_BAR, BINAROOM } from './components/CaseTemplatePage';
+import CaseTemplatePage, { SENIORS_BAR, BINAROOM, AE_PLUGIN, AE_PLATFORM, AE_LANDING } from './components/CaseTemplatePage';
+
+// Case pages that run on the case template, by address
+const CASE_PAGES: Record<string, any> = {
+  '/binaroom': BINAROOM,
+  '/plugin-aliexpress': AE_PLUGIN,
+  '/ae-platform': AE_PLATFORM,
+  '/aliexpress-landing': AE_LANDING,
+};
 import GuidePage from './components/GuidePage';
 import MoscowTime from './components/MoscowTime';
 import BunnyHero from './components/BunnyHero';
@@ -456,7 +464,7 @@ function AppInner() {
   });
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
-  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/services-2', '/policy', '/index2', '/case-template', '/Seniorsbar', '/binaroom', '/guide', '/lab', '/insights', '/system', '/brand', '/visual', '/digital'];
+  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/services-2', '/policy', '/index2', '/case-template', '/Seniorsbar', ...Object.keys(CASE_PAGES), '/guide', '/lab', '/insights', '/system', '/brand', '/visual', '/digital'];
   const page = pathname === '/cases' ? 'cases'
              : pathname === '/instruments' ? 'instruments'
              : (pathname === '/expertiza' || pathname === '/services') ? 'expertiza'
@@ -466,7 +474,7 @@ function AppInner() {
              : pathname === '/index2' ? 'index2'
              : pathname === '/case-template' ? 'case-template'
              : pathname === '/Seniorsbar' ? 'seniors'
-             : pathname === '/binaroom' ? 'binaroom'
+             : CASE_PAGES[pathname] ? 'binaroom'
              : pathname === '/guide' ? 'guide'
              // /lab is the old address of the insights page — still opens it
              : pathname === '/insights' || pathname === '/lab' ? 'lab'
@@ -1524,7 +1532,7 @@ function AppInner() {
       {page === 'index2' && <Index2Page />}
       {page === 'case-template' && <CaseTemplatePage onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}
       {page === 'seniors' && <CaseTemplatePage data={SENIORS_BAR} onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}
-      {page === 'binaroom' && <CaseTemplatePage data={BINAROOM} onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}
+      {page === 'binaroom' && <CaseTemplatePage key={pathname} data={CASE_PAGES[pathname]} onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}
       {page === 'guide' && <GuidePage />}
       {page === 'system' && <DesignSystemPage />}
       {page === 'svc-brand'   && <ServiceDetailPage serviceIdx={0} onBack={() => navigateWithExit('/services')} />}

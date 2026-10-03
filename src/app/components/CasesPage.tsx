@@ -216,9 +216,9 @@ const ROUND_ROW = 1, ROUND_COL = 1;
 const LEAD_IDS = [1, 2, 4, 3];
 // Always last on the page
 const LAST_IDS = [10];
-// Cases pinned to a place in the list (1-based): Coming soon fourth, Gate Legal fifth, Senior*s bar sixth,
+// Cases pinned to a place in the list (1-based): Coming soon fourth, Senior*s bar fifth, Gate Legal sixth,
 // Kon' Ogon' eighth
-const FIXED_POS: Record<number, number> = { 5: 4, 8: 5, 7: 6, 11: 8 };
+const FIXED_POS: Record<number, number> = { 5: 4, 7: 5, 8: 6, 11: 8 };
 // The page order: lead cases first, the rest, Binaroom last, pinned ones in their place
 function orderCases<T extends { id: number }>(list: T[]): T[] {
   const out = [...list.filter(p => !LAST_IDS.includes(p.id)), ...list.filter(p => LAST_IDS.includes(p.id))];

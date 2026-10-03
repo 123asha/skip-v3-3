@@ -37,9 +37,19 @@ const TEAM: { name: string; role: string }[] = [
 //    looping video (used for converted GIFs). ──────────────────────────────────
 /** `n` — the picture's number down the case, the same in both layouts, so the
  *  zoom switch can find «the picture that was on screen» again */
-function Img({ ar, src, style, round, n }: { ar: string; src?: string; style?: React.CSSProperties; round?: boolean; n?: number }) {
+function Img({ ar, src, style, round, n, natural }: { ar: string; src?: string; style?: React.CSSProperties; round?: boolean; n?: number; natural?: boolean }) {
   const isVideo = !!src && /\.(mp4|webm)$/i.test(src);
-  const fill: React.CSSProperties = { width: '100%', height: '100%', objectFit: 'cover', display: 'block' };
+  const fill: React.CSSProperties = natural
+    // Its own proportions: the width fills the column, the height follows
+    ? { width: '100%', height: 'auto', display: 'block' }
+    : { width: '100%', height: '100%', objectFit: 'cover', display: 'block' };
+  if (natural) return (
+    <div data-case-img={n ?? ''} style={{ width: '100%', overflow: 'hidden', background: 'var(--c-surface)', ...style }}>
+      {src && (isVideo
+        ? <video src={src} autoPlay muted loop playsInline style={fill} />
+        : <img src={src} alt="" loading="lazy" style={fill} />)}
+    </div>
+  );
   return (
     <div data-case-img={n ?? ''} style={{ aspectRatio: round ? '1 / 1' : ar, borderRadius: round ? '50%' : undefined, background: 'var(--c-surface)', width: '100%', overflow: 'hidden', ...style }}>
       {src && (isVideo
@@ -199,7 +209,7 @@ const arNum = (ar: string, round: boolean) => {
   const [w, h] = ar.split('/').map(Number);
   return w / h;
 };
-function pairUp(items: { ar: string; src?: string; round: boolean }[]) {
+function pairUp(items: { ar: string; src?: string; round: boolean }[], natural?: boolean) {
   const rows: React.ReactNode[] = [];
   for (let i = 0; i < items.length; i++) {
     const a = items[i], b = items[i + 1];
@@ -211,14 +221,14 @@ function pairUp(items: { ar: string; src?: string; round: boolean }[]) {
         <Block key={i}>
           <div style={{ display: 'flex', gap: 4, alignItems: 'flex-start' }}>
             {/* In a pair a round picture shows as a square */}
-            <div style={{ flex: '1 1 0', minWidth: 0 }}><Img n={i} ar={a.round ? '1/1' : a.ar} src={a.src} /></div>
-            <div style={{ flex: '1 1 0', minWidth: 0 }}><Img n={i + 1} ar={b.round ? '1/1' : b.ar} src={b.src} /></div>
+            <div style={{ flex: '1 1 0', minWidth: 0 }}><Img n={i} ar={a.round ? '1/1' : a.ar} src={a.src} natural={natural} /></div>
+            <div style={{ flex: '1 1 0', minWidth: 0 }}><Img n={i + 1} ar={b.round ? '1/1' : b.ar} src={b.src} natural={natural} /></div>
           </div>
         </Block>,
       );
       i++;
     } else {
-      rows.push(<Block key={i}><Img n={i} ar={a.ar} src={a.src} round={a.round} /></Block>);
+      rows.push(<Block key={i}><Img n={i} ar={a.ar} src={a.src} round={a.round && !natural} natural={natural} /></Block>);
     }
   }
   return rows;
@@ -268,6 +278,8 @@ export interface CaseData {
   tags: string[];
   industry: string;  // meta col 2
   intro: string;     // meta description text
+  /** Pictures shown at their own proportions (width fills, height auto) */
+  naturalSize?: boolean;
   coverVideo?: string; // if set, the cover plays this video instead of a flat colour
   blocks: CaseBlock[];
   team: { name: string; role: string }[];
@@ -379,6 +391,7 @@ export const BINAROOM: CaseData = {
   tags: ['Веб', 'Продукт'],
   industry: '',
   intro: 'Разработали дизайн платформы, которая помогает превращать 3D-проекты в сметы и коммерческие предложения, а также управлять документооборотом',
+  naturalSize: true,
   coverVideo: asset('/cases/binaroom/cover.mp4'),
   blocks: [
     { kind: 'single', ar: 'h', src: bin(1) },
@@ -878,7 +891,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
               flat.push({ ar, src: b.src, round: rd });
               images.push(
                 <Block key={i}>
-                  <Img n={flat.length - 1} ar={ar} src={b.src} round={rd} />
+                  <Img n={flat.length - 1} ar={ar} src={b.src} round={rd && !data.naturalSize} natural={data.naturalSize} />
                 </Block>,
               );
               if (b.caption) pushCopy(`c${i}`, b.caption, b.title);
@@ -894,8 +907,8 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
             images.push(
               <Block key={i}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <Img n={flat.length - 2} ar={leftAr} src={b.leftSrc} round={rdL} />
-                  <Img n={flat.length - 1} ar={rightAr} src={b.rightSrc} round={rdR} />
+                  <Img n={flat.length - 2} ar={leftAr} src={b.leftSrc} round={rdL && !data.naturalSize} natural={data.naturalSize} />
+                  <Img n={flat.length - 1} ar={rightAr} src={b.rightSrc} round={rdR && !data.naturalSize} natural={data.naturalSize} />
                 </div>
               </Block>,
             );
@@ -941,7 +954,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                   ? `calc(100% + 2 * (var(--pad) - ${SIDE}))`
                   : `calc((100% - 4 * var(--gap)) * 3 / 5 + 2 * var(--gap) + var(--pad) - ${SIDE})`,
                 transition: `width ${ZOOM_EASE}`,
-              }}>{caseZoom ? pairUp(flat) : images}</div>
+              }}>{caseZoom ? pairUp(flat, data.naturalSize) : images}</div>
               {/* Copy sticks 40px under the meta row while the images scroll
                   past; zoomed in, it folds away to the right */}
               <div style={{

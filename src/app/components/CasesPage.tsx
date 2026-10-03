@@ -234,7 +234,7 @@ function orderCases<T extends { id: number }>(list: T[]): T[] {
 }
 // Shapes on this page that differ from the case's own: the first case stands
 // vertical, the third is square (the home page keeps their usual shapes)
-const LEAD_AR: Record<number, AR> = { 1: V, 4: H, 3: V, 11: H };
+const LEAD_AR: Record<number, AR> = { 1: V, 4: H, 3: V, 11: V };
 
 function buildScatterRows(projects: Project[], perRow: number, gridCols: number): Row[] {
   // The four lead cases (the ones on the home page) open the page, in their

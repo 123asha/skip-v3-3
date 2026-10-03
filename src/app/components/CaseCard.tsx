@@ -50,6 +50,8 @@ export interface CaseCardProps {
   metaSize?: string | number; // font size for the bottom name + description (shrinks with the grid zoom)
   image?: string;         // optional image url (omit for plain placeholder)
   preview?: string;       // real preview — shown even while PLACEHOLDER_PREVIEWS is on
+  /** A looping, muted clip used as the preview itself */
+  clip?: string;
   video?: string;         // optional hover video (desktop only — mobile shows image)
   onClick?: () => void;
   linkLabel?: string;     // defaults to "Перейти"
@@ -90,7 +92,7 @@ const servicesStyle: React.CSSProperties = {
 };
 
 export default function CaseCard({
-  ar, title, desc, services, showCats, servicesSize, metaSize, image: rawImage, preview, video: rawVideo, onClick, linkLabel = 'Перейти', hideMeta = false, hideImage = false, aspect, scrubVideo, round, stackMeta, tall, slides,
+  ar, title, desc, services, showCats, servicesSize, metaSize, image: rawImage, preview, clip, video: rawVideo, onClick, linkLabel = 'Перейти', hideMeta = false, hideImage = false, aspect, scrubVideo, round, stackMeta, tall, slides,
 }: CaseCardProps) {
   // Per-card caption style — size overridable so it scales with the grid zoom.
   const svcStyle: React.CSSProperties = servicesSize != null
@@ -263,6 +265,8 @@ export default function CaseCard({
                 fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)', whiteSpace: 'nowrap',
               }}>{slide + 1} / {slides.length}</span>
             </>
+          ) : clip ? (
+            <video src={clip} muted loop playsInline autoPlay preload="auto" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : image && <img src={image} alt={title} loading="lazy" />}
           {/* The flagship's clip simply loops on a phone (no scroll scrub) */}
           {scrubVideo && (
@@ -354,6 +358,8 @@ export default function CaseCard({
                 opacity: hovered ? 1 : 0, transition: 'opacity 0.25s ease',
               }}>{slide + 1} / {slides.length}</span>
             </>
+          ) : clip ? (
+            <video src={clip} muted loop playsInline autoPlay preload="auto" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : image && (
             <img
               src={image}

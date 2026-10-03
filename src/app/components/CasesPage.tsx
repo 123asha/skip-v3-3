@@ -35,6 +35,8 @@ export interface Project {
   ar: AR;
   image: string;
   video?: string;
+  /** A looping clip shown as the preview */
+  clip?: string;
   title: string;
   desc: string;
   year: string;   // shown above the card
@@ -49,7 +51,7 @@ export const PROJECTS: Project[] = [
   { id: 2, preview: asset('/preview-case1.webp'), subs: ['strategy', 'design', 'architecture'], cats: ['interfaces'],      ...img('/case2-v.webp'), title: 'Magic Moon App',     year: '2024', desc: 'Трекер целей от Юрия Мурадяна, в котором визуал поддерживает философию продукта', video: asset('/magic-moon.mp4') },
   { id: 3, preview: asset('/preview-case3.webp'),  subs: ['design', 'tools', 'uxui'], cats: ['interfaces'], ...img('/case3-h.webp'), title: 'AE Platform',     year: '2025', desc: 'Тысячи партнёров AliExpress в одной B2B-платформе' },
   { id: 4, preview: asset('/preview-case4.webp'), subs: ['design', 'nocode'], cats: ['interfaces'],                     ...img('/case4-v.webp'), title: 'Плагин AliExpress',    year: '2025', desc: 'Браузерное расширение для отображения affiliate-данных прямо на AliExpress' },
-  { id: 5, preview: asset('/preview-keys.jpg'),  subs: ['strategy', 'design', 'uxui'], cats: ['branding', 'interfaces'],       ...img('/case5-v.webp'), title: 'Coming soon', year: '2026', desc: 'Брендинг и конструктор фирменной графики для социального проекта' },
+  { id: 5, preview: asset('/preview-keys.jpg'),  subs: ['strategy', 'design', 'uxui'], cats: ['branding', 'interfaces'],       ...img('/case5-v.webp'), title: 'Coming soon', clip: asset('/coming-soon.mp4'), year: '2026', desc: 'Брендинг и конструктор фирменной графики для социального проекта' },
   { id: 6, preview: asset('/preview-app.jpg'),  subs: ['tools', 'architecture', 'uxui'], cats: ['sites', 'interfaces', 'instruments'],    ...img('/case6-h.webp'), title: 'Gate Legal',     year: '2024', desc: 'Конструктор баннеров для ускорения разработки креативов к ежедневным постам' },
   { id: 7, preview: asset('/preview-seniors.webp'), slides: ['/preview-seniors.webp', '/cases/seniors/1.webp', '/cases/seniors/2.webp', '/cases/seniors/4.webp', '/cases/seniors/5.webp', '/cases/seniors/6.webp'].map(asset),  subs: ['strategy', 'design', 'tools'], cats: ['branding', 'sites', 'instruments'],      ...img('/case1-h.webp'), title: 'Senior*s bar',   year: '2025', desc: 'Бар своей среды. Визуальный язык для офлайна и онлайна', href: '/Seniorsbar' },
   { id: 8, preview: asset('/preview-pocket.avif'),  subs: ['design', 'uxui', 'productStrategy'], cats: ['branding', 'sites', 'instruments'],                   ...img('/case2-v.webp'), title: 'Gate Legal',     year: '2024', desc: 'Помогли запуститься: от платформы бренда до сайта — за полтора месяца' },
@@ -214,9 +216,9 @@ const ROUND_ROW = 1, ROUND_COL = 1;
 const LEAD_IDS = [1, 2, 4, 3];
 // Always last on the page
 const LAST_IDS = [10];
-// Cases pinned to a place in the list (1-based): Senior*s bar fourth, Coming soon sixth,
+// Cases pinned to a place in the list (1-based): Coming soon fourth, Senior*s bar fifth,
 // Gate Legal seventh, Kon' Ogon' eighth
-const FIXED_POS: Record<number, number> = { 7: 4, 5: 6, 8: 7, 11: 8 };
+const FIXED_POS: Record<number, number> = { 5: 4, 7: 5, 8: 7, 11: 8 };
 // The page order: lead cases first, the rest, Binaroom last, pinned ones in their place
 function orderCases<T extends { id: number }>(list: T[]): T[] {
   const out = [...list.filter(p => !LAST_IDS.includes(p.id)), ...list.filter(p => LAST_IDS.includes(p.id))];
@@ -309,9 +311,9 @@ function mobileColSpan(idx: number): string {
 }
 
 // ── ProjectCard ───────────────────────────────────────────────────────────────
-function ProjectCard({ ar, cats, title, desc, image, preview, video, slides, onClick, servicesSize, metaSize, hideMeta, hideImage, round, stackMeta, hideCats, tall, slider }: Project & { slider?: boolean; hideCats?: boolean; tall?: boolean; onClick?: () => void; servicesSize?: string | number; metaSize?: string | number; hideMeta?: boolean; hideImage?: boolean; round?: boolean; stackMeta?: boolean }) {
+function ProjectCard({ ar, cats, title, desc, image, preview, clip, video, slides, onClick, servicesSize, metaSize, hideMeta, hideImage, round, stackMeta, hideCats, tall, slider }: Project & { slider?: boolean; hideCats?: boolean; tall?: boolean; onClick?: () => void; servicesSize?: string | number; metaSize?: string | number; hideMeta?: boolean; hideImage?: boolean; round?: boolean; stackMeta?: boolean }) {
   return (
-    <CaseCard ar={ar} title={title} desc={desc} services={hideCats ? undefined : catLine(cats)} showCats servicesSize={servicesSize} metaSize={metaSize} hideMeta={hideMeta} hideImage={hideImage} image={image} preview={preview} video={video} onClick={onClick} round={round} stackMeta={stackMeta} tall={tall} slides={slider ? slides : undefined} />
+    <CaseCard ar={ar} title={title} desc={desc} services={hideCats ? undefined : catLine(cats)} showCats servicesSize={servicesSize} metaSize={metaSize} hideMeta={hideMeta} hideImage={hideImage} image={image} preview={preview} clip={clip} video={video} onClick={onClick} round={round} stackMeta={stackMeta} tall={tall} slides={slider ? slides : undefined} />
   );
 }
 

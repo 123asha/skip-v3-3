@@ -106,6 +106,13 @@ export default function CaseCard({
   const video = PLACEHOLDER_PREVIEWS ? undefined : rawVideo;
   const [hovered, setHovered]  = useState(false);
   const [slide, setSlide] = useState(0);
+  const clipRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const v = clipRef.current;
+    if (!v) return;
+    if (hovered) v.play().catch(() => {});
+    else { v.pause(); v.currentTime = 0; }
+  }, [hovered]);
   useEffect(() => { setSlide(0); }, [slides]);
   const isMobile = useMobile();
   const cardRef     = useRef<HTMLDivElement>(null);
@@ -359,7 +366,9 @@ export default function CaseCard({
               }}>{slide + 1} / {slides.length}</span>
             </>
           ) : clip ? (
-            <video src={clip} muted loop playsInline autoPlay preload="auto" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+            // Desktop: the clip plays only while the card is hovered, resting
+            // on its first frame
+            <video ref={clipRef} src={clip} muted loop playsInline preload="auto" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : image && (
             <img
               src={image}

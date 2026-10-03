@@ -309,7 +309,7 @@ export default function ServiceDetailPage({ serviceIdx = 0, onBack }: { serviceI
             <CaseCard ar={H} title="Senior*s Bar" services="2025" desc="Бар своей среды. Визуальный язык для офлайна и онлайна." />
           </div>
           <div style={{ gridColumn: '4/6' }} data-reveal="" data-reveal-delay="0.1">
-            <CaseCard ar={V} title="Gate Legal" services="2024" desc="Помогли запуститься: от платформы бренда до сайта — за полтора месяца." />
+            <CaseCard ar={V} title="Gate Legal" services="2024" desc="Помогли запуститься: от платформы бренда до сайта — за полтора месяца" />
           </div>
         </div>
       </div>

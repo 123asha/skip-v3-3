@@ -213,7 +213,7 @@ export default function DesignSystemPage() {
         {/* V card — occupies 2 cols */}
         <div style={{ gridColumn: '4/6' }}>
           <p style={{ ...ts, opacity: 0.35, marginBottom: 10, fontSize: '11px' }}>V — 5/6</p>
-          <CaseCard ar={V} title="Gate Legal" desc="Помогли запуститься: от платформы бренда до сайта — за полтора месяца." />
+          <CaseCard ar={V} title="Gate Legal" desc="Помогли запуститься: от платформы бренда до сайта — за полтора месяца" />
         </div>
       </div>
 

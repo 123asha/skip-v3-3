@@ -213,7 +213,8 @@ function interleaveHV(projects: Project[]): Project[] {
 // which would scatter more circles).
 const ROUND_ROW = 1, ROUND_COL = 1;
 
-const LEAD_IDS = [1, 2, 4, 3];
+// (AE Platform first, Magic Moon in its old place further down)
+const LEAD_IDS = [3, 2, 4, 1];
 // Always last on the page
 const LAST_IDS = [10];
 // Cases pinned to a place in the list (1-based): Coming soon fourth, Senior*s bar fifth, Gate Legal sixth,

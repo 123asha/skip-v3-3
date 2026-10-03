@@ -54,7 +54,7 @@ export const PROJECTS: Project[] = [
   { id: 5, preview: asset('/preview-keys.jpg'),  subs: ['strategy', 'design', 'uxui'], cats: ['branding', 'interfaces'],       ...img('/case5-v.webp'), title: 'Coming soon', clip: asset('/coming-soon.mp4'), year: '2026', desc: 'Брендинг и конструктор фирменной графики для социального проекта' },
   { id: 6, preview: asset('/preview-app.jpg'),  subs: ['tools', 'architecture', 'uxui'], cats: ['sites', 'interfaces', 'instruments'],    ...img('/case6-h.webp'), title: 'Gate Legal',     year: '2024', desc: 'Конструктор баннеров для ускорения разработки креативов к ежедневным постам' },
   { id: 7, preview: asset('/preview-seniors.webp'), slides: ['/preview-seniors.webp', '/cases/seniors/1.webp', '/cases/seniors/2.webp', '/cases/seniors/4.webp', '/cases/seniors/5.webp', '/cases/seniors/6.webp'].map(asset),  subs: ['strategy', 'design', 'tools'], cats: ['branding', 'sites', 'instruments'],      ...img('/case1-h.webp'), title: 'Senior*s bar',   year: '2025', desc: 'Бар своей среды. Визуальный язык для офлайна и онлайна', href: '/Seniorsbar' },
-  { id: 8, preview: asset('/preview-pocket.avif'),  subs: ['design', 'uxui', 'productStrategy'], cats: ['branding', 'sites', 'instruments'],                   ...img('/case2-v.webp'), title: 'Gate Legal',     year: '2024', desc: 'Помогли запуститься: от платформы бренда до сайта — за полтора месяца' },
+  { id: 8, preview: asset('/preview-gate-legal.avif'),  subs: ['design', 'uxui', 'productStrategy'], cats: ['branding', 'sites', 'instruments'],                   ...img('/case2-v.webp'), title: 'Gate Legal',     year: '2024', desc: 'Помогли запуститься' },
   { id: 9, preview: asset('/preview-phone.webp'),  subs: ['tools', 'uxui'], cats: ['interfaces', 'instruments'],             ...img('/case3-h.webp'), title: 'AliExpress',     year: '2026', desc: 'Тысячи партнёров AliExpress в одном дашборде' },
   { id: 10, preview: asset('/preview-coffee.webp'), subs: ['architecture', 'nocode', 'uxui'], cats: ['sites', 'interfaces', 'instruments'],    ...img('/case4-v.webp'), title: 'Binaroom',       year: '2025', desc: '3D-проекты превращаются в сметы и КП за минуту' },
   { id: 11, preview: asset('/preview-case4.webp'), subs: ['design', 'nocode'], cats: ['branding', 'sites'], ...img('/case4-v.webp'), title: "Kon' Ogon'", year: '2025', desc: 'Новогодний спецпроект Конь Огонь от студии Skip Design' },
@@ -216,9 +216,9 @@ const ROUND_ROW = 1, ROUND_COL = 1;
 const LEAD_IDS = [1, 2, 4, 3];
 // Always last on the page
 const LAST_IDS = [10];
-// Cases pinned to a place in the list (1-based): Coming soon fourth, Senior*s bar fifth,
-// Gate Legal seventh, Kon' Ogon' eighth
-const FIXED_POS: Record<number, number> = { 5: 4, 7: 5, 8: 7, 11: 8 };
+// Cases pinned to a place in the list (1-based): Coming soon fourth, Gate Legal fifth, Senior*s bar sixth,
+// Kon' Ogon' eighth
+const FIXED_POS: Record<number, number> = { 5: 4, 8: 5, 7: 6, 11: 8 };
 // The page order: lead cases first, the rest, Binaroom last, pinned ones in their place
 function orderCases<T extends { id: number }>(list: T[]): T[] {
   const out = [...list.filter(p => !LAST_IDS.includes(p.id)), ...list.filter(p => LAST_IDS.includes(p.id))];

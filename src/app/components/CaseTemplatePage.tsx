@@ -12,7 +12,7 @@ import { sound } from '../sound/Sound';
 import ZoomControl from './ZoomControl';
 import { MagneticDivider } from './MagneticDivider';
 import PillButton from './PillButton';
-import { LANG } from '../i18n';
+import { LANG, t } from '../i18n';
 import ContactForm from './ContactForm';
 import { asset } from '../utils/asset';
 import { usePinchSteps } from '../hooks/usePinchSteps';
@@ -356,10 +356,12 @@ const SEN_CAPS = {
 export const SENIORS_BAR: CaseData = {
   href: '/Seniorsbar',
   title: 'Senior*s Bar',
+  links: [{ label: 'Behance', href: 'https://www.behance.net/gallery/250692383/Seniors-community-bar' }],
   year: '2025',
   tags: ['Брендинг'],
   industry: 'ХоРеКа',
   intro: 'Бар своей среды. Визуальный язык для офлайна и онлайна.',
+  naturalSize: true,
   coverVideo: asset('/seniors.mp4'),
   blocks: [
     // Copy column — same four-step template as every other case
@@ -394,13 +396,17 @@ export const BINAROOM: CaseData = {
   industry: '',
   intro: 'Разработали дизайн платформы, которая помогает превращать 3D-проекты в сметы и коммерческие предложения, а также управлять документооборотом',
   naturalSize: true,
-  // The cover is a still: the wide render (not repeated in the stack below)
-  coverImage: bin(1),
+  // The cover is a still: the regular photo (the wide render opens the stack)
+  coverImage: asset('/preview-binaroom.avif'),
   blocks: [
+    { kind: 'single', ar: 'h', src: bin(1) },
     { kind: 'duo', left: 'v', right: 'v', leftSrc: bin(2), rightSrc: bin(3) },
     { kind: 'single', ar: 'h', src: bin(4) },
   ],
-  team: TEAM,
+  team: [
+    { name: 'Полина Шершнева', role: 'продуктовый дизайнер' },
+    { name: 'Сеня Синица', role: 'продакт-менеджер' },
+  ],
   // testimonial omitted — none for this case.
 };
 
@@ -413,13 +419,20 @@ const AE_TEAM = {
   alina: { name: 'Алина Калистрина', role: 'диджитал-дизайнер' },
 };
 
+const aeP = (n: number) => asset(`/cases/ae-plugin/${n}.avif`);
+const aeF = (n: number) => asset(`/cases/ae-platform/${n}.avif`);
+const aeL = (n: number) => asset(`/cases/ae-landing/${n}.avif`);
+
 export const AE_PLUGIN: CaseData = {
   href: '/plugin-aliexpress',
   title: 'Плагин AliExpress',
+  links: [{ label: 'Перейти', href: 'https://chromewebstore.google.com/detail/ae-platform/hpaeecfkmbiemajbfgllfgghfajplcdf' }],
   year: '2025',
   tags: ['Продукт'],
   industry: '',
   intro: 'Обновили дизайн плагина AE Platform, который упрощает работу с креативами для продавцов-участников партнёрской программы AliExpress',
+  naturalSize: true,
+  coverVideo: asset('/cases/ae-plugin/cover.mp4'),
   blocks: [
     { kind: 'text', title: 'С помощью плагина можно', text: [
       'Проверить, участвует ли товар в партнёрской программе;',
@@ -428,23 +441,37 @@ export const AE_PLUGIN: CaseData = {
       'Копировать и перезапускать креативы;',
       'Работать без лишнего — мы почистили функционал и избавились от артефактов',
     ].join('\n\n') },
+    { kind: 'single', ar: 'h', src: aeP(1) },
+    { kind: 'duo', left: 'v', right: 'v', leftSrc: aeP(2), rightSrc: aeP(3) },
+    { kind: 'single', ar: 'h', src: aeP(4) },
+    { kind: 'single', ar: 'h', src: aeP(5) },
   ],
-  team: [AE_TEAM.anna, AE_TEAM.senya],
+  team: [AE_TEAM.anna, AE_TEAM.senya, AE_TEAM.asha],
 };
 
 export const AE_PLATFORM: CaseData = {
   href: '/ae-platform',
   title: 'AE Platform',
+  links: [{ label: 'Перейти', href: 'https://aeplatform.ru/' }],
   year: '2025',
   tags: ['Продукт'],
   industry: '',
   intro: 'Обновили дизайн платформы AE Platform для продавцов-участников партнёрской программы AliExpress',
+  naturalSize: true,
+  coverImage: aeF(1),
   blocks: [
     { kind: 'text', title: 'Что сделали', text: [
       'Адаптировали продукт под задачи B2B-аудитории и сохранили визуальную целостность с основным брендом.',
       'Добавили дашборд и перераспределили функционал между страницами, чтобы ключевые действия выполнялись быстрее.',
       'Дополнили дизайн-систему необходимыми компонентами и состояниями.',
     ].join('\n\n') },
+    { kind: 'single', ar: 'h', src: aeF(2) },
+    { kind: 'single', ar: 'h', src: aeF(3) },
+    { kind: 'single', ar: 'h', src: aeF(4) },
+    { kind: 'single', ar: 'h', src: aeF(5) },
+    { kind: 'single', ar: 'h', src: aeF(6) },
+    { kind: 'single', ar: 'h', src: aeF(7) },
+    { kind: 'single', ar: 'h', src: aeF(8) },
   ],
   team: [AE_TEAM.senya, AE_TEAM.anna, AE_TEAM.asha],
 };
@@ -452,15 +479,23 @@ export const AE_PLATFORM: CaseData = {
 export const AE_LANDING: CaseData = {
   href: '/aliexpress-landing',
   title: 'Лендинг AliExpress',
+  links: [{ label: 'Перейти', href: 'https://aeplatform.ru/' }],
   year: '2025',
-  tags: ['Брендинг', 'Веб'],
+  tags: ['Веб'],
   industry: '',
   intro: 'Разработали дизайн лендинга для B2B-платформы, который презентует продукт, показывает его преимущества и формирует доверие к бренду',
+  naturalSize: true,
+  coverImage: aeL(1),
   blocks: [
     { kind: 'text', title: 'Подход', text: [
       'При работе с визуальной частью опирались на существующие константы бренда AliExpress и свежий дизайн AE Platform.',
       'Это позволило сохранить узнаваемость и преемственность с материнским брендом, а также обеспечить цельность с самим продуктом — лендинг органично продолжает его визуальный язык и создаёт ощущение бесшовного перехода в интерфейс платформы.',
     ].join('\n\n') },
+    { kind: 'single', ar: 'h', src: aeL(2) },
+    { kind: 'single', ar: 'h', src: aeL(3) },
+    { kind: 'single', ar: 'h', src: aeL(4) },
+    { kind: 'single', ar: 'h', src: aeL(5) },
+    { kind: 'single', ar: 'h', src: aeL(6) },
   ],
   team: [AE_TEAM.alina, AE_TEAM.anna, AE_TEAM.senya, AE_TEAM.asha],
 };
@@ -719,7 +754,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                 display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 'var(--gap)',
                 padding: '10px 0', borderTop: '1px solid var(--c-border)',
               }}>
-                <p style={{ ...textStyle, margin: 0 }}>{LANG === 'en' ? `${data.title} team` : `Команда ${data.title}`}</p>
+                <p style={{ ...textStyle, margin: 0 }}>{LANG === 'en' ? `${t(data.title)} team` : `Команда ${data.title}`}</p>
                 <p aria-label="спасибо" style={{ ...textStyle, margin: 0 }}>{'\u2665\uFE0E'}</p>
               </div>
             </div>
@@ -1042,12 +1077,6 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                 {copy}
                 {/* Skip the read-through, plus this case's outbound links */}
                 <div style={{ marginTop: 40, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
-                  <PillButton
-                    onClick={() => {
-                      const el = document.querySelector('[data-case-credits]') as HTMLElement | null;
-                      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }}
-                  >скипнуть описание</PillButton>
                   {data.links?.map(l => (
                     <PillButton key={l.href} href={l.href}>{l.label}</PillButton>
                   ))}

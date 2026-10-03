@@ -95,6 +95,7 @@ function ProjectCard({ project, onClick, aspect, scrubVideo, shape }: { project:
       image={project.image}
       preview={project.preview}
       video={project.video}
+      slides={project.href === '/Seniorsbar' ? undefined : project.slides}
       onClick={onClick}
     />
   );
@@ -191,7 +192,7 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: (href?: 
               minWidth: 0,
             }}
           >
-            <ProjectCard project={slot.project} aspect={slot.aspect} scrubVideo={slot.scrubVideo} shape={slot.shape} onClick={() => onCaseClick?.(slot.project.href)} />
+            <ProjectCard project={slot.project} aspect={slot.aspect} scrubVideo={slot.scrubVideo} shape={slot.shape} onClick={slot.scrubVideo || slot.project.id === 1 || slot.project.noLink ? undefined : () => (/^https?:/.test(slot.project.href ?? '') ? window.open(slot.project.href, '_blank', 'noopener') : onCaseClick?.(slot.project.href))} />
           </div>
         ))}
       </div>

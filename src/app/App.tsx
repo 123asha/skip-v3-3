@@ -81,10 +81,10 @@ const CLIENT_VIDEOS: Record<PeopleClient, { left: VideoConfig; right: VideoConfi
 // Picture shown in a circle under the «Нам доверяют» ticker while a client's
 // name is hovered — the preview of that client's case
 const CLIENT_PICTURES: Record<PeopleClient, string> = {
-  'AliExpress':   '/preview-phone.webp',
-  'Юрий Мурадян': '/preview-pocket.avif',
-  'Gate Legal':   '/preview-app.jpg',
-  'Senior*s Bar': '/preview-storefront.webp',
+  'AliExpress':   '/preview-ae-platform.webp',
+  'Юрий Мурадян': '/preview-case1.webp',
+  'Gate Legal':   '/preview-gate-legal.avif',
+  'Senior*s Bar': '/preview-seniors.webp',
 };
 
 const DEFAULT_PEOPLE_VIDEOS = {
@@ -500,7 +500,7 @@ function AppInner() {
   }, []);
 
   // Search / share tags for the page on screen (content/seo.ts)
-  useEffect(() => { applyPageMeta(pageMetaFor(pathname)); }, [pathname]);
+  useEffect(() => { { const m = pageMetaFor(pathname); applyPageMeta({ ...m, title: t(m.title), description: t(m.description) }); } }, [pathname]);
 
   const navigate = useCallback((path: string) => {
     window.history.pushState({}, '', _BASE + LANG_PREFIX + path);

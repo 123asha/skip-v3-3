@@ -40,25 +40,29 @@ export interface Project {
   title: string;
   desc: string;
   year: string;   // shown above the card
+  noLink?: boolean; // not a case yet: the card leads nowhere
   href?: string; // own case page (defaults to the generic template)
   /** Pictures to flip through inside the preview on the biggest (two-column)
    *  grid — only cases that have them; the first is the preview itself */
   slides?: string[];
 }
 
-export const PROJECTS: Project[] = [
-  { id: 1, preview: asset('/preview-case2.webp'), subs: ['strategy', 'design', 'uxui'], cats: ['branding'],       ...img('/case1-h.webp'), title: 'Magic Moon',     year: '2025', desc: 'Брендинг для приложения по трекингу целей и медитаций' },
-  { id: 2, preview: asset('/preview-case1.webp'), subs: ['strategy', 'design', 'architecture'], cats: ['interfaces'],      ...img('/case2-v.webp'), title: 'Magic Moon App',     year: '2024', desc: 'Трекер целей от Юрия Мурадяна, в котором визуал поддерживает философию продукта', video: asset('/magic-moon.mp4') },
+// Cards kept in the list but not shown yet (the second Gate Legal)
+const HIDDEN_IDS = [6];
+const ALL_PROJECTS: Project[] = [
+  { id: 1, preview: asset('/preview-case2.webp'), subs: ['strategy', 'design', 'uxui'], cats: ['branding'],       ...img('/case1-h.webp'), title: 'Magic Moon',     year: '2025', desc: 'Брендинг для приложения по трекингу целей и медитаций (soon)', noLink: true },
+  { id: 2, preview: asset('/preview-case1.webp'), slides: [asset('/preview-case1.webp'), ...[1, 2, 3, 4, 5].map(n => asset(`/cases/magic-moon-app/${n}.avif`))], subs: ['strategy', 'design', 'architecture'], cats: ['interfaces'],      ...img('/case2-v.webp'), title: 'Magic Moon App',     year: '2024', desc: 'Трекер целей от Юрия Мурадяна, в котором визуал поддерживает философию продукта (soon)', noLink: true, video: asset('/magic-moon.mp4') },
   { id: 3, preview: asset('/preview-ae-platform.webp'),  subs: ['design', 'tools', 'uxui'], cats: ['interfaces'], ...img('/case3-h.webp'), title: 'AE Platform',     year: '2025', desc: 'Тысячи партнёров AliExpress в одной B2B-платформе AE Platform', href: '/ae-platform' },
   { id: 4, preview: asset('/preview-case4.webp'), subs: ['design', 'nocode'], cats: ['interfaces'],                     ...img('/case4-v.webp'), title: 'Плагин AliExpress',    year: '2025', desc: 'Браузерное расширение для отображения affiliate-данных прямо на AliExpress', href: '/plugin-aliexpress' },
-  { id: 5, preview: asset('/preview-keys.jpg'),  subs: ['strategy', 'design', 'uxui'], cats: ['branding', 'interfaces'],       ...img('/case5-v.webp'), title: 'Coming soon', clip: asset('/coming-soon.mp4'), year: '2026', desc: 'Брендинг и конструктор фирменной графики для социального проекта' },
+  { id: 5, preview: asset('/preview-keys.jpg'),  subs: ['strategy', 'design', 'uxui'], cats: ['branding', 'interfaces'],       ...img('/case5-v.webp'), title: 'Coming soon', noLink: true, clip: asset('/coming-soon.mp4'), year: '2026', desc: 'Брендинг и конструктор фирменной графики для социального проекта' },
   { id: 6, preview: asset('/preview-app.jpg'),  subs: ['tools', 'architecture', 'uxui'], cats: ['sites', 'interfaces', 'instruments'],    ...img('/case6-h.webp'), title: 'Gate Legal',     year: '2024', desc: 'Конструктор баннеров для ускорения разработки креативов к ежедневным постам' },
   { id: 7, preview: asset('/preview-seniors.webp'), slides: ['/preview-seniors.webp', '/cases/seniors/1.webp', '/cases/seniors/2.webp', '/cases/seniors/4.webp', '/cases/seniors/5.webp', '/cases/seniors/6.webp'].map(asset),  subs: ['strategy', 'design', 'tools'], cats: ['branding', 'sites', 'instruments'],      ...img('/case1-h.webp'), title: 'Senior*s bar',   year: '2025', desc: 'Бар своей среды. Визуальный язык для офлайна и онлайна', href: '/Seniorsbar' },
-  { id: 8, preview: asset('/preview-gate-legal.avif'),  subs: ['design', 'uxui', 'productStrategy'], cats: ['branding', 'sites', 'instruments'],                   ...img('/case2-v.webp'), title: 'Gate Legal',     year: '2024', desc: 'Помогли запуститься' },
-  { id: 9, preview: asset('/preview-landing.webp'),  subs: ['tools', 'uxui'], cats: ['branding', 'sites', 'interfaces'],             ...img('/case3-h.webp'), title: 'Лендинг AliExpress',     year: '2026', desc: 'Страница, которая приводит партнёров AliExpress', href: '/aliexpress-landing' },
+  { id: 8, preview: asset('/preview-gate-legal.avif'),  subs: ['design', 'uxui', 'productStrategy'], cats: ['branding', 'sites', 'instruments'],                   ...img('/case2-v.webp'), title: 'Gate Legal',     year: '2024', desc: 'Помогли запуститься', href: 'https://gate.legal/' },
+  { id: 9, preview: asset('/preview-landing.webp'),  subs: ['tools', 'uxui'], cats: ['sites'],             ...img('/case3-h.webp'), title: 'Лендинг AliExpress',     year: '2026', desc: 'Страница, которая приводит партнёров AliExpress', href: '/aliexpress-landing' },
   { id: 10, preview: asset('/preview-binaroom.avif'), subs: ['architecture', 'nocode', 'uxui'], cats: ['sites', 'interfaces', 'instruments'],    ...img('/case4-v.webp'), title: 'Binaroom',       year: '2025', desc: '3D-проекты превращаются в сметы и КП за минуту', href: '/binaroom' },
-  { id: 11, preview: asset('/preview-case4.webp'), subs: ['design', 'nocode'], cats: ['branding', 'sites'], ...img('/case4-v.webp'), title: "Kon' Ogon'", year: '2025', desc: 'Новогодний спецпроект Конь Огонь от студии Skip Design' },
+  { id: 11, preview: asset('/preview-kon.avif'), subs: ['design', 'nocode'], cats: ['branding', 'sites'], ...img('/case4-v.webp'), title: "Kon' Ogon'", year: '2025', desc: 'Новогодний спецпроект Конь Огонь от студии Skip Design', href: 'https://kon.skip.design/' },
 ];
+export const PROJECTS: Project[] = ALL_PROJECTS.filter(p => !HIDDEN_IDS.includes(p.id));
 
 // Grey category line in each card's description spot (gives way on hover): the case's filter categories, one or
 // two, comma-separated
@@ -106,7 +110,7 @@ const SUBTABS: Record<string, { key: string; label: string }[]> = {
 const CFG_GAP  = { a: '1 / 3', b: '4 / 6' };  // left card col 1-2, right col 4-5
 const CFG_ADJ  = { a: '2 / 4', b: '4 / 6' };  // left card col 2-3, right col 4-5 (always aligned)
 
-interface RowItem { project: Project; col: string; round?: boolean; ar?: AR; }
+interface RowItem { project: Project; col: string; round?: boolean; square?: boolean; ar?: AR; }
 interface Row { key: string; items: RowItem[]; }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -236,6 +240,26 @@ function orderCases<T extends { id: number }>(list: T[]): T[] {
 // vertical, the third is square (the home page keeps their usual shapes)
 const LEAD_AR: Record<number, AR> = { 1: V, 4: H, 3: V, 11: V };
 
+// A card's shape belongs to the card: worked out once from its place in the
+// full list (three to a row — second row vertical · circle · vertical), so
+// sorting by category or changing the columns never changes it
+function fullOrder(projects: Project[]): Project[] {
+  const mixed = interleaveHV(projects);
+  const lead = LEAD_IDS.map(id => mixed.find(p => p.id === id)).filter((p): p is Project => !!p);
+  const rest = mixed.filter(p => !LEAD_IDS.includes(p.id));
+  return orderCases([...lead, ...rest]);
+}
+const SHAPES: Record<number, { round: boolean; square: boolean; ar?: AR }> = (() => {
+  const out: Record<number, { round: boolean; square: boolean; ar?: AR }> = {};
+  fullOrder(PROJECTS).forEach((p, k) => {
+    const mid = Math.floor(k / 3) === 1;
+    const round = mid && k % 3 === 1;
+    const square = (p.href === '/Seniorsbar' && round) || p.href === '/binaroom';
+    out[p.id] = { round: round && p.href !== '/binaroom', square, ar: LEAD_AR[p.id] ?? (mid && k % 3 !== 1 ? V : undefined) };
+  });
+  return out;
+})();
+
 function buildScatterRows(projects: Project[], perRow: number, gridCols: number): Row[] {
   // The four lead cases (the ones on the home page) open the page, in their
   // own order; the rest follow as interleaved
@@ -276,8 +300,9 @@ function buildScatterRows(projects: Project[], perRow: number, gridCols: number)
         // from its place in the list (three to a row — the reference layout:
         // second row vertical · circle · vertical), so the same card keeps
         // its proportions at every number of columns
-        round: Math.floor((i + j) / 3) === 1 && (i + j) % 3 === 1,
-        ar: LEAD_AR[project.id] ?? (Math.floor((i + j) / 3) === 1 && (i + j) % 3 !== 1 ? V : undefined),
+        round: SHAPES[project.id]?.round,
+        square: SHAPES[project.id]?.square,
+        ar: SHAPES[project.id]?.ar,
       })),
     });
   }
@@ -313,9 +338,9 @@ function mobileColSpan(idx: number): string {
 }
 
 // ── ProjectCard ───────────────────────────────────────────────────────────────
-function ProjectCard({ ar, cats, title, desc, image, preview, clip, video, slides, onClick, servicesSize, metaSize, hideMeta, hideImage, round, stackMeta, hideCats, tall, slider }: Project & { slider?: boolean; hideCats?: boolean; tall?: boolean; onClick?: () => void; servicesSize?: string | number; metaSize?: string | number; hideMeta?: boolean; hideImage?: boolean; round?: boolean; stackMeta?: boolean }) {
+function ProjectCard({ ar, cats, title, desc, image, preview, clip, video, slides, onClick, servicesSize, metaSize, hideMeta, hideImage, round, square, stackMeta, hideCats, tall, slider }: Project & { slider?: boolean; hideCats?: boolean; tall?: boolean; onClick?: () => void; servicesSize?: string | number; metaSize?: string | number; hideMeta?: boolean; hideImage?: boolean; round?: boolean; square?: boolean; stackMeta?: boolean }) {
   return (
-    <CaseCard ar={ar} title={title} desc={desc} services={hideCats ? undefined : catLine(cats)} showCats servicesSize={servicesSize} metaSize={metaSize} hideMeta={hideMeta} hideImage={hideImage} image={image} preview={preview} clip={clip} video={video} onClick={onClick} round={round} stackMeta={stackMeta} tall={tall} slides={slider ? slides : undefined} />
+    <CaseCard square={square} ar={ar} title={title} desc={desc} services={hideCats ? undefined : catLine(cats)} showCats servicesSize={servicesSize} metaSize={metaSize} hideMeta={hideMeta} hideImage={hideImage} image={image} preview={preview} clip={clip} video={video} onClick={onClick} round={round} stackMeta={stackMeta} tall={tall} slides={slider ? slides : undefined} />
   );
 }
 
@@ -920,7 +945,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
               <div key={project.id} data-case-card="" style={{ minWidth: 0 }}>
                 {/* Two columns: the caption stacks (name over description) */}
                 {/* Phone: every preview 4:5, one or two a row; no category line */}
-                <ProjectCard {...project} ar={V} tall hideCats stackMeta={mobCols === 2} slider={mobCols === 1} onClick={() => onCaseClick?.(project.href)} />
+                <ProjectCard {...project} ar={V} tall hideCats stackMeta={mobCols === 2} slider={mobCols === 1} onClick={project.noLink ? undefined : () => (/^https?:/.test(project.href ?? '') ? window.open(project.href, '_blank', 'noopener') : onCaseClick?.(project.href))} />
               </div>
             ))
           ) : (
@@ -934,7 +959,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
                   data-id={item.project.id}
                   style={{ gridColumn: item.col, gridRow: rowIdx + 1, minWidth: 0 }}
                 >
-                  <ProjectCard {...item.project} ar={item.ar ?? item.project.ar} round={item.round} servicesSize={ZOOM_CFG[zoom].cap} metaSize={ZOOM_CFG[zoom].cap} hideMeta={!ZOOM_CFG[zoom].showMeta} hideImage={ZOOM_CFG[zoom].imagesOff} slider={zoom === ZOOM_MAX} onClick={() => onCaseClick?.(item.project.href)} />
+                  <ProjectCard {...item.project} ar={item.ar ?? item.project.ar} round={item.round} square={item.square} servicesSize={ZOOM_CFG[zoom].cap} metaSize={ZOOM_CFG[zoom].cap} hideMeta={!ZOOM_CFG[zoom].showMeta} hideImage={ZOOM_CFG[zoom].imagesOff} slider={ZOOM_CFG[zoom].cols <= 4} onClick={item.project.noLink ? undefined : () => (/^https?:/.test(item.project.href ?? '') ? window.open(item.project.href, '_blank', 'noopener') : onCaseClick?.(item.project.href))} />
                 </div>
               ))
             )

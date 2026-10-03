@@ -75,6 +75,8 @@ export interface CaseCardProps {
   /** Force round or square instead of the title-hash default — used where a
    *  page needs to control exactly how many/which cards are round */
   round?: boolean;
+  /** Keeps the round slot's 1:1 proportions but with square corners */
+  square?: boolean;
   /** Phone, two cards per row: the name sits over the description instead
    *  of beside it */
   stackMeta?: boolean;
@@ -95,7 +97,7 @@ const servicesStyle: React.CSSProperties = {
 };
 
 export default function CaseCard({
-  ar, title, desc, services, showCats, servicesSize, metaSize, image: rawImage, preview, clip, video: rawVideo, onClick, linkLabel = 'Перейти', hideMeta = false, hideImage = false, aspect, scrubVideo, round, stackMeta, tall, slides,
+  ar, title, desc, services, showCats, servicesSize, metaSize, image: rawImage, preview, clip, video: rawVideo, onClick, linkLabel = 'Перейти', hideMeta = false, hideImage = false, aspect, scrubVideo, round, square, stackMeta, tall, slides,
 }: CaseCardProps) {
   // Per-card caption style — size overridable so it scales with the grid zoom.
   const svcStyle: React.CSSProperties = servicesSize != null
@@ -128,7 +130,7 @@ export default function CaseCard({
   // For now every preview is round, wherever cases are listed
   // The flagship (a card given its own proportions, e.g. the full-width one)
   // always keeps those instead of round/square.
-  const isRound = !aspect && (round ?? (ROUND_PREVIEWS && isCaseRound(title)));
+  const isRound = !aspect && (square || (round ?? (ROUND_PREVIEWS && isCaseRound(title))));
 
   // No fixed card height: the image always keeps its aspect ratio and the
   // description row always reserves its space (only its text fades in on
@@ -207,7 +209,8 @@ export default function CaseCard({
   // all-keyframe, so a seek is cheap. Phones just loop — iOS paints seeks badly.
   const scrubRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
-    if (!scrubVideo || isMobile) return;
+    // The clip now just plays on its own everywhere (no scroll scrub)
+    if (true || !scrubVideo || isMobile) return;
     const vid = scrubRef.current;
     const box = cardRef.current;
     if (!vid || !box) return;
@@ -255,7 +258,7 @@ export default function CaseCard({
     return (
       // Not clipped: the picture bleeds half the side padding past the card
       // (index.css, --m-bleed), and the card's own overflow would cut that off
-      <div className={s.card} onClick={onClick} style={{ overflow: 'visible' }}>
+      <div className={s.card} onClick={onClick} style={{ overflow: 'visible', ...(onClick ? null : { cursor: 'default' }) }}>
         {/* Two per row: every picture 4:5, so the rows line up */}
         <div className={`${s.cardImage}${stackMeta || tall ? ` ${s.cardTall}` : ''}`} style={{ aspectRatio: ar, width: '100%', flex: 'none', ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}>
           {slides && slides.length > 1 ? (
@@ -303,7 +306,7 @@ export default function CaseCard({
     <div
       ref={cardRef}
       className={s.card}
-      style={{ display: 'flex', flexDirection: 'column', overflow: 'visible' }}
+      style={{ display: 'flex', flexDirection: 'column', overflow: 'visible', ...(onClick ? null : { cursor: 'default' }) }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={onClick}
@@ -320,7 +323,7 @@ export default function CaseCard({
       {!hideImage && (
         <div
           className={`${s.cardImage}${isRound ? ` ${s.cardRound}` : ''}${aspect ? ` ${s.cardWide}` : ''}${!isRound && !aspect && !isHorizontal ? ` ${s.cardTall}` : ''}`}
-          style={{ aspectRatio: aspect ?? (isHorizontal ? '4/3' : '4/5'), width: '100%', flexShrink: 0, ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}
+          style={{ aspectRatio: aspect ?? (isHorizontal ? '4/3' : '4/5'), width: '100%', flexShrink: 0, ...(square ? { borderRadius: 0 } : null), ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}
         >
           {scrubVideo && (
             <video
@@ -329,9 +332,9 @@ export default function CaseCard({
               muted
               playsInline
               preload="auto"
-              // Desktop: driven by the scroll (see above). Phone: just loops.
-              autoPlay={isMobile}
-              loop={isMobile}
+              // Plays and loops by itself, on desktop and phone alike
+              autoPlay
+              loop
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1 }}
             />
           )}

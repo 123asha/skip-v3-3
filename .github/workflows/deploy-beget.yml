@@ -1,0 +1,34 @@
+# Builds the skip.design version (base /) and uploads it to Beget over FTP.
+# Run by hand: Actions → «Deploy to Beget» → Run workflow.
+# Needs three repository secrets: BEGET_FTP_HOST, BEGET_FTP_USER, BEGET_FTP_PASSWORD
+# (and optionally BEGET_FTP_DIR, the site folder on the server, e.g. skip.design/public_html/).
+# Files that aren't in the build (tg-config.php and the like) are left alone.
+name: Deploy to Beget
+
+on:
+  workflow_dispatch:
+
+concurrency: beget
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npm run build:beget
+      - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.BEGET_FTP_HOST }}
+          username: ${{ secrets.BEGET_FTP_USER }}
+          password: ${{ secrets.BEGET_FTP_PASSWORD }}
+          local-dir: ./dist-beget/
+          server-dir: ${{ secrets.BEGET_FTP_DIR || 'skip.design/public_html/' }}
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            tg-config.php

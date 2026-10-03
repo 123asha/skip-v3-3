@@ -18,7 +18,7 @@ import ExpertizaPage2 from './components/ExpertizaPage2';
 import MindMapBlock from './components/MindMapBlock';
 import PolicyPage from './components/PolicyPage';
 import Index2Page from './components/Index2Page';
-import CaseTemplatePage, { SENIORS_BAR } from './components/CaseTemplatePage';
+import CaseTemplatePage, { SENIORS_BAR, BINAROOM } from './components/CaseTemplatePage';
 import GuidePage from './components/GuidePage';
 import MoscowTime from './components/MoscowTime';
 import BunnyHero from './components/BunnyHero';
@@ -441,7 +441,7 @@ function stripBase(p: string): string {
 
 // Pages whose top area is a full-bleed cover/video — there the nav inverts
 // itself; everywhere else it is plain text on the light background.
-const INVERTED_NAV_PAGES = new Set(['home', 'index2', 'case-template', 'seniors']);
+const INVERTED_NAV_PAGES = new Set(['home', 'index2', 'case-template', 'seniors', 'binaroom']);
 
 function AppInner() {
   const [pathname, setPathname] = useState(() => {
@@ -456,7 +456,7 @@ function AppInner() {
   });
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
-  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/services-2', '/policy', '/index2', '/case-template', '/Seniorsbar', '/guide', '/lab', '/insights', '/system', '/brand', '/visual', '/digital'];
+  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/services-2', '/policy', '/index2', '/case-template', '/Seniorsbar', '/binaroom', '/guide', '/lab', '/insights', '/system', '/brand', '/visual', '/digital'];
   const page = pathname === '/cases' ? 'cases'
              : pathname === '/instruments' ? 'instruments'
              : (pathname === '/expertiza' || pathname === '/services') ? 'expertiza'
@@ -466,6 +466,7 @@ function AppInner() {
              : pathname === '/index2' ? 'index2'
              : pathname === '/case-template' ? 'case-template'
              : pathname === '/Seniorsbar' ? 'seniors'
+             : pathname === '/binaroom' ? 'binaroom'
              : pathname === '/guide' ? 'guide'
              // /lab is the old address of the insights page — still opens it
              : pathname === '/insights' || pathname === '/lab' ? 'lab'
@@ -971,7 +972,7 @@ function AppInner() {
   // sections are dimmed with opacity instead of a grey colour.
   // The section the menu marks as current
   const navSection = page === 'expertiza2' ? 'expertiza'
-    : page === 'case-template' || page === 'seniors' ? 'cases' : page === 'insight' ? 'lab' : page;
+    : page === 'case-template' || page === 'seniors' || page === 'binaroom' ? 'cases' : page === 'insight' ? 'lab' : page;
   // Phone: the menu links are chips — the current one spreads the others
   // from it, like the filter chips (utils/chipBounce)
   const navLinksRef = useRef<HTMLSpanElement>(null);
@@ -981,7 +982,7 @@ function AppInner() {
   useEffect(() => {
     const root = document.documentElement;
     if (!isMobile) { root.removeAttribute('data-nav-hidden'); return; }
-    const hideOnDown = page === 'cases' || page === 'case-template' || page === 'seniors' || page === 'insight';
+    const hideOnDown = page === 'cases' || page === 'case-template' || page === 'seniors' || page === 'binaroom' || page === 'insight';
     let last = 0;
     const onScroll = (e: Event) => {
       // Inner pages scroll their own layer; the home page scrolls the window
@@ -1011,7 +1012,7 @@ function AppInner() {
     // The /services-2 sandbox counts as the services section
     // Case pages count as the projects section
     const section = page === 'expertiza2' ? 'expertiza'
-      : page === 'case-template' || page === 'seniors' ? 'cases' : page === 'insight' ? 'lab' : page;
+      : page === 'case-template' || page === 'seniors' || page === 'binaroom' ? 'cases' : page === 'insight' ? 'lab' : page;
     // Home and other pages with no current section: all three dark
     if (!['cases', 'expertiza', 'lab'].includes(section)) return undefined;
     // The site's standard muted grey. The nav blends by difference (white
@@ -1062,7 +1063,7 @@ function AppInner() {
   useEffect(() => {
     const was = prevPath.current;
     prevPath.current = pathname;
-    if (pathname === '/' && (was === '/cases' || was === '/instruments' || was === '/expertiza' || was === '/services' || was === '/policy' || was === '/case-template' || was === '/Seniorsbar' || was === '/guide' || was === '/lab' || was === '/insights' || was.startsWith('/insights/'))) {
+    if (pathname === '/' && (was === '/cases' || was === '/instruments' || was === '/expertiza' || was === '/services' || was === '/policy' || was === '/case-template' || was === '/Seniorsbar' || was === '/binaroom' || was === '/guide' || was === '/lab' || was === '/insights' || was.startsWith('/insights/'))) {
       requestAnimationFrame(() => {
         if (casesLinkRef.current) gsap.set(casesLinkRef.current, { opacity: 1 });
         if (toolsLinkRef.current) gsap.set(toolsLinkRef.current, { opacity: 1 });
@@ -1523,6 +1524,7 @@ function AppInner() {
       {page === 'index2' && <Index2Page />}
       {page === 'case-template' && <CaseTemplatePage onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}
       {page === 'seniors' && <CaseTemplatePage data={SENIORS_BAR} onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}
+      {page === 'binaroom' && <CaseTemplatePage data={BINAROOM} onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}
       {page === 'guide' && <GuidePage />}
       {page === 'system' && <DesignSystemPage />}
       {page === 'svc-brand'   && <ServiceDetailPage serviceIdx={0} onBack={() => navigateWithExit('/services')} />}

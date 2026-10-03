@@ -369,8 +369,28 @@ export const SENIORS_BAR: CaseData = {
   // testimonial omitted — not shown on the Senior*s page.
 };
 
+// Binaroom — the 3D-projects platform (text and pictures from the studio's
+// earlier page, skip.design/room-3d.html)
+const bin = (n: number) => asset(`/cases/binaroom/${n}.avif`);
+export const BINAROOM: CaseData = {
+  href: '/binaroom',
+  title: 'Binaroom',
+  year: '2023',
+  tags: ['Веб', 'Продукт'],
+  industry: '',
+  intro: 'Разработали дизайн платформы, которая помогает превращать 3D-проекты в сметы и коммерческие предложения, а также управлять документооборотом',
+  coverVideo: asset('/cases/binaroom/cover.mp4'),
+  blocks: [
+    { kind: 'single', ar: 'h', src: bin(1) },
+    { kind: 'duo', left: 'v', right: 'v', leftSrc: bin(2), rightSrc: bin(3) },
+    { kind: 'single', ar: 'h', src: bin(4) },
+  ],
+  team: TEAM,
+  // testimonial omitted — none for this case.
+};
+
 // Reading order of the cases — the last block of one case shows the next one
-CASES.push(GATE_LEGAL, SENIORS_BAR);
+CASES.push(GATE_LEGAL, SENIORS_BAR, BINAROOM);
 
 export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavigateCase, data = GATE_LEGAL }: { onNavigatePolicy?: () => void; onGridMode?: (on: boolean) => void; onNavigateCase?: (href: string) => void; data?: CaseData }) {
   // The case that follows this one — its meta strip closes the page

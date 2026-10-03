@@ -36,6 +36,9 @@ const ROUND_PREVIEWS = false;
 // Some previews round, the rest square — picked from the title so a case
 // keeps its shape across reloads and pages. Exported so a gallery can balance
 // how many round cards land in the same row before it hands out the props.
+// Second of a preview clip shown while it isn't playing (the stop frame)
+const CLIP_POSTER = 1.85;
+
 export function isCaseRound(title: string): boolean {
   return [...title].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 0) % 2 === 0;
 }
@@ -110,8 +113,8 @@ export default function CaseCard({
   useEffect(() => {
     const v = clipRef.current;
     if (!v) return;
-    if (hovered) v.play().catch(() => {});
-    else { v.pause(); v.currentTime = 0; }
+    if (hovered) { v.currentTime = 0; v.play().catch(() => {}); }
+    else { v.pause(); v.currentTime = CLIP_POSTER; }
   }, [hovered]);
   useEffect(() => { setSlide(0); }, [slides]);
   const isMobile = useMobile();
@@ -368,7 +371,10 @@ export default function CaseCard({
           ) : clip ? (
             // Desktop: the clip plays only while the card is hovered, resting
             // on its first frame
-            <video ref={clipRef} src={clip} muted loop playsInline preload="auto" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+            <video ref={clipRef} src={clip} muted loop playsInline preload="auto"
+              // At rest the clip shows its poster frame (CLIP_POSTER)
+              onLoadedMetadata={e => { if (!hovered) e.currentTarget.currentTime = CLIP_POSTER; }}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : image && (
             <img
               src={image}

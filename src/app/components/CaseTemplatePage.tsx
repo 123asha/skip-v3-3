@@ -280,6 +280,8 @@ export interface CaseData {
   intro: string;     // meta description text
   /** Pictures shown at their own proportions (width fills, height auto) */
   naturalSize?: boolean;
+  /** A still cover picture (instead of a video or a flat colour) */
+  coverImage?: string;
   coverVideo?: string; // if set, the cover plays this video instead of a flat colour
   blocks: CaseBlock[];
   team: { name: string; role: string }[];
@@ -392,9 +394,9 @@ export const BINAROOM: CaseData = {
   industry: '',
   intro: 'Разработали дизайн платформы, которая помогает превращать 3D-проекты в сметы и коммерческие предложения, а также управлять документооборотом',
   naturalSize: true,
-  coverVideo: asset('/cases/binaroom/cover.mp4'),
+  // The cover is a still: the wide render (not repeated in the stack below)
+  coverImage: bin(1),
   blocks: [
-    { kind: 'single', ar: 'h', src: bin(1) },
     { kind: 'duo', left: 'v', right: 'v', leftSrc: bin(2), rightSrc: bin(3) },
     { kind: 'single', ar: 'h', src: bin(4) },
   ],
@@ -724,6 +726,9 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
               autoPlay={isMobile} loop={isMobile}
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
             />
+          ) : data.coverImage ? (
+            <img src={data.coverImage} alt={data.title}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             <div style={{ position: 'absolute', inset: 0, background: 'var(--c-surface)' }} />
           )}

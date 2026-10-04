@@ -184,8 +184,8 @@ const INSIGHTS: Insight[] = [
   {
     name: 'Фреймворк',
     desc: 'Конструктор миссии',
-    year: '2026',
-    date: '12.03.2026',
+    year: '2025',
+    date: '25.10.2025',
     source: 'VC',
     slug: 'konstruktor-missii-brenda',
     body: [

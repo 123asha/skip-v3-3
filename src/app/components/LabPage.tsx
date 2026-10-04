@@ -7,26 +7,38 @@ import { INSIGHTS_LIST, isInternal } from '../content/insights';
 import { goTo, siteHref } from '../utils/siteNav';
 import { useMobile } from '../hooks/useMobile';
 
-// Top of the insights page: just the articles as text — title, then date
+const MONTHS_RU = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+// Top of the insights page: the articles as text, grouped under their month
+// (titles stepped in under it), the groups flowing in two columns
 function InsightList() {
   const isMobile = useMobile();
+  const groups: { label: string; items: typeof INSIGHTS_LIST }[] = [];
+  for (const it of INSIGHTS_LIST) {
+    const [, m, y] = (it.date ?? '').split('.');
+    const names = LANG === 'en' ? MONTHS_EN : MONTHS_RU;
+    const label = m ? `${names[Number(m) - 1]}${Number(y) !== new Date().getFullYear() ? ` ${y}` : ''}` : (it.year ?? '');
+    const last = groups[groups.length - 1];
+    if (last && last.label === label) last.items.push(it);
+    else groups.push({ label, items: [it] });
+  }
   return (
-    <div style={{ marginBottom: 'var(--space-xl)' }}>
-      {INSIGHTS_LIST.map((it, i) => (
-        <a
-          key={it.href ?? i}
-          href={isInternal(it.href) ? siteHref(it.href!) : it.href}
-          target={isInternal(it.href) ? undefined : '_blank'}
-          rel={isInternal(it.href) ? undefined : 'noopener noreferrer'}
-          onClick={isInternal(it.href) ? e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); goTo(it.href!); } : undefined}
-          style={{
-            display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 'var(--gap)',
-            padding: '6px 0', color: 'var(--c-text)', textDecoration: 'none',
-          }}
-        >
-          <span style={{ ...TEXT_STYLE, paddingRight: isMobile ? 0 : 40 }}>{typo(it.desc)}</span>
-          <span style={{ ...TEXT_STYLE, opacity: 'var(--opacity-muted)' as any }}>{it.shown}</span>
-        </a>
+    <div style={{ marginBottom: 'var(--space-xl)', columnCount: isMobile ? 1 : 2, columnGap: 'var(--gap)' }}>
+      {groups.map(g => (
+        <div key={g.label} style={{ breakInside: 'avoid', marginBottom: 32 }}>
+          <p style={{ ...TEXT_STYLE, margin: '0 0 6px', opacity: 'var(--opacity-muted)' as any }}>{g.label}</p>
+          {g.items.map((it, i) => (
+            <a
+              key={it.href ?? i}
+              href={isInternal(it.href) ? siteHref(it.href!) : it.href}
+              target={isInternal(it.href) ? undefined : '_blank'}
+              rel={isInternal(it.href) ? undefined : 'noopener noreferrer'}
+              onClick={isInternal(it.href) ? e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); goTo(it.href!); } : undefined}
+              style={{ ...TEXT_STYLE, display: 'block', padding: '3px 0 3px 40px', color: 'var(--c-text)', textDecoration: 'none' }}
+            >{typo(it.desc)}</a>
+          ))}
+        </div>
       ))}
     </div>
   );

@@ -158,10 +158,12 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       <canvas ref={canvasRef} aria-hidden="true" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />
       <div className={s.body} style={{ position: 'relative', zIndex: 1, paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
         
-        <h1 ref={textRef} style={{ ...H1, display: 'flex', flexDirection: 'column', gap: '0.2em', }}>
-          {/* Each paragraph's first line starts on the page grid's second column */}
+        <h1 ref={textRef} style={{ ...H1, display: 'flex', flexDirection: 'column', gap: '0.2em',
+          // Desktop: the text sits on page columns 2–3
+          ...(isMobile ? null : { marginLeft: 'calc((100% - 4 * var(--gap)) / 5 + var(--gap))', width: 'calc((100% - 4 * var(--gap)) / 5 * 2 + var(--gap))' }) }}>
+          {/* Phone: each paragraph's first line starts a third in */}
           {TEXT.map((p, i) => (
-            <span key={i} style={{ textIndent: isMobile ? '33.333vw' : 'calc((100% - 4 * var(--gap)) / 5 + var(--gap))' }}>
+            <span key={i} style={{ textIndent: isMobile ? '33.333vw' : 0 }}>
               {typo(t(p)).split(' ').map((w, k) => <span key={k}><span data-w="" style={{ display: 'inline-block', textIndent: 0 }}>{w}</span>{' '}</span>)}
             </span>
           ))}

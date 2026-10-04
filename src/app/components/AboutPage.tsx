@@ -30,16 +30,6 @@ const DARK: Record<string, string> = {
   '--c-border': '#2e2e2e', '--c-text-muted': '#7c7c7c', '--c-button': '#2a2a2a',
 };
 
-// The home headline: its size, leading and tracking (ScrollHero)
-const H1: React.CSSProperties = {
-  fontFamily: 'var(--font-display)',
-  fontSize: 'var(--hero-fs, min(var(--hero-size), 7.2vw))',
-  fontWeight: 'var(--heading-weight)' as React.CSSProperties['fontWeight'],
-  lineHeight: 'var(--hero-lh, 0.8755)',
-  letterSpacing: '-0.03em',
-  color: 'var(--c-text)',
-  margin: 0,
-};
 
 import { useMobile } from '../hooks/useMobile';
 
@@ -71,9 +61,15 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
     const words = Array.from(textRef.current!.querySelectorAll<HTMLElement>('[data-w]'));
     let lines: { els: HTMLElement[]; on: boolean }[] = [];
     const build = () => {
-      const byTop = new Map<number, HTMLElement[]>();
-      words.forEach(w => { const t = Math.round(w.offsetTop / 4); (byTop.get(t) ?? byTop.set(t, []).get(t)!).push(w); });
-      lines = [...byTop.entries()].sort((a, b) => a[0] - b[0]).map(([, els]) => ({ els, on: false }));
+      // Lines are told apart by column and top; the left column reads first
+      const colW = textRef.current!.clientWidth / 2;
+      const byLine = new Map<number, HTMLElement[]>();
+      words.forEach(w => {
+        const col = window.innerWidth > 768 ? Math.floor(w.offsetLeft / colW) : 0;
+        const key = col * 100000 + Math.round(w.offsetTop / 6);
+        (byLine.get(key) ?? byLine.set(key, []).get(key)!).push(w);
+      });
+      lines = [...byLine.entries()].sort((a, b) => a[0] - b[0]).map(([, els]) => ({ els, on: false }));
       gsap.set(words, { yPercent: 70, opacity: 0 });
       check();
     };
@@ -158,12 +154,12 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       <canvas ref={canvasRef} aria-hidden="true" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />
       <div className={s.body} style={{ position: 'relative', zIndex: 1, paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
         
-        <h1 ref={textRef} style={{ ...H1, display: 'flex', flexDirection: 'column', gap: '0.2em',
+        <h1 ref={textRef} style={{ ...TEXT_STYLE, margin: 0, fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'], display: isMobile ? 'flex' : 'block', flexDirection: 'column', columnCount: isMobile ? undefined : 2, columnGap: 'var(--gap)',
           // Desktop: the text sits on page columns 2–3
           ...(isMobile ? null : { marginLeft: 'calc((100% - 4 * var(--gap)) / 5 + var(--gap))', width: 'calc((100% - 4 * var(--gap)) / 5 * 2 + var(--gap))' }) }}>
           {/* Phone: each paragraph's first line starts a third in */}
           {TEXT.map((p, i) => (
-            <span key={i} style={{ textIndent: isMobile ? '33.333vw' : 0 }}>
+            <span key={i} style={{ display: 'block', marginBottom: 12, textIndent: isMobile ? '33.333vw' : 0 }}>
               {typo(t(p)).split(' ').map((w, k) => <span key={k}><span data-w="" style={{ display: 'inline-block', textIndent: 0 }}>{w}</span>{' '}</span>)}
             </span>
           ))}

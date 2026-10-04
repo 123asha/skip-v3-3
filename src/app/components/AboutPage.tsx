@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import s from './CasesPage.module.css';
 import ContactForm from './ContactForm';
-import { typo, TEXT_STYLE } from '../utils/typography';
+import { typo, TEXT_STYLE, H2_STYLE } from '../utils/typography';
 import { SERVICES } from './ExpertiseSection2';
 import { t } from '../i18n';
 
@@ -154,17 +154,23 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
             </span>
           ))}
         </h1>
-        {/* The services, plainly listed from the fourth column: each category,
-            its services a step in under it */}
-        <div style={{ marginTop: 'var(--space-xl)', marginLeft: isMobile ? 0 : 'calc((100% - 4 * var(--gap)) / 5 * 3 + 3 * var(--gap))' }}>
-          {SERVICES.map(c => (
-            <div key={c.category} style={{ marginBottom: 20 }}>
-              <p style={{ ...TEXT_STYLE, margin: 0 }}>{t(c.category)}</p>
-              <div style={{ paddingLeft: 20, marginTop: 6 }}>
-                {c.items.map(it => <p key={it.text} style={{ ...TEXT_STYLE, margin: 0 }}>{t(it.text)}</p>)}
+        {/* «Наши услуги» on the third column, the list on the fourth */}
+        <div style={{
+          marginTop: 'var(--space-xl)',
+          display: 'grid', columnGap: 'var(--gap)',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, minmax(0, 1fr))',
+        }}>
+          <h2 style={{ ...H2_STYLE, margin: 0, gridColumn: isMobile ? 'auto' : '3 / 4' }}>{t('Наши услуги')}</h2>
+          <div style={{ gridColumn: isMobile ? 'auto' : '4 / 6', marginTop: isMobile ? 20 : 0 }}>
+            {SERVICES.map(c => (
+              <div key={c.category} style={{ marginBottom: 20 }}>
+                <p style={{ ...TEXT_STYLE, margin: 0 }}>{t(c.category)}</p>
+                <div style={{ paddingLeft: 20, marginTop: 6 }}>
+                  {c.items.map(it => <p key={it.text} style={{ ...TEXT_STYLE, margin: 0 }}>{t(it.text)}</p>)}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
         <ContactForm noInvert onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
       </div>

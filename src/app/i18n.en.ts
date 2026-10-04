@@ -265,6 +265,7 @@ export const EN: Record<string, string> = {
   'Название': 'Title',
   'Источник': 'Source',
   'Тип': 'Type',
+  'Наши услуги': 'Our services',
   "Философия": "Philosophy",
   "Дизайн здравого смысла — это когда всё подчиняется логике формы. А значит — идее. В древних языках «форма», «слово» и «звук» были связаны между собой. Говорить — значит придавать форму, а форма смысла — дизайн.": "Common-sense design is when everything obeys the logic of form — and so, of the idea. In ancient languages “form”, “word” and “sound” were bound together. To speak is to give form, and the form of meaning is design.",
   "Мы любим, когда проект не кричит, а держит форму. И слово.": "We like a project that doesn't shout but keeps its form. And its word.",

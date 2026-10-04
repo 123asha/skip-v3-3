@@ -38,8 +38,8 @@ const PARTS: { title: string; paras: string[] }[] = [
   },
 ];
 const TEXT = PARTS.flatMap(x => x.paras);
-// One page column: the paragraphs' first-line indent
-const COLUMN = 'calc((100vw - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5)';
+// Half a page column: the paragraphs' first-line indent
+const COLUMN = 'calc((100vw - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 10)';
 
 const DARK: Record<string, string> = {
   '--c-bg': '#0d0d0d', '--c-text': '#f2f2f2', '--c-surface': '#1c1c1c',

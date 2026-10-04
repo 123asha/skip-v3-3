@@ -265,8 +265,6 @@ export const EN: Record<string, string> = {
   'Название': 'Title',
   'Источник': 'Source',
   'Тип': 'Type',
-  'Скип': 'Skip',
-  'больше': 'more',
   'Дизайн, как правила игры.': 'Design as the rules of the game.',
   'Наши услуги': 'Our services',
   "Философия": "Philosophy",

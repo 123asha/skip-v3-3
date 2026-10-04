@@ -1,4 +1,3 @@
-import { t } from '../i18n';
 import { createPortal } from 'react-dom';
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import { useMobile } from '../hooks/useMobile';
@@ -552,39 +551,6 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
   const zoomRef = useRef(zoom);
   zoomRef.current = zoom;
 
-  // Desktop: the pictures themselves zoom the grid — over one the pointer
-  // turns into a small square tag («больше»); a click steps the grid up.
-  // At the biggest view the tag reads «Скип» and a click opens the case.
-  const tagRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (isMobile) return;
-    const imageUnder = (t: EventTarget | null) => {
-      const el = (t as HTMLElement | null)?.closest?.('[data-case-card] [class*="cardImage"]');
-      return el && !(t as HTMLElement).closest('button, a') ? el : null;
-    };
-    const onMove = (e: MouseEvent) => {
-      const tag = tagRef.current; if (!tag) return;
-      if (!imageUnder(e.target) || ZOOM_CFG[zoomRef.current].imagesOff) { tag.style.opacity = '0'; return; }
-      tag.textContent = zoomRef.current < ZOOM_MAX ? t('больше') : t('Скип');
-      tag.style.transform = `translate(${e.clientX + 14}px, ${e.clientY + 14}px)`;
-      tag.style.opacity = '1';
-    };
-    const onLeave = () => { if (tagRef.current) tagRef.current.style.opacity = '0'; };
-    const onClick = (e: MouseEvent) => {
-      if (!imageUnder(e.target) || zoomRef.current >= ZOOM_MAX || ZOOM_CFG[zoomRef.current].imagesOff) return;
-      e.stopPropagation(); e.preventDefault();
-      setZoom(z => Math.min(ZOOM_MAX, z + 1));
-    };
-    window.addEventListener('mousemove', onMove, { passive: true });
-    document.addEventListener('mouseleave', onLeave);
-    window.addEventListener('click', onClick, true);
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseleave', onLeave);
-      window.removeEventListener('click', onClick, true);
-    };
-  }, [isMobile]);
-
   const filteredProjects = activeTab === 'web'
     ? PROJECTS.filter(p => p.cats.some(c => WEB_CATS.includes(c)))
     : activeTab
@@ -1002,18 +968,6 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
           )}
         </div>
       </div>
-
-      {!isMobile && (
-        <>
-          <style>{`[data-case-card] [class*="cardImage"], [data-case-card] [class*="cardImage"] * { cursor: none !important; }`}</style>
-          <div ref={tagRef} aria-hidden="true" style={{
-            position: 'fixed', left: 0, top: 0, zIndex: 400, pointerEvents: 'none', opacity: 0,
-            padding: '3px 8px 4px', borderRadius: 0, background: 'var(--c-text)', color: 'var(--c-bg)',
-            fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)', whiteSpace: 'nowrap',
-            transition: 'opacity 0.15s ease',
-          }} />
-        </>
-      )}
 
       <div>
         <ContactForm variant="consult" onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />

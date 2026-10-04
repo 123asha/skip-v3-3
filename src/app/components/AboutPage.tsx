@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import s from './CasesPage.module.css';
 import ContactForm from './ContactForm';
-import { typo, TEXT_STYLE } from '../utils/typography';
+import { typo, TEXT_STYLE, H2_STYLE } from '../utils/typography';
 import { SERVICES } from './ExpertiseSection2';
 import { t } from '../i18n';
 
@@ -28,16 +28,8 @@ const DARK: Record<string, string> = {
   '--c-border': '#2e2e2e', '--c-text-muted': '#7c7c7c',
 };
 
-// The home headline: its size, leading and tracking (ScrollHero)
-const H1: React.CSSProperties = {
-  fontFamily: 'var(--font-display)',
-  fontSize: 'var(--hero-fs, min(var(--hero-size), 7.2vw))',
-  fontWeight: 'var(--heading-weight)' as React.CSSProperties['fontWeight'],
-  lineHeight: 'var(--hero-lh, 0.8755)',
-  letterSpacing: '-0.03em',
-  color: 'var(--c-text)',
-  margin: 0,
-};
+// The site's H2 for the whole text
+const H1: React.CSSProperties = { ...H2_STYLE, margin: 0 };
 
 export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigatePolicy?: () => void; onGridMode?: (on: boolean) => void }) {
   const pageRef = useRef<HTMLDivElement>(null);
@@ -60,7 +52,7 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
   return (
     <div className={s.page} ref={pageRef} style={{ ...DARK, background: DARK['--c-bg'] } as React.CSSProperties}>
       <div className={s.body} style={{ paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
-        <h1 style={{ ...H1, display: 'flex', flexDirection: 'column', gap: '0.6em' }}>
+        <h1 style={{ ...H1, display: 'flex', flexDirection: 'column', gap: '0.8em' }}>
           {/* Each paragraph's first line starts on the page grid's third column */}
           {TEXT.map((p, i) => <span key={i} style={{ textIndent: 'calc((100% - 4 * var(--gap)) / 5 * 2 + 2 * var(--gap))' }}>{typo(t(p))}</span>)}
         </h1>

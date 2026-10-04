@@ -159,15 +159,14 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       });
       // The top edge bounces it back; a ball that drains off the bottom starts over from the top
       if (ball.y < R) { ball.y = R; ball.vy = Math.abs(ball.vy) * 0.6; }
-      if (form) { if (ball.y > H - R) { ball.y = H - R; ball.vy = -Math.abs(ball.vy) * 0.7 - 3; } }
-      else if (ball.y - R > H) serve();
+      if (ball.y - R > H) serve();
       spin();
     };
 
     const draw = () => {
       ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
       if (form) ctx.clearRect(0, 0, W, H); else { ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H); }
-      const lineCol = form ? (dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)') : '#000';
+      const lineCol = form ? (dark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)') : '#000';
       ctx.strokeStyle = lineCol; ctx.lineWidth = 1.5; ctx.lineCap = 'butt';
       walls.forEach(w => { ctx.beginPath(); ctx.moveTo(w.ax, w.ay); ctx.lineTo(w.bx, w.by); ctx.stroke(); });
       ctx.strokeStyle = LINE;

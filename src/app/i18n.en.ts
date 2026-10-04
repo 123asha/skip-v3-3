@@ -264,6 +264,7 @@ export const EN: Record<string, string> = {
   'Дата': 'Date',
   'Название': 'Title',
   'Источник': 'Source',
+  'Тип': 'Type',
   'Коротко': 'Short',
   'Средне': 'Medium',
   'Вся мысль': 'Full',

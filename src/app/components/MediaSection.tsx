@@ -265,7 +265,7 @@ export function ToolsList({ toolsRowsRef, showZoom = false, bandHeader = false }
           <p style={{ ...headerStyle, ...firstColPad }}>Дата</p>
           <p style={{ ...headerStyle, gridColumn: '2' }}>Название</p>
           {bandHeader
-            ? <p style={{ ...headerStyle, ...lastColPad, gridColumn: '5', textAlign: 'right' }}>Источник</p>
+            ? <p style={{ ...headerStyle, ...lastColPad, gridColumn: '5', textAlign: 'right' }}>Тип</p>
             : <p style={{ ...headerStyle, gridColumn: '3 / 5' }}>{expanded.length ? 'Средне' : 'Коротко'}</p>}
         </div>
       )}
@@ -346,7 +346,7 @@ export function ToolsList({ toolsRowsRef, showZoom = false, bandHeader = false }
                         description opens under the row the way the services
                         table does it — one column right of the title and one
                         line down, then «Перейти» */}
-                    <p className={s.toolRowText} style={{ gridColumn: '5', margin: 0, textAlign: 'right', ...lastColPad, opacity: 'var(--opacity-muted)' as any }}>{tool.source}</p>
+                    <p className={s.toolRowText} style={{ gridColumn: '5', margin: 0, textAlign: 'right', ...lastColPad, opacity: 'var(--opacity-muted)' as any }}>{tool.name}</p>
                     <div style={{ gridColumn: '3', gridRow: 1, display: 'grid', gridTemplateRows: isOpen ? '1fr' : '0fr', transition: `grid-template-rows ${EXPAND}` }}>
                       <div style={{ overflow: 'hidden' }}>
                         <div style={{ marginTop: 'calc(var(--text-size) * var(--text-lh) + 20px)', paddingBottom: 32 }}>

@@ -41,11 +41,9 @@ export default function LabPage({
             the page title already says "Инсайты". */}
         {/* flushTop — the page body already carries the title → content gap,
             so the section must not add its own on top of it. */}
-        <InsightList />
-        {/* The table below is the archive of every insight — Russian only:
-            the English site shows just the cards */}
+        {/* The insights as a table (Russian); the English site keeps the list */}
+        {LANG === 'en' && <InsightList />}
         {LANG !== 'en' && <>
-        <h2 style={{ ...H2_STYLE, margin: '0 0 40px' }}>Архив</h2>
         <div style={{ marginLeft: 'calc(-1 * var(--pad))', marginRight: 'calc(-1 * var(--pad))' }}>
           {/* showZoom off here — InsightCards above already carries the
               page's one ⌘ ⊖ ⊕ control */}

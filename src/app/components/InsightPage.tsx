@@ -6,7 +6,6 @@ import { TEXT_STYLE as textStyle, H2_STYLE as h2Style, typo } from '../utils/typ
 import { useMobile } from '../hooks/useMobile';
 import { insightBySlug, shownDate, type Block } from '../content/insights';
 import { InsightCards } from './InsightCards';
-import { InsightList } from './InsightList';
 import { goTo, siteHref } from '../utils/siteNav';
 
 /**
@@ -176,7 +175,7 @@ export default function InsightPage({
   // Desktop widths in page-grid columns (5 columns, --gap between them)
   const cols = (n: number) => `calc((100% - 4 * var(--gap)) / 5 * ${n} + ${n - 1} * var(--gap))`;
   // Desktop: the list takes column 1, the article from column 2
-  const column: React.CSSProperties = isMobile ? {} : { width: cols(2), marginLeft: `calc(${cols(1)} + var(--gap))` };
+  const column: React.CSSProperties = isMobile ? {} : { width: cols(2), marginLeft: 'auto', marginRight: 'auto' };
 
   const blocks = article.blocks ?? [];
 
@@ -188,17 +187,16 @@ export default function InsightPage({
         paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)',
       }}>
         <div style={{ position: 'relative' }}>
-        {/* Desktop: the insights list stays at the left, the open one in black */}
-        {!isMobile && (
-          <nav style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, pointerEvents: 'none' }}>
-            <div style={{ position: 'sticky', top: 'var(--inner-content-top)', width: '100%' }}>
-              <InsightList flush current={slug} />
-            </div>
-          </nav>
-        )}
         {/* Just the date in grey, the title under it — the column's width */}
         <header style={column}>
-          <h1 style={{ ...titleStyle, margin: 0 }}>
+          <h1 style={{ ...titleStyle, margin: 0, position: 'relative' }}>
+            {/* ← back to the insights, hanging one gap left of the title */}
+            <a
+              href={siteHref('/insights')}
+              aria-label="Все инсайты"
+              onClick={e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); goTo('/insights'); }}
+              style={{ ...textStyle, color: 'var(--c-text)', textDecoration: 'none', position: isMobile ? 'static' : 'absolute', display: isMobile ? 'block' : undefined, marginBottom: isMobile ? 10 : 0, right: 'calc(100% + var(--gap))', top: '0.35em' }}
+            >←</a>
             {typo(article.desc)}
           </h1>
         </header>

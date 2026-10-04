@@ -166,7 +166,7 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       <div className={s.body} style={{ position: 'relative', zIndex: 1, paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
         
         {/* Three parts. Desktop: each heading (plain text size) on column 1, its
-            text in two columns on page columns 3–4; wide gaps between parts */}
+            text in two columns on page columns 2–3; wide gaps between parts */}
         <div ref={textRef} style={{ ...TEXT_STYLE, margin: 0, fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'] }}>
           {(() => {
             let n = 0;
@@ -176,7 +176,7 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
                 gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, minmax(0, 1fr))',
               }}>
                 <h2 style={{ ...TEXT_STYLE, margin: 0, gridColumn: isMobile ? 'auto' : '1 / 2', marginBottom: isMobile ? 12 : 0 }}>{t(part.title)}</h2>
-                <div data-cols="" style={{ gridColumn: isMobile ? 'auto' : '3 / 5', ...(isMobile ? null : { columnCount: 2, columnGap: 'var(--gap)' }) }}>
+                <div data-cols="" style={{ gridColumn: isMobile ? 'auto' : '2 / 4', ...(isMobile ? null : { columnCount: 2, columnGap: 'var(--gap)' }) }}>
                   {part.paras.map(p => (
                     <p key={n} data-p={n++} style={{ margin: 0, textIndent: isMobile ? '33.333vw' : '2em' }}>
                       {typo(t(p)).split(' ').map((w, k) => <span key={k}><span data-w="" style={{ display: 'inline-block', textIndent: 0 }}>{w}</span>{' '}</span>)}

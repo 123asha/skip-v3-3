@@ -29,7 +29,7 @@ export default function PillButton({
 
   const face: React.CSSProperties = {
     background: primary ? 'var(--c-text)' : 'var(--c-button)',
-    color: primary ? '#fff' : 'var(--c-text)',
+    color: primary ? 'var(--c-bg)' : 'var(--c-text)',
     height: compact ? undefined : 44,
     paddingLeft: icon ? 0 : compact ? 14 : 16,
     paddingRight: compact ? 14 : 16,
@@ -80,7 +80,7 @@ export default function PillButton({
     textDecoration: 'none',
     display: 'inline-block',
     perspective: 'none',
-    color: primary ? '#fff' : 'var(--c-text)',
+    color: primary ? 'var(--c-bg)' : 'var(--c-text)',
     ...(fullWidth ? { display: 'block', width: '100%' } : null),
     ...style,
   };

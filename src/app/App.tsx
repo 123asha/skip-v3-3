@@ -1216,7 +1216,7 @@ function AppInner() {
                     // Black pill with white type. The nav inverts itself
                     // (difference), so these are the pre-blend colours.
                     // (on a phone it lives outside the menu: its own colours)
-                    background: isMobile ? 'var(--c-text)' : '#fff', color: isMobile ? '#fff' : '#000',
+                    background: isMobile ? 'var(--c-text)' : '#fff', color: isMobile ? 'var(--c-bg)' : '#000',
                     ...(isMobile ? { padding: '8px 14px 9px' } : null),
                     // Cube depth = half the pill's height
                     transform: f ? 'rotateX(-90deg) translateZ(18px)' : 'translateZ(18px)',

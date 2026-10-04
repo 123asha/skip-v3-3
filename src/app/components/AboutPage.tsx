@@ -25,14 +25,17 @@ const TEXT = [
 
 const DARK: Record<string, string> = {
   '--c-bg': '#0d0d0d', '--c-text': '#f2f2f2', '--c-surface': '#1c1c1c',
-  '--c-border': '#2e2e2e', '--c-text-muted': '#7c7c7c',
+  '--c-border': '#2e2e2e', '--c-text-muted': '#7c7c7c', '--c-button': '#2a2a2a',
 };
 
 // The site's H2 for the whole text
 const H1: React.CSSProperties = { ...H2_STYLE, margin: 0 };
 
+import { useMobile } from '../hooks/useMobile';
+
 export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigatePolicy?: () => void; onGridMode?: (on: boolean) => void }) {
   const pageRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMobile();
   useEffect(() => {
     const mainLenis = (window as any).__lenis;
     if (mainLenis) mainLenis.stop();
@@ -52,9 +55,10 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
   return (
     <div className={s.page} ref={pageRef} style={{ ...DARK, background: DARK['--c-bg'] } as React.CSSProperties}>
       <div className={s.body} style={{ paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
-        <h1 style={{ ...H1, display: 'flex', flexDirection: 'column', gap: '0.8em' }}>
+        {/* Desktop: four columns wide, the fifth left empty */}
+        <h1 style={{ ...H1, display: 'flex', flexDirection: 'column', gap: '0.8em', width: isMobile ? undefined : 'calc((100% - 4 * var(--gap)) / 5 * 4 + 3 * var(--gap))' }}>
           {/* Each paragraph's first line starts on the page grid's third column */}
-          {TEXT.map((p, i) => <span key={i} style={{ textIndent: 'calc((100% - 4 * var(--gap)) / 5 * 2 + 2 * var(--gap))' }}>{typo(t(p))}</span>)}
+          {TEXT.map((p, i) => <span key={i} style={{ textIndent: isMobile ? '33.333vw' : 'calc((100% - 3 * var(--gap)) / 2 + 2 * var(--gap))' }}>{typo(t(p))}</span>)}
         </h1>
         {/* The services, plainly listed from the third column: each category,
             its services a step in under it */}

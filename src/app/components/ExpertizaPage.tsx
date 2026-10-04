@@ -809,8 +809,8 @@ function Tile({ index, tile }: { index: number; tile: { title: string; who: stri
       data-svc-tile=""
       // Phone: square tiles
       style={{ position: 'relative', aspectRatio: isMobile ? '1/1' : '4/5', background: 'var(--c-surface)', overflow: 'hidden' }}
-      onMouseEnter={isMobile ? undefined : () => { setHovered(true); playKnock(0.35); tintSite(TILE_TINTS[index % TILE_TINTS.length]); }}
-      onMouseLeave={isMobile ? undefined : () => { setHovered(false); tintSite(null); }}
+      onMouseEnter={isMobile ? undefined : () => { setHovered(true); playKnock(0.35); }}
+      onMouseLeave={isMobile ? undefined : () => { setHovered(false); }}
     >
       {/* Animated falling balls — on hover (desktop) or on scroll-in (phone) */}
       <TileBalls tileIndex={index} hovered={hovered} />

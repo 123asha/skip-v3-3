@@ -150,7 +150,7 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       <canvas ref={canvasRef} aria-hidden="true" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />
       <div className={s.body} style={{ position: 'relative', zIndex: 1, paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
         
-        {/* Desktop: the text centred on columns 2–4, each paragraph's first line
+        {/* Desktop: the text on columns 2–3, each paragraph's first line
             indented by one column; the headings stand alone on column 1 */}
         <div ref={textRef} style={{
           ...TEXT_STYLE, margin: 0, fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
@@ -170,7 +170,7 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
             ...H2_STYLE, margin: 0,
             fontSize: 'var(--hero-fs, min(var(--hero-size), 7.2vw))', lineHeight: 'var(--hero-lh, 0.8755)', letterSpacing: '-0.03em',
           }),
-                  gridColumn: isMobile ? 'auto' : heading ? '1 / 2' : '2 / 5',
+                  gridColumn: isMobile ? 'auto' : heading ? '1 / 2' : '2 / 4',
                   gridRow: isMobile ? 'auto' : r,
                   textIndent: heading ? 0 : isMobile ? '33.333vw' : 'calc((100vw - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap))',
                 }}>

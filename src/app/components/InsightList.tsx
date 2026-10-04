@@ -30,8 +30,8 @@ export function InsightList({ current, flush }: { current?: string; flush?: bool
       {years.map(yg => (
         <div key={yg.year} style={{
           // Year, then its months a step in, then the titles a step further —
-          // all in the page grid's second column
-          marginLeft: isMobile ? 0 : `calc(${col} + var(--gap))`, width: isMobile ? undefined : col,
+          // all in the page grid's first column, 40px clear of the next
+          width: isMobile ? undefined : col, paddingRight: isMobile ? 0 : 40, boxSizing: 'border-box',
           marginBottom: 20,
         }}>
           <p style={{ ...TEXT_STYLE, margin: '0 0 20px' }}>{yg.year}</p>

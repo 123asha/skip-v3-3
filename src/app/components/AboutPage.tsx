@@ -120,15 +120,24 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       });
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, W, H);
-      ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.setLineDash([2, 11]);
+      ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.setLineDash([2, 11]);
       form.edges.forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(pts[a].x, pts[a].y); ctx.lineTo(pts[b].x, pts[b].y); ctx.stroke(); });
       ctx.setLineDash([]);
       ctx.font = `${R * 1.1}px "CoFo Sans VF", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       pts.forEach((p, i) => {
-        const g = ctx.createRadialGradient(p.x - R * 0.15, p.y - R * 0.2, 0, p.x - R * 0.15, p.y - R * 0.2, R * 1.3);
-        g.addColorStop(0, '#fdfdfd'); g.addColorStop(0.6, '#efefef'); g.addColorStop(1, '#cfcfcf');
+        // A dark ball close to the page colour, but round: lit from the upper left,
+        // a soft rim of light on the lower right, a drop of shade beneath
+        ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.ellipse(p.x + R * 0.1, p.y + R * 1.08, R * 0.8, R * 0.18, 0, 0, Math.PI * 2); ctx.fill();
+        const g = ctx.createRadialGradient(p.x - R * 0.35, p.y - R * 0.4, R * 0.05, p.x, p.y, R * 1.05);
+        g.addColorStop(0, '#4a4a4a'); g.addColorStop(0.45, '#262626'); g.addColorStop(0.85, '#141414'); g.addColorStop(1, '#0a0a0a');
         ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = DARK['--c-bg']; ctx.fillText(LETTERS[i], p.x, p.y + R * 0.06);
+        const rim = ctx.createRadialGradient(p.x + R * 0.5, p.y + R * 0.6, R * 0.5, p.x + R * 0.5, p.y + R * 0.6, R * 1.0);
+        rim.addColorStop(0, 'rgba(255,255,255,0)'); rim.addColorStop(1, 'rgba(255,255,255,0.14)');
+        ctx.fillStyle = rim; ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill();
+        const hl = ctx.createRadialGradient(p.x - R * 0.4, p.y - R * 0.45, 0, p.x - R * 0.4, p.y - R * 0.45, R * 0.55);
+        hl.addColorStop(0, 'rgba(255,255,255,0.38)'); hl.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = hl; ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.fillText(LETTERS[i], p.x, p.y + R * 0.06);
       });
       raf = requestAnimationFrame(tick);
     };

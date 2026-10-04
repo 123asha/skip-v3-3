@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import s from './CasesPage.module.css';
 import ContactForm from './ContactForm';
-import { typo, TEXT_STYLE } from '../utils/typography';
+import { typo, TEXT_STYLE, H2_STYLE } from '../utils/typography';
 import { SERVICES } from './ExpertiseSection2';
 import { t } from '../i18n';
 
@@ -170,7 +170,7 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
               const r = heading ? row + 1 : row;
               return (
                 <p key={i} data-p="" style={{
-                  margin: 0, fontWeight: 'inherit',
+                  margin: 0, ...(heading ? { fontWeight: 'inherit' } : { ...H2_STYLE, margin: 0 }),
                   gridColumn: isMobile ? 'auto' : heading ? '2 / 3' : '3 / 4',
                   gridRow: isMobile ? 'auto' : r,
                   textIndent: isMobile && !heading ? '33.333vw' : 0,

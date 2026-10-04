@@ -29,7 +29,7 @@ const CASE_PAGES: Record<string, any> = {
 };
 import GuidePage from './components/GuidePage';
 import MoscowTime from './components/MoscowTime';
-import BunnyHero from './components/BunnyHero';
+import { Pinball } from './components/Pinball';
 import BunnyFollower from './components/BunnyFollower';
 import ContactForm from './components/ContactForm';
 import { ToolsSection } from './components/ToolsSection';
@@ -301,22 +301,20 @@ function Preloader({ onReveal, onGone }: { onReveal: () => void; onGone: () => v
   );
 }
 
-// ── 404 page — flying bunny with "Перейти на главную" link ────────────────────
+// ── 404 page — minimal pinball with "Перейти на главную" link ────────────────────
 function NotFoundPage({ onGoHome }: { onGoHome: () => void }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 160,
-      background: 'var(--c-bg)',
+      background: '#eaeaea',
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       gap: 40,
       animation: 'pageIn 0.35s 0.05s ease both',
     }}>
-      {/* Flying bunny — BunnyHero in idle/float mode */}
-      <div style={{ width: 480, height: 270, overflow: 'hidden' }}>
-        <BunnyHero activeSection={-1} />
-      </div>
-      <div style={{
+      {/* A bare pinball table behind the 404 — the hero's ball, ← → flippers */}
+      <Pinball />
+      <div style={{ position: 'relative', pointerEvents: 'none',
         fontFamily: 'var(--font-display)',
         fontSize: 'var(--heading-size)',
         fontWeight: 'var(--heading-weight)' as React.CSSProperties['fontWeight'],
@@ -327,6 +325,7 @@ function NotFoundPage({ onGoHome }: { onGoHome: () => void }) {
       <button
         onClick={onGoHome}
         style={{
+          position: 'relative',
           background: 'none', border: 'none', padding: 0, cursor: 'pointer',
           fontFamily: 'var(--font)',
           fontSize: 'var(--text-size)',

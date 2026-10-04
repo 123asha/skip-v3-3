@@ -5,7 +5,6 @@ import { MagneticDivider } from './MagneticDivider';
 import { TEXT_STYLE as textStyle, H2_STYLE as h2Style, typo } from '../utils/typography';
 import { useMobile } from '../hooks/useMobile';
 import { insightBySlug, shownDate, type Block } from '../content/insights';
-import { InsightCards } from './InsightCards';
 import { goTo, siteHref } from '../utils/siteNav';
 
 /**
@@ -219,11 +218,6 @@ export default function InsightPage({
         </article>
         </div>
 
-        {/* The three newest other insights — the insights page's own cards */}
-        <section style={{ marginTop: 'var(--space-xl)' }}>
-          <h2 style={{ ...h2Style, margin: '0 0 40px' }}>Другие инсайты</h2>
-          <InsightCards exclude={slug} limit={3} flushBottom />
-        </section>
 
         <ContactForm onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
       </div>

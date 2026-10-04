@@ -272,6 +272,7 @@ export interface CaseData {
   /** This case's own route — used by the teaser that closes the previous case */
   href?: string;
   title: string;     // cover heading
+  client?: string;   // the client's name for «Команда …», when the title isn't it
   year: string;      // intro meta number (shown instead of "00/")
   /** Categories this case belongs to — rendered as chips, at most three:
    *  Брендинг · Веб · Продукт */
@@ -479,6 +480,7 @@ export const AE_PLATFORM: CaseData = {
 export const AE_LANDING: CaseData = {
   href: '/aliexpress-landing',
   title: 'Лендинг AliExpress',
+  client: 'AliExpress',
   links: [{ label: 'Перейти', href: 'https://aeplatform.ru/' }],
   year: '2025',
   tags: ['Веб'],
@@ -756,7 +758,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                 position: 'relative', padding: '10px 0',
               }}>
                 <MagneticDivider flat={isMobile} />
-                <p style={{ ...textStyle, margin: 0 }}>{LANG === 'en' ? `${t(data.title)} team` : `Команда ${data.title}`}</p>
+                <p style={{ ...textStyle, margin: 0 }}>{LANG === 'en' ? `${t(data.client ?? data.title)} team` : `Команда ${data.client ?? data.title}`}</p>
                 <p aria-label="спасибо" style={{ ...textStyle, margin: 0 }}>{'\u2665\uFE0E'}</p>
               </div>
             </div>

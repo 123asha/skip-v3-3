@@ -476,3 +476,6 @@ input::placeholder {
 
 /* Solution-card hover tints the page: everything painted with --c-bg eases */
 .bg-tinting body { transition: background-color 0.5s ease; }
+
+/* Insights list: a dotted underline only under the hovered title */
+@media (hover: hover) { [data-insight-link]:hover { text-decoration-line: underline !important; } }

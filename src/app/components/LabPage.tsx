@@ -39,7 +39,8 @@ function InsightList() {
               target={isInternal(it.href) ? undefined : '_blank'}
               rel={isInternal(it.href) ? undefined : 'noopener noreferrer'}
               onClick={isInternal(it.href) ? e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); goTo(it.href!); } : undefined}
-              style={{ ...TEXT_STYLE, display: 'block', padding: '3px 0 3px 20px', color: 'var(--c-text)', textDecoration: 'none' }}
+              data-insight-link=""
+              style={{ ...TEXT_STYLE, display: 'block', padding: '3px 0 3px 20px', color: 'var(--c-text)', textDecoration: 'none', textDecorationStyle: 'dotted', textUnderlineOffset: 3 }}
             >{typo(it.desc)}</a>
           ))}
         </div>

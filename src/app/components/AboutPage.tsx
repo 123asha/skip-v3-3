@@ -37,7 +37,9 @@ const PARTS: { title: string; paras: string[] }[] = [
     ],
   },
 ];
-const TEXT = PARTS.flatMap(x => x.paras);
+// For now the page keeps only the last part («Подход» — the principles)
+const SHOWN = PARTS.slice(2);
+const TEXT = SHOWN.flatMap(x => x.paras);
 // Half a page column: the paragraphs' first-line indent
 const COLUMN = 'calc((100vw - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 10)';
 
@@ -172,14 +174,17 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
         <div ref={textRef} style={{ ...TEXT_STYLE, margin: 0, fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'] }}>
           {(() => {
             let n = 0;
-            return PARTS.map(part => (
+            return SHOWN.map(part => (
               <section key={part.title} style={{
                 display: 'grid', columnGap: 'var(--gap)', marginBottom: isMobile ? 32 : 48,
                 gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, minmax(0, 1fr))',
               }}>
                 <div data-cols="" style={{ gridColumn: isMobile ? 'auto' : '2 / 5' }}>
                   {part.paras.map((p, pi) => (
-                    <p key={n} data-p={n++} style={{ ...H2_STYLE, margin: 0, position: 'relative', textIndent: isMobile ? '33.333vw' : COLUMN }}>
+                    <p key={n} data-p={n++} style={{
+                      // The home headline: its size, leading and tracking (ScrollHero)
+                      ...H2_STYLE, margin: 0,
+                      fontSize: 'var(--hero-fs, min(var(--hero-size), 7.2vw))', lineHeight: 'var(--hero-lh, 0.8755)', letterSpacing: '-0.03em', position: 'relative', textIndent: isMobile ? '33.333vw' : COLUMN }}>
                       {/* The part's heading stands in the first paragraph's indent */}
                       {pi === 0 && <span style={{ ...TEXT_STYLE, position: 'absolute', left: 0, textIndent: 0, lineHeight: 'var(--text-lh)',
                         // Lowered so the tops of its lowercase letters meet those of the first H2 line

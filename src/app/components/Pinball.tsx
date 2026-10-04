@@ -24,7 +24,12 @@ const CRITTER = [
   '.....WW..WW....',
 ];
 
-export function Pinball() {
+// variant 'form': the same table behind the contact form — no bumpers, the
+// lines barely there, a transparent field; the ball is bounced only by the
+// screen's edges, the flippers and the text marked data-pin-obstacle.
+// `dark`: drawn for a dark page (a dark ball, a white critter).
+export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' | 'form'; dark?: boolean } = {}) {
+  const form = variant === 'form';
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -74,7 +79,7 @@ export function Pinball() {
         { ax: W, ay: fy - (W - rx) * 0.55, bx: rx, by: fy },
       ];
       const br = Math.max(26, Math.min(W, H) * 0.045);
-      bumpers = [
+      bumpers = form ? [] : [
         { x: W * 0.3, y: H * 0.3, r: br, hit: 0 },
         { x: W * 0.7, y: H * 0.3, r: br, hit: 0 },
         { x: W * 0.5, y: H * 0.62, r: br, hit: 0 },
@@ -154,14 +159,16 @@ export function Pinball() {
       });
       // The top edge bounces it back; a ball that drains off the bottom starts over from the top
       if (ball.y < R) { ball.y = R; ball.vy = Math.abs(ball.vy) * 0.6; }
-      if (ball.y - R > H) serve();
+      if (form) { if (ball.y > H - R) { ball.y = H - R; ball.vy = -Math.abs(ball.vy) * 0.7 - 3; } }
+      else if (ball.y - R > H) serve();
       spin();
     };
 
     const draw = () => {
       ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
-      ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H);
-      ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5; ctx.lineCap = 'butt';
+      if (form) ctx.clearRect(0, 0, W, H); else { ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H); }
+      const lineCol = form ? (dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)') : '#000';
+      ctx.strokeStyle = lineCol; ctx.lineWidth = 1.5; ctx.lineCap = 'butt';
       walls.forEach(w => { ctx.beginPath(); ctx.moveTo(w.ax, w.ay); ctx.lineTo(w.bx, w.by); ctx.stroke(); });
       ctx.strokeStyle = LINE;
       bumpers.forEach(b => {
@@ -169,14 +176,14 @@ export function Pinball() {
       });
       // Flippers: the walls' own line carried on, same colour, same width, same plain end
       ctx.lineWidth = 1.5; ctx.lineCap = 'butt';
-      ctx.strokeStyle = '#000';
+      ctx.strokeStyle = lineCol;
       flip.forEach(f => { const s = flipSeg(f); ctx.beginPath(); ctx.moveTo(s.ax, s.ay); ctx.lineTo(s.bx, s.by); ctx.stroke(); });
       // The hero's ball: bright base, glint up-left, faint rim shade
       const g = ctx.createRadialGradient(ball.x - R * 0.15, ball.y - R * 0.2, 0, ball.x - R * 0.15, ball.y - R * 0.2, R * 1.3);
-      g.addColorStop(0, '#fdfdfd'); g.addColorStop(0.6, '#f4f4f4'); g.addColorStop(1, '#e2e2e2');
+      if (dark) { g.addColorStop(0, '#3a3a3a'); g.addColorStop(0.6, '#262626'); g.addColorStop(1, '#161616'); } else { g.addColorStop(0, '#fdfdfd'); g.addColorStop(0.6, '#f4f4f4'); g.addColorStop(1, '#e2e2e2'); }
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ball.x, ball.y, R, 0, Math.PI * 2); ctx.fill();
       const sg = ctx.createRadialGradient(ball.x - R * 0.4, ball.y - R * 0.48, 0, ball.x - R * 0.4, ball.y - R * 0.48, R * 0.7);
-      sg.addColorStop(0, 'rgba(255,255,255,0.85)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
+      sg.addColorStop(0, dark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.85)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
       ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(ball.x, ball.y, R, 0, Math.PI * 2); ctx.fill();
       // The sticker: the black-and-white critter, no background, laid on the
       // ball's surface — it turns with the ball, so it often faces away
@@ -197,7 +204,7 @@ export function Pinball() {
         const mid = toScreen(a0 + pp / 2, b0 + pp / 2);
         if (mid[2] < 0.1) return;
         const pts = [[a0, b0], [a0 + pp, b0], [a0 + pp, b0 + pp], [a0, b0 + pp]].map(([a, b]) => toScreen(a, b));
-        ctx.fillStyle = c === 'W' ? '#161616' : c === 'G' ? '#8c8c8c' : '#f6f6f6';
+        ctx.fillStyle = dark ? (c === 'W' ? '#f2f2f2' : c === 'G' ? '#8c8c8c' : '#161616') : (c === 'W' ? '#161616' : c === 'G' ? '#8c8c8c' : '#f6f6f6');
         ctx.globalAlpha = Math.min(1, (mid[2] - 0.1) * 4);
         ctx.beginPath();
         pts.forEach((q, k) => { const X = ball.x + q[0] * R, Y = ball.y + q[1] * R; k ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
@@ -213,6 +220,7 @@ export function Pinball() {
 
     const set = (side: 0 | 1, up: boolean) => { flip[side].up = up; };
     const key = (up: boolean) => (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement | null)?.closest?.('input, textarea, [contenteditable]')) return;
       if (e.key === 'ArrowLeft' || e.key === 'z' || e.key === 'Shift') set(0, up);
       if (e.key === 'ArrowRight' || e.key === '/' || e.key === 'm') set(1, up);
     };
@@ -220,7 +228,8 @@ export function Pinball() {
     const pd = (e: PointerEvent) => set(e.clientX < cv.getBoundingClientRect().width / 2 ? 0 : 1, true);
     const pu = () => { set(0, false); set(1, false); };
     window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
-    cv.addEventListener('pointerdown', pd); window.addEventListener('pointerup', pu);
+    if (!form) cv.addEventListener('pointerdown', pd);
+    window.addEventListener('pointerup', pu);
     window.addEventListener('resize', layout);
     return () => {
       cancelAnimationFrame(raf);
@@ -230,5 +239,5 @@ export function Pinball() {
     };
   }, []);
 
-  return <canvas ref={ref} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', touchAction: 'none' }} />;
+  return <canvas ref={ref} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', touchAction: form ? undefined : 'none', pointerEvents: form ? 'none' : undefined, zIndex: 0 }} />;
 }

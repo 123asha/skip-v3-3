@@ -1,3 +1,4 @@
+import { Pinball } from './Pinball';
 import { useState, useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { createPortal } from 'react-dom';
@@ -272,6 +273,8 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
           />,
           document.body,
         )}
+        {/* The table of the 404 game, faint, behind the form (desktop) */}
+        {!isMobile && <Pinball variant="form" dark={noInvert} />}
         {/* Form content — centered column */}
         <div ref={formAreaRef} className={s.contactFormArea} style={{ position: 'relative', zIndex: 1, background: 'transparent', flex: '0 0 auto', paddingTop: 20, paddingBottom: 20,
           // A touch above the middle of the screen: the card centres this
@@ -284,7 +287,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
               effects (grid + bunny game) depend on the form variant. */}
           {/* Two tabs — the second one behaves as it always did (resume input
               + grid/bunny side effects on the default variant). */}
-          <div style={{ display: 'flex', flexDirection: 'row', gap: 20, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div data-pin-obstacle="" style={{ display: 'flex', flexDirection: 'row', gap: 20, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
             {([
               { key: 'discuss', label: 'Обсудить проект' },
               { key: 'join',    label: 'Сотрудничество' },
@@ -306,17 +309,17 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
               On the consult variant + tab 2 the heading switches to
               "Оставьте контакт, запланируем консультацию". */}
           {variant === 'consult' && activeTab === 'join' ? (
-            <p className={s.contactTitle} style={{ marginTop: 20, textAlign: 'center' }}>
+            <p className={s.contactTitle} data-pin-obstacle="" style={{ marginTop: 20, textAlign: 'center' }}>
               Оставьте{' '}
               <span ref={wordRef}>{consultWord}</span>
               {' '}— мы свяжемся с вами
             </p>
           ) : activeTab === 'join' ? (
-            <p className={s.contactTitle} style={{ marginTop: 20, textAlign: 'center' }}>
+            <p className={s.contactTitle} data-pin-obstacle="" style={{ marginTop: 20, textAlign: 'center' }}>
               Отправьте CV<br />креативному директору
             </p>
           ) : (
-            <p className={s.contactTitle} style={{ marginTop: 20, textAlign: 'center' }}>
+            <p className={s.contactTitle} data-pin-obstacle="" style={{ marginTop: 20, textAlign: 'center' }}>
               Оставьте{' '}
               <span ref={wordRef}>{word}</span>,<br />мы назначим встречу
             </p>
@@ -412,7 +415,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
             </div>
             {/* Phone: the fine print a pixel smaller, so its two lines fit */}
             {/* Grey until the box is ticked */}
-            <span className={s.checkboxLabel} style={{ textAlign: 'left', color: checked ? 'var(--c-text)' : 'var(--c-text-muted)', transition: 'color 0.2s', ...(isMobile ? { fontSize: 13 } : null) }}>
+            <span className={s.checkboxLabel} data-pin-obstacle="" style={{ textAlign: 'left', color: checked ? 'var(--c-text)' : 'var(--c-text-muted)', transition: 'color 0.2s', ...(isMobile ? { fontSize: 13 } : null) }}>
               Даю согласие на обработку персональных данных<br />в&nbsp;соответствии с&nbsp;
               <button
                 style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'inherit', letterSpacing: 'inherit', lineHeight: 'inherit', color: 'inherit', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}

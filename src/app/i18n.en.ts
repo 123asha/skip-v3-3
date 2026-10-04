@@ -58,9 +58,10 @@ export const EN: Record<string, string> = {
   'Брендинг для приложения по трекингу целей и медитаций': 'Branding for a goal-tracking and meditation app',
   'Тысячи партнёров AliExpress в одной B2B-платформе AE Platform': 'Thousands of AliExpress partners on one B2B platform AE Platform',
   'Дизайн как правила игры': 'Design as the rules of the game',
-  'Сайт использует куки-файлы (текстовые файлы с данными) для обеспечения функционирования, анализа посещаемости и повышения качества сервиса. Продолжая работу с сайтом, вы подтверждаете согласие использования куки-файлов на условиях':
-    'This site uses cookies (small text files with data) to work, to analyse traffic and to improve the service. By continuing to use the site you agree to the use of cookies under the',
+  'Мы осуществляем обработку файлов cookie с использованием Яндекс.Метрика. Оставаясь на сайте, вы соглашаетесь на использование cookie и на обработку персональных данных в соответствии с ':
+    'We process cookies using Yandex Metrica. By staying on the site you agree to the use of cookies and to the processing of personal data in accordance with the ',
   'Политики конфиденциальности': 'Privacy Policy',
+  'Политикой': 'Policy',
   'Хорошо': 'OK',
   'От смысла до фирменного стиля': 'From meaning to brand identity',
   'Стартапам и новым продуктам': 'For startups and new products',

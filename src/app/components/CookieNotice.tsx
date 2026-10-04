@@ -39,12 +39,12 @@ export default function CookieNotice({ onPolicy }: { onPolicy?: () => void }) {
       }}
     >
       <p style={{ ...ts, margin: 0, flex: 1 }}>
-        {typo('Сайт использует куки-файлы (текстовые файлы с данными) для обеспечения функционирования, анализа посещаемости и повышения качества сервиса. Продолжая работу с сайтом, вы подтверждаете согласие использования куки-файлов на условиях ')}
+        {typo('Мы осуществляем обработку файлов cookie с использованием Яндекс.Метрика. Оставаясь на сайте, вы соглашаетесь на использование cookie и на обработку персональных данных в соответствии с ')}
         <a
           href="#"
           onClick={e => { e.preventDefault(); onPolicy?.(); }}
           style={{ color: 'inherit', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}
-        >Политики конфиденциальности</a>.
+        >Политикой</a>.
       </p>
       <PillButton compact fullWidth={isMobile} onClick={accept}>Хорошо</PillButton>
     </div>

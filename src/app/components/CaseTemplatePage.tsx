@@ -554,9 +554,10 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
   const [formInView, setFormInView] = useState(false);
   const isMobile = useMobile();
 
-  // Desktop: a case's pictures enlarge on a click. Over one the pointer turns
-  // into a small square tag («больше»); enlarged, the tag reads «Скип» and a
-  // click anywhere (or Esc) puts the picture back.
+  // Desktop: a case's pictures work the page's ⊕ ⊖. Over one the pointer turns
+  // into a small square tag: «больше» does what ⊕ does (pictures only), «Скип»
+  // what ⊖ does (back to the description).
+  const zoomAct = useRef({ zoom: 0, plus: () => {}, minus: () => {} });
   useEffect(() => {
     if (isMobile) return;
     const tag = document.createElement('div');
@@ -568,49 +569,26 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
     } as Partial<CSSStyleDeclaration>);
     document.body.appendChild(tag);
     const style = document.createElement('style');
-    style.textContent = '[data-case-img] img, [data-case-img] video, [data-big-pic], [data-big-pic] * { cursor: none !important; }';
+    style.textContent = '[data-case-img] img, [data-case-img] video { cursor: none !important; }';
     document.head.appendChild(style);
-    let big: HTMLDivElement | null = null;
-    const closeBig = () => { big?.remove(); big = null; };
-    const picUnder = (t: EventTarget | null) => {
-      const el = (t as HTMLElement | null)?.closest?.('[data-case-img]') as HTMLElement | null;
-      return el && el.querySelector('img') ? el : null;
-    };
+    const picUnder = (t: EventTarget | null) => (t as HTMLElement | null)?.closest?.('[data-case-img]') ?? null;
     const onMove = (e: MouseEvent) => {
-      const over = big || picUnder(e.target);
-      if (!over) { tag.style.opacity = '0'; return; }
-      tag.textContent = big ? t('Скип') : t('больше');
+      if (!picUnder(e.target)) { tag.style.opacity = '0'; return; }
+      tag.textContent = zoomAct.current.zoom === 0 ? t('больше') : t('Скип');
       tag.style.transform = `translate(${e.clientX + 14}px, ${e.clientY + 14}px)`;
       tag.style.opacity = '1';
     };
     const onClick = (e: MouseEvent) => {
-      if (big) { e.stopPropagation(); e.preventDefault(); closeBig(); return; }
-      const pic = picUnder(e.target);
-      if (!pic) return;
+      if (!picUnder(e.target)) return;
       e.stopPropagation(); e.preventDefault();
-      const src = pic.querySelector('img')!.currentSrc || pic.querySelector('img')!.src;
-      big = document.createElement('div');
-      big.setAttribute('data-big-pic', '');
-      Object.assign(big.style, {
-        position: 'fixed', inset: '0', zIndex: '500', background: 'var(--c-bg)', display: 'flex',
-        alignItems: 'center', justifyContent: 'center', padding: 'var(--pad)', boxSizing: 'border-box',
-      } as Partial<CSSStyleDeclaration>);
-      const img = document.createElement('img');
-      img.src = src; img.alt = '';
-      Object.assign(img.style, { maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' } as Partial<CSSStyleDeclaration>);
-      big.appendChild(img);
-      document.body.appendChild(big);
-      onMove(e);
+      if (zoomAct.current.zoom === 0) zoomAct.current.plus(); else zoomAct.current.minus();
     };
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { closeBig(); tag.style.opacity = '0'; } };
     window.addEventListener('mousemove', onMove, { passive: true });
     window.addEventListener('click', onClick, true);
-    window.addEventListener('keydown', onKey);
     return () => {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('click', onClick, true);
-      window.removeEventListener('keydown', onKey);
-      closeBig(); tag.remove(); style.remove();
+      tag.remove(); style.remove();
     };
   }, [isMobile]);
 
@@ -695,6 +673,7 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
     holdInView(1);
   };
   const zoomOut = () => holdInView(0);
+  zoomAct.current = { zoom: caseZoom, plus: zoomIn, minus: zoomOut };
   usePinchSteps(zoomIn, zoomOut, !isMobile);
   useEffect(() => {
     if (isMobile) return;

@@ -742,8 +742,9 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
               {data.team.map(({ name, role }, k) => (
                 <div key={name} style={{
                   display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 'var(--gap)',
-                  padding: '10px 0', borderTop: k === 0 ? 'none' : '1px solid var(--c-border)',
+                  position: 'relative', padding: '10px 0',
                 }}>
+                  {k > 0 && <MagneticDivider flat={isMobile} />}
                   <p style={{ ...textStyle, margin: 0 }}>{name}</p>
                   <p style={{ ...textStyle, margin: 0 }}>{role}</p>
                 </div>
@@ -752,8 +753,9 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
                   where the role would be (\uFE0E keeps it a text glyph) */}
               <div style={{
                 display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 'var(--gap)',
-                padding: '10px 0', borderTop: '1px solid var(--c-border)',
+                position: 'relative', padding: '10px 0',
               }}>
+                <MagneticDivider flat={isMobile} />
                 <p style={{ ...textStyle, margin: 0 }}>{LANG === 'en' ? `${t(data.title)} team` : `Команда ${data.title}`}</p>
                 <p aria-label="спасибо" style={{ ...textStyle, margin: 0 }}>{'\u2665\uFE0E'}</p>
               </div>

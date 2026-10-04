@@ -117,7 +117,7 @@ function AskButton({ service }: { service: string }) {
   // The site's grey pill (same flip on hover as every other button), in its
   // compact size. The wrapper keeps the click from reaching the row.
   return (
-    <span onClick={e => e.stopPropagation()} style={{ display: 'inline-block', marginTop: 20 }}>
+    <span onClick={e => e.stopPropagation()} style={{ display: 'inline-block', marginTop: 32 }}>
       <PillButton
         compact
         onClick={() => {
@@ -255,11 +255,11 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
     if (!h) return;
     const words = Array.from(h.querySelectorAll<HTMLElement>('[data-h-word]'));
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { gsap.set(words, { opacity: 1 }); return; }
-    gsap.set(words, { opacity: 0, y: 18 });
+    gsap.set(words, { opacity: 0, y: 10 });
     const io = new IntersectionObserver(([e]) => {
       if (!e.isIntersecting) return;
       io.disconnect();
-      gsap.to(words, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out', stagger: 0.05, clearProps: 'transform,willChange' });
+      gsap.to(words, { opacity: 1, y: 0, duration: 1.1, ease: 'power2.out', stagger: 0.04, clearProps: 'transform,willChange' });
     }, { threshold: 0.4 });
     io.observe(h);
     return () => io.disconnect();
@@ -390,7 +390,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
                   {/* Blank lines in `desc` become paragraph breaks */}
                   <div style={{
                     marginTop: 'calc(var(--text-size) * var(--text-lh) + 20px)',
-                    paddingBottom: 32,
+                    paddingBottom: onAllServices ? 32 : 48,
                   }}>
                     {row.desc.split('\n\n').map((para, k) => (
                       <p key={k} style={{ ...itemStyle, marginTop: k === 0 ? 0 : PARA_GAP }}>

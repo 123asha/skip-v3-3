@@ -164,14 +164,14 @@ export default function CaseCard({
     gsap.killTweensOf(words);
 
     // Group words into visual lines (offsetTop ignores our transforms)
-    const byLine = new Map<number, HTMLElement[]>();
+    // Words on one line can differ by a pixel or two under the page's zoom
+    // scaling, so a new line starts only past half a word's height
+    const lines: HTMLElement[][] = [];
+    let lineTop = -Infinity;
     words.forEach(w => {
-      const top = Math.round(w.offsetTop);
-      const line = byLine.get(top);
-      if (line) line.push(w);
-      else byLine.set(top, [w]);
+      if (w.offsetTop - lineTop > w.offsetHeight / 2) { lines.push([w]); lineTop = w.offsetTop; }
+      else lines[lines.length - 1].push(w);
     });
-    const lines = [...byLine.entries()].sort((a, b) => a[0] - b[0]).map(([, ws]) => ws);
 
     // The grey categories make way: up and out as the first line rises in,
     // back down once the description has gone

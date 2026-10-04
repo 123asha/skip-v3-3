@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { sound } from '../sound/Sound';
 
 // 404: a bare pinball table — two flippers, three round bumpers, the hero's
 // white ball. ← → (or a tap / click on either half) work the flippers.
@@ -97,7 +98,11 @@ export function Pinball() {
       nx /= d; ny /= d;
       ball.x = cx + nx * R; ball.y = cy + ny * R;
       const vn = ball.vx * nx + ball.vy * ny;
-      if (vn < 0) { ball.vx -= (1 + bounce) * vn * nx; ball.vy -= (1 + bounce) * vn * ny; }
+      if (vn < 0) {
+        ball.vx -= (1 + bounce) * vn * nx; ball.vy -= (1 + bounce) * vn * ny;
+        // A knock on a flipper, a softer tick on the walls
+        if (vn < -2.5) sound.play(kick ? 'logo' : 'hover', 90);
+      }
       if (kick) { ball.vx += nx * kick * t; ball.vy += ny * kick * t; }
     };
 
@@ -107,8 +112,8 @@ export function Pinball() {
       const sp = Math.hypot(ball.vx, ball.vy);
       if (sp > 13) { ball.vx *= 13 / sp; ball.vy *= 13 / sp; }
       ball.x += ball.vx; ball.y += ball.vy;
-      if (ball.x < R) { ball.x = R; ball.vx = Math.abs(ball.vx) * 0.6; }
-      if (ball.x > W - R) { ball.x = W - R; ball.vx = -Math.abs(ball.vx) * 0.6; }
+      if (ball.x < R) { ball.x = R; if (ball.vx < -2) sound.play('hover', 90); ball.vx = Math.abs(ball.vx) * 0.6; }
+      if (ball.x > W - R) { ball.x = W - R; if (ball.vx > 2) sound.play('hover', 90); ball.vx = -Math.abs(ball.vx) * 0.6; }
       walls.forEach(w => hitSeg(w, 0.4));
       flip.forEach(f => {
         const target = f.up ? UP : REST;
@@ -126,6 +131,7 @@ export function Pinball() {
           ball.vx -= 2 * vn * nx; ball.vy -= 2 * vn * ny;
           ball.vx += nx * 1.4; ball.vy += ny * 1.4;
           b.hit = 1;
+          sound.play('tap', 60);
         }
         b.hit *= 0.9;
       });

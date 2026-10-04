@@ -327,7 +327,7 @@ function NotFoundPage({ onGoHome }: { onGoHome: () => void }) {
       }}>404</div>
       {/* The way back: a black pill in the middle of the screen, a little above centre */}
       <div style={{ position: 'relative', marginTop: '-12vh' }}>
-        <PillButton variant="primary" onClick={onGoHome}>Назад домой</PillButton>
+        <PillButton variant="primary" onClick={onGoHome}>На главную</PillButton>
       </div>
     </div>
   );

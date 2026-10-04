@@ -59,7 +59,7 @@ export const EN: Record<string, string> = {
   'Тысячи партнёров AliExpress в одной B2B-платформе AE Platform': 'Thousands of AliExpress partners on one B2B platform AE Platform',
   'Дизайн как правила игры': 'Design as the rules of the game',
   'Мы осуществляем обработку файлов cookie с использованием Яндекс.Метрика. Оставаясь на сайте, вы соглашаетесь на использование cookie и на обработку персональных данных в соответствии с ':
-    'We process cookies using Yandex Metrica. By staying on the site you agree to the use of cookies and to the processing of personal data in accordance with the ',
+    'We process cookies using Yandex Metrica. By staying on the site you agree to the use of cookies and to the processing of personal data in accordance with the',
   'Политики конфиденциальности': 'Privacy Policy',
   'Политикой': 'Policy',
   'Хорошо': 'OK',

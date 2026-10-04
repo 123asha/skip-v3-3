@@ -182,9 +182,9 @@ export default function InsightPage({
         <div style={{ position: 'relative' }}>
         {/* Desktop: the insights list stays at the left, the open one in black */}
         {!isMobile && (
-          <nav style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: cols(2) }}>
-            <div style={{ position: 'sticky', top: 'var(--inner-content-top)' }}>
-              <InsightList oneColumn current={slug} />
+          <nav style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, pointerEvents: 'none' }}>
+            <div style={{ position: 'sticky', top: 'var(--inner-content-top)', width: '100%' }}>
+              <InsightList flush current={slug} />
             </div>
           </nav>
         )}

@@ -7,39 +7,50 @@ import { LANG } from '../i18n';
 const MONTHS_RU = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-// Top of the insights page: the articles as text, grouped under their month
-// (titles stepped in under it), the groups flowing in two columns
-export function InsightList({ oneColumn, current }: { oneColumn?: boolean; current?: string } = {}) {
+// The articles as text: the year in the page grid's first column, the
+// months (titles stepped in under each) in one column beside it
+export function InsightList({ current, flush }: { current?: string; flush?: boolean } = {}) {
   const isMobile = useMobile();
-  const groups: { label: string; items: typeof INSIGHTS_LIST }[] = [];
+  const names = LANG === 'en' ? MONTHS_EN : MONTHS_RU;
+  const years: { year: string; months: { label: string; items: typeof INSIGHTS_LIST }[] }[] = [];
   for (const it of INSIGHTS_LIST) {
     const [, m, y] = (it.date ?? '').split('.');
-    const names = LANG === 'en' ? MONTHS_EN : MONTHS_RU;
-    const label = m ? `${names[Number(m) - 1]}${Number(y) !== new Date().getFullYear() ? ` ${y}` : ''}` : (it.year ?? '');
-    const last = groups[groups.length - 1];
+    const year = y ?? it.year ?? '';
+    const label = m ? names[Number(m) - 1] : '';
+    let yg = years[years.length - 1];
+    if (!yg || yg.year !== year) { yg = { year, months: [] }; years.push(yg); }
+    const last = yg.months[yg.months.length - 1];
     if (last && last.label === label) last.items.push(it);
-    else groups.push({ label, items: [it] });
+    else yg.months.push({ label, items: [it] });
   }
+  // Tracks in % of the list's box, which spans the page's full content width
+  const col = 'calc((100% - 4 * var(--gap)) / 5)';
   return (
-    <div style={{
-      marginBottom: oneColumn ? 0 : 'var(--space-xl)', columnCount: isMobile || oneColumn ? 1 : 2, columnGap: 'var(--gap)',
-      // Desktop: the page grid's first two columns, one group-column each
-      width: isMobile || oneColumn ? undefined : 'calc((100% - 4 * var(--gap)) / 5 * 2 + var(--gap))',
-    }}>
-      {groups.map(g => (
-        <div key={g.label} style={{ breakInside: 'avoid', marginBottom: 32 }}>
-          <p style={{ ...TEXT_STYLE, margin: '0 0 6px', opacity: 'var(--opacity-muted)' as any }}>{g.label}</p>
-          {g.items.map((it, i) => (
-            <a
-              key={it.href ?? i}
-              href={isInternal(it.href) ? siteHref(it.href!) : it.href}
-              target={isInternal(it.href) ? undefined : '_blank'}
-              rel={isInternal(it.href) ? undefined : 'noopener noreferrer'}
-              onClick={isInternal(it.href) ? e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); goTo(it.href!); } : undefined}
-              data-insight-link=""
-              style={{ ...TEXT_STYLE, display: 'block', padding: '3px 0 3px 20px', color: 'var(--c-text)', opacity: current && it.slug !== current ? 'var(--opacity-muted)' as any : 1, textDecoration: 'none', textDecorationStyle: 'dotted', textUnderlineOffset: 3 }}
-            >{typo(it.desc)}</a>
-          ))}
+    <div style={{ marginBottom: flush ? 0 : 'var(--space-xl)' }}>
+      {years.map(yg => (
+        <div key={yg.year} style={{
+          display: 'grid', gridTemplateColumns: isMobile ? '1fr' : `${col} ${col}`, columnGap: 'var(--gap)',
+          marginBottom: 32,
+        }}>
+          <p style={{ ...TEXT_STYLE, margin: isMobile ? '0 0 16px' : 0 }}>{yg.year}</p>
+          <div>
+            {yg.months.map(g => (
+              <div key={g.label} style={{ marginBottom: 32 }}>
+                {g.label && <p style={{ ...TEXT_STYLE, margin: '0 0 6px' }}>{g.label}</p>}
+                {g.items.map((it, i) => (
+                  <a
+                    key={it.href ?? i}
+                    href={isInternal(it.href) ? siteHref(it.href!) : it.href}
+                    target={isInternal(it.href) ? undefined : '_blank'}
+                    rel={isInternal(it.href) ? undefined : 'noopener noreferrer'}
+                    onClick={isInternal(it.href) ? e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); goTo(it.href!); } : undefined}
+                    data-insight-link=""
+                    style={{ ...TEXT_STYLE, pointerEvents: 'auto', display: 'block', padding: '3px 0 3px 20px', color: 'var(--c-text)', opacity: current && it.slug !== current ? 'var(--opacity-muted)' as any : 1, textDecoration: 'none', textDecorationStyle: 'dotted', textUnderlineOffset: 3 }}
+                  >{typo(it.desc)}</a>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       ))}
     </div>

@@ -132,17 +132,12 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.setLineDash([2, 11]);
       form.edges.forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(pts[a].x, pts[a].y); ctx.lineTo(pts[b].x, pts[b].y); ctx.stroke(); });
       ctx.setLineDash([]);
-      pts.forEach((p, i) => {
-        // A matte ping-pong ball in a tone near the page's: soft, diffuse light
-        // from the upper left, no gloss and no hard highlight, the far side
-        // sinking gently into shade
-        const g = ctx.createRadialGradient(p.x - R * 0.3, p.y - R * 0.35, R * 0.1, p.x, p.y, R * 1.1);
-        g.addColorStop(0, '#1d1d1d'); g.addColorStop(0.55, '#171717'); g.addColorStop(1, '#101010');
-        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill();
-        const soft = ctx.createRadialGradient(p.x - R * 0.35, p.y - R * 0.4, 0, p.x - R * 0.35, p.y - R * 0.4, R * 0.9);
-        soft.addColorStop(0, 'rgba(255,255,255,0.045)'); soft.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = soft; ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill();
-      });
+      // Outlines only: the links stop at the rings, the inside stays empty
+      ctx.globalCompositeOperation = 'destination-out';
+      pts.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill(); });
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = 'rgba(255,255,255,0.28)'; ctx.lineWidth = 1.5;
+      pts.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.stroke(); });
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);

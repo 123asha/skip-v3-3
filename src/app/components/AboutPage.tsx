@@ -155,8 +155,8 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       <canvas ref={canvasRef} aria-hidden="true" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />
       <div className={s.body} style={{ position: 'relative', zIndex: 1, paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
         
-        {/* Desktop: the text in one column on page column 3; the headings
-            stand alone on column 2, level with the paragraph they open */}
+        {/* Desktop: the text centred on columns 2–4, each paragraph's first line
+            indented by one column; the headings stand alone on column 1 */}
         <div ref={textRef} style={{
           ...TEXT_STYLE, margin: 0, fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
           display: 'grid', columnGap: 'var(--gap)', rowGap: 12,
@@ -171,9 +171,9 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
               return (
                 <p key={i} data-p="" style={{
                   margin: 0, ...(heading ? { fontWeight: 'inherit' } : { ...H2_STYLE, margin: 0 }),
-                  gridColumn: isMobile ? 'auto' : heading ? '2 / 3' : '3 / 4',
+                  gridColumn: isMobile ? 'auto' : heading ? '1 / 2' : '2 / 5',
                   gridRow: isMobile ? 'auto' : r,
-                  textIndent: isMobile && !heading ? '33.333vw' : 0,
+                  textIndent: heading ? 0 : isMobile ? '33.333vw' : 'calc((100vw - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap))',
                 }}>
                   {typo(t(p)).split(' ').map((w, k) => <span key={k}><span data-w="" style={{ display: 'inline-block', textIndent: 0 }}>{w}</span>{' '}</span>)}
                 </p>

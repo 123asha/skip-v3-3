@@ -251,7 +251,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
       <div
         ref={cardRef}
         className={s.contactCard}
-        style={{ background: 'var(--c-bg)', justifyContent: 'center', paddingBottom: kbPad, transition: 'padding-bottom 0.2s ease' }}
+        style={{ background: noInvert ? 'transparent' : 'var(--c-bg)', justifyContent: 'center', paddingBottom: kbPad, transition: 'padding-bottom 0.2s ease' }}
       >
         {/* A bit of mischief: scrolled right to the end, the whole screen
             inverts — dark background, white type. One overlay flips the colours

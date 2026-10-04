@@ -619,30 +619,13 @@ function AppInner() {
     let dragging = false;
     let lastX = 0;
     let lastT = 0;
-    // The names run round a ball: each one turns away, shrinks, sinks and
-    // fades as it nears the edge, as if on the far side of a sphere
-    let items: { el: HTMLElement; c: number }[] = [];
     const measure = () => {
       const colGap = parseFloat(getComputedStyle(track).columnGap || '0');
       cycle = set0.offsetWidth + colGap;
-      items = [...track.querySelectorAll<HTMLElement>(':scope > div > p')].map(el => ({
-        el, c: track.offsetLeft + (el.parentElement as HTMLElement).offsetLeft + el.offsetLeft + el.offsetWidth / 2,
-      }));
     };
     const apply = () => {
       if (cycle) x = ((x % cycle) - cycle) % cycle;   // keep x in (-cycle, 0]
       gsap.set(track, { x });
-      const R = box.clientWidth / 2;
-      if (!R) return;
-      for (const { el, c } of items) {
-        const u = (c + x - R) / R;
-        if (Math.abs(u) >= 1) { el.style.visibility = 'hidden'; continue; }
-        const th = u * Math.PI / 2;
-        const cos = Math.cos(th);
-        el.style.visibility = '';
-        el.style.opacity = String(Math.max(0, cos) ** 0.6);
-        el.style.transform = `translate(${R * Math.sin(th) - u * R}px, ${(1 - cos) * R * 0.12}px) perspective(${R * 2}px) rotateY(${th}rad) scale(${0.75 + 0.25 * cos})`;
-      }
     };
     const tick = (_t: number, dtMs: number) => {
       const dt = Math.min(dtMs, 64) / 1000;

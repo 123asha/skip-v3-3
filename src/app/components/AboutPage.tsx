@@ -123,7 +123,6 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.setLineDash([2, 11]);
       form.edges.forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(pts[a].x, pts[a].y); ctx.lineTo(pts[b].x, pts[b].y); ctx.stroke(); });
       ctx.setLineDash([]);
-      ctx.font = `${R * 1.1}px "CoFo Sans VF", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       pts.forEach((p, i) => {
         // A matte ping-pong ball in a tone near the page's: soft, diffuse light
         // from the upper left, no gloss and no hard highlight, the far side
@@ -134,7 +133,6 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
         const soft = ctx.createRadialGradient(p.x - R * 0.35, p.y - R * 0.4, 0, p.x - R * 0.35, p.y - R * 0.4, R * 0.9);
         soft.addColorStop(0, 'rgba(255,255,255,0.07)'); soft.addColorStop(1, 'rgba(255,255,255,0)');
         ctx.fillStyle = soft; ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,255,0.16)'; ctx.fillText(LETTERS[i], p.x, p.y + R * 0.06);
       });
       raf = requestAnimationFrame(tick);
     };

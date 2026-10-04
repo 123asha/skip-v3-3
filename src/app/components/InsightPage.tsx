@@ -169,8 +169,8 @@ export default function InsightPage({
 
   // Desktop widths in page-grid columns (5 columns, --gap between them)
   const cols = (n: number) => `calc((100% - 4 * var(--gap)) / 5 * ${n} + ${n - 1} * var(--gap))`;
-  // Desktop: the list takes columns 1–2, the article columns 4–5
-  const column: React.CSSProperties = isMobile ? {} : { width: cols(2), marginLeft: `calc(${cols(3)} + var(--gap))` };
+  // Desktop: the list takes columns 1–2, the article from column 3
+  const column: React.CSSProperties = isMobile ? {} : { width: cols(2), marginLeft: `calc(${cols(2)} + var(--gap))` };
 
   const blocks = article.blocks ?? [];
 

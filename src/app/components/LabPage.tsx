@@ -32,7 +32,7 @@ export default function LabPage({
 
   return (
     <div className={s.page} ref={pageRef}>
-      <div className={s.body} style={{ paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
+      <div className={s.body} style={{ paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0, '--text-weight': 400, '--heading-weight': 400 } as React.CSSProperties}>
 
 
         {/* MediaSection (Инсайты) above the contact form — its own h2 is off,

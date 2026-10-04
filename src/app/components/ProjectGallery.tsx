@@ -190,6 +190,8 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: (href?: 
               gridColumn: isMobile ? 'auto' : slot.col,
               gridRow: isMobile ? 'auto' : slot.row,
               minWidth: 0,
+              // Desktop: the flower video takes half the side padding each way
+              ...(!isMobile && slot.scrubVideo ? { marginLeft: 'calc(var(--pad) / -2)', marginRight: 'calc(var(--pad) / -2)' } : null),
             }}
           >
             <ProjectCard project={slot.project} aspect={slot.aspect} scrubVideo={slot.scrubVideo} shape={slot.shape} onClick={slot.scrubVideo || slot.project.id === 1 || slot.project.noLink ? undefined : () => (/^https?:/.test(slot.project.href ?? '') ? window.open(slot.project.href, '_blank', 'noopener') : onCaseClick?.(slot.project.href))} />

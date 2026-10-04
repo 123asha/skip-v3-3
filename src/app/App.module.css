@@ -762,3 +762,7 @@
 .writeLink:hover svg path { transform: translateX(2px); }
 .writeArrow { display: inline-block; transition: transform 0.2s ease; }
 .writeLink:hover .writeArrow { transform: translateX(2px); }
+
+/* Desktop menu over a dark video: white type, the circle arrow inverted */
+.navOverDark { --c-bg: #1a1a1a; }
+.navOverDark .navLink { color: #fff; transition: color 0.2s ease; }

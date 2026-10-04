@@ -34,6 +34,7 @@ import BunnyFollower from './components/BunnyFollower';
 import ContactForm from './components/ContactForm';
 import { ToolsSection } from './components/ToolsSection';
 import { MediaSection } from './components/MediaSection';
+import { SphereFilter } from './components/SphereFilter';
 import { ExpertiseSection2 } from './components/ExpertiseSection2';
 import { CircleArrow } from './components/CircleArrow';
 import LabPage from './components/LabPage';
@@ -984,6 +985,28 @@ function AppInner() {
   // Phone: the menu links are chips — the current one spreads the others
   // from it, like the filter chips (utils/chipBounce)
   const navLinksRef = useRef<HTMLSpanElement>(null);
+  // Desktop: over a dark video (the flower block) the menu turns white
+  const [navOverDark, setNavOverDark] = useState(false);
+  useEffect(() => {
+    if (isMobile) { setNavOverDark(false); return; }
+    let raf = 0;
+    const check = () => {
+      raf = 0;
+      const nav = navLinksRef.current?.parentElement;
+      if (!nav) return;
+      const n = nav.getBoundingClientRect();
+      const over = [...document.querySelectorAll<HTMLElement>('[data-dark-media]')].some(el => {
+        const r = el.getBoundingClientRect();
+        return r.top < n.bottom && r.bottom > n.top && r.left < n.right && r.right > n.left;
+      });
+      setNavOverDark(over);
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(check); };
+    window.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    window.addEventListener('resize', onScroll);
+    check();
+    return () => { window.removeEventListener('scroll', onScroll, true); window.removeEventListener('resize', onScroll); cancelAnimationFrame(raf); };
+  }, [isMobile, pathname]);
   // Phone: on the projects and case pages the menu tucks away while scrolling
   // down (never at the very end of a page); scrolling up a little brings it
   // back (index.css, data-nav-hidden)
@@ -1130,7 +1153,7 @@ function AppInner() {
       {/* Phone: progressive blur under the bottom menu (App.module.css) */}
       <div className={s.menuBlur} aria-hidden="true"><div /><div /><div /></div>
       <nav
-        className={`${s.nav} ${s.navBoxed}`}
+        className={`${s.nav} ${s.navBoxed}${navOverDark ? ` ${s.navOverDark}` : ''}`}
         // One row on every page: the section links, then «Написать» — all on
         // one text baseline (the nav aligns its items by baseline), the pill's
         // top on the logo's top line. Inner pages add the scrollbar gutter
@@ -1745,6 +1768,8 @@ function AppInner() {
                   transition: 'opacity 0.3s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
                 }}
               >
+                <SphereFilter id="client-sphere" />
+                <div style={{ position: 'absolute', inset: 0, filter: 'url(#client-sphere)' }}>
                 {PEOPLE_CLIENTS.map(name => (
                   <img
                     key={name}
@@ -1757,6 +1782,12 @@ function AppInner() {
                     }}
                   />
                 ))}
+                </div>
+                {/* Light from the upper left, the rim turning away into shade */}
+                <div style={{
+                  position: 'absolute', inset: 0, borderRadius: '50%', pointerEvents: 'none',
+                  background: 'radial-gradient(circle at 34% 28%, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.08) 22%, rgba(255,255,255,0) 42%), radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.10) 80%, rgba(0,0,0,0.28) 100%)',
+                }} />
               </div>
             </div>
           )}

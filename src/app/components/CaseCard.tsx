@@ -283,7 +283,8 @@ export default function CaseCard({
           ) : image && <img src={image} alt={title} loading="lazy" />}
           {/* The flagship's clip simply loops on a phone (no scroll scrub) */}
           {scrubVideo && (
-            <video src={scrubVideo} muted playsInline autoPlay loop preload="metadata"
+            <video
+              data-dark-media="" src={scrubVideo} muted playsInline autoPlay loop preload="metadata"
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1 }} />
           )}
         </div>
@@ -327,7 +328,7 @@ export default function CaseCard({
           style={{ aspectRatio: aspect ?? (isHorizontal ? '4/3' : '4/5'), width: '100%', flexShrink: 0, ...(square ? { borderRadius: 0 } : null), ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}
         >
           {scrubVideo && (
-            <video
+            <video data-dark-media=""
               ref={scrubRef}
               src={scrubVideo}
               muted

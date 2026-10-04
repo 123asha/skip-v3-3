@@ -181,7 +181,9 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
                   {part.paras.map((p, pi) => (
                     <p key={n} data-p={n++} style={{ ...H2_STYLE, margin: 0, position: 'relative', textIndent: isMobile ? '33.333vw' : COLUMN }}>
                       {/* The part's heading stands in the first paragraph's indent */}
-                      {pi === 0 && <span style={{ ...TEXT_STYLE, position: 'absolute', left: 0, top: 0, textIndent: 0, lineHeight: 'var(--text-lh)' }}>{t(part.title)}</span>}
+                      {pi === 0 && <span style={{ ...TEXT_STYLE, position: 'absolute', left: 0, textIndent: 0, lineHeight: 'var(--text-lh)',
+                        // Lowered so the tops of its lowercase letters meet those of the first H2 line
+                        top: 'calc(var(--h2-size) * (var(--h2-lh) - 1) / 2 + 0.3 * var(--h2-size) - var(--text-size) * (var(--text-lh) - 1) / 2 - 0.3 * var(--text-size))' }}>{t(part.title)}</span>}
                       {typo(t(p)).split(' ').map((w, k) => <span key={k}><span data-w="" style={{ display: 'inline-block', textIndent: 0 }}>{w}</span>{' '}</span>)}
                     </p>
                   ))}

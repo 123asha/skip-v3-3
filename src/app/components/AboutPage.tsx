@@ -154,9 +154,9 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
             </span>
           ))}
         </h1>
-        {/* The services, plainly listed from the second column: each category,
+        {/* The services, plainly listed from the fourth column: each category,
             its services a step in under it */}
-        <div style={{ marginTop: 'var(--space-xl)', marginLeft: isMobile ? 0 : 'calc((100% - 4 * var(--gap)) / 5 + var(--gap))' }}>
+        <div style={{ marginTop: 'var(--space-xl)', marginLeft: isMobile ? 0 : 'calc((100% - 4 * var(--gap)) / 5 * 3 + 3 * var(--gap))' }}>
           {SERVICES.map(c => (
             <div key={c.category} style={{ marginBottom: 20 }}>
               <p style={{ ...TEXT_STYLE, margin: 0 }}>{t(c.category)}</p>

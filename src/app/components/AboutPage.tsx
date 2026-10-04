@@ -43,7 +43,13 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
     return () => { el.removeEventListener('wheel', stopBubble); if (mainLenis) mainLenis.start(); };
   }, []);
   return (
-    <div className={s.page} ref={pageRef}>
+    <div className={s.page} ref={pageRef} style={{
+      // Dark page: the colour tokens flipped for everything inside
+      background: '#0d0d0d',
+      ['--c-bg' as string]: '#0d0d0d', ['--c-text' as string]: '#f2f2f2',
+      ['--c-surface' as string]: '#1c1c1c', ['--c-border' as string]: '#2e2e2e',
+      ['--c-text-muted' as string]: '#7c7c7c',
+    } as React.CSSProperties}>
       <div className={s.body} style={{ paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
         <h1 style={{ ...H1, display: 'flex', flexDirection: 'column', gap: '0.6em' }}>
           {TEXT.map((p, i) => <span key={i}>{typo(p)}</span>)}

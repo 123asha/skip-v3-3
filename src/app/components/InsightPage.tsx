@@ -6,6 +6,7 @@ import { TEXT_STYLE as textStyle, H2_STYLE as h2Style, typo } from '../utils/typ
 import { useMobile } from '../hooks/useMobile';
 import { insightBySlug, shownDate, type Block } from '../content/insights';
 import { InsightCards } from './InsightCards';
+import { InsightList } from './InsightList';
 import { goTo, siteHref } from '../utils/siteNav';
 
 /**
@@ -166,7 +167,8 @@ export default function InsightPage({
 
   // Desktop widths in page-grid columns (5 columns, --gap between them)
   const cols = (n: number) => `calc((100% - 4 * var(--gap)) / 5 * ${n} + ${n - 1} * var(--gap))`;
-  const column: React.CSSProperties = isMobile ? {} : { width: cols(2), marginLeft: 'auto', marginRight: 'auto' };
+  // Desktop: the list takes columns 1–2, the article starts on the third
+  const column: React.CSSProperties = isMobile ? {} : { width: cols(2), marginLeft: `calc(${cols(2)} + var(--gap))` };
 
   const blocks = article.blocks ?? [];
 
@@ -177,6 +179,15 @@ export default function InsightPage({
         paddingTop: 'var(--inner-content-top)',
         paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)',
       }}>
+        <div style={{ position: 'relative' }}>
+        {/* Desktop: the insights list stays at the left, the open one in black */}
+        {!isMobile && (
+          <nav style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: cols(2) }}>
+            <div style={{ position: 'sticky', top: 'var(--inner-content-top)' }}>
+              <InsightList oneColumn current={slug} />
+            </div>
+          </nav>
+        )}
         {/* Just the date in grey, the title under it — the column's width */}
         <header style={column}>
           {/* ← back to the insights, left of the date by one column gap
@@ -206,6 +217,7 @@ export default function InsightPage({
             })}
           </div>
         </article>
+        </div>
 
         {/* The three newest other insights — the insights page's own cards */}
         <section style={{ marginTop: 'var(--space-xl)' }}>

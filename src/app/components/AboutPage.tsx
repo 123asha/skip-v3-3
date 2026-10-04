@@ -23,8 +23,6 @@ const TEXT = [
   'Результат, к которому мы стремимся — это когда сайт, интерфейс, бренд выглядят так, как будто по-другому и быть не могло. Когда без слов понятно, что проект сделан с вниманием к деталям и в точку.',
 ];
 
-const HEADINGS = ['Философия', 'Подход'];
-
 const DARK: Record<string, string> = {
   '--c-bg': '#0d0d0d', '--c-text': '#f2f2f2', '--c-surface': '#1c1c1c',
   '--c-border': '#2e2e2e', '--c-text-muted': '#7c7c7c', '--c-button': '#2a2a2a',
@@ -65,7 +63,8 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       const byLine = new Map<number, HTMLElement[]>();
       words.forEach(w => {
         const para = w.closest('[data-p]') as HTMLElement;
-        const key = Array.from(para.parentElement!.children).indexOf(para) * 100000 + Math.round(w.offsetTop / 6);
+        const col = window.innerWidth > 768 ? Math.floor(w.offsetLeft / (textRef.current!.clientWidth / 2)) : 0;
+        const key = Array.from(para.parentElement!.children).indexOf(para) * 100000 + col * 50000 + Math.round(w.offsetTop / 6);
         (byLine.get(key) ?? byLine.set(key, []).get(key)!).push(w);
       });
       lines = [...byLine.entries()].sort((a, b) => a[0] - b[0]).map(([, els]) => ({ els, on: false }));
@@ -134,8 +133,9 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       ctx.globalCompositeOperation = 'destination-out';
       pts.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill(); });
       ctx.globalCompositeOperation = 'source-over';
-      ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1.5; ctx.setLineDash([2, 7]); ctx.lineCap = 'round';
       pts.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.stroke(); });
+      ctx.setLineDash([]);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -148,31 +148,20 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       <canvas ref={canvasRef} aria-hidden="true" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />
       <div className={s.body} style={{ position: 'relative', zIndex: 1, paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
         
-        {/* Desktop: the text on columns 2–3, each paragraph's first line
-            indented by one column; the headings stand alone on column 1 */}
+        {/* Desktop: the text in two columns, on page columns 2 and 3 */}
         <div ref={textRef} style={{
           ...TEXT_STYLE, margin: 0, fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
-          display: 'grid', columnGap: 'var(--gap)', rowGap: 12,
-          gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, minmax(0, 1fr))',
+          ...(isMobile ? null : {
+            columnCount: 2, columnGap: 'var(--gap)',
+            marginLeft: 'calc((100% - 4 * var(--gap)) / 5 + var(--gap))',
+            width: 'calc((100% - 4 * var(--gap)) / 5 * 2 + var(--gap))',
+          }),
         }}>
-          {(() => {
-            let row = 0;
-            return TEXT.map((p, i) => {
-              const heading = HEADINGS.includes(p);
-              if (!heading) row += 1;
-              const r = heading ? row + 1 : row;
-              return (
-                <p key={i} data-p="" style={{
-                  margin: 0, ...(heading ? { fontWeight: 'inherit' } : { ...TEXT_STYLE, margin: 0 }),
-                  gridColumn: isMobile ? 'auto' : '2 / 4',
-                  gridRow: isMobile ? 'auto' : r,
-                  textIndent: heading ? 0 : isMobile ? '33.333vw' : 'calc((100vw - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap))',
-                }}>
-                  {typo(t(p)).split(' ').map((w, k) => <span key={k}><span data-w="" style={{ display: 'inline-block', textIndent: 0 }}>{w}</span>{' '}</span>)}
-                </p>
-              );
-            });
-          })()}
+          {TEXT.map((p, i) => (
+            <p key={i} data-p="" style={{ margin: 0, textIndent: isMobile ? '33.333vw' : '2em' }}>
+              {typo(t(p)).split(' ').map((w, k) => <span key={k}><span data-w="" style={{ display: 'inline-block', textIndent: 0 }}>{w}</span>{' '}</span>)}
+            </p>
+          ))}
         </div>
         {/* «Наши услуги» on the third column, the list on the fourth */}
         <div style={{

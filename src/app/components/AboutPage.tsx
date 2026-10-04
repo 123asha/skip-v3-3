@@ -56,10 +56,10 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
   // The whole site goes dark while this page is open — footer, edges, banner
   useEffect(() => {
     const root = document.documentElement;
-    const prev = root.getAttribute('style') ?? '';
     Object.entries(DARK).forEach(([k, v]) => root.style.setProperty(k, v));
     document.body.style.background = DARK['--c-bg'];
-    return () => { root.setAttribute('style', prev); document.body.style.background = ''; };
+    // Only our own properties go back — the app sets html's scroll lock itself
+    return () => { Object.keys(DARK).forEach(k => root.style.removeProperty(k)); document.body.style.background = ''; };
   }, []);
   // Paragraphs rise in word by word as they scroll into view, and sink away
   // again as they leave; a shown paragraph is something the ball can land on
@@ -84,41 +84,52 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
     return () => io.disconnect();
   }, []);
 
-  // A ball like the hero's rolls down the page, landing on the paragraphs
-  // that are in view and dropping off their ends to the next
+  // Behind the text: one graph of lettered balls, as on the home page. As the
+  // page scrolls its nodes drift into other formations and rewire themselves
   const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
-    const cv = canvasRef.current!;
+    const cv = canvasRef.current!, page = pageRef.current!;
     const ctx = cv.getContext('2d')!;
+    const LETTERS = 'SKIPDESIGN'.split('');
+    const N = LETTERS.length;
     let W = 0, H = 0, dpr = 1, R = 0, raf = 0;
-    const b = { x: 0, y: 0, vx: 0, vy: 0 };
+    const pts = Array.from({ length: N }, () => ({ x: 0, y: 0 }));
+    // Formations (unit square) and which nodes each one links
+    const ring = (i: number) => ({ x: 0.5 + 0.34 * Math.cos(i / N * 6.283 - 1.57), y: 0.5 + 0.34 * Math.sin(i / N * 6.283 - 1.57) });
+    const FORMS: { at: (i: number) => { x: number; y: number }; edges: [number, number][] }[] = [
+      { at: ring, edges: Array.from({ length: N }, (_, i) => [i, (i + 1) % N] as [number, number]) },
+      { at: i => ({ x: 0.1 + i * 0.8 / (N - 1), y: 0.5 + 0.22 * Math.sin(i * 0.9) }), edges: Array.from({ length: N - 1 }, (_, i) => [i, i + 1] as [number, number]) },
+      { at: i => i === 0 ? { x: 0.5, y: 0.5 } : { x: 0.5 + 0.38 * Math.cos((i - 1) / (N - 1) * 6.283), y: 0.5 + 0.38 * Math.sin((i - 1) / (N - 1) * 6.283) }, edges: Array.from({ length: N - 1 }, (_, i) => [0, i + 1] as [number, number]) },
+      { at: i => ({ x: 0.2 + (i % 4) * 0.2, y: 0.25 + Math.floor(i / 4) * 0.25 }), edges: [[0,1],[1,2],[2,3],[4,5],[5,6],[6,7],[8,9],[0,4],[4,8],[1,5],[5,9],[2,6],[3,7]] },
+      { at: i => ({ x: 0.3 + 0.4 * (i % 2) + 0.05 * Math.sin(i), y: 0.1 + i * 0.8 / (N - 1) }), edges: Array.from({ length: N - 2 }, (_, i) => [i, i + 2] as [number, number]).concat([[0, 1], [N - 2, N - 1]]) },
+    ];
     const size = () => {
       dpr = window.devicePixelRatio || 1; W = cv.clientWidth; H = cv.clientHeight;
-      cv.width = W * dpr; cv.height = H * dpr; R = Math.max(14, Math.min(W, H) * 0.028);
+      cv.width = W * dpr; cv.height = H * dpr; R = Math.max(18, Math.min(W, H) * 0.045);
     };
-    const drop = () => { b.x = W * (0.3 + Math.random() * 0.4); b.y = -R; b.vx = 1.2 + Math.random(); b.vy = 0; };
-    size(); drop();
+    size();
+    pts.forEach((p, i) => { const q = ring(i); p.x = q.x * W; p.y = q.y * H; });
     const tick = () => {
-      b.vy += 0.35; b.x += b.vx; b.y += b.vy;
-      // Land on the top of the first line of every shown paragraph
-      shown.current.forEach(p => {
-        const r = p.getBoundingClientRect();
-        const indent = parseFloat(getComputedStyle(p).textIndent) || 0;
-        const left = r.left + indent, top = r.top + 4;
-        if (b.x > left && b.x < r.right && b.vy > 0 && b.y + R > top && b.y + R - b.vy <= top + 12) {
-          b.y = top - R;
-          b.vy = b.vy > 3 ? -b.vy * 0.45 : 0;
-          if (Math.abs(b.vx) < 1.2) b.vx = 1.2 * Math.sign(b.vx || 1);
-        }
+      const max = page.scrollHeight - page.clientHeight;
+      const prog = max > 0 ? Math.min(1, Math.max(0, page.scrollTop / max)) : 0;
+      const f = Math.min(FORMS.length - 1, Math.floor(prog * FORMS.length));
+      const form = FORMS[f];
+      pts.forEach((p, i) => {
+        const q = form.at(i);
+        p.x += (q.x * W - p.x) * 0.05; p.y += (q.y * H - p.y) * 0.05;
       });
-      if (b.x < R) { b.x = R; b.vx = Math.abs(b.vx); }
-      if (b.x > W - R) { b.x = W - R; b.vx = -Math.abs(b.vx); }
-      if (b.y - R > H) drop();
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, W, H);
-      const g = ctx.createRadialGradient(b.x - R * 0.15, b.y - R * 0.2, 0, b.x - R * 0.15, b.y - R * 0.2, R * 1.3);
-      g.addColorStop(0, '#fdfdfd'); g.addColorStop(0.6, '#f0f0f0'); g.addColorStop(1, '#cfcfcf');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(b.x, b.y, R, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.setLineDash([2, 11]);
+      form.edges.forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(pts[a].x, pts[a].y); ctx.lineTo(pts[b].x, pts[b].y); ctx.stroke(); });
+      ctx.setLineDash([]);
+      ctx.font = `${R * 1.1}px "CoFo Sans VF", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      pts.forEach((p, i) => {
+        const g = ctx.createRadialGradient(p.x - R * 0.15, p.y - R * 0.2, 0, p.x - R * 0.15, p.y - R * 0.2, R * 1.3);
+        g.addColorStop(0, '#fdfdfd'); g.addColorStop(0.6, '#efefef'); g.addColorStop(1, '#cfcfcf');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = DARK['--c-bg']; ctx.fillText(LETTERS[i], p.x, p.y + R * 0.06);
+      });
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -128,13 +139,13 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
 
   return (
     <div className={s.page} ref={pageRef} style={{ ...DARK, background: DARK['--c-bg'] } as React.CSSProperties}>
-      <canvas ref={canvasRef} aria-hidden="true" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 5 }} />
-      <div className={s.body} style={{ paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
-        {/* Desktop: four columns wide, the fifth left empty */}
-        <h1 ref={textRef} style={{ ...H1, display: 'flex', flexDirection: 'column', gap: '0.8em', width: isMobile ? undefined : 'calc((100% - 4 * var(--gap)) / 5 * 4 + 3 * var(--gap))' }}>
+      <canvas ref={canvasRef} aria-hidden="true" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />
+      <div className={s.body} style={{ position: 'relative', zIndex: 1, paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
+        
+        <h1 ref={textRef} style={{ ...H1, display: 'flex', flexDirection: 'column', gap: '0.8em', }}>
           {/* Each paragraph's first line starts on the page grid's second column */}
           {TEXT.map((p, i) => (
-            <span key={i} style={{ textIndent: isMobile ? '33.333vw' : 'calc((100% - 3 * var(--gap)) / 4 + var(--gap))' }}>
+            <span key={i} style={{ textIndent: isMobile ? '33.333vw' : 'calc((100% - 4 * var(--gap)) / 5 + var(--gap))' }}>
               {typo(t(p)).split(' ').map((w, k) => <span key={k}><span data-w="" style={{ display: 'inline-block', textIndent: 0 }}>{w}</span>{' '}</span>)}
             </span>
           ))}

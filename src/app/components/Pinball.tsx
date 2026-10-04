@@ -33,13 +33,31 @@ export function Pinball() {
     let walls: Seg[] = [];
     let bumpers: { x: number; y: number; r: number; hit: number }[] = [];
     let flip: { px: number; py: number; len: number; dir: 1 | -1; a: number; up: boolean }[] = [];
-    const ball = { x: 0, y: 0, vx: 0, vy: 0, rot: 0 };
+    const ball = { x: 0, y: 0, vx: 0, vy: 0 };
+    // The ball's orientation (3×3, row-major): starts a little turned away
+    let M = [0.9, 0, 0.436, 0, 1, 0, -0.436, 0, 0.9];
+    const spin = () => {
+      // Rolls with its motion, plus a slow tumble of its own about every axis
+      const wx = ball.vy / R * 0.9 + 0.011, wy = -ball.vx / R * 0.9 + 0.017, wz = 0.007;
+      const th = Math.hypot(wx, wy, wz); if (!th) return;
+      const k = [wx / th, wy / th, wz / th], c = Math.cos(th), sn = Math.sin(th), v = 1 - c;
+      const Rm = [
+        c + k[0] * k[0] * v, k[0] * k[1] * v - k[2] * sn, k[0] * k[2] * v + k[1] * sn,
+        k[1] * k[0] * v + k[2] * sn, c + k[1] * k[1] * v, k[1] * k[2] * v - k[0] * sn,
+        k[2] * k[0] * v - k[1] * sn, k[2] * k[1] * v + k[0] * sn, c + k[2] * k[2] * v,
+      ];
+      const N = new Array(9).fill(0);
+      for (let r = 0; r < 3; r++) for (let q = 0; q < 3; q++) for (let m = 0; m < 3; m++) N[r * 3 + q] += Rm[r * 3 + m] * M[m * 3 + q];
+      M = N;
+    };
 
     const REST = 0.5, UP = -0.45;
     const layout = () => {
       dpr = window.devicePixelRatio || 1;
       W = cv.clientWidth; H = cv.clientHeight;
-      cv.width = W * dpr; cv.height = H * dpr;
+      // The page may be scaled with CSS zoom: the bitmap follows what is on screen
+      const box = cv.getBoundingClientRect();
+      cv.width = Math.round(box.width * dpr); cv.height = Math.round(box.height * dpr);
       R = Math.max(24, Math.min(W, H) * 0.05);
       const fw = Math.min(W * 0.16, 200);           // flipper length
       const gap = R * 2.6;                           // drain between them
@@ -114,11 +132,11 @@ export function Pinball() {
       // Never leaves the screen: the top and the bottom edge bounce it back
       if (ball.y < R) { ball.y = R; ball.vy = Math.abs(ball.vy) * 0.6; }
       if (ball.y > H - R) { ball.y = H - R; ball.vy = -Math.abs(ball.vy) * 0.75 - 6; }
-      ball.rot += ball.vx / R;
+      spin();
     };
 
     const draw = () => {
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
       ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H);
       ctx.strokeStyle = LINE; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
       walls.forEach(w => { ctx.beginPath(); ctx.moveTo(w.ax, w.ay); ctx.lineTo(w.bx, w.by); ctx.stroke(); });
@@ -135,20 +153,30 @@ export function Pinball() {
       const sg = ctx.createRadialGradient(ball.x - R * 0.4, ball.y - R * 0.48, 0, ball.x - R * 0.4, ball.y - R * 0.48, R * 0.7);
       sg.addColorStop(0, 'rgba(255,255,255,0.85)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
       ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(ball.x, ball.y, R, 0, Math.PI * 2); ctx.fill();
-      // The sticker: a dark square with the pixel critter, turning with the ball
-      ctx.save();
-      ctx.beginPath(); ctx.arc(ball.x, ball.y, R, 0, Math.PI * 2); ctx.clip();
-      ctx.translate(ball.x, ball.y); ctx.rotate(ball.rot);
-      const side = R * 1.05, px = side / 17;
-      ctx.fillStyle = '#121212';
-      ctx.beginPath(); (ctx as any).roundRect ? (ctx as any).roundRect(-side / 2, -side / 2, side, side, px * 1.5) : ctx.rect(-side / 2, -side / 2, side, side); ctx.fill();
-      const ox = -CRITTER[0].length * px / 2, oy = -CRITTER.length * px / 2;
+      // The sticker: the black-and-white critter, no background, laid on the
+      // ball's surface — it turns with the ball, so it often faces away
+      const cols = CRITTER[0].length, rows = CRITTER.length, pp = 1.05 / cols;
+      const toScreen = (a: number, b: number) => {
+        const l = Math.hypot(a, b, 1), v = [a / l, b / l, 1 / l];
+        return [
+          M[0] * v[0] + M[1] * v[1] + M[2] * v[2],
+          M[3] * v[0] + M[4] * v[1] + M[5] * v[2],
+          M[6] * v[0] + M[7] * v[1] + M[8] * v[2],
+        ];
+      };
       CRITTER.forEach((row, y) => [...row].forEach((c, x) => {
         if (c === '.') return;
-        ctx.fillStyle = c === 'W' ? '#efefef' : c === 'G' ? '#a9a9a9' : '#121212';
-        ctx.fillRect(ox + x * px, oy + y * px, px + 0.3, px + 0.3);
+        const a0 = (x - cols / 2) * pp, b0 = (y - rows / 2) * pp;
+        const mid = toScreen(a0 + pp / 2, b0 + pp / 2);
+        if (mid[2] < 0.1) return;
+        const pts = [[a0, b0], [a0 + pp, b0], [a0 + pp, b0 + pp], [a0, b0 + pp]].map(([a, b]) => toScreen(a, b));
+        ctx.fillStyle = c === 'W' ? '#161616' : c === 'G' ? '#8c8c8c' : '#f6f6f6';
+        ctx.globalAlpha = Math.min(1, (mid[2] - 0.1) * 4);
+        ctx.beginPath();
+        pts.forEach((q, k) => { const X = ball.x + q[0] * R, Y = ball.y + q[1] * R; k ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
+        ctx.closePath(); ctx.fill();
       }));
-      ctx.restore();
+      ctx.globalAlpha = 1;
     };
 
     let raf = 0;
@@ -161,7 +189,7 @@ export function Pinball() {
       if (e.key === 'ArrowRight' || e.key === '/' || e.key === 'm') set(1, up);
     };
     const kd = key(true), ku = key(false);
-    const pd = (e: PointerEvent) => set(e.clientX < W / 2 ? 0 : 1, true);
+    const pd = (e: PointerEvent) => set(e.clientX < cv.getBoundingClientRect().width / 2 ? 0 : 1, true);
     const pu = () => { set(0, false); set(1, false); };
     window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
     cv.addEventListener('pointerdown', pd); window.addEventListener('pointerup', pu);

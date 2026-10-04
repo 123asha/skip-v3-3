@@ -27,11 +27,13 @@ const muted: React.CSSProperties = { ...textStyle, color: 'var(--c-text-muted)' 
 
 // The home headline exactly: its size, its own tighter leading and tracking
 // (ScrollHero; phones: the heading size, via --hero-fs / --hero-lh)
-const titleStyle: React.CSSProperties = {
-  ...h2Style,
-  fontSize: 'var(--hero-fs, min(var(--hero-size), 7.2vw))',
-  lineHeight: 'var(--hero-lh, 0.8755)',
-  letterSpacing: '-0.03em',
+// One size throughout the article: the title reads like the list beside it
+const titleStyle: React.CSSProperties = { ...textStyle };
+
+// Whatever needs marking out gets a grey marker under the words
+const marker: React.CSSProperties = {
+  background: 'var(--c-surface)', padding: '1px 4px', margin: '0 -4px',
+  boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone',
 };
 
 const AR = { square: '1 / 1', vertical: '4 / 5' } as const;
@@ -74,8 +76,8 @@ const AFTER_HEADING = { h2: 'var(--space-sm)', h3: 'var(--space-xs)' } as const;
 
 function BlockView({ b }: { b: Block }) {
   switch (b.type) {
-    case 'h2': return <h2 style={{ ...h2Style, margin: 0 }}>{typo(b.text)}</h2>;
-    case 'h3': return <h3 style={{ ...h2Style, fontSize: 'var(--h3-size)', lineHeight: 1.15, margin: 0 }}>{rich(b.text)}</h3>;
+    case 'h2': return <h2 style={{ ...textStyle, margin: 0 }}><mark style={{ ...marker, color: 'inherit' }}>{typo(b.text)}</mark></h2>;
+    case 'h3': return <h3 style={{ ...textStyle, margin: 0 }}><mark style={{ ...marker, color: 'inherit' }}>{rich(b.text)}</mark></h3>;
     case 'p': return <p style={{ ...textStyle, margin: 0 }}>{rich(b.text)}</p>;
     case 'note': return <p style={{ ...muted, margin: 0 }}>{rich(b.text)}</p>;
     case 'ul':
@@ -91,7 +93,7 @@ function BlockView({ b }: { b: Block }) {
       // A marked-out passage: plain text, just grey
       return (
         <figure style={{ margin: 0 }}>
-          <blockquote style={{ ...muted, margin: 0 }}>{rich(b.text)}</blockquote>
+          <blockquote style={{ ...textStyle, margin: 0 }}><mark style={{ ...marker, color: 'inherit' }}>{rich(b.text)}</mark></blockquote>
           {b.author && <figcaption style={{ ...muted, marginTop: 10 }}>{b.author}</figcaption>}
         </figure>
       );
@@ -100,7 +102,7 @@ function BlockView({ b }: { b: Block }) {
         // Code (prompts and the like): monospaced, a size smaller, on a grey field
         <pre style={{
           margin: 0, padding: '16px 20px', background: 'var(--c-surface)', color: 'var(--c-text)',
-          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', fontSize: 13, lineHeight: 1.55,
+          ...textStyle,
           whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',
         }}>{b.text}</pre>
       );
@@ -201,7 +203,7 @@ export default function InsightPage({
             >←</a>
             <span>{shownDate(article)}</span>
           </p>
-          <h1 style={{ ...titleStyle, margin: 0, marginTop: isMobile ? 'var(--space-xs)' : 'var(--space-sm)' }}>
+          <h1 style={{ ...titleStyle, margin: 0, marginTop: 6 }}>
             {typo(article.desc)}
           </h1>
         </header>

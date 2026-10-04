@@ -11,10 +11,8 @@ import { t } from '../i18n';
 const TEXT = [
   'Дизайн, как правила игры.',
   'Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться сути.',
-  'Философия',
   'Дизайн здравого смысла — это когда всё подчиняется логике формы. А значит — идее. В древних языках «форма», «слово» и «звук» были связаны между собой. Говорить — значит придавать форму, а форма смысла — дизайн.',
   'Мы любим, когда проект не кричит, а держит форму. И слово.',
-  'Подход',
   'Skip Design — команда стратегов, дизайнеров и менеджеров. Мы верим в хард-скиллы, опыт и индивидуальность каждого специалиста. Это значит, что каждый делает свои задачи по-своему, но с ответственностью за общий результат.',
   'Один из наших принципов — привносить в работу лёгкость, юмор и отступать от шаблонов, если так получится лучший результат.',
   'Любим структуру и уважаем ясность. Поэтому делаем так, чтобы случился мэтч у всех, кто вовлечён в проект:',
@@ -129,14 +127,14 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       });
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, W, H);
-      ctx.strokeStyle = 'rgba(255,255,255,0.32)'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.setLineDash([2, 11]);
+      ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.setLineDash([2, 11]);
       form.edges.forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(pts[a].x, pts[a].y); ctx.lineTo(pts[b].x, pts[b].y); ctx.stroke(); });
       ctx.setLineDash([]);
       // Outlines only: the links stop at the rings, the inside stays empty
       ctx.globalCompositeOperation = 'destination-out';
       pts.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill(); });
       ctx.globalCompositeOperation = 'source-over';
-      ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1.5;
       pts.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.stroke(); });
       raf = requestAnimationFrame(tick);
     };
@@ -166,7 +164,7 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
               return (
                 <p key={i} data-p="" style={{
                   margin: 0, ...(heading ? { fontWeight: 'inherit' } : { ...TEXT_STYLE, margin: 0 }),
-                  gridColumn: isMobile ? 'auto' : heading ? '1 / 2' : '2 / 4',
+                  gridColumn: isMobile ? 'auto' : '2 / 4',
                   gridRow: isMobile ? 'auto' : r,
                   textIndent: heading ? 0 : isMobile ? '33.333vw' : 'calc((100vw - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap))',
                 }}>

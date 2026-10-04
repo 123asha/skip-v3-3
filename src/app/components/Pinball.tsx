@@ -7,6 +7,22 @@ const LINE = 'rgba(0,0,0,0.18)';
 
 type Seg = { ax: number; ay: number; bx: number; by: number };
 
+// The sticker's critter, pixel by pixel (W white, G grey, D dark)
+const CRITTER = [
+  '....W.....W....',
+  '....WG....WG...',
+  '....WWWWWWWW...',
+  '..G.WWWWWWWW.G.',
+  '.GGGWWWWWWWWGGG',
+  'G...WDWWWWDW..G',
+  '....WWWWWWWW...',
+  '....WGWWWWGW...',
+  '....WWWGGWWW...',
+  '.....WWWWWW....',
+  '.....WW..WW....',
+  '.....WW..WW....',
+];
+
 export function Pinball() {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -17,14 +33,14 @@ export function Pinball() {
     let walls: Seg[] = [];
     let bumpers: { x: number; y: number; r: number; hit: number }[] = [];
     let flip: { px: number; py: number; len: number; dir: 1 | -1; a: number; up: boolean }[] = [];
-    const ball = { x: 0, y: 0, vx: 0, vy: 0 };
+    const ball = { x: 0, y: 0, vx: 0, vy: 0, rot: 0 };
 
     const REST = 0.5, UP = -0.45;
     const layout = () => {
       dpr = window.devicePixelRatio || 1;
       W = cv.clientWidth; H = cv.clientHeight;
       cv.width = W * dpr; cv.height = H * dpr;
-      R = Math.max(14, Math.min(W, H) * 0.03);
+      R = Math.max(24, Math.min(W, H) * 0.05);
       const fw = Math.min(W * 0.16, 200);           // flipper length
       const gap = R * 2.6;                           // drain between them
       const fy = H - Math.max(130, H * 0.2);
@@ -45,7 +61,7 @@ export function Pinball() {
         { x: W * 0.5, y: H * 0.62, r: br, hit: 0 },
       ];
     };
-    const serve = () => { ball.x = W * (0.3 + Math.random() * 0.4); ball.y = -R; ball.vx = (Math.random() - 0.5) * 4; ball.vy = 0; };
+    const serve = () => { ball.x = W * (0.3 + Math.random() * 0.4); ball.y = R; ball.vx = (Math.random() - 0.5) * 3; ball.vy = 0; };
 
     const flipSeg = (f: typeof flip[0]): Seg => ({
       ax: f.px, ay: f.py,
@@ -68,10 +84,10 @@ export function Pinball() {
     };
 
     const step = () => {
-      ball.vy += 0.32;
+      ball.vy += 0.256;
       ball.vx *= 0.999; ball.vy *= 0.999;
       const sp = Math.hypot(ball.vx, ball.vy);
-      if (sp > 26) { ball.vx *= 26 / sp; ball.vy *= 26 / sp; }
+      if (sp > 21) { ball.vx *= 21 / sp; ball.vy *= 21 / sp; }
       ball.x += ball.vx; ball.y += ball.vy;
       if (ball.x < R) { ball.x = R; ball.vx = Math.abs(ball.vx) * 0.6; }
       if (ball.x > W - R) { ball.x = W - R; ball.vx = -Math.abs(ball.vx) * 0.6; }
@@ -80,7 +96,7 @@ export function Pinball() {
         const target = f.up ? UP : REST;
         const prev = f.a;
         f.a += Math.max(-0.35, Math.min(0.35, target - f.a));
-        const swing = f.a - prev < 0 ? 22 : 0;
+        const swing = f.a - prev < 0 ? 17.6 : 0;
         hitSeg(flipSeg(f), 0.3, swing);
       });
       bumpers.forEach(b => {
@@ -90,12 +106,15 @@ export function Pinball() {
           ball.x = b.x + nx * (b.r + R); ball.y = b.y + ny * (b.r + R);
           const vn = ball.vx * nx + ball.vy * ny;
           ball.vx -= 2 * vn * nx; ball.vy -= 2 * vn * ny;
-          ball.vx += nx * 4; ball.vy += ny * 4;
+          ball.vx += nx * 3.2; ball.vy += ny * 3.2;
           b.hit = 1;
         }
         b.hit *= 0.9;
       });
-      if (ball.y - R > H) serve();
+      // Never leaves the screen: the top and the bottom edge bounce it back
+      if (ball.y < R) { ball.y = R; ball.vy = Math.abs(ball.vy) * 0.6; }
+      if (ball.y > H - R) { ball.y = H - R; ball.vy = -Math.abs(ball.vy) * 0.75 - 6; }
+      ball.rot += ball.vx / R;
     };
 
     const draw = () => {
@@ -116,6 +135,20 @@ export function Pinball() {
       const sg = ctx.createRadialGradient(ball.x - R * 0.4, ball.y - R * 0.48, 0, ball.x - R * 0.4, ball.y - R * 0.48, R * 0.7);
       sg.addColorStop(0, 'rgba(255,255,255,0.85)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
       ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(ball.x, ball.y, R, 0, Math.PI * 2); ctx.fill();
+      // The sticker: a dark square with the pixel critter, turning with the ball
+      ctx.save();
+      ctx.beginPath(); ctx.arc(ball.x, ball.y, R, 0, Math.PI * 2); ctx.clip();
+      ctx.translate(ball.x, ball.y); ctx.rotate(ball.rot);
+      const side = R * 1.05, px = side / 17;
+      ctx.fillStyle = '#121212';
+      ctx.beginPath(); (ctx as any).roundRect ? (ctx as any).roundRect(-side / 2, -side / 2, side, side, px * 1.5) : ctx.rect(-side / 2, -side / 2, side, side); ctx.fill();
+      const ox = -CRITTER[0].length * px / 2, oy = -CRITTER.length * px / 2;
+      CRITTER.forEach((row, y) => [...row].forEach((c, x) => {
+        if (c === '.') return;
+        ctx.fillStyle = c === 'W' ? '#efefef' : c === 'G' ? '#a9a9a9' : '#121212';
+        ctx.fillRect(ox + x * px, oy + y * px, px + 0.3, px + 0.3);
+      }));
+      ctx.restore();
     };
 
     let raf = 0;

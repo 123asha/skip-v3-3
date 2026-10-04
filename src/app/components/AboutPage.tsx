@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import s from './CasesPage.module.css';
 import ContactForm from './ContactForm';
 import { typo } from '../utils/typography';
+import { t } from '../i18n';
 
 // /about-skip-design — the old site's «Инфо» text, copied as is for now, all
 // of it in the home headline's style. Not in the menu yet.
@@ -52,7 +53,7 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
     } as React.CSSProperties}>
       <div className={s.body} style={{ paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
         <h1 style={{ ...H1, display: 'flex', flexDirection: 'column', gap: '0.6em' }}>
-          {TEXT.map((p, i) => <span key={i}>{typo(p)}</span>)}
+          {TEXT.map((p, i) => <span key={i}>{typo(t(p))}</span>)}
         </h1>
         <ContactForm onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
       </div>

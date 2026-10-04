@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import s from './CasesPage.module.css';
 import ContactForm from './ContactForm';
-import { typo, TEXT_STYLE, H2_STYLE } from '../utils/typography';
+import { typo, TEXT_STYLE } from '../utils/typography';
 import { SERVICES } from './ExpertiseSection2';
 import { t } from '../i18n';
 
@@ -165,11 +165,7 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
               const r = heading ? row + 1 : row;
               return (
                 <p key={i} data-p="" style={{
-                  margin: 0, ...(heading ? { fontWeight: 'inherit' } : {
-            // The home headline: its size, leading and tracking (ScrollHero)
-            ...H2_STYLE, margin: 0,
-            fontSize: 'var(--hero-fs, min(var(--hero-size), 7.2vw))', lineHeight: 'var(--hero-lh, 0.8755)', letterSpacing: '-0.03em',
-          }),
+                  margin: 0, ...(heading ? { fontWeight: 'inherit' } : { ...TEXT_STYLE, margin: 0 }),
                   gridColumn: isMobile ? 'auto' : heading ? '1 / 2' : '2 / 4',
                   gridRow: isMobile ? 'auto' : r,
                   textIndent: heading ? 0 : isMobile ? '33.333vw' : 'calc((100vw - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5 + var(--gap))',

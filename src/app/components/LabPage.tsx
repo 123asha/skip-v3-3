@@ -24,7 +24,11 @@ function InsightList() {
     else groups.push({ label, items: [it] });
   }
   return (
-    <div style={{ marginBottom: 'var(--space-xl)', columnCount: isMobile ? 1 : 2, columnGap: 'var(--gap)' }}>
+    <div style={{
+      marginBottom: 'var(--space-xl)', columnCount: isMobile ? 1 : 2, columnGap: 'var(--gap)',
+      // Desktop: the page grid's first two columns, one group-column each
+      width: isMobile ? undefined : 'calc((100% - 4 * var(--gap)) / 5 * 2 + var(--gap))',
+    }}>
       {groups.map(g => (
         <div key={g.label} style={{ breakInside: 'avoid', marginBottom: 32 }}>
           <p style={{ ...TEXT_STYLE, margin: '0 0 6px', opacity: 'var(--opacity-muted)' as any }}>{g.label}</p>
@@ -35,7 +39,7 @@ function InsightList() {
               target={isInternal(it.href) ? undefined : '_blank'}
               rel={isInternal(it.href) ? undefined : 'noopener noreferrer'}
               onClick={isInternal(it.href) ? e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); goTo(it.href!); } : undefined}
-              style={{ ...TEXT_STYLE, display: 'block', padding: '3px 0 3px 40px', color: 'var(--c-text)', textDecoration: 'none' }}
+              style={{ ...TEXT_STYLE, display: 'block', padding: '3px 0 3px 20px', color: 'var(--c-text)', textDecoration: 'none' }}
             >{typo(it.desc)}</a>
           ))}
         </div>

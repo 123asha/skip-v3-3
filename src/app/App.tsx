@@ -330,7 +330,7 @@ function NotFoundPage({ onGoHome }: { onGoHome: () => void }) {
         position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: 'calc(var(--pad) + 28px)', pointerEvents: 'none',
         fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)', color: 'var(--c-text)',
         opacity: 'var(--opacity-muted)' as any, whiteSpace: 'nowrap',
-      }}>{t('Играйте стрелками')} ← →</div>
+      }}>← →</div>
       {/* The way back: a black pill in the middle of the screen, a little above centre */}
       <div data-pin-obstacle="" style={{ position: 'relative', marginTop: '-22vh' }}>
         <PillButton variant="primary" onClick={onGoHome}>На главную</PillButton>

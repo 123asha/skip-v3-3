@@ -265,7 +265,6 @@ export const EN: Record<string, string> = {
   'Название': 'Title',
   'Источник': 'Source',
   'Тип': 'Type',
-  'Играйте стрелками': 'Play with the arrow keys',
   'На главную': 'Home',
   "Не всегда нужна разработка с нуля: сайт на конструкторе выходит быстрее и дешевле, а команда дальше правит его сама.\n\nРаботаем почти на всех популярных конструкторах: Tilda, Webflow, Readymag и других. Подбираем платформу под задачу и собираем сайт так, чтобы после нас его было удобно поддерживать: понятная структура, аккуратные блоки, инструкция для команды.": "You don't always need development from scratch: a site built on a platform ships faster and costs less, and the team keeps editing it on its own.\n\nWe work on almost all the popular builders: Tilda, Webflow, Readymag and others. We pick the platform for the task and build the site so it's easy to maintain after us: a clear structure, tidy blocks, a guide for your team.",
   "Когда нужно показать идею быстро, а не через месяцы согласований, сайт можно навайбкодить.\n\nСоберём лендинг быстрее, чем обычно, и передадим исходники с микро- и макроанимациями. Так же делаем фестивальные проекты: быстро и на крутом уровне, с вниманием к деталям и движению.": "When you need to show an idea fast, not after months of approvals, a site can be vibe-coded.\n\nWe'll put a landing page together faster than usual and hand over the source files with micro- and macro-animations. We make festival projects the same way: fast and at a high level, with attention to detail and motion.",

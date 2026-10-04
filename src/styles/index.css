@@ -35,7 +35,7 @@
      to viewport width above 1200px (below that main.tsx zooms the whole page,
      type included). Mobile overrides live in the media blocks further down. */
   --text-size: 16px;
-  --text-weight: 465;
+  --text-weight: 450;
   --text-lh: 1.2;
   --text-ls: -0.02em;
 

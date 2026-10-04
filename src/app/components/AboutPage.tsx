@@ -38,6 +38,8 @@ const PARTS: { title: string; paras: string[] }[] = [
   },
 ];
 const TEXT = PARTS.flatMap(x => x.paras);
+// One page column: the paragraphs' first-line indent
+const COLUMN = 'calc((100vw - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5)';
 
 const DARK: Record<string, string> = {
   '--c-bg': '#0d0d0d', '--c-text': '#f2f2f2', '--c-surface': '#1c1c1c',
@@ -165,20 +167,21 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       <canvas ref={canvasRef} aria-hidden="true" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />
       <div className={s.body} style={{ position: 'relative', zIndex: 1, paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
         
-        {/* Three parts. Desktop: each heading (plain text size) on column 1, its
-            text three columns wide (2–4) in H2; wide gaps between parts */}
+        {/* Three parts: the text three columns wide (2–4) in H2, first lines indented
+            by a column, each part's heading (plain text size) standing in that indent */}
         <div ref={textRef} style={{ ...TEXT_STYLE, margin: 0, fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'] }}>
           {(() => {
             let n = 0;
             return PARTS.map(part => (
               <section key={part.title} style={{
-                display: 'grid', columnGap: 'var(--gap)', marginBottom: isMobile ? 48 : 96,
+                display: 'grid', columnGap: 'var(--gap)', marginBottom: isMobile ? 32 : 48,
                 gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, minmax(0, 1fr))',
               }}>
-                <h2 style={{ ...TEXT_STYLE, margin: 0, gridColumn: isMobile ? 'auto' : '1 / 2', marginBottom: isMobile ? 12 : 0 }}>{t(part.title)}</h2>
                 <div data-cols="" style={{ gridColumn: isMobile ? 'auto' : '2 / 5' }}>
-                  {part.paras.map(p => (
-                    <p key={n} data-p={n++} style={{ ...H2_STYLE, margin: 0, textIndent: isMobile ? '33.333vw' : '2em' }}>
+                  {part.paras.map((p, pi) => (
+                    <p key={n} data-p={n++} style={{ ...H2_STYLE, margin: 0, position: 'relative', textIndent: isMobile ? '33.333vw' : COLUMN }}>
+                      {/* The part's heading stands in the first paragraph's indent */}
+                      {pi === 0 && <span style={{ ...TEXT_STYLE, position: 'absolute', left: 0, top: 0, textIndent: 0, lineHeight: 'var(--text-lh)' }}>{t(part.title)}</span>}
                       {typo(t(p)).split(' ').map((w, k) => <span key={k}><span data-w="" style={{ display: 'inline-block', textIndent: 0 }}>{w}</span>{' '}</span>)}
                     </p>
                   ))}

@@ -8,20 +8,36 @@ import { t } from '../i18n';
 
 // /about-skip-design — the old site's «Инфо» text, copied as is for now, all
 // of it in the home headline's style. Not in the menu yet.
-const TEXT = [
-  'Дизайн, как правила игры.',
-  'Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться сути.',
-  'Дизайн здравого смысла — это когда всё подчиняется логике формы. А значит — идее. В древних языках «форма», «слово» и «звук» были связаны между собой. Говорить — значит придавать форму, а форма смысла — дизайн.',
-  'Мы любим, когда проект не кричит, а держит форму. И слово.',
-  'Skip Design — команда стратегов, дизайнеров и менеджеров. Мы верим в хард-скиллы, опыт и индивидуальность каждого специалиста. Это значит, что каждый делает свои задачи по-своему, но с ответственностью за общий результат.',
-  'Один из наших принципов — привносить в работу лёгкость, юмор и отступать от шаблонов, если так получится лучший результат.',
-  'Любим структуру и уважаем ясность. Поэтому делаем так, чтобы случился мэтч у всех, кто вовлечён в проект:',
-  '⭆ клиентам — понятно, каким будет процесс и результат.',
-  '⤷ пользователям — удобно и приятно взаимодействовать с продуктом или брендом.',
-  '⧉ разработчикам — не приходится тратить время, чтобы разобраться в логике макетов.',
-  '※ команде — не стыдно за результат, и хочется им поделиться.',
-  'Результат, к которому мы стремимся — это когда сайт, интерфейс, бренд выглядят так, как будто по-другому и быть не могло. Когда без слов понятно, что проект сделан с вниманием к деталям и в точку.',
+const PARTS: { title: string; paras: string[] }[] = [
+  {
+    title: 'Skip Design',
+    paras: [
+      'Дизайн, как правила игры.',
+      'Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться сути.',
+    ],
+  },
+  {
+    title: 'Философия',
+    paras: [
+      'Дизайн здравого смысла — это когда всё подчиняется логике формы. А значит — идее. В древних языках «форма», «слово» и «звук» были связаны между собой. Говорить — значит придавать форму, а форма смысла — дизайн.',
+      'Мы любим, когда проект не кричит, а держит форму. И слово.',
+    ],
+  },
+  {
+    title: 'Подход',
+    paras: [
+      'Skip Design — команда стратегов, дизайнеров и менеджеров. Мы верим в хард-скиллы, опыт и индивидуальность каждого специалиста. Это значит, что каждый делает свои задачи по-своему, но с ответственностью за общий результат.',
+      'Один из наших принципов — привносить в работу лёгкость, юмор и отступать от шаблонов, если так получится лучший результат.',
+      'Любим структуру и уважаем ясность. Поэтому делаем так, чтобы случился мэтч у всех, кто вовлечён в проект:',
+      '⭆ клиентам — понятно, каким будет процесс и результат.',
+      '⤷ пользователям — удобно и приятно взаимодействовать с продуктом или брендом.',
+      '⧉ разработчикам — не приходится тратить время, чтобы разобраться в логике макетов.',
+      '※ команде — не стыдно за результат, и хочется им поделиться.',
+      'Результат, к которому мы стремимся — это когда сайт, интерфейс, бренд выглядят так, как будто по-другому и быть не могло. Когда без слов понятно, что проект сделан с вниманием к деталям и в точку.',
+    ],
+  },
 ];
+const TEXT = PARTS.flatMap(x => x.paras);
 
 const DARK: Record<string, string> = {
   '--c-bg': '#0d0d0d', '--c-text': '#f2f2f2', '--c-surface': '#1c1c1c',
@@ -63,8 +79,9 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       const byLine = new Map<number, HTMLElement[]>();
       words.forEach(w => {
         const para = w.closest('[data-p]') as HTMLElement;
-        const col = window.innerWidth > 768 ? Math.floor(w.offsetLeft / (textRef.current!.clientWidth / 2)) : 0;
-        const key = Array.from(para.parentElement!.children).indexOf(para) * 100000 + col * 50000 + Math.round(w.offsetTop / 6);
+        const box = para.parentElement as HTMLElement;
+        const col = window.innerWidth > 768 ? (w.getBoundingClientRect().left - box.getBoundingClientRect().left > box.clientWidth / 2 ? 1 : 0) : 0;
+        const key = Number(para.dataset.p) * 100000 + col * 50000 + Math.round(w.offsetTop / 6);
         (byLine.get(key) ?? byLine.set(key, []).get(key)!).push(w);
       });
       lines = [...byLine.entries()].sort((a, b) => a[0] - b[0]).map(([, els]) => ({ els, on: false }));
@@ -148,20 +165,27 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       <canvas ref={canvasRef} aria-hidden="true" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />
       <div className={s.body} style={{ position: 'relative', zIndex: 1, paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
         
-        {/* Desktop: the text in two columns, on page columns 2 and 3 */}
-        <div ref={textRef} style={{
-          ...TEXT_STYLE, margin: 0, fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
-          ...(isMobile ? null : {
-            columnCount: 2, columnGap: 'var(--gap)',
-            marginLeft: 'calc((100% - 4 * var(--gap)) / 5 + var(--gap))',
-            width: 'calc((100% - 4 * var(--gap)) / 5 * 2 + var(--gap))',
-          }),
-        }}>
-          {TEXT.map((p, i) => (
-            <p key={i} data-p="" style={{ margin: 0, textIndent: isMobile ? '33.333vw' : '2em' }}>
-              {typo(t(p)).split(' ').map((w, k) => <span key={k}><span data-w="" style={{ display: 'inline-block', textIndent: 0 }}>{w}</span>{' '}</span>)}
-            </p>
-          ))}
+        {/* Three parts. Desktop: each heading (plain text size) on column 1, its
+            text in two columns on page columns 3–4; wide gaps between parts */}
+        <div ref={textRef} style={{ ...TEXT_STYLE, margin: 0, fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'] }}>
+          {(() => {
+            let n = 0;
+            return PARTS.map(part => (
+              <section key={part.title} style={{
+                display: 'grid', columnGap: 'var(--gap)', marginBottom: isMobile ? 48 : 96,
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, minmax(0, 1fr))',
+              }}>
+                <h2 style={{ ...TEXT_STYLE, margin: 0, gridColumn: isMobile ? 'auto' : '1 / 2', marginBottom: isMobile ? 12 : 0 }}>{t(part.title)}</h2>
+                <div data-cols="" style={{ gridColumn: isMobile ? 'auto' : '3 / 5', ...(isMobile ? null : { columnCount: 2, columnGap: 'var(--gap)' }) }}>
+                  {part.paras.map(p => (
+                    <p key={n} data-p={n++} style={{ margin: 0, textIndent: isMobile ? '33.333vw' : '2em' }}>
+                      {typo(t(p)).split(' ').map((w, k) => <span key={k}><span data-w="" style={{ display: 'inline-block', textIndent: 0 }}>{w}</span>{' '}</span>)}
+                    </p>
+                  ))}
+                </div>
+              </section>
+            ));
+          })()}
         </div>
         {/* «Наши услуги» on the third column, the list on the fourth */}
         <div style={{

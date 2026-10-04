@@ -1,9 +1,36 @@
 import { useEffect, useRef } from 'react';
 import s from './CasesPage.module.css';
 import { MediaSection } from './MediaSection';
-import { InsightCards } from './InsightCards';
 import ContactForm from './ContactForm';
-import { H2_STYLE } from '../utils/typography';
+import { H2_STYLE, TEXT_STYLE, typo } from '../utils/typography';
+import { INSIGHTS_LIST, isInternal } from '../content/insights';
+import { goTo, siteHref } from '../utils/siteNav';
+import { useMobile } from '../hooks/useMobile';
+
+// Top of the insights page: just the articles as text — title, then date
+function InsightList() {
+  const isMobile = useMobile();
+  return (
+    <div style={{ marginBottom: 'var(--space-xl)' }}>
+      {INSIGHTS_LIST.map((it, i) => (
+        <a
+          key={it.href ?? i}
+          href={isInternal(it.href) ? siteHref(it.href!) : it.href}
+          target={isInternal(it.href) ? undefined : '_blank'}
+          rel={isInternal(it.href) ? undefined : 'noopener noreferrer'}
+          onClick={isInternal(it.href) ? e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); goTo(it.href!); } : undefined}
+          style={{
+            display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: 'var(--gap)',
+            padding: '6px 0', color: 'var(--c-text)', textDecoration: 'none',
+          }}
+        >
+          <span style={{ ...TEXT_STYLE, paddingRight: isMobile ? 0 : 40 }}>{typo(it.desc)}</span>
+          <span style={{ ...TEXT_STYLE, opacity: 'var(--opacity-muted)' as any }}>{it.shown}</span>
+        </a>
+      ))}
+    </div>
+  );
+}
 import { useReveal } from '../hooks/useReveal';
 import { LANG } from '../i18n';
 
@@ -39,7 +66,7 @@ export default function LabPage({
             the page title already says "Инсайты". */}
         {/* flushTop — the page body already carries the title → content gap,
             so the section must not add its own on top of it. */}
-        <InsightCards />
+        <InsightList />
         {/* The table below is the archive of every insight — Russian only:
             the English site shows just the cards */}
         {LANG !== 'en' && <>

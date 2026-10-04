@@ -332,6 +332,14 @@ const TILE_MARKS = ['①', '②', '③', '④'];
 // asagi (pale indigo-teal), kuchiba (dried-leaf ochre)
 const TILE_TINTS = ['#C8CDB4', '#D9C4BC', '#BCCBCC', '#D8C79F'];
 
+// Hovering a solution card tints the whole site's background
+function tintSite(color: string | null) {
+  const root = document.documentElement;
+  root.classList.add('bg-tinting');
+  if (color) root.style.setProperty('--c-bg', color);
+  else root.style.removeProperty('--c-bg');
+}
+
 // Deterministic pseudo-random 0…1, seeded — same scatter every render/reload
 function pseudoRandom(seed: number): number {
   const v = Math.sin(seed * 12.9898) * 43758.5453;
@@ -777,6 +785,7 @@ function TileBalls({ tileIndex, hovered }: { tileIndex: number; hovered: boolean
 
 function Tile({ index, tile }: { index: number; tile: { title: string; who: string } }) {
   const isMobile = useMobile();
+  useEffect(() => () => tintSite(null), []);
   const [hovered, setHovered] = useState(false);
   // Phones have no hover: the balls come in by themselves once the tile is
   // on screen — tile after tile, quickly
@@ -799,9 +808,9 @@ function Tile({ index, tile }: { index: number; tile: { title: string; who: stri
       ref={tileRef}
       data-svc-tile=""
       // Phone: square tiles
-      style={{ position: 'relative', aspectRatio: isMobile ? '1/1' : '4/5', background: hovered && !isMobile ? TILE_TINTS[index % TILE_TINTS.length] : 'var(--c-surface)', transition: 'background-color 0.45s ease', overflow: 'hidden' }}
-      onMouseEnter={isMobile ? undefined : () => { setHovered(true); playKnock(0.35); }}
-      onMouseLeave={isMobile ? undefined : () => setHovered(false)}
+      style={{ position: 'relative', aspectRatio: isMobile ? '1/1' : '4/5', background: 'var(--c-surface)', overflow: 'hidden' }}
+      onMouseEnter={isMobile ? undefined : () => { setHovered(true); playKnock(0.35); tintSite(TILE_TINTS[index % TILE_TINTS.length]); }}
+      onMouseLeave={isMobile ? undefined : () => { setHovered(false); tintSite(null); }}
     >
       {/* Animated falling balls — on hover (desktop) or on scroll-in (phone) */}
       <TileBalls tileIndex={index} hovered={hovered} />

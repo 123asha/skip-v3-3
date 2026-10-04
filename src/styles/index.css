@@ -473,3 +473,6 @@ input::placeholder {
     box-shadow: var(--m-bleed) 0 0 var(--c-surface), calc(-1 * var(--m-bleed)) 0 0 var(--c-surface);
   }
 }
+
+/* Solution-card hover tints the page: everything painted with --c-bg eases */
+.bg-tinting body { transition: background-color 0.5s ease; }

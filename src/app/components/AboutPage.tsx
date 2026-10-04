@@ -125,19 +125,16 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       ctx.setLineDash([]);
       ctx.font = `${R * 1.1}px "CoFo Sans VF", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       pts.forEach((p, i) => {
-        // A dark ball close to the page colour, but round: lit from the upper left,
-        // a soft rim of light on the lower right, a drop of shade beneath
-        ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.ellipse(p.x + R * 0.1, p.y + R * 1.08, R * 0.8, R * 0.18, 0, 0, Math.PI * 2); ctx.fill();
-        const g = ctx.createRadialGradient(p.x - R * 0.35, p.y - R * 0.4, R * 0.05, p.x, p.y, R * 1.05);
-        g.addColorStop(0, '#4a4a4a'); g.addColorStop(0.45, '#262626'); g.addColorStop(0.85, '#141414'); g.addColorStop(1, '#0a0a0a');
+        // A matte ping-pong ball in a tone near the page's: soft, diffuse light
+        // from the upper left, no gloss and no hard highlight, the far side
+        // sinking gently into shade
+        const g = ctx.createRadialGradient(p.x - R * 0.3, p.y - R * 0.35, R * 0.1, p.x, p.y, R * 1.1);
+        g.addColorStop(0, '#2b2b2b'); g.addColorStop(0.55, '#202020'); g.addColorStop(1, '#131313');
         ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill();
-        const rim = ctx.createRadialGradient(p.x + R * 0.5, p.y + R * 0.6, R * 0.5, p.x + R * 0.5, p.y + R * 0.6, R * 1.0);
-        rim.addColorStop(0, 'rgba(255,255,255,0)'); rim.addColorStop(1, 'rgba(255,255,255,0.14)');
-        ctx.fillStyle = rim; ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill();
-        const hl = ctx.createRadialGradient(p.x - R * 0.4, p.y - R * 0.45, 0, p.x - R * 0.4, p.y - R * 0.45, R * 0.55);
-        hl.addColorStop(0, 'rgba(255,255,255,0.38)'); hl.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = hl; ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.fillText(LETTERS[i], p.x, p.y + R * 0.06);
+        const soft = ctx.createRadialGradient(p.x - R * 0.35, p.y - R * 0.4, 0, p.x - R * 0.35, p.y - R * 0.4, R * 0.9);
+        soft.addColorStop(0, 'rgba(255,255,255,0.07)'); soft.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = soft; ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.16)'; ctx.fillText(LETTERS[i], p.x, p.y + R * 0.06);
       });
       raf = requestAnimationFrame(tick);
     };
@@ -151,7 +148,7 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       <canvas ref={canvasRef} aria-hidden="true" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />
       <div className={s.body} style={{ position: 'relative', zIndex: 1, paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
         
-        <h1 ref={textRef} style={{ ...H1, display: 'flex', flexDirection: 'column', gap: '0.8em', }}>
+        <h1 ref={textRef} style={{ ...H1, display: 'flex', flexDirection: 'column', gap: '0.2em', }}>
           {/* Each paragraph's first line starts on the page grid's second column */}
           {TEXT.map((p, i) => (
             <span key={i} style={{ textIndent: isMobile ? '33.333vw' : 'calc((100% - 4 * var(--gap)) / 5 + var(--gap))' }}>

@@ -203,7 +203,7 @@ export default function InsightPage({
           </h1>
         </header>
 
-        <article style={{ marginTop: 'var(--space-lg)' }}>
+        <article style={{ marginTop: 40 }}>
           <div style={column}>
             {(() => { let depth = 0; return blocks.map((b, k) => {
               const prev = blocks[k - 1];

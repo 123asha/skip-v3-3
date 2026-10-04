@@ -9,6 +9,8 @@ import { useMobile } from '../hooks/useMobile';
 import s from '../App.module.css';
 
 interface ContactFormProps {
+  /** Already a dark page: no end-of-page inversion */
+  noInvert?: boolean;
   onNavigatePolicy?: () => void;
   onGridMode?: (on: boolean) => void;
   /* "default" → second tab is "Стать частью команды" (resume input + bunny game)
@@ -17,7 +19,7 @@ interface ContactFormProps {
   variant?: 'default' | 'consult';
 }
 
-export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'default' }: ContactFormProps) {
+export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'default', noInvert = false }: ContactFormProps) {
   const isMobile = useMobile();
   const [checked, setChecked]   = useState(false);
   const [email, setEmail]       = useState('');
@@ -249,7 +251,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
       <div
         ref={cardRef}
         className={s.contactCard}
-        style={{ background: '#fff', justifyContent: 'center', paddingBottom: kbPad, transition: 'padding-bottom 0.2s ease' }}
+        style={{ background: 'var(--c-bg)', justifyContent: 'center', paddingBottom: kbPad, transition: 'padding-bottom 0.2s ease' }}
       >
         {/* A bit of mischief: scrolled right to the end, the whole screen
             inverts — dark background, white type. One overlay flips the colours
@@ -257,7 +259,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
         {/* Mounted only around the inversion itself: an always-present
             full-screen backdrop-filter layer (even at opacity 0) made iOS
             repaint every pinned element on each scroll frame — they shook */}
-        {invertOn && createPortal(
+        {invertOn && !noInvert && createPortal(
           <div
             aria-hidden="true"
             style={{

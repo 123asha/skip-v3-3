@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import s from './CasesPage.module.css';
 import ContactForm from './ContactForm';
-import { typo } from '../utils/typography';
+import { typo, TEXT_STYLE } from '../utils/typography';
+import { SERVICES } from './ExpertiseSection2';
 import { t } from '../i18n';
 
 // /about-skip-design — the old site's «Инфо» text, copied as is for now, all
@@ -21,6 +22,11 @@ const TEXT = [
   '※ команде — не стыдно за результат, и хочется им поделиться.',
   'Результат, к которому мы стремимся — это когда сайт, интерфейс, бренд выглядят так, как будто по-другому и быть не могло. Когда без слов понятно, что проект сделан с вниманием к деталям и в точку.',
 ];
+
+const DARK: Record<string, string> = {
+  '--c-bg': '#0d0d0d', '--c-text': '#f2f2f2', '--c-surface': '#1c1c1c',
+  '--c-border': '#2e2e2e', '--c-text-muted': '#7c7c7c',
+};
 
 // The home headline: its size, leading and tracking (ScrollHero)
 const H1: React.CSSProperties = {
@@ -43,19 +49,34 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
     el.addEventListener('wheel', stopBubble, { passive: true });
     return () => { el.removeEventListener('wheel', stopBubble); if (mainLenis) mainLenis.start(); };
   }, []);
+  // The whole site goes dark while this page is open — footer, edges, banner
+  useEffect(() => {
+    const root = document.documentElement;
+    const prev = root.getAttribute('style') ?? '';
+    Object.entries(DARK).forEach(([k, v]) => root.style.setProperty(k, v));
+    document.body.style.background = DARK['--c-bg'];
+    return () => { root.setAttribute('style', prev); document.body.style.background = ''; };
+  }, []);
   return (
-    <div className={s.page} ref={pageRef} style={{
-      // Dark page: the colour tokens flipped for everything inside
-      background: '#0d0d0d',
-      ['--c-bg' as string]: '#0d0d0d', ['--c-text' as string]: '#f2f2f2',
-      ['--c-surface' as string]: '#1c1c1c', ['--c-border' as string]: '#2e2e2e',
-      ['--c-text-muted' as string]: '#7c7c7c',
-    } as React.CSSProperties}>
+    <div className={s.page} ref={pageRef} style={{ ...DARK, background: DARK['--c-bg'] } as React.CSSProperties}>
       <div className={s.body} style={{ paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
         <h1 style={{ ...H1, display: 'flex', flexDirection: 'column', gap: '0.6em' }}>
-          {TEXT.map((p, i) => <span key={i}>{typo(t(p))}</span>)}
+          {/* Each paragraph's first line starts on the page grid's third column */}
+          {TEXT.map((p, i) => <span key={i} style={{ textIndent: 'calc((100% - 4 * var(--gap)) / 5 * 2 + 2 * var(--gap))' }}>{typo(t(p))}</span>)}
         </h1>
-        <ContactForm onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
+        {/* The services, plainly listed from the third column: each category,
+            its services a step in under it */}
+        <div style={{ marginTop: 'var(--space-xl)', marginLeft: 'calc((100% - 4 * var(--gap)) / 5 * 2 + 2 * var(--gap))' }}>
+          {SERVICES.map(c => (
+            <div key={c.category} style={{ marginBottom: 20 }}>
+              <p style={{ ...TEXT_STYLE, margin: 0 }}>{t(c.category)}</p>
+              <div style={{ paddingLeft: 20, marginTop: 6 }}>
+                {c.items.map(it => <p key={it.text} style={{ ...TEXT_STYLE, margin: 0 }}>{t(it.text)}</p>)}
+              </div>
+            </div>
+          ))}
+        </div>
+        <ContactForm noInvert onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
       </div>
     </div>
   );

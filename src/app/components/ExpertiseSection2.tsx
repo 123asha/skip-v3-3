@@ -20,7 +20,7 @@ const PLACEHOLDER_DESC = 'Короткое описание услуги: что
 // Shared by "Лендинги и промо" and "Корпоративные сайты" until each gets its own.
 const SITES_DESC = 'Неважно, это одностраничный лендинг или большой корпоративный сайт — для нас это один из главных носителей бренда и важная точка контакта с аудиторией.\n\nОбъединяем стратегию, дизайн и разработку в одном процессе, чтобы быстрее запускать проекты и сохранять качество на каждом этапе.';
 
-const SERVICES: { category: string; groupLabel?: string; items: ServiceItem[] }[] = [
+export const SERVICES: { category: string; groupLabel?: string; items: ServiceItem[] }[] = [
   {
     category: 'Брендинг',
     groupLabel: '✻',

@@ -324,22 +324,10 @@ function NotFoundPage({ onGoHome }: { onGoHome: () => void }) {
         letterSpacing: 'var(--heading-ls)',
         color: 'var(--c-text)',
       }}>404</div>
-      <button
-        onClick={onGoHome}
-        style={{
-          position: 'relative',
-          background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-          fontFamily: 'var(--font)',
-          fontSize: 'var(--text-size)',
-          fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
-          lineHeight: 'var(--text-lh)',
-          letterSpacing: 'var(--text-ls)',
-          color: 'var(--c-text)',
-          textDecoration: 'underline',
-          textDecorationStyle: 'dotted',
-          textUnderlineOffset: '3px',
-        }}
-      >Перейти на главную</button>
+      {/* A black pill, above the pinball */}
+      <div style={{ position: 'relative' }}>
+        <PillButton variant="primary" onClick={onGoHome}>Перейти на главную</PillButton>
+      </div>
     </div>
   );
 }

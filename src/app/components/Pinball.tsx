@@ -129,9 +129,9 @@ export function Pinball() {
         }
         b.hit *= 0.9;
       });
-      // Never leaves the screen: the top and the bottom edge bounce it back
+      // The top edge bounces it back; a ball that drains off the bottom starts over from the top
       if (ball.y < R) { ball.y = R; ball.vy = Math.abs(ball.vy) * 0.6; }
-      if (ball.y > H - R) { ball.y = H - R; ball.vy = -Math.abs(ball.vy) * 0.75 - 6; }
+      if (ball.y - R > H) serve();
       spin();
     };
 
@@ -143,8 +143,9 @@ export function Pinball() {
       bumpers.forEach(b => {
         ctx.beginPath(); ctx.arc(b.x, b.y, b.r + b.hit * 6, 0, Math.PI * 2); ctx.stroke();
       });
-      ctx.lineWidth = 6;
-      ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+      // Flippers: just a line, the same thin stroke as the walls
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(0,0,0,0.45)';
       flip.forEach(f => { const s = flipSeg(f); ctx.beginPath(); ctx.moveTo(s.ax, s.ay); ctx.lineTo(s.bx, s.by); ctx.stroke(); });
       // The hero's ball: bright base, glint up-left, faint rim shade
       const g = ctx.createRadialGradient(ball.x - R * 0.15, ball.y - R * 0.2, 0, ball.x - R * 0.15, ball.y - R * 0.2, R * 1.3);

@@ -554,6 +554,66 @@ export default function CaseTemplatePage({ onNavigatePolicy, onGridMode, onNavig
   const [formInView, setFormInView] = useState(false);
   const isMobile = useMobile();
 
+  // Desktop: a case's pictures enlarge on a click. Over one the pointer turns
+  // into a small square tag («больше»); enlarged, the tag reads «Скип» and a
+  // click anywhere (or Esc) puts the picture back.
+  useEffect(() => {
+    if (isMobile) return;
+    const tag = document.createElement('div');
+    Object.assign(tag.style, {
+      position: 'fixed', left: '0', top: '0', zIndex: '600', pointerEvents: 'none', opacity: '0',
+      padding: '3px 8px 4px', borderRadius: '0', background: 'var(--c-text)', color: 'var(--c-bg)',
+      fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)', whiteSpace: 'nowrap',
+      transition: 'opacity 0.15s ease',
+    } as Partial<CSSStyleDeclaration>);
+    document.body.appendChild(tag);
+    const style = document.createElement('style');
+    style.textContent = '[data-case-img] img, [data-case-img] video, [data-big-pic], [data-big-pic] * { cursor: none !important; }';
+    document.head.appendChild(style);
+    let big: HTMLDivElement | null = null;
+    const closeBig = () => { big?.remove(); big = null; };
+    const picUnder = (t: EventTarget | null) => {
+      const el = (t as HTMLElement | null)?.closest?.('[data-case-img]') as HTMLElement | null;
+      return el && el.querySelector('img') ? el : null;
+    };
+    const onMove = (e: MouseEvent) => {
+      const over = big || picUnder(e.target);
+      if (!over) { tag.style.opacity = '0'; return; }
+      tag.textContent = big ? t('Скип') : t('больше');
+      tag.style.transform = `translate(${e.clientX + 14}px, ${e.clientY + 14}px)`;
+      tag.style.opacity = '1';
+    };
+    const onClick = (e: MouseEvent) => {
+      if (big) { e.stopPropagation(); e.preventDefault(); closeBig(); return; }
+      const pic = picUnder(e.target);
+      if (!pic) return;
+      e.stopPropagation(); e.preventDefault();
+      const src = pic.querySelector('img')!.currentSrc || pic.querySelector('img')!.src;
+      big = document.createElement('div');
+      big.setAttribute('data-big-pic', '');
+      Object.assign(big.style, {
+        position: 'fixed', inset: '0', zIndex: '500', background: 'var(--c-bg)', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', padding: 'var(--pad)', boxSizing: 'border-box',
+      } as Partial<CSSStyleDeclaration>);
+      const img = document.createElement('img');
+      img.src = src; img.alt = '';
+      Object.assign(img.style, { maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' } as Partial<CSSStyleDeclaration>);
+      big.appendChild(img);
+      document.body.appendChild(big);
+      onMove(e);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { closeBig(); tag.style.opacity = '0'; } };
+    window.addEventListener('mousemove', onMove, { passive: true });
+    window.addEventListener('click', onClick, true);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('click', onClick, true);
+      window.removeEventListener('keydown', onKey);
+      closeBig(); tag.remove(); style.remove();
+    };
+  }, [isMobile]);
+
   // ── Reading width, stepped with ⊖ ⊕ (and ⌘− / ⌘+, trackpad pinch) ─────────
   //   0 — images on the left, the copy column on the right (default)
   //   1 — the copy folds away to the right and the images take the full width

@@ -520,7 +520,6 @@ function AppInner() {
   const [gridVisible, setGridVisible] = useState(false);
   // Column count for the grid overlay — driven by the cases page zoom (5 by default).
   const [overlayCols, setOverlayCols] = useState(5);
-  const [showPrivacy, setShowPrivacy] = useState(false);
   // Width of the scrollbar reserved by sub-pages (.page has overflow-y:scroll).
   // The grid overlay is viewport-fixed, so on sub-pages it must add this on the
   // right to line up with content that lives inside the scrollbar gutter.
@@ -696,23 +695,6 @@ function AppInner() {
     }
   }, []);
 
-  // Reset privacy visibility on page change
-  useEffect(() => { setShowPrivacy(false); }, [pathname]);
-
-  // Detect scroll-to-bottom on both the main page (window) and inner fixed pages
-  useEffect(() => {
-    const onScroll = (e: Event) => {
-      const t = e.target as HTMLElement;
-      if (t === document || t === document.documentElement || t === document.body) {
-        const scrolled = window.scrollY + window.innerHeight;
-        setShowPrivacy(scrolled >= document.documentElement.scrollHeight - 120);
-      } else if (t && t.scrollHeight) {
-        setShowPrivacy(t.scrollTop + t.clientHeight >= t.scrollHeight - 120);
-      }
-    };
-    document.addEventListener('scroll', onScroll, { passive: true, capture: true });
-    return () => document.removeEventListener('scroll', onScroll, { capture: true });
-  }, []);
 
   // Bootstrap saved sound preference, then UNLOCK the AudioContext on the first
   // user gesture (browsers require a gesture before audio can play). Sound is ON
@@ -1302,9 +1284,9 @@ function AppInner() {
         display: 'flex',
         flexDirection: 'column',
         gap: '4px',
-        opacity: showPrivacy ? 'var(--opacity-muted)' as any : 0,
+        opacity: 'var(--opacity-muted)' as any,
         transition: 'opacity 0.4s ease',
-        pointerEvents: showPrivacy ? 'auto' : 'none',
+        pointerEvents: 'auto',
         fontSize: 'var(--text-size)',
         fontFamily: 'var(--font)',
         fontWeight: 'var(--text-weight)',

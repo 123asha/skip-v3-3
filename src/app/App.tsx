@@ -30,6 +30,7 @@ const CASE_PAGES: Record<string, any> = {
 import GuidePage from './components/GuidePage';
 import MoscowTime from './components/MoscowTime';
 import { Pinball } from './components/Pinball';
+import AboutPage from './components/AboutPage';
 import BunnyFollower from './components/BunnyFollower';
 import ContactForm from './components/ContactForm';
 import { ToolsSection } from './components/ToolsSection';
@@ -463,7 +464,7 @@ function AppInner() {
   });
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
-  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/services-2', '/policy', '/index2', '/case-template', '/Seniorsbar', ...Object.keys(CASE_PAGES), '/guide', '/lab', '/insights', '/system', '/brand', '/visual', '/digital'];
+  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/services-2', '/policy', '/index2', '/case-template', '/Seniorsbar', ...Object.keys(CASE_PAGES), '/guide', '/lab', '/insights', '/system', '/brand', '/visual', '/digital', '/about-skip-design'];
   const page = pathname === '/cases' ? 'cases'
              : pathname === '/instruments' ? 'instruments'
              : (pathname === '/expertiza' || pathname === '/services') ? 'expertiza'
@@ -475,6 +476,7 @@ function AppInner() {
              : pathname === '/Seniorsbar' ? 'seniors'
              : CASE_PAGES[pathname] ? 'binaroom'
              : pathname === '/guide' ? 'guide'
+             : pathname === '/about-skip-design' ? 'about'
              // /lab is the old address of the insights page — still opens it
              : pathname === '/insights' || pathname === '/lab' ? 'lab'
              // An insight's own article page (unknown slugs fall through to 404)
@@ -983,26 +985,6 @@ function AppInner() {
   // Phone: the menu links are chips — the current one spreads the others
   // from it, like the filter chips (utils/chipBounce)
   const navLinksRef = useRef<HTMLSpanElement>(null);
-  // Home, desktop: white menu while it sits over the dark flower video
-  const [navOverDark, setNavOverDark] = useState(false);
-  useEffect(() => {
-    if (isMobile || page !== 'home') { setNavOverDark(false); return; }
-    let raf = 0;
-    const check = () => {
-      raf = 0;
-      const nav = navLinksRef.current?.parentElement;
-      if (!nav) return;
-      const n = nav.getBoundingClientRect();
-      setNavOverDark([...document.querySelectorAll<HTMLElement>('video[data-dark-media][src*="flower"]')].some(el => {
-        const r = el.getBoundingClientRect();
-        return r.top < n.bottom && r.bottom > n.top;
-      }));
-    };
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(check); };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    check();
-    return () => { window.removeEventListener('scroll', onScroll); cancelAnimationFrame(raf); };
-  }, [isMobile, page]);
   // Phone: on the projects and case pages the menu tucks away while scrolling
   // down (never at the very end of a page); scrolling up a little brings it
   // back (index.css, data-nav-hidden)
@@ -1149,7 +1131,7 @@ function AppInner() {
       {/* Phone: progressive blur under the bottom menu (App.module.css) */}
       <div className={s.menuBlur} aria-hidden="true"><div /><div /><div /></div>
       <nav
-        className={`${s.nav} ${s.navBoxed}${page === 'home' ? ` ${s.navHome}` : ''}${navOverDark ? ` ${s.navOverDark}` : ''}`}
+        className={`${s.nav} ${s.navBoxed}`}
         // One row on every page: the section links, then «Написать» — all on
         // one text baseline (the nav aligns its items by baseline), the pill's
         // top on the logo's top line. Inner pages add the scrollbar gutter
@@ -1524,6 +1506,10 @@ function AppInner() {
       {page === 'insight' && <InsightPage
         key={pathname}
         slug={pathname.slice(10)}
+        onNavigatePolicy={() => navigateWithExit('/policy')}
+        onGridMode={setGridVisible}
+      />}
+      {page === 'about' && <AboutPage
         onNavigatePolicy={() => navigateWithExit('/policy')}
         onGridMode={setGridVisible}
       />}

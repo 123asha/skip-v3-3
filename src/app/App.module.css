@@ -769,10 +769,4 @@
 @media (min-width: 769px) {
   .nav.navBoxed { mix-blend-mode: difference; --c-text-muted-inv: #585a59; --c-bg: #000; }
   .navBoxed .navLink { color: #fff; }
-  /* Home: no blend — over the playing video it made every scroll frame
-     repaint the page. White only while over a dark video (navOverDark). */
-  .nav.navBoxed.navHome { mix-blend-mode: normal; --c-text-muted-inv: var(--c-text-muted); --c-bg: #fff; }
-  .navBoxed.navHome .navLink { color: var(--c-text); }
-  .navBoxed.navHome.navOverDark { --c-bg: #1a1a1a; }
-  .navBoxed.navHome.navOverDark .navLink { color: #fff; }
 }

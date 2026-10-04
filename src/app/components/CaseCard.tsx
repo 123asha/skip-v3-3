@@ -209,8 +209,7 @@ export default function CaseCard({
   // all-keyframe, so a seek is cheap. Phones just loop — iOS paints seeks badly.
   const scrubRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
-    // The clip now just plays on its own everywhere (no scroll scrub)
-    if (true || !scrubVideo || isMobile) return;
+    if (!scrubVideo || isMobile) return;
     const vid = scrubRef.current;
     const box = cardRef.current;
     if (!vid || !box) return;
@@ -334,9 +333,9 @@ export default function CaseCard({
               muted
               playsInline
               preload="auto"
-              // Plays and loops by itself, on desktop and phone alike
-              autoPlay
-              loop
+              // Desktop: driven by the scroll (above). Phone: just loops.
+              autoPlay={isMobile}
+              loop={isMobile}
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1 }}
             />
           )}

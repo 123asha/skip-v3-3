@@ -105,12 +105,15 @@ const WORD_ORDER = ['S1', 'K', 'I1', 'P', 'D', 'E', 'S2', 'I2', 'G', 'N'];
 const WORD_GROUP: Record<string, number> = { S1: 0, K: 0, I1: 0, P: 0, D: 1, E: 1, S2: 1, I2: 1, G: 1, N: 1 };
 
 export default function Constellation({
-  sound = true, gravityOnScroll = false, intro = false, ballColor = '#ffffff', lineColor = '#ffffff', letterColor = 'var(--c-surface)', scrollSource,
+  sound = true, gravityOnScroll = false, intro = false, exitAt, ballColor = '#ffffff', lineColor = '#ffffff', letterColor = 'var(--c-surface)', scrollSource,
 }: {
   sound?: boolean;
   /** First mount only: the system assembles itself — balls pop in letter
    *  by letter, then the links close the ring */
   intro?: boolean;
+  /** Desktop: past this share of a screen scrolled, the landed balls roll
+   *  off the floor and out past the sides of the field */
+  exitAt?: number;
   /** Scrolling the page pulls the vertices down until they rest on the floor */
   gravityOnScroll?: boolean;
   /** Ball fill, dashed link colour, and the knocked-out letter colour — the
@@ -318,6 +321,9 @@ export default function Constellation({
     // How long balls are steered toward their columns after the drop starts
     const SETTLE_WINDOW = 1100; // ms
     let lastScrollY = 0;
+    // Rolled off: no floor or side walls, everyone heads out of the field
+    let exiting = false;
+    const canExit = exitAt != null && !window.matchMedia('(max-width: 768px)').matches;
     let travelUp = 0, travelDown = 0;
     let returning = false;
     const readScroll = () => {
@@ -354,6 +360,20 @@ export default function Constellation({
         WORD_ORDER.forEach(id => { slotJitter[id] = (Math.random() - 0.5) * R * 0.8; });
         respawnMerged();
         recomputeSlots();
+      }
+      const shouldExit = canExit && !returning && y > window.innerHeight * exitAt!;
+      if (shouldExit && !exiting) {
+        exiting = true;
+        Object.values(nodes).forEach(n => {
+          const dir = n.x < WIDTH / 2 ? -1 : 1;
+          n.vx = dir * (3 + Math.random() * 3);
+          n.vy = Math.min(n.vy, -2 - Math.random() * 2);
+          n.restFrames = 0;
+        });
+      } else if (!shouldExit && exiting) {
+        exiting = false;
+        // Back on the floor in their row, ready to rise home or drop again
+        Object.values(nodes).forEach(n => { n.x = n.slotX; n.y = HEIGHT - n.r; n.vx = 0; n.vy = 0; });
       }
       const isHome = homePull >= 1;
       if (isHome && !wasHome) { respawnMerged(); randomizeHomeTargets(); }
@@ -1235,6 +1255,7 @@ export default function Constellation({
         if (Math.abs(n.vx) < STOP_THRESHOLD) n.vx = 0;
         if (Math.abs(n.vy) < STOP_THRESHOLD) n.vy = 0;
 
+        if (exiting) return;
         const wasOnWall = touchingWall[id];
         const hitWall = (speed: number) => { if (!wasOnWall) triggerWallHit(id, speed); };
         let onWall = false;
@@ -1274,7 +1295,7 @@ export default function Constellation({
       resolveBallCollisions();
       resolveBallCollisions();
       // Collisions can shove a ball past the edge — keep everyone in the field
-      Object.values(nodes).forEach(n => {
+      if (!exiting) Object.values(nodes).forEach(n => {
         n.x = Math.min(Math.max(n.x, n.r), WIDTH - n.r);
         n.y = Math.min(Math.max(n.y, n.r), HEIGHT - n.r);
       });
@@ -1285,7 +1306,7 @@ export default function Constellation({
       // any real knock (it gets shoved several pixels in a frame) wakes it.
       Object.keys(nodes).forEach(id => {
         const n = nodes[id];
-        if (!gravity || id === dragId) { n.restFrames = 0; n.anchorX = n.x; n.anchorY = n.y; return; }
+        if (!gravity || exiting || id === dragId) { n.restFrames = 0; n.anchorX = n.x; n.anchorY = n.y; return; }
         if (Math.hypot(n.x - n.anchorX, n.y - n.anchorY) > 3) {
           n.restFrames = 0; n.anchorX = n.x; n.anchorY = n.y;
         } else if (++n.restFrames > 36) {

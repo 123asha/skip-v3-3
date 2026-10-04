@@ -244,17 +244,33 @@ function ConstellationHero() {
   const isMobile = useMobile();
   // English is shorter: its phone headline keeps the desktop two lines
   const lines = isMobile && LANG !== 'en' ? HEADLINE_LINES_MOBILE : HEADLINE_LINES;
+  // Desktop: once the balls have landed, the grey fades to white as the page
+  // scrolls on (then the balls roll away — Constellation's exitAt)
+  const heroRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el || isMobile) { el?.style.removeProperty('--hero-white'); return; }
+    const onScroll = () => {
+      const t = Math.min(1, Math.max(0, (window.scrollY - window.innerHeight * 0.08) / (window.innerHeight * 0.17)));
+      el.style.setProperty('--hero-white', `${Math.round(t * 1000) / 10}%`);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [isMobile]);
+  const bg = `color-mix(in srgb, ${HERO_BG}, #fff var(--hero-white, 0%))`;
   return (
     <div
+      ref={heroRef}
       id="hero"
       style={{
         position: 'relative',
         height: 'var(--hero-h, 100svh)',   // phones: 70% of the screen (index.css)
         width: '100%',
-        background: HERO_BG,
+        background: bg,
         // The balls knock their letters out in the background colour, so the
         // token is redefined here too and they follow the hero automatically.
-        ['--c-surface' as string]: HERO_BG,
+        ['--c-surface' as string]: bg,
         overflow: 'hidden',
       }}
     >
@@ -289,7 +305,7 @@ function ConstellationHero() {
 
       {/* The playing field is the hero itself — the balls live behind the copy */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
-        <Constellation gravityOnScroll intro />
+        <Constellation gravityOnScroll intro exitAt={0.3} />
       </div>
     </div>
   );

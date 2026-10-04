@@ -1533,7 +1533,9 @@ function AppInner() {
           a phone the menu takes that row */}
       {sectionTitleFor(pathname) && !(page === 'home' && isMobile) && (
         <SiteTitle
-          key={sectionTitleFor(pathname)!}
+          // By path, not title: the page exit fades the title out, so even the
+          // same title has to come back fresh on the next page
+          key={pathname}
           // Phone: without «Skip Design» — the header already says it
           title={isMobile
             ? (page === 'cases' ? 'Проекты студии' : sectionTitleFor(pathname)!.replace(/\s*Skip Design$/, ''))

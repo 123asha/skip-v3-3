@@ -41,12 +41,18 @@ const AR = { square: '1 / 1', vertical: '4 / 5' } as const;
 // Text with [label](url) links in it: the links dotted-underlined like the
 // site's other inline links, the rest through the typographer
 const linkStyle: React.CSSProperties = { color: 'inherit', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' };
+// **words** — what used to be bold — get the grey marker instead
+function marked(text: string, key: number): React.ReactNode {
+  const bits = text.split(/\*\*([^*]+)\*\*/);
+  if (bits.length === 1) return <span key={key}>{typo(text)}</span>;
+  return <span key={key}>{bits.map((b, k) => k % 2 ? <mark key={k} style={{ ...marker, color: 'inherit' }}>{typo(b)}</mark> : typo(b))}</span>;
+}
 function rich(text: string): React.ReactNode {
   const parts = text.split(/\[([^\]]+)\]\((https?:[^)\s]+)\)/);
-  if (parts.length === 1) return typo(text);
+  if (parts.length === 1) return marked(text, 0);
   return parts.map((part, k) => k % 3 === 1
     ? <a key={k} href={parts[k + 1]} target="_blank" rel="noopener noreferrer" style={linkStyle}>{part}</a>
-    : k % 3 === 2 ? null : <span key={k}>{typo(part)}</span>);
+    : k % 3 === 2 ? null : marked(part, k));
 }
 
 function Media({ src, shape = 'vertical', ratio, video }: { src: string; shape?: 'square' | 'vertical' | 'auto'; ratio?: number; video?: boolean }) {
@@ -76,8 +82,8 @@ const AFTER_HEADING = { h2: 'var(--space-sm)', h3: 'var(--space-xs)' } as const;
 
 function BlockView({ b }: { b: Block }) {
   switch (b.type) {
-    case 'h2': return <h2 style={{ ...textStyle, margin: 0 }}><mark style={{ ...marker, color: 'inherit' }}>{typo(b.text)}</mark></h2>;
-    case 'h3': return <h3 style={{ ...textStyle, margin: 0 }}><mark style={{ ...marker, color: 'inherit' }}>{rich(b.text)}</mark></h3>;
+    case 'h2': return <h2 style={{ ...textStyle, margin: 0 }}>{typo(b.text)}</h2>;
+    case 'h3': return <h3 style={{ ...textStyle, margin: 0 }}>{rich(b.text)}</h3>;
     case 'p': return <p style={{ ...textStyle, margin: 0 }}>{rich(b.text)}</p>;
     case 'note': return <p style={{ ...muted, margin: 0 }}>{rich(b.text)}</p>;
     case 'ul':
@@ -93,7 +99,7 @@ function BlockView({ b }: { b: Block }) {
       // A marked-out passage: plain text, just grey
       return (
         <figure style={{ margin: 0 }}>
-          <blockquote style={{ ...textStyle, margin: 0 }}><mark style={{ ...marker, color: 'inherit' }}>{rich(b.text)}</mark></blockquote>
+          <blockquote style={{ ...muted, margin: 0 }}>{rich(b.text)}</blockquote>
           {b.author && <figcaption style={{ ...muted, marginTop: 10 }}>{b.author}</figcaption>}
         </figure>
       );
@@ -199,13 +205,18 @@ export default function InsightPage({
 
         <article style={{ marginTop: 'var(--space-lg)' }}>
           <div style={column}>
-            {blocks.map((b, k) => {
+            {(() => { let depth = 0; return blocks.map((b, k) => {
               const prev = blocks[k - 1];
+              // Headings are plain text; what follows one steps in under it
+              // (20px under a heading, 40px under a subheading)
+              const indent = b.type === 'h2' ? 0 : b.type === 'h3' ? (depth ? 20 : 0) : depth;
+              if (b.type === 'h2') depth = 20;
+              else if (b.type === 'h3') depth = indent + 20;
               const top = k === 0 ? 0
                 : prev && (prev.type === 'h2' || prev.type === 'h3') ? AFTER_HEADING[prev.type]
                 : SPACE_ABOVE[b.type];
-              return <div key={k} style={{ marginTop: top }}><BlockView b={b} /></div>;
-            })}
+              return <div key={k} style={{ marginTop: top, paddingLeft: indent }}><BlockView b={b} /></div>;
+            }); })()}
           </div>
         </article>
         </div>

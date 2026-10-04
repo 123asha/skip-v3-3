@@ -192,18 +192,7 @@ export default function InsightPage({
         )}
         {/* Just the date in grey, the title under it — the column's width */}
         <header style={column}>
-          {/* ← back to the insights, left of the date by one column gap
-              (desktop: hanging outside the column; phone: in the row) */}
-          <p style={{ ...muted, margin: 0, position: 'relative', display: 'flex', alignItems: 'baseline', gap: 'var(--gap)' }}>
-            <a
-              href={siteHref('/insights')}
-              aria-label="Все инсайты"
-              onClick={e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); goTo('/insights'); }}
-              style={{ color: 'var(--c-text)', textDecoration: 'none', ...(isMobile ? null : { position: 'absolute', right: 'calc(100% + var(--gap))', top: 0 }) }}
-            >←</a>
-            <span>{shownDate(article)}</span>
-          </p>
-          <h1 style={{ ...titleStyle, margin: 0, marginTop: 6 }}>
+          <h1 style={{ ...titleStyle, margin: 0 }}>
             {typo(article.desc)}
           </h1>
         </header>

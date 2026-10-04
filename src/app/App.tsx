@@ -51,7 +51,7 @@ function sectionTitleFor(path: string): string | null {
   const p = path.split(/[?#]/)[0].replace(/\/$/, '');
   if (p === '/cases') return 'Проекты Skip Design';
   if (p === '/services' || p === '/services-2' || p === '/expertiza') return 'Услуги и решения студии';
-  if (p === '/insights' || p === '/lab') return 'Инсайты команды';
+  if (p === '/insights' || p === '/lab' || p.startsWith('/insights/')) return 'Инсайты команды';
   if (p === '') return 'Skip Design';
   return null;
 }

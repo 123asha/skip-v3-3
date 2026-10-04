@@ -479,7 +479,7 @@ export const AE_PLATFORM: CaseData = {
 
 export const AE_LANDING: CaseData = {
   href: '/aliexpress-landing',
-  title: 'Лендинг AliExpress',
+  title: 'AliExpress B2B',
   client: 'AliExpress',
   links: [{ label: 'Перейти', href: 'https://aeplatform.ru/' }],
   year: '2025',

@@ -33,7 +33,7 @@ const SECTIONS: PageMeta[] = [
   { path: '/Seniorsbar', title: `Senior*s bar — кейс ${SITE}`, description: 'Кейс студии Skip Design: бренд и сайт для бара Senior*s в Тбилиси.' },
   { path: '/plugin-aliexpress', title: `Плагин AliExpress — кейс ${SITE}`, description: 'Кейс студии Skip Design: обновили дизайн плагина AE Platform для продавцов-участников партнёрской программы AliExpress.' },
   { path: '/ae-platform', title: `AE Platform — кейс ${SITE}`, description: 'Кейс студии Skip Design: обновили дизайн B2B-платформы AE Platform для продавцов-участников партнёрской программы AliExpress.' },
-  { path: '/aliexpress-landing', title: `Лендинг AliExpress — кейс ${SITE}`, description: 'Кейс студии Skip Design: дизайн лендинга B2B-платформы AE Platform, который презентует продукт и формирует доверие к бренду.' },
+  { path: '/aliexpress-landing', title: `AliExpress B2B — кейс ${SITE}`, description: 'Кейс студии Skip Design: дизайн лендинга B2B-платформы AE Platform, который презентует продукт и формирует доверие к бренду.' },
   { path: '/binaroom', title: `Binaroom — кейс ${SITE}`, description: 'Кейс студии Skip Design: дизайн платформы, которая превращает 3D-проекты в сметы и коммерческие предложения и помогает управлять документооборотом.' },
   { path: '/policy', title: `Политика конфиденциальности — ${SITE}`, description: 'Политика обработки персональных данных на сайте студии Skip Design.' },
 ];

@@ -763,6 +763,10 @@
 .writeArrow { display: inline-block; transition: transform 0.2s ease; }
 .writeLink:hover .writeArrow { transform: translateX(2px); }
 
-/* Desktop menu over a dark video: white type, the circle arrow inverted */
-.navOverDark { --c-bg: #1a1a1a; }
-.navOverDark .navLink { color: #fff; transition: color 0.2s ease; }
+/* Desktop: the menu inverts against whatever is under it (difference blend):
+   white type reads black on the light page and white over any picture or
+   video; the grey links use the inverse grey so they come out the same grey */
+@media (min-width: 769px) {
+  .nav.navBoxed { mix-blend-mode: difference; --c-text-muted-inv: #585a59; --c-bg: #000; }
+  .navBoxed .navLink { color: #fff; }
+}

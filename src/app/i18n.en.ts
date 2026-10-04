@@ -72,6 +72,10 @@ export const EN: Record<string, string> = {
   'Продуктовым командам': 'For product teams',
   'Другие инсайты': 'More insights',
   'больше проектов': 'more projects',
+  'Больше проектов': 'More projects',
+  'Все услуги': 'All services',
+  'Задать вопрос': 'Ask a question',
+  'Сайт': 'Website',
   'Экспертиза': 'Expertise',
   // Two lines on the page (a <br /> between them), so two text nodes
   'Готовим бренд к&nbsp;росту. Собираем системы.': 'We get brands ready to grow. We build systems.',

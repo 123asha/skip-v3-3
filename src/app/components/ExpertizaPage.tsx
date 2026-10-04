@@ -9,7 +9,7 @@ import { MagneticDivider } from './MagneticDivider';
 import { useReveal } from '../hooks/useReveal';
 import { useMobile } from '../hooks/useMobile';
 import LinkFlip from './LinkFlip';
-import { ExpertiseSection2, EXPERTISE_LEVELS, EXPERTISE_DEFAULT_LEVEL } from './ExpertiseSection2';
+import { ExpertiseSection2, EXPERTISE_LEVELS, EXPERTISE_DEFAULT_LEVEL, OPEN_KEY } from './ExpertiseSection2';
 import { PARA_GAP } from './CaseTemplatePage';
 import { usePinchSteps } from '../hooks/usePinchSteps';
 import { playKnock } from '../utils/knock';
@@ -327,6 +327,10 @@ const TILES = [
 
 // Step markers, top-left of each tile — just the numerals
 const TILE_MARKS = ['①', '②', '③', '④'];
+
+// Hover tints — muted, grown-up Japanese shades: matcha, dusty sakura,
+// asagi (pale indigo-teal), kuchiba (dried-leaf ochre)
+const TILE_TINTS = ['#C8CDB4', '#D9C4BC', '#BCCBCC', '#D8C79F'];
 
 // Deterministic pseudo-random 0…1, seeded — same scatter every render/reload
 function pseudoRandom(seed: number): number {
@@ -795,7 +799,7 @@ function Tile({ index, tile }: { index: number; tile: { title: string; who: stri
       ref={tileRef}
       data-svc-tile=""
       // Phone: square tiles
-      style={{ position: 'relative', aspectRatio: isMobile ? '1/1' : '4/5', background: 'var(--c-surface)', overflow: 'hidden' }}
+      style={{ position: 'relative', aspectRatio: isMobile ? '1/1' : '4/5', background: hovered && !isMobile ? TILE_TINTS[index % TILE_TINTS.length] : 'var(--c-surface)', transition: 'background-color 0.45s ease', overflow: 'hidden' }}
       onMouseEnter={isMobile ? undefined : () => { setHovered(true); playKnock(0.35); }}
       onMouseLeave={isMobile ? undefined : () => setHovered(false)}
     >
@@ -967,7 +971,13 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
 
   // ── Table depth — folded/unfolded one level at a time with ⊖ ⊕, same
   //    controls and ⌘+ / ⌘− shortcuts as the density zoom on the cases page.
-  const [level, setLevel] = useState(EXPERTISE_DEFAULT_LEVEL);
+  // Arriving from a sub-group on the home table: the whole table opens to its
+  // services (level 3), and the table scrolls to that sub-group (it reads the
+  // same key and clears it — see ExpertiseSection2)
+  const [level, setLevel] = useState(() => {
+    try { if (sessionStorage.getItem(OPEN_KEY)) return 3; } catch { /* storage blocked */ }
+    return EXPERTISE_DEFAULT_LEVEL;
+  });
   // Phones have no ⊖ ⊕: the table shows the sub-groups (level 2); a tap
   // opens a sub-group's services, another a service's description
   useEffect(() => { if (isMobile) setLevel(2); }, [isMobile]);

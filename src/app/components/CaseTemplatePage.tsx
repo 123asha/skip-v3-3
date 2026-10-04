@@ -303,8 +303,8 @@ const GATE_LEGAL: CaseData = {
   href: '/case-template',
   // Placeholder links — swap for the real ones per case
   links: [
-    { label: 'behance', href: 'https://behance.net' },
-    { label: 'сайт', href: 'https://example.com' },
+    { label: 'Behance', href: 'https://behance.net' },
+    { label: 'Сайт', href: 'https://example.com' },
   ],
   title: 'Gate Legal',
   year: '2026',

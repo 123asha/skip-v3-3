@@ -53,9 +53,14 @@ const SERVICES: { category: string; groupLabel?: string; items: ServiceItem[] }[
     category: 'Веб',
     groupLabel: '◊',
     items: [
-      { text: 'Информационная архитектура', label: 'Информационная архитектура', desc: PLACEHOLDER_DESC },
-      { text: 'Прототипирование', hideNumber: true, desc: 'Сайт без продуманной структуры — это набор красивых блоков, которые не отвечают на вопросы посетителя и не ведут его к цели.\n\nСпроектируем прототип вместе со стратегом: учтём смыслы бренда и проанализируем ваш текущий сайт, если он есть. Для каждой страницы и каждого блока поставим задачу, чтобы в структуре не осталось ничего случайного.' },
-      { text: 'Редактура', hideNumber: true, desc: 'При необходимости подключим редактора, который работает с текстами на русском и английском. Можем поддерживать ваш контент и дальше — в формате подряда.' },
+      {
+        text: 'Прототипирование', label: 'Информационная архитектура',
+        desc: 'Сайт без продуманной структуры — это набор красивых блоков, которые не отвечают на вопросы посетителя и не ведут его к цели.\n\nСпроектируем прототип вместе со стратегом: учтём смыслы бренда и проанализируем ваш текущий сайт, если он есть. Для каждой страницы и каждого блока поставим задачу, чтобы в структуре не осталось ничего случайного.',
+      },
+      {
+        text: 'Редактура', hideNumber: true,
+        desc: 'При необходимости подключим редактора, который работает с текстами на русском и английском. Можем поддерживать ваш контент и дальше — в формате подряда.',
+      },
       { text: 'Лендинги и промо', label: 'Веб-дизайн', desc: SITES_DESC },
       {
         text: 'Спецпроекты', hideNumber: true,
@@ -119,7 +124,7 @@ function AskButton({ service }: { service: string }) {
           if (ASK_GOES_TO === 'footer') document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
           else window.open(`https://t.me/${TELEGRAM}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
         }}
-      >задать вопрос</PillButton>
+      >Задать вопрос</PillButton>
     </span>
   );
 }
@@ -129,7 +134,7 @@ function AskButton({ service }: { service: string }) {
 const HEADING = 'Готовим бренд к\u00A0росту: от\u00A0стратегической идеи до\u00A0визуальной системы';
 
 /** Home → services: the sub-group clicked on the home table, opened on arrival */
-const OPEN_KEY = 'svc-open';
+export const OPEN_KEY = 'svc-open';
 
 // Phone: where a category's name starts (symbol column + its 12px gap) —
 // sub-group names line up on it; services and descriptions step in from it
@@ -170,10 +175,9 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
     const t = window.setTimeout(() => {
       const el = rootRef.current?.querySelector<HTMLElement>(`[data-group-key="${key}"]`);
       if (!el) return;
-      const y = el.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.25;
-      const lenis = (window as any).__lenis;
-      if (lenis?.scrollTo) lenis.scrollTo(y, { duration: 1.2 });
-      else window.scrollTo({ top: y, behavior: 'smooth' });
+      // The services page scrolls inside its own box, not the window —
+      // scrollIntoView finds whichever scroller the row lives in
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }, 700);
     return () => clearTimeout(t);
   }, []);
@@ -528,7 +532,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
         // from the last line of text; the last row adds its own 12px padding).
         // Phone: nearer the table than the next block
         <div style={{ marginTop: isMobile ? 'var(--space-btn)' : 64, display: 'flex', justifyContent: isMobile ? 'center' : 'flex-start' }}>
-          <PillButton onClick={() => onAllServices()}>все услуги</PillButton>
+          <PillButton onClick={() => onAllServices()}>Все услуги</PillButton>
         </div>
       )}
     </div>

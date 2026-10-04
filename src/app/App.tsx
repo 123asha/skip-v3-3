@@ -1631,7 +1631,7 @@ function AppInner() {
             usual --space-xl gap of its own. */}
         {/* Phone: --space-btn — half the gap to the next block (see index.css) */}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: isMobile ? 'var(--space-btn)' : 100 }}>
-          <PillButton onClick={() => navigateWithExit('/cases')}>больше проектов</PillButton>
+          <PillButton onClick={() => navigateWithExit('/cases')}>Больше проектов</PillButton>
         </div>
 
         {/* Фреймворки section removed — its items now live as text rows inside

@@ -282,6 +282,8 @@ function buildScatterRows(projects: Project[], perRow: number, gridCols: number)
       dropped.add(1 + (rows.length + d) % gridCols);
     }
     let cols = all.filter(c => !dropped.has(c));
+    // The closing, incomplete row starts at the left edge
+    if (i + perRow >= items.length && chunk.length < gridCols) cols = all.slice(0, chunk.length);
 
     // If a V card would land in the same column as last row's V card, reverse
     // the column assignment to move it to the other slot.
@@ -959,7 +961,7 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
                   data-id={item.project.id}
                   style={{ gridColumn: item.col, gridRow: rowIdx + 1, minWidth: 0 }}
                 >
-                  <ProjectCard {...item.project} ar={item.ar ?? item.project.ar} round={item.round} square={item.square} servicesSize={ZOOM_CFG[zoom].cap} metaSize={ZOOM_CFG[zoom].cap} hideMeta={!ZOOM_CFG[zoom].showMeta} hideImage={ZOOM_CFG[zoom].imagesOff} slider={ZOOM_CFG[zoom].cols <= 4} onClick={item.project.noLink ? undefined : () => (/^https?:/.test(item.project.href ?? '') ? window.open(item.project.href, '_blank', 'noopener') : onCaseClick?.(item.project.href))} />
+                  <ProjectCard {...item.project} ar={item.ar ?? item.project.ar} round={item.round} square={item.square} servicesSize={ZOOM_CFG[zoom].cap} metaSize={ZOOM_CFG[zoom].cap} hideMeta={!ZOOM_CFG[zoom].showMeta} hideImage={ZOOM_CFG[zoom].imagesOff} slider onClick={item.project.noLink ? undefined : () => (/^https?:/.test(item.project.href ?? '') ? window.open(item.project.href, '_blank', 'noopener') : onCaseClick?.(item.project.href))} />
                 </div>
               ))
             )

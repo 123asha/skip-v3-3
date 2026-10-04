@@ -307,8 +307,9 @@ export default function CaseCard({
       ref={cardRef}
       className={s.card}
       style={{ display: 'flex', flexDirection: 'column', overflow: 'visible', ...(onClick ? null : { cursor: 'default' }) }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      // With a slider, hovering already shows the next picture; leaving resets
+      onMouseEnter={() => { setHovered(true); if (slides && slides.length > 1) setSlide(v => v === 0 ? 1 : v); }}
+      onMouseLeave={() => { setHovered(false); if (slides && slides.length > 1) setSlide(0); }}
       onClick={onClick}
     >
       {/* Year — at top */}

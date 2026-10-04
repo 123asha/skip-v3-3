@@ -29,14 +29,16 @@ export function InsightList({ current, flush }: { current?: string; flush?: bool
     <div style={{ marginBottom: flush ? 0 : 'var(--space-xl)' }}>
       {years.map(yg => (
         <div key={yg.year} style={{
-          display: 'grid', gridTemplateColumns: isMobile ? '1fr' : `${col} ${col}`, columnGap: 'var(--gap)',
-          marginBottom: 32,
+          // Year, then its months a step in, then the titles a step further —
+          // all in the page grid's second column
+          marginLeft: isMobile ? 0 : `calc(${col} + var(--gap))`, width: isMobile ? undefined : col,
+          marginBottom: 20,
         }}>
-          <p style={{ ...TEXT_STYLE, margin: isMobile ? '0 0 16px' : 0 }}>{yg.year}</p>
-          <div>
+          <p style={{ ...TEXT_STYLE, margin: '0 0 20px' }}>{yg.year}</p>
+          <div style={{ paddingLeft: 20 }}>
             {yg.months.map(g => (
-              <div key={g.label} style={{ marginBottom: 32 }}>
-                {g.label && <p style={{ ...TEXT_STYLE, margin: '0 0 6px' }}>{g.label}</p>}
+              <div key={g.label} style={{ marginBottom: 20 }}>
+                {g.label && <p style={{ ...TEXT_STYLE, margin: '0 0 20px' }}>{g.label}</p>}
                 {g.items.map((it, i) => (
                   <a
                     key={it.href ?? i}

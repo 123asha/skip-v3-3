@@ -27,8 +27,8 @@ const muted: React.CSSProperties = { ...textStyle, color: 'var(--c-text-muted)' 
 
 // The home headline exactly: its size, its own tighter leading and tracking
 // (ScrollHero; phones: the heading size, via --hero-fs / --hero-lh)
-// One size throughout the article: the title reads like the list beside it
-const titleStyle: React.CSSProperties = { ...textStyle };
+// The article's title in the site's H2; everything else one text size
+const titleStyle: React.CSSProperties = { ...h2Style };
 
 // Whatever needs marking out gets a grey marker under the words
 const marker: React.CSSProperties = {

@@ -109,14 +109,14 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
     const ring = (i: number) => ({ x: 0.5 + 0.34 * Math.cos(i / N * 6.283 - 1.57), y: 0.5 + 0.34 * Math.sin(i / N * 6.283 - 1.57) });
     const FORMS: { at: (i: number) => { x: number; y: number }; edges: [number, number][] }[] = [
       { at: ring, edges: Array.from({ length: N }, (_, i) => [i, (i + 1) % N] as [number, number]) },
-      { at: i => ({ x: 0.1 + i * 0.8 / (N - 1), y: 0.5 + 0.22 * Math.sin(i * 0.9) }), edges: Array.from({ length: N - 1 }, (_, i) => [i, i + 1] as [number, number]) },
+      { at: i => ({ x: 0.06 + i * 0.88 / (N - 1), y: 0.5 + 0.22 * Math.sin(i * 0.9) }), edges: Array.from({ length: N - 1 }, (_, i) => [i, i + 1] as [number, number]) },
       { at: i => i === 0 ? { x: 0.5, y: 0.5 } : { x: 0.5 + 0.38 * Math.cos((i - 1) / (N - 1) * 6.283), y: 0.5 + 0.38 * Math.sin((i - 1) / (N - 1) * 6.283) }, edges: Array.from({ length: N - 1 }, (_, i) => [0, i + 1] as [number, number]) },
       { at: i => ({ x: 0.2 + (i % 4) * 0.2, y: 0.25 + Math.floor(i / 4) * 0.25 }), edges: [[0,1],[1,2],[2,3],[4,5],[5,6],[6,7],[8,9],[0,4],[4,8],[1,5],[5,9],[2,6],[3,7]] },
       { at: i => ({ x: 0.3 + 0.4 * (i % 2) + 0.05 * Math.sin(i), y: 0.1 + i * 0.8 / (N - 1) }), edges: Array.from({ length: N - 2 }, (_, i) => [i, i + 2] as [number, number]).concat([[0, 1], [N - 2, N - 1]]) },
     ];
     const size = () => {
       dpr = window.devicePixelRatio || 1; W = cv.clientWidth; H = cv.clientHeight;
-      cv.width = W * dpr; cv.height = H * dpr; R = Math.max(18, Math.min(W, H) * 0.045);
+      cv.width = W * dpr; cv.height = H * dpr; R = Math.max(30, Math.min(W * 0.05, H * 0.09));
     };
     size();
     pts.forEach((p, i) => { const q = ring(i); p.x = q.x * W; p.y = q.y * H; });
@@ -139,10 +139,10 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
         // from the upper left, no gloss and no hard highlight, the far side
         // sinking gently into shade
         const g = ctx.createRadialGradient(p.x - R * 0.3, p.y - R * 0.35, R * 0.1, p.x, p.y, R * 1.1);
-        g.addColorStop(0, '#2b2b2b'); g.addColorStop(0.55, '#202020'); g.addColorStop(1, '#131313');
+        g.addColorStop(0, '#1d1d1d'); g.addColorStop(0.55, '#171717'); g.addColorStop(1, '#101010');
         ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill();
         const soft = ctx.createRadialGradient(p.x - R * 0.35, p.y - R * 0.4, 0, p.x - R * 0.35, p.y - R * 0.4, R * 0.9);
-        soft.addColorStop(0, 'rgba(255,255,255,0.07)'); soft.addColorStop(1, 'rgba(255,255,255,0)');
+        soft.addColorStop(0, 'rgba(255,255,255,0.045)'); soft.addColorStop(1, 'rgba(255,255,255,0)');
         ctx.fillStyle = soft; ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, Math.PI * 2); ctx.fill();
       });
       raf = requestAnimationFrame(tick);

@@ -79,7 +79,7 @@ export function Pinball() {
         { x: W * 0.5, y: H * 0.62, r: br, hit: 0 },
       ];
     };
-    const serve = () => { ball.x = W * (0.3 + Math.random() * 0.4); ball.y = R; ball.vx = (Math.random() - 0.5) * 3; ball.vy = 0; };
+    const serve = () => { ball.x = W * (0.3 + Math.random() * 0.4); ball.y = R; ball.vx = (Math.random() - 0.5) * 2; ball.vy = 0; };
 
     const flipSeg = (f: typeof flip[0]): Seg => ({
       ax: f.px, ay: f.py,
@@ -102,10 +102,10 @@ export function Pinball() {
     };
 
     const step = () => {
-      ball.vy += 0.256;
+      ball.vy += 0.2;
       ball.vx *= 0.999; ball.vy *= 0.999;
       const sp = Math.hypot(ball.vx, ball.vy);
-      if (sp > 21) { ball.vx *= 21 / sp; ball.vy *= 21 / sp; }
+      if (sp > 13) { ball.vx *= 13 / sp; ball.vy *= 13 / sp; }
       ball.x += ball.vx; ball.y += ball.vy;
       if (ball.x < R) { ball.x = R; ball.vx = Math.abs(ball.vx) * 0.6; }
       if (ball.x > W - R) { ball.x = W - R; ball.vx = -Math.abs(ball.vx) * 0.6; }
@@ -113,8 +113,8 @@ export function Pinball() {
       flip.forEach(f => {
         const target = f.up ? UP : REST;
         const prev = f.a;
-        f.a += Math.max(-0.35, Math.min(0.35, target - f.a));
-        const swing = f.a - prev < 0 ? 17.6 : 0;
+        f.a += Math.max(-0.22, Math.min(0.22, target - f.a));
+        const swing = f.a - prev < 0 ? 9 : 0;
         hitSeg(flipSeg(f), 0.3, swing);
       });
       bumpers.forEach(b => {
@@ -124,7 +124,7 @@ export function Pinball() {
           ball.x = b.x + nx * (b.r + R); ball.y = b.y + ny * (b.r + R);
           const vn = ball.vx * nx + ball.vy * ny;
           ball.vx -= 2 * vn * nx; ball.vy -= 2 * vn * ny;
-          ball.vx += nx * 3.2; ball.vy += ny * 3.2;
+          ball.vx += nx * 1.4; ball.vy += ny * 1.4;
           b.hit = 1;
         }
         b.hit *= 0.9;
@@ -138,14 +138,14 @@ export function Pinball() {
     const draw = () => {
       ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
       ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H);
-      ctx.strokeStyle = LINE; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
+      ctx.strokeStyle = LINE; ctx.lineWidth = 1.5; ctx.lineCap = 'butt';
       walls.forEach(w => { ctx.beginPath(); ctx.moveTo(w.ax, w.ay); ctx.lineTo(w.bx, w.by); ctx.stroke(); });
       bumpers.forEach(b => {
         ctx.beginPath(); ctx.arc(b.x, b.y, b.r + b.hit * 6, 0, Math.PI * 2); ctx.stroke();
       });
       // Flippers: just a line, the same thin stroke as the walls
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+      ctx.lineWidth = 1.5; ctx.lineCap = 'butt';
+      ctx.strokeStyle = '#000';
       flip.forEach(f => { const s = flipSeg(f); ctx.beginPath(); ctx.moveTo(s.ax, s.ay); ctx.lineTo(s.bx, s.by); ctx.stroke(); });
       // The hero's ball: bright base, glint up-left, faint rim shade
       const g = ctx.createRadialGradient(ball.x - R * 0.15, ball.y - R * 0.2, 0, ball.x - R * 0.15, ball.y - R * 0.2, R * 1.3);
@@ -157,8 +157,10 @@ export function Pinball() {
       // The sticker: the black-and-white critter, no background, laid on the
       // ball's surface — it turns with the ball, so it often faces away
       const cols = CRITTER[0].length, rows = CRITTER.length, pp = 1.05 / cols;
+      // One on each side of the ball (the second faces the opposite way)
+      for (const side of [1, -1]) {
       const toScreen = (a: number, b: number) => {
-        const l = Math.hypot(a, b, 1), v = [a / l, b / l, 1 / l];
+        const l = Math.hypot(a, b, 1), v = [side * a / l, b / l, side / l];
         return [
           M[0] * v[0] + M[1] * v[1] + M[2] * v[2],
           M[3] * v[0] + M[4] * v[1] + M[5] * v[2],
@@ -178,6 +180,7 @@ export function Pinball() {
         ctx.closePath(); ctx.fill();
       }));
       ctx.globalAlpha = 1;
+      }
     };
 
     let raf = 0;

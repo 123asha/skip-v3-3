@@ -303,7 +303,7 @@ function Preloader({ onReveal, onGone }: { onReveal: () => void; onGone: () => v
   );
 }
 
-// ── 404 page — minimal pinball with "Перейти на главную" link ────────────────────
+// ── 404 page — minimal pinball, «404» on top, «Назад домой» ────────────────────
 function NotFoundPage({ onGoHome }: { onGoHome: () => void }) {
   return (
     <div style={{
@@ -311,22 +311,23 @@ function NotFoundPage({ onGoHome }: { onGoHome: () => void }) {
       background: '#eaeaea',
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
-      gap: 40,
       animation: 'pageIn 0.35s 0.05s ease both',
     }}>
-      {/* A bare pinball table behind the 404 — the hero's ball, ← → flippers */}
+      {/* A bare pinball table, the hero's ball, ← → flippers */}
       <Pinball />
-      <div style={{ position: 'relative', pointerEvents: 'none',
+      {/* «404» at the top centre like every page's title — the home headline's size, in the usual dark */}
+      <div style={{
+        position: 'absolute', top: 'var(--pad)', left: '50%', transform: 'translateX(-50%)', pointerEvents: 'none',
         fontFamily: 'var(--font-display)',
-        fontSize: 'var(--heading-size)',
+        fontSize: 'var(--hero-fs, min(var(--hero-size), 7.2vw))',
         fontWeight: 'var(--heading-weight)' as React.CSSProperties['fontWeight'],
-        lineHeight: 'var(--heading-lh)',
-        letterSpacing: 'var(--heading-ls)',
+        lineHeight: 'var(--hero-lh, 0.8755)',
+        letterSpacing: '-0.03em',
         color: 'var(--c-text)',
       }}>404</div>
-      {/* A black pill, above the pinball */}
-      <div style={{ position: 'relative' }}>
-        <PillButton variant="primary" onClick={onGoHome}>Перейти на главную</PillButton>
+      {/* The way back: a black pill in the middle of the screen, a little above centre */}
+      <div style={{ position: 'relative', marginTop: '-12vh' }}>
+        <PillButton variant="primary" onClick={onGoHome}>Назад домой</PillButton>
       </div>
     </div>
   );

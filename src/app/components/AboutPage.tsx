@@ -25,6 +25,8 @@ const TEXT = [
   'Результат, к которому мы стремимся — это когда сайт, интерфейс, бренд выглядят так, как будто по-другому и быть не могло. Когда без слов понятно, что проект сделан с вниманием к деталям и в точку.',
 ];
 
+const HEADINGS = ['Философия', 'Подход'];
+
 const DARK: Record<string, string> = {
   '--c-bg': '#0d0d0d', '--c-text': '#f2f2f2', '--c-surface': '#1c1c1c',
   '--c-border': '#2e2e2e', '--c-text-muted': '#7c7c7c', '--c-button': '#2a2a2a',
@@ -62,11 +64,10 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
     let lines: { els: HTMLElement[]; on: boolean }[] = [];
     const build = () => {
       // Lines are told apart by column and top; the left column reads first
-      const colW = textRef.current!.clientWidth / 2;
       const byLine = new Map<number, HTMLElement[]>();
       words.forEach(w => {
-        const col = window.innerWidth > 768 ? Math.floor(w.offsetLeft / colW) : 0;
-        const key = col * 100000 + Math.round(w.offsetTop / 6);
+        const para = w.closest('[data-p]') as HTMLElement;
+        const key = Array.from(para.parentElement!.children).indexOf(para) * 100000 + Math.round(w.offsetTop / 6);
         (byLine.get(key) ?? byLine.set(key, []).get(key)!).push(w);
       });
       lines = [...byLine.entries()].sort((a, b) => a[0] - b[0]).map(([, els]) => ({ els, on: false }));
@@ -154,16 +155,32 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
       <canvas ref={canvasRef} aria-hidden="true" style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />
       <div className={s.body} style={{ position: 'relative', zIndex: 1, paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
         
-        <h1 ref={textRef} style={{ ...TEXT_STYLE, margin: 0, fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'], display: isMobile ? 'flex' : 'block', flexDirection: 'column', columnCount: isMobile ? undefined : 2, columnGap: 'var(--gap)',
-          // Desktop: the text sits on page columns 2–3
-          ...(isMobile ? null : { marginLeft: 'calc((100% - 4 * var(--gap)) / 5 + var(--gap))', width: 'calc((100% - 4 * var(--gap)) / 5 * 2 + var(--gap))' }) }}>
-          {/* Phone: each paragraph's first line starts a third in */}
-          {TEXT.map((p, i) => (
-            <span key={i} style={{ display: 'block', marginBottom: 12, textIndent: isMobile ? '33.333vw' : 0 }}>
-              {typo(t(p)).split(' ').map((w, k) => <span key={k}><span data-w="" style={{ display: 'inline-block', textIndent: 0 }}>{w}</span>{' '}</span>)}
-            </span>
-          ))}
-        </h1>
+        {/* Desktop: the text in one column on page column 3; the headings
+            stand alone on column 2, level with the paragraph they open */}
+        <div ref={textRef} style={{
+          ...TEXT_STYLE, margin: 0, fontWeight: 'var(--text-weight)' as React.CSSProperties['fontWeight'],
+          display: 'grid', columnGap: 'var(--gap)', rowGap: 12,
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, minmax(0, 1fr))',
+        }}>
+          {(() => {
+            let row = 0;
+            return TEXT.map((p, i) => {
+              const heading = HEADINGS.includes(p);
+              if (!heading) row += 1;
+              const r = heading ? row + 1 : row;
+              return (
+                <p key={i} data-p="" style={{
+                  margin: 0, fontWeight: 'inherit',
+                  gridColumn: isMobile ? 'auto' : heading ? '2 / 3' : '3 / 4',
+                  gridRow: isMobile ? 'auto' : r,
+                  textIndent: isMobile && !heading ? '33.333vw' : 0,
+                }}>
+                  {typo(t(p)).split(' ').map((w, k) => <span key={k}><span data-w="" style={{ display: 'inline-block', textIndent: 0 }}>{w}</span>{' '}</span>)}
+                </p>
+              );
+            });
+          })()}
+        </div>
         {/* «Наши услуги» on the third column, the list on the fourth */}
         <div style={{
           marginTop: 'var(--space-xl)',

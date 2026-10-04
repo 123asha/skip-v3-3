@@ -122,6 +122,23 @@ export function Pinball() {
         const swing = f.a - prev < 0 ? 9 : 0;
         hitSeg(flipSeg(f), 0.3, swing);
       });
+      // Anything marked data-pin-obstacle on the page (the «На главную» button) is solid too
+      const box = cv.getBoundingClientRect(), kx = W / box.width, ky = H / box.height;
+      document.querySelectorAll<HTMLElement>('[data-pin-obstacle]').forEach(el => {
+        const r = el.getBoundingClientRect();
+        const l = (r.left - box.left) * kx, t = (r.top - box.top) * ky, rr = (r.right - box.left) * kx, bb = (r.bottom - box.top) * ky;
+        const cx = Math.max(l, Math.min(ball.x, rr)), cy = Math.max(t, Math.min(ball.y, bb));
+        let nx = ball.x - cx, ny = ball.y - cy, d = Math.hypot(nx, ny);
+        if (d >= R) return;
+        if (d === 0) { nx = 0; ny = -1; d = 1; }
+        nx /= d; ny /= d;
+        ball.x = cx + nx * R; ball.y = cy + ny * R;
+        const vn = ball.vx * nx + ball.vy * ny;
+        if (vn < 0) {
+          ball.vx -= 1.6 * vn * nx; ball.vy -= 1.6 * vn * ny;
+          if (vn < -1.5) sound.play('tap', 60);
+        }
+      });
       bumpers.forEach(b => {
         const dx = ball.x - b.x, dy = ball.y - b.y, d = Math.hypot(dx, dy);
         if (d < b.r + R && d > 0) {
@@ -144,12 +161,13 @@ export function Pinball() {
     const draw = () => {
       ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
       ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H);
-      ctx.strokeStyle = LINE; ctx.lineWidth = 1.5; ctx.lineCap = 'butt';
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5; ctx.lineCap = 'butt';
       walls.forEach(w => { ctx.beginPath(); ctx.moveTo(w.ax, w.ay); ctx.lineTo(w.bx, w.by); ctx.stroke(); });
+      ctx.strokeStyle = LINE;
       bumpers.forEach(b => {
         ctx.beginPath(); ctx.arc(b.x, b.y, b.r + b.hit * 6, 0, Math.PI * 2); ctx.stroke();
       });
-      // Flippers: just a line, the same thin stroke as the walls
+      // Flippers: the walls' own line carried on, same colour, same width, same plain end
       ctx.lineWidth = 1.5; ctx.lineCap = 'butt';
       ctx.strokeStyle = '#000';
       flip.forEach(f => { const s = flipSeg(f); ctx.beginPath(); ctx.moveTo(s.ax, s.ay); ctx.lineTo(s.bx, s.by); ctx.stroke(); });

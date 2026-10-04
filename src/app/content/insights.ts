@@ -258,7 +258,11 @@ const SORTED = [...INSIGHTS]
   .sort((a, b) => dateKey(b) - dateKey(a));
 
 /** Insights newest first, with their shown date and where each one leads */
-export const INSIGHTS_LIST = SORTED.map(i => ({ ...i, href: insightPath(i), shown: shownDate(i) }));
+// A short article (under ~1500 characters of text) is listed as a note
+const textLength = (i: Insight) => (i.blocks ?? []).reduce((n, b: any) => n + (b.text?.length ?? 0) + (b.items?.join('').length ?? 0), 0)
+  + (i.full ?? []).join('').length + (i.body ?? []).join('').length;
+const kind = (i: Insight) => i.name === 'Статья' && textLength(i) < 1500 ? 'Заметка' : i.name;
+export const INSIGHTS_LIST = SORTED.map(i => ({ ...i, name: kind(i), href: insightPath(i), shown: shownDate(i) }));
 
 /** An internal article by its slug (drafts included — they open by address) */
 export const insightBySlug = (slug: string) => INSIGHTS.find(i => i.slug === slug && i.blocks);

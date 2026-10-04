@@ -531,7 +531,7 @@ export function ExpertiseSection2({ level = EXPERTISE_DEFAULT_LEVEL, onLevel, sh
         // Same visible gap as above «больше проектов» on the home page (76px
         // from the last line of text; the last row adds its own 12px padding).
         // Phone: nearer the table than the next block
-        <div style={{ marginTop: isMobile ? 'var(--space-btn)' : 64, display: 'flex', justifyContent: isMobile ? 'center' : 'flex-start' }}>
+        <div style={{ marginTop: isMobile ? 'var(--space-btn)' : 64, display: 'flex', justifyContent: 'center' }}>
           <PillButton onClick={() => onAllServices()}>Все услуги</PillButton>
         </div>
       )}

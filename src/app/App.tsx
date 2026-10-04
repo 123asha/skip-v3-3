@@ -54,6 +54,7 @@ function sectionTitleFor(path: string): string | null {
   if (p === '/services' || p === '/services-2' || p === '/expertiza') return 'Услуги и решения студии';
   if (p === '/insights' || p === '/lab') return 'Инсайты команды';
   if (p === '') return 'Skip Design';
+  if (p === '/about-skip-design') return 'Skip Design — дизайн, как правила игры.';
   return null;
 }
 import DesignSystemPage from './components/DesignSystemPage';

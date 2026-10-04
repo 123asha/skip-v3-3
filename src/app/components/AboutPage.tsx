@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import s from './CasesPage.module.css';
 import ContactForm from './ContactForm';
-import { typo, TEXT_STYLE, H2_STYLE } from '../utils/typography';
+import { typo, TEXT_STYLE } from '../utils/typography';
 import { SERVICES } from './ExpertiseSection2';
 import { t } from '../i18n';
 
@@ -61,27 +61,38 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
     // Only our own properties go back — the app sets html's scroll lock itself
     return () => { Object.keys(DARK).forEach(k => root.style.removeProperty(k)); document.body.style.background = ''; };
   }, []);
-  // Paragraphs rise in word by word as they scroll into view, and sink away
-  // again as they leave; a shown paragraph is something the ball can land on
+  // The text comes in line by line as the page scrolls: a line rises into
+  // place when it reaches the lower part of the screen, and sinks away again
+  // when scrolled back below it
   const textRef = useRef<HTMLHeadingElement>(null);
-  const shown = useRef(new Set<HTMLElement>());
   useEffect(() => {
-    const paras = Array.from(textRef.current!.children) as HTMLElement[];
-    const words = (p: HTMLElement) => p.querySelectorAll<HTMLElement>('[data-w]');
-    paras.forEach(p => gsap.set(words(p), { yPercent: 60, opacity: 0 }));
-    const io = new IntersectionObserver(entries => entries.forEach(e => {
-      const p = e.target as HTMLElement;
-      gsap.killTweensOf(words(p));
-      if (e.isIntersecting) {
-        shown.current.add(p);
-        gsap.to(words(p), { yPercent: 0, opacity: 1, duration: 0.9, ease: 'power3.out', stagger: 0.025 });
-      } else {
-        shown.current.delete(p);
-        gsap.to(words(p), { yPercent: 60, opacity: 0, duration: 0.4, ease: 'power2.in', stagger: 0.01 });
-      }
-    }), { root: pageRef.current, threshold: 0.25 });
-    paras.forEach(p => io.observe(p));
-    return () => io.disconnect();
+    const page = pageRef.current!;
+    const words = Array.from(textRef.current!.querySelectorAll<HTMLElement>('[data-w]'));
+    let lines: { els: HTMLElement[]; on: boolean }[] = [];
+    const build = () => {
+      const byTop = new Map<number, HTMLElement[]>();
+      words.forEach(w => { const t = Math.round(w.offsetTop / 4); (byTop.get(t) ?? byTop.set(t, []).get(t)!).push(w); });
+      lines = [...byTop.entries()].sort((a, b) => a[0] - b[0]).map(([, els]) => ({ els, on: false }));
+      gsap.set(words, { yPercent: 70, opacity: 0 });
+      check();
+    };
+    const check = () => {
+      const edge = window.innerHeight * 0.88;
+      lines.forEach(l => {
+        const top = l.els[0].getBoundingClientRect().top - (parseFloat(String(gsap.getProperty(l.els[0], 'yPercent'))) || 0) * 0.01 * l.els[0].offsetHeight;
+        const want = top < edge;
+        if (want === l.on) return;
+        l.on = want;
+        gsap.killTweensOf(l.els);
+        gsap.to(l.els, want
+          ? { yPercent: 0, opacity: 1, duration: 0.8, ease: 'power3.out', stagger: 0.015 }
+          : { yPercent: 70, opacity: 0, duration: 0.35, ease: 'power2.in' });
+      });
+    };
+    build();
+    page.addEventListener('scroll', check, { passive: true });
+    window.addEventListener('resize', build);
+    return () => { page.removeEventListener('scroll', check); window.removeEventListener('resize', build); };
   }, []);
 
   // Behind the text: one graph of lettered balls, as on the home page. As the
@@ -160,7 +171,7 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
           display: 'grid', columnGap: 'var(--gap)',
           gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, minmax(0, 1fr))',
         }}>
-          <h2 style={{ ...H2_STYLE, margin: 0, gridColumn: isMobile ? 'auto' : '3 / 4' }}>{t('Наши услуги')}</h2>
+          <h2 style={{ ...TEXT_STYLE, margin: 0, gridColumn: isMobile ? 'auto' : '3 / 4' }}>{t('Наши услуги')}</h2>
           <div style={{ gridColumn: isMobile ? 'auto' : '4 / 6', marginTop: isMobile ? 20 : 0 }}>
             {SERVICES.map(c => (
               <div key={c.category} style={{ marginBottom: 20 }}>

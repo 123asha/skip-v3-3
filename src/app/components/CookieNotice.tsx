@@ -32,7 +32,7 @@ export default function CookieNotice({ onPolicy }: { onPolicy?: () => void }) {
         ...(isMobile
           ? { left: 'var(--pad)', right: 'var(--pad)', bottom: 'var(--m-above-menu)', transition: 'bottom var(--m-menu-move)' }
           // Desktop: the three middle columns of the page grid
-          : { left: 'calc(50% - var(--page-sb, 0px) / 2)', bottom: 'calc(var(--pad) + 40px)', transform: 'translateX(-50%)', width: 'calc((100vw - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5 * 3 + 2 * var(--gap))' }),
+          : { left: 'calc(50% - (var(--page-sb, 0px) - var(--win-sb, 0px)) / 2)', bottom: 'calc(var(--pad) + 40px)', transform: 'translateX(-50%)', width: 'calc((100vw - var(--page-sb, 0px) - 2 * var(--pad) - 4 * var(--gap)) / 5 * 3 + 2 * var(--gap))' }),
         background: 'var(--c-bg)', border: '1px solid var(--c-border)', borderRadius: 4,
         padding: 16, boxSizing: 'border-box',
         display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-end', gap: 16,

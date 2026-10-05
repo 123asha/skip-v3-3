@@ -39,6 +39,11 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
     let walls: Seg[] = [];
     let bumpers: { x: number; y: number; r: number; hit: number }[] = [];
     let flip: { px: number; py: number; len: number; dir: 1 | -1; a: number; up: boolean }[] = [];
+    // Sounds only while the table is on screen
+    let visible = true;
+    const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0.2 });
+    io.observe(cv);
+    const play = (kind: Parameters<typeof sound.play>[0], throttle?: number) => { if (visible && document.visibilityState === 'visible') sound.play(kind, throttle); };
     const ball = { x: 0, y: 0, vx: 0, vy: 0 };
     // Phone (form variant): no lines at all — the ball just rolls the way the
     // phone is tilted and bounces off the screen's edges and the text
@@ -129,7 +134,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       if (vn < 0) {
         ball.vx -= (1 + bounce) * vn * nx; ball.vy -= (1 + bounce) * vn * ny;
         // A knock on a flipper, a softer tick on the walls
-        if (vn < -2.5) sound.play(kick ? 'logo' : 'hover', 90);
+        if (vn < -2.5) play(kick ? 'logo' : 'hover', 90);
       }
       if (kick) { ball.vx += nx * kick * t; ball.vy += ny * kick * t; }
     };
@@ -140,8 +145,8 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       const sp = Math.hypot(ball.vx, ball.vy);
       if (sp > 13) { ball.vx *= 13 / sp; ball.vy *= 13 / sp; }
       ball.x += ball.vx; ball.y += ball.vy;
-      if (ball.x < R) { ball.x = R; if (ball.vx < -2) sound.play('hover', 90); ball.vx = Math.abs(ball.vx) * 0.6; }
-      if (ball.x > W - R) { ball.x = W - R; if (ball.vx > 2) sound.play('hover', 90); ball.vx = -Math.abs(ball.vx) * 0.6; }
+      if (ball.x < R) { ball.x = R; if (ball.vx < -2) play('hover', 90); ball.vx = Math.abs(ball.vx) * 0.6; }
+      if (ball.x > W - R) { ball.x = W - R; if (ball.vx > 2) play('hover', 90); ball.vx = -Math.abs(ball.vx) * 0.6; }
       walls.forEach(w => hitSeg(w, 0.4));
       flip.forEach(f => {
         const target = f.up ? UP : REST;
@@ -164,7 +169,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
         const vn = ball.vx * nx + ball.vy * ny;
         if (vn < 0) {
           ball.vx -= 1.6 * vn * nx; ball.vy -= 1.6 * vn * ny;
-          if (vn < -1.5) sound.play('tap', 60);
+          if (vn < -1.5) play('tap', 60);
         }
       });
       bumpers.forEach(b => {
@@ -176,7 +181,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
           ball.vx -= 2 * vn * nx; ball.vy -= 2 * vn * ny;
           ball.vx += nx * 1.4; ball.vy += ny * 1.4;
           b.hit = 1;
-          sound.play('tap', 60);
+          play('tap', 60);
         }
         b.hit *= 0.9;
       });
@@ -265,7 +270,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       if (d < R * 1.8) {
         const nx = d ? dx / d : 0, ny = d ? dy / d : -1;
         ball.vx += nx * 7; ball.vy += ny * 7 - 2;
-        sound.play('tap', 60);
+        play('tap', 60);
       } else {
         ball.vy -= 4 + Math.random() * 2; ball.vx += (Math.random() - 0.5) * 5;
       }
@@ -274,6 +279,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
     window.addEventListener('pointerup', pu);
     window.addEventListener('resize', layout);
     return () => {
+      io.disconnect();
       cancelAnimationFrame(raf);
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku);
       window.removeEventListener('deviceorientation', onOrient); if (askTilt) document.removeEventListener('touchend', askTilt);

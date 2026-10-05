@@ -28,8 +28,8 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 50);
-      camera.position.set(0, 0.35, 6.4);
-      camera.lookAt(0, 0, -0.8);
+      camera.position.set(0, 1.5, 6.8);
+      camera.lookAt(0, -0.45, -0.4);
       const resize = () => {
         const w = el.clientWidth, h = el.clientHeight;
         renderer.setSize(w, h, false);
@@ -92,66 +92,74 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
       const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.125, 0.125, 0.04, 32), new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.8 }));
       cap.position.set(0, -RACKET_R - 0.58, 0); cap.scale.z = 0.5;
       racket.add(rim, front, back, handle, cap);
-      racket.rotation.z = 0.35;           // held at a slight angle
       scene.add(racket);
 
-      // Game state
-      const st = { x: 0, y: -0.2, tx: 0, ty: -0.2, vx: 0, vy: 0 };
-      const b = { x: 0.6, y: 0.5, z: Z_BACK + 0.4, vx: 0, vy: 0.01, vz: 0.05 };
-      let missed = 0, hitKick = 0;
-      const serve = () => {
-        b.x = (Math.random() - 0.5) * 3; b.y = 0.6; b.z = Z_BACK + 0.4;
-        b.vx = (Math.random() - 0.5) * 0.05; b.vy = 0.012; b.vz = 0.05;
-      };
+      // Juggling: the paddle lies flat, black side up, at the bottom of the room;
+      // the ball falls onto it and is knocked back up from below. The pointer
+      // slides the paddle across the floor (left–right, near–far); a press
+      // swings it up for a harder hit.
+      const PY = -Y + 0.55;
+      const st = { x: 0, z: 0.6, tx: 0, tz: 0.6, vx: 0, vz: 0, lift: 0, swing: 0 };
+      const b = { x: 0.3, y: 0.9, z: 0.4, vx: 0, vy: 0, vz: 0 };
+      let lost = 0, hitKick = 0;
+      const serve = () => { b.x = (Math.random() - 0.5) * 2; b.z = (Math.random() - 0.5) * 2 + 0.2; b.y = Y - 0.3; b.vx = b.vz = 0; b.vy = 0; };
       serve();
 
-      // The pointer, taken onto the racket's plane
-      const ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -Z_RACKET), hit = new THREE.Vector3();
+      // The pointer, taken onto the paddle's plane
+      const ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -PY), hit = new THREE.Vector3();
       const onMove = (e: PointerEvent) => {
         const r = renderer.domElement.getBoundingClientRect();
         ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
         if (ray.ray.intersectPlane(plane, hit)) {
           st.tx = Math.max(-X + 0.5, Math.min(X - 0.5, hit.x));
-          st.ty = Math.max(-Y + 0.5, Math.min(Y - 0.3, hit.y));
+          st.tz = Math.max(Z_BACK + 0.6, Math.min(Z_RACKET + 0.2, hit.z));
         }
       };
+      const onDown = () => { st.swing = 1; };
       window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerdown', onDown);
 
       let raf = 0;
       const tick = () => {
-        // Racket
-        const px = st.x, py = st.y;
-        st.x += (st.tx - st.x) * 0.2; st.y += (st.ty - st.y) * 0.2;
-        st.vx = st.x - px; st.vy = st.y - py;
-        racket.position.set(st.x, st.y, Z_RACKET);
-        racket.rotation.y = THREE.MathUtils.lerp(racket.rotation.y, -st.vx * 7, 0.2);
-        racket.rotation.x = THREE.MathUtils.lerp(racket.rotation.x, st.vy * 7 - hitKick * 0.25, 0.2);
-        racket.rotation.z = 0.35 - st.vx * 2.4;
-        hitKick *= 0.88;
+        // Paddle
+        const px = st.x, pz = st.z;
+        st.x += (st.tx - st.x) * 0.2; st.z += (st.tz - st.z) * 0.2;
+        st.vx = st.x - px; st.vz = st.z - pz;
+        st.swing *= 0.82;
+        st.lift = st.swing * 0.35;
+        racket.position.set(st.x, PY + st.lift, st.z);
+        racket.rotation.set(-Math.PI / 2 - st.vz * 3.5, 0, -st.vx * 3.5 + 0.12);
+        racket.rotation.order = 'YXZ';
 
         // Ball
-        b.vy -= 0.0008;
+        b.vy -= 0.0034;
         b.x += b.vx; b.y += b.vy; b.z += b.vz;
-        if (b.x > X - BALL_R) { b.x = X - BALL_R; b.vx = -Math.abs(b.vx) * 0.95; }
-        if (b.x < -X + BALL_R) { b.x = -X + BALL_R; b.vx = Math.abs(b.vx) * 0.95; }
-        if (b.y < -Y + BALL_R) { b.y = -Y + BALL_R; b.vy = Math.abs(b.vy) * 0.88; }
-        if (b.y > Y - BALL_R) { b.y = Y - BALL_R; b.vy = -Math.abs(b.vy) * 0.9; }
-        if (b.z < Z_BACK + BALL_R) { b.z = Z_BACK + BALL_R; b.vz = Math.abs(b.vz); sound.play('hover', 90); }
-        if (b.vz > 0 && b.z > Z_RACKET - BALL_R - 0.05 && b.z < Z_RACKET + 0.25) {
-          const dx = b.x - st.x, dy = b.y - st.y;
-          if (Math.hypot(dx, dy) < RACKET_R + BALL_R * 0.6) {
-            b.z = Z_RACKET - BALL_R - 0.05;
-            b.vz = -Math.min(0.12, Math.abs(b.vz) * 1.05 + 0.006);
-            b.vx = b.vx * 0.4 + dx * 0.06 + st.vx * 0.9;
-            b.vy = Math.max(0.008, b.vy * 0.3 + dy * 0.05 + st.vy * 0.9 + 0.014);
+        if (b.x > X - BALL_R) { b.x = X - BALL_R; b.vx = -Math.abs(b.vx) * 0.9; }
+        if (b.x < -X + BALL_R) { b.x = -X + BALL_R; b.vx = Math.abs(b.vx) * 0.9; }
+        if (b.z < Z_BACK + BALL_R) { b.z = Z_BACK + BALL_R; b.vz = Math.abs(b.vz) * 0.9; }
+        if (b.z > Z_RACKET + 0.4) { b.z = Z_RACKET + 0.4; b.vz = -Math.abs(b.vz) * 0.9; }
+        if (b.y > Y - BALL_R) { b.y = Y - BALL_R; b.vy = -Math.abs(b.vy) * 0.6; }
+        // The paddle's face
+        const top = PY + st.lift + 0.04;
+        if (b.vy < 0 && b.y - BALL_R < top && b.y - BALL_R > top - 0.25) {
+          const dx = b.x - st.x, dz = b.z - st.z;
+          if (Math.hypot(dx, dz) < RACKET_R + BALL_R * 0.5) {
+            b.y = top + BALL_R;
+            b.vy = 0.095 + st.swing * 0.06 + Math.min(0.02, Math.hypot(st.vx, st.vz) * 0.2);
+            b.vx = b.vx * 0.3 + dx * 0.05 + st.vx * 0.9;
+            b.vz = b.vz * 0.3 + dz * 0.05 + st.vz * 0.9;
             hitKick = 1;
             sound.play('tap', 40);
           }
         }
-        // Missed: the ball drifts on past the racket, then a new one is served
-        if (b.z > Z_RACKET + 1.2) { b.vz *= 0.9; if (++missed > 60) { missed = 0; serve(); } }
+        // Dropped on the floor: it bounces a little, then a new ball falls from the top
+        if (b.y < -Y + BALL_R) {
+          b.y = -Y + BALL_R; b.vy = Math.abs(b.vy) * 0.4; b.vx *= 0.8; b.vz *= 0.8;
+          if (++lost > 70) { lost = 0; serve(); }
+        }
+        hitKick *= 0.9;
         ball.position.set(b.x, b.y, b.z);
-        ball.rotation.x += b.vz * 2; ball.rotation.y += b.vx * 2;
+        ball.rotation.x += b.vz * 2 + b.vy * 0.3; ball.rotation.z -= b.vx * 2;
         shadow.position.set(b.x, -Y + 0.01, b.z);
         shadow.scale.setScalar(Math.max(0.5, 1.3 - (b.y + Y) * 0.25));
 
@@ -164,6 +172,7 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
         cancelAnimationFrame(raf);
         window.removeEventListener('resize', resize);
         window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerdown', onDown);
         renderer.dispose();
         scene.traverse(o => {
           const m = o as import('three').Mesh;

@@ -272,8 +272,8 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
           />,
           document.body,
         )}
-        {/* The table of the 404 game, faint, behind the form (desktop) */}
-        {!isMobile && <Pinball variant="form" dark={noInvert} />}
+        {/* The table of the 404 game, faint, behind the form (a click or tap on the background plays it) */}
+        <Pinball variant="form" dark={noInvert} />
         {/* Form content — centered column */}
         <div ref={formAreaRef} className={s.contactFormArea} style={{ position: 'relative', zIndex: 1, background: 'transparent', flex: '0 0 auto', paddingTop: 20, paddingBottom: 20,
           // A touch above the middle of the screen: the card centres this

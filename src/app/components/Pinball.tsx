@@ -65,7 +65,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       const box = cv.getBoundingClientRect();
       cv.width = Math.round(box.width * dpr); cv.height = Math.round(box.height * dpr);
       R = Math.max(24, Math.min(W, H) * 0.05);
-      const fw = Math.min(W * 0.16, 200);           // flipper length
+      const fw = Math.min(W * (W < 600 ? 0.27 : 0.16), 200);           // flipper length
       const gap = R * 2.6;                           // drain between them
       const fy = H - Math.max(130, H * 0.2);
       const lx = W / 2 - gap / 2 - fw, rx = W / 2 + gap / 2 + fw;
@@ -166,7 +166,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
     const draw = () => {
       ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
       if (form) ctx.clearRect(0, 0, W, H); else { ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H); }
-      const lineCol = form ? (dark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)') : '#000';
+      const lineCol = form ? (dark ? 'rgba(255,255,255,0.26)' : 'rgba(0,0,0,0.26)') : '#000';
       ctx.strokeStyle = lineCol; ctx.lineWidth = 1.5; ctx.lineCap = 'butt';
       walls.forEach(w => { ctx.beginPath(); ctx.moveTo(w.ax, w.ay); ctx.lineTo(w.bx, w.by); ctx.stroke(); });
       ctx.strokeStyle = LINE;
@@ -228,12 +228,31 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
     const pu = () => { set(0, false); set(1, false); };
     window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
     if (!form) cv.addEventListener('pointerdown', pd);
+    // In the form a press on the empty background (a click or a tap, phones
+    // too) lifts the flipper on that side and nudges the ball, so it never sticks
+    const host = cv.parentElement;
+    const hostDown = (e: PointerEvent) => {
+      if ((e.target as HTMLElement).closest('a, button, input, textarea, select, label, [role=button]')) return;
+      set(e.clientX < cv.getBoundingClientRect().width / 2 ? 0 : 1, true);
+      // On the ball itself: it springs away from the finger; elsewhere a gentle nudge
+      const box = cv.getBoundingClientRect();
+      const px = (e.clientX - box.left) * (W / box.width), py = (e.clientY - box.top) * (H / box.height);
+      const dx = ball.x - px, dy = ball.y - py, d = Math.hypot(dx, dy);
+      if (d < R * 1.8) {
+        const nx = d ? dx / d : 0, ny = d ? dy / d : -1;
+        ball.vx += nx * 7; ball.vy += ny * 7 - 2;
+        sound.play('tap', 60);
+      } else {
+        ball.vy -= 4 + Math.random() * 2; ball.vx += (Math.random() - 0.5) * 5;
+      }
+    };
+    if (form) host?.addEventListener('pointerdown', hostDown);
     window.addEventListener('pointerup', pu);
     window.addEventListener('resize', layout);
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku);
-      cv.removeEventListener('pointerdown', pd); window.removeEventListener('pointerup', pu);
+      cv.removeEventListener('pointerdown', pd); if (form) host?.removeEventListener('pointerdown', hostDown); window.removeEventListener('pointerup', pu);
       window.removeEventListener('resize', layout);
     };
   }, []);

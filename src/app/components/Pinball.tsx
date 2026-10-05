@@ -40,6 +40,29 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
     let bumpers: { x: number; y: number; r: number; hit: number }[] = [];
     let flip: { px: number; py: number; len: number; dir: 1 | -1; a: number; up: boolean }[] = [];
     const ball = { x: 0, y: 0, vx: 0, vy: 0 };
+    // Phone (form variant): no lines at all — the ball just rolls the way the
+    // phone is tilted and bounces off the screen's edges and the text
+    const phone = form && window.matchMedia('(max-width: 768px)').matches;
+    let tiltX = 0, tiltY = 0, baseBeta: number | null = null;
+    const onOrient = (e: DeviceOrientationEvent) => {
+      if (e.gamma == null || e.beta == null) return;
+      if (baseBeta === null) baseBeta = e.beta;
+      const clamp = (v: number) => Math.max(-60, Math.min(60, v));
+      tiltX = Math.sin(clamp(e.gamma) * Math.PI / 180) * 0.5;
+      tiltY = Math.sin(clamp(e.beta - baseBeta) * Math.PI / 180) * 0.5;
+    };
+    let askTilt: (() => void) | null = null;
+    if (phone && 'DeviceOrientationEvent' in window) {
+      const DOE = (window as any).DeviceOrientationEvent;
+      if (typeof DOE?.requestPermission === 'function') {
+        // iOS asks for the sensors on a first touch
+        askTilt = () => {
+          document.removeEventListener('touchend', askTilt!);
+          DOE.requestPermission().then((r: string) => { if (r === 'granted') window.addEventListener('deviceorientation', onOrient); }).catch(() => {});
+        };
+        document.addEventListener('touchend', askTilt, { once: true });
+      } else window.addEventListener('deviceorientation', onOrient);
+    }
     // The ball's orientation (3×3, row-major): starts a little turned away
     let M = [0.9, 0, 0.436, 0, 1, 0, -0.436, 0, 0.9];
     const spin = () => {
@@ -69,12 +92,12 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       const gap = R * 2.6;                           // drain between them
       const fy = H - Math.max(130, H * 0.2);
       const lx = W / 2 - gap / 2 - fw, rx = W / 2 + gap / 2 + fw;
-      flip = [
+      flip = phone ? [] : [
         { px: lx, py: fy, len: fw, dir: 1, a: REST, up: false },
         { px: rx, py: fy, len: fw, dir: -1, a: REST, up: false },
       ];
       // Side walls run down into the flippers' pivots
-      walls = [
+      walls = phone ? [] : [
         { ax: 0, ay: fy - (lx) * 0.55, bx: lx, by: fy },
         { ax: W, ay: fy - (W - rx) * 0.55, bx: rx, by: fy },
       ];
@@ -112,7 +135,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
     };
 
     const step = () => {
-      ball.vy += 0.2;
+      if (phone) { ball.vx += tiltX; ball.vy += tiltY + 0.03; } else ball.vy += 0.2;
       ball.vx *= 0.999; ball.vy *= 0.999;
       const sp = Math.hypot(ball.vx, ball.vy);
       if (sp > 13) { ball.vx *= 13 / sp; ball.vy *= 13 / sp; }
@@ -159,7 +182,8 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       });
       // The top edge bounces it back; a ball that drains off the bottom starts over from the top
       if (ball.y < R) { ball.y = R; ball.vy = Math.abs(ball.vy) * 0.6; }
-      if (ball.y - R > H) serve();
+      if (phone) { if (ball.y > H - R) { ball.y = H - R; ball.vy = -Math.abs(ball.vy) * 0.6; } }
+      else if (ball.y - R > H) serve();
       spin();
     };
 
@@ -252,6 +276,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku);
+      window.removeEventListener('deviceorientation', onOrient); if (askTilt) document.removeEventListener('touchend', askTilt);
       cv.removeEventListener('pointerdown', pd); if (form) host?.removeEventListener('pointerdown', hostDown); window.removeEventListener('pointerup', pu);
       window.removeEventListener('resize', layout);
     };

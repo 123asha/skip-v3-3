@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { sound } from '../sound/Sound';
 import PillButton from './PillButton';
 
-// 404 alternative (localhost only): a minimalist racket in real 3D (three.js)
+// 404 alternative (localhost only): a minimalist table-tennis paddle in real 3D (three.js)
 // and a ball in a bare room. The racket follows the pointer on its own plane,
 // tilting with its motion; the ball flies back and forth between the racket,
 // the walls, the floor and the ceiling.
@@ -72,31 +72,26 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
       shadow.rotation.x = -Math.PI / 2;
       scene.add(shadow);
 
-      // The racket: a thin black ring, a pale translucent face, a handle with a grip
+      // A table-tennis paddle: a solid round blade — black rubber on this side,
+      // pale on the other, a thin wooden rim — and a short flared handle
       const racket = new THREE.Group();
-      const ink = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.55, metalness: 0.1 });
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(RACKET_R, 0.035, 20, 96), ink);
-      const face = new THREE.Mesh(
-        new THREE.CircleGeometry(RACKET_R, 64),
-        new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.32, side: THREE.DoubleSide, roughness: 0.4 }),
-      );
-      // Strings: a fine grid across the face, cut to the ring
-      const pts: number[] = [];
-      for (let i = -5; i <= 5; i++) {
-        const o = (i / 6) * RACKET_R, c = Math.sqrt(Math.max(0, RACKET_R * RACKET_R - o * o)) * 0.97;
-        pts.push(-c, o, 0, c, o, 0, o, -c, 0, o, c, 0);
-      }
-      const sg = new THREE.BufferGeometry();
-      sg.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-      const strings = new THREE.LineSegments(sg, new THREE.LineBasicMaterial({ color: 0x111111, transparent: true, opacity: 0.35 }));
-      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.06, 0.55, 20), ink);
-      neck.position.set(0, -RACKET_R - 0.22, 0);
-      const grip = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.075, 0.075, 0.5, 24),
-        new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.9 }),
-      );
-      grip.position.set(0, -RACKET_R - 0.7, 0);
-      racket.add(ring, face, strings, neck, grip);
+      const rubberBlack = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.9 });
+      const rubberPale = new THREE.MeshStandardMaterial({ color: 0xf4f4f4, roughness: 0.9 });
+      const wood = new THREE.MeshStandardMaterial({ color: 0xd9c3a0, roughness: 0.75 });
+      const T = 0.055;
+      const rim = new THREE.Mesh(new THREE.CylinderGeometry(RACKET_R, RACKET_R, T, 96), wood);
+      rim.rotation.x = Math.PI / 2;
+      const front = new THREE.Mesh(new THREE.CylinderGeometry(RACKET_R * 0.985, RACKET_R * 0.985, 0.012, 96), rubberBlack);
+      front.rotation.x = Math.PI / 2; front.position.z = T / 2 + 0.004;
+      const back = new THREE.Mesh(new THREE.CylinderGeometry(RACKET_R * 0.985, RACKET_R * 0.985, 0.012, 96), rubberPale);
+      back.rotation.x = Math.PI / 2; back.position.z = -T / 2 - 0.004;
+      // The handle: slightly flared towards the end, flat like a paddle's
+      const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.125, 0.62, 32), wood);
+      handle.position.set(0, -RACKET_R - 0.26, 0);
+      handle.scale.z = 0.5;
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.125, 0.125, 0.04, 32), new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.8 }));
+      cap.position.set(0, -RACKET_R - 0.58, 0); cap.scale.z = 0.5;
+      racket.add(rim, front, back, handle, cap);
       racket.rotation.z = 0.35;           // held at a slight angle
       scene.add(racket);
 

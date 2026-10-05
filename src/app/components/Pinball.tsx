@@ -167,6 +167,19 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
         nx /= d; ny /= d;
         ball.x = cx + nx * R; ball.y = cy + ny * R;
         const vn = ball.vx * nx + ball.vy * ny;
+        // Phone: a very hard hit on the form's heading nudges it clockwise a little — and the ball goes on falling
+        if (phone && el.hasAttribute('data-pin-title') && vn < -6) {
+          const now = performance.now();
+          if (now - Number(el.dataset.hitAt || 0) > 700) {
+            el.dataset.hitAt = String(now);
+            const k = Math.min(3, Number(el.dataset.tilt || 0) + 1);
+            el.dataset.tilt = String(k);
+            el.style.transition = 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)';
+            el.style.transform = `translate(${k * 3}px, ${k * 2}px) rotate(${k * 2.5}deg)`;
+            sound.play('logo', 80);
+          }
+          return;
+        }
         if (vn < 0) {
           ball.vx -= 1.6 * vn * nx; ball.vy -= 1.6 * vn * ny;
           if (vn < -1.5) play('tap', 60);

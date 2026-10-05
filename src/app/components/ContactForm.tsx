@@ -308,17 +308,17 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
               On the consult variant + tab 2 the heading switches to
               "Оставьте контакт, запланируем консультацию". */}
           {variant === 'consult' && activeTab === 'join' ? (
-            <p className={s.contactTitle} data-pin-obstacle="" style={{ marginTop: 20, textAlign: 'center' }}>
+            <p className={s.contactTitle} data-pin-obstacle="" data-pin-title="" style={{ marginTop: 20, textAlign: 'center' }}>
               Оставьте{' '}
               <span ref={wordRef}>{consultWord}</span>
               {' '}— мы свяжемся с вами
             </p>
           ) : activeTab === 'join' ? (
-            <p className={s.contactTitle} data-pin-obstacle="" style={{ marginTop: 20, textAlign: 'center' }}>
+            <p className={s.contactTitle} data-pin-obstacle="" data-pin-title="" style={{ marginTop: 20, textAlign: 'center' }}>
               Отправьте CV<br />креативному директору
             </p>
           ) : (
-            <p className={s.contactTitle} data-pin-obstacle="" style={{ marginTop: 20, textAlign: 'center' }}>
+            <p className={s.contactTitle} data-pin-obstacle="" data-pin-title="" style={{ marginTop: 20, textAlign: 'center' }}>
               Оставьте{' '}
               <span ref={wordRef}>{word}</span>,<br />мы назначим встречу
             </p>

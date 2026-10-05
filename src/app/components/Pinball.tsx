@@ -210,6 +210,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       if (form) ctx.clearRect(0, 0, W, H); else { ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H); }
       const lineCol = form ? (dark ? 'rgba(255,255,255,0.26)' : 'rgba(0,0,0,0.26)') : '#000';
       ctx.strokeStyle = lineCol; ctx.lineWidth = 1.5; ctx.lineCap = 'butt';
+      if (form) ctx.setLineDash([3, 8]);
       walls.forEach(w => { ctx.beginPath(); ctx.moveTo(w.ax, w.ay); ctx.lineTo(w.bx, w.by); ctx.stroke(); });
       ctx.strokeStyle = LINE;
       bumpers.forEach(b => {
@@ -219,9 +220,10 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       ctx.lineWidth = 1.5; ctx.lineCap = 'butt';
       ctx.strokeStyle = lineCol;
       flip.forEach(f => { const s = flipSeg(f); ctx.beginPath(); ctx.moveTo(s.ax, s.ay); ctx.lineTo(s.bx, s.by); ctx.stroke(); });
+      ctx.setLineDash([]);
       // The hero's ball: bright base, glint up-left, faint rim shade
       const g = ctx.createRadialGradient(ball.x - R * 0.15, ball.y - R * 0.2, 0, ball.x - R * 0.15, ball.y - R * 0.2, R * 1.3);
-      if (dark) { g.addColorStop(0, '#3a3a3a'); g.addColorStop(0.6, '#262626'); g.addColorStop(1, '#161616'); } else { g.addColorStop(0, '#fdfdfd'); g.addColorStop(0.6, '#f4f4f4'); g.addColorStop(1, '#e2e2e2'); }
+      if (dark) { if (form) { g.addColorStop(0, '#424242'); g.addColorStop(0.6, '#2e2e2e'); g.addColorStop(1, '#1e1e1e'); } else { g.addColorStop(0, '#3a3a3a'); g.addColorStop(0.6, '#262626'); g.addColorStop(1, '#161616'); } } else if (form) { g.addColorStop(0, '#f5f5f5'); g.addColorStop(0.6, '#ececec'); g.addColorStop(1, '#dadada'); } else { g.addColorStop(0, '#fdfdfd'); g.addColorStop(0.6, '#f4f4f4'); g.addColorStop(1, '#e2e2e2'); }
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ball.x, ball.y, R, 0, Math.PI * 2); ctx.fill();
       const sg = ctx.createRadialGradient(ball.x - R * 0.4, ball.y - R * 0.48, 0, ball.x - R * 0.4, ball.y - R * 0.48, R * 0.7);
       sg.addColorStop(0, dark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.85)'); sg.addColorStop(1, 'rgba(255,255,255,0)');

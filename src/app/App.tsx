@@ -31,6 +31,7 @@ import GuidePage from './components/GuidePage';
 import MoscowTime from './components/MoscowTime';
 import { Pinball } from './components/Pinball';
 import AboutPage from './components/AboutPage';
+import Racket3D from './components/Racket3D';
 import BunnyFollower from './components/BunnyFollower';
 import ContactForm from './components/ContactForm';
 import { ToolsSection } from './components/ToolsSection';
@@ -460,7 +461,7 @@ function AppInner() {
   });
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
-  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/services-2', '/policy', '/index2', '/case-template', '/Seniorsbar', ...Object.keys(CASE_PAGES), '/guide', '/lab', '/insights', '/system', '/brand', '/visual', '/digital', '/about-skip-design'];
+  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/services-2', '/policy', '/index2', '/case-template', '/Seniorsbar', ...Object.keys(CASE_PAGES), '/guide', '/lab', '/insights', '/system', '/brand', '/visual', '/digital', '/about-skip-design', '/404-3d'];
   const page = pathname === '/cases' ? 'cases'
              : pathname === '/instruments' ? 'instruments'
              : (pathname === '/expertiza' || pathname === '/services') ? 'expertiza'
@@ -473,6 +474,8 @@ function AppInner() {
              : CASE_PAGES[pathname] ? 'binaroom'
              : pathname === '/guide' ? 'guide'
              : pathname === '/about-skip-design' ? 'about'
+             // An alternative 404 with a 3D racket — a local-development sketch only
+             : pathname === '/404-3d' && import.meta.env.DEV ? 'notfound3d'
              // /lab is the old address of the insights page — still opens it
              : pathname === '/insights' || pathname === '/lab' ? 'lab'
              // An insight's own article page (unknown slugs fall through to 404)
@@ -1488,6 +1491,7 @@ function AppInner() {
         onNavigatePolicy={() => navigateWithExit('/policy')}
         onGridMode={setGridVisible}
       />}
+      {page === 'notfound3d' && <Racket3D onGoHome={() => navigateWithExit('/')} />}
       {page === 'about' && <AboutPage
         onNavigatePolicy={() => navigateWithExit('/policy')}
         onGridMode={setGridVisible}

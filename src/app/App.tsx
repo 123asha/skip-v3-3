@@ -1322,6 +1322,7 @@ function AppInner() {
       {/* hi@skip.design — desktop only (on mobile it would overlap the
           centred "новый проект" sticky button which sits at the same y) */}
       {!isMobile && <button
+        data-footer-mail=""
         onClick={(e) => {
           const text = 'hi@skip.design';
           const el = e.currentTarget;

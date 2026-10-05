@@ -35,6 +35,12 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
   // page, faded in on the next frame, kept until its fade-out has finished
   const [invertOn, setInvertOn] = useState(false);
   const [invertShown, setInvertShown] = useState(false);
+  // While the end of the page is inverted (black), tell the footer to go plain white
+  useEffect(() => {
+    if (noInvert || !(atBottom && invertShown)) return;
+    document.documentElement.setAttribute('data-dark', '');
+    return () => { document.documentElement.removeAttribute('data-dark'); };
+  }, [atBottom, invertShown, noInvert]);
   useEffect(() => {
     if (atBottom) {
       setInvertOn(true);

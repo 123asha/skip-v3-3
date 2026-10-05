@@ -984,7 +984,8 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
   // services (level 3), and the table scrolls to that sub-group (it reads the
   // same key and clears it — see ExpertiseSection2)
   const [level, setLevel] = useState(() => {
-    try { if (sessionStorage.getItem(OPEN_KEY)) return 3; } catch { /* storage blocked */ }
+    // Phone: the table stays at level 2 and just that sub-group opens
+    try { if (sessionStorage.getItem(OPEN_KEY)) return window.innerWidth <= 768 ? 2 : 3; } catch { /* storage blocked */ }
     return EXPERTISE_DEFAULT_LEVEL;
   });
   // Phones have no ⊖ ⊕: the table shows the sub-groups (level 2); a tap

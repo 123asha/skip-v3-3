@@ -67,8 +67,9 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
     const root = document.documentElement;
     Object.entries(DARK).forEach(([k, v]) => root.style.setProperty(k, v));
     document.body.style.background = DARK['--c-bg'];
+    root.setAttribute('data-dark', '');
     // Only our own properties go back — the app sets html's scroll lock itself
-    return () => { Object.keys(DARK).forEach(k => root.style.removeProperty(k)); document.body.style.background = ''; };
+    return () => { Object.keys(DARK).forEach(k => root.style.removeProperty(k)); document.body.style.background = ''; root.removeAttribute('data-dark'); };
   }, []);
   // The text comes in line by line as the page scrolls: a line rises into
   // place when it reaches the lower part of the screen, and sinks away again

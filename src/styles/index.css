@@ -479,3 +479,6 @@ input::placeholder {
 
 /* Insights list: a dotted underline only under the hovered title */
 @media (hover: hover) { [data-insight-link]:hover { text-decoration-line: underline !important; } }
+
+/* On a black page (the About page, or the inverted end of any page) the footer address is plain white */
+html[data-dark] [data-footer-mail] { opacity: 1 !important; }

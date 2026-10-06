@@ -1,7 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { sound } from '../sound/Sound';
-import PillButton from './PillButton';
-import { useMobile } from '../hooks/useMobile';
 import svgPaths from '../../imports/Index/svg-3bjnx36a2y';
 
 // 404 alternative (localhost only): a minimalist table-tennis paddle in real 3D (three.js)
@@ -12,8 +10,7 @@ const BG = 0xeaeaea;
 const X = 2.6, Y = 1.5, Z_BACK = -4, Z_RACKET = 2.2;
 const BALL_R = 0.17, RACKET_R = 0.62;
 
-export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
-  const isMobile = useMobile();
+export default function Racket3D(_: { onGoHome?: () => void }) {
   const host = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -76,6 +73,30 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
       floorShadow.rotation.x = -Math.PI / 2; floorShadow.position.set(0, -Y + 0.002, (Z_RACKET + Z_BACK) / 2);
       floorShadow.receiveShadow = true;
       scene.add(floorShadow);
+
+      // «404», written on the back wall in the site's display type
+      await document.fonts.ready;
+      if (stop) { renderer.dispose(); renderer.domElement.remove(); return; }
+      const wallTex = (() => {
+        const c = document.createElement('canvas'); c.width = 2048; c.height = Math.round(2048 * Y / X);
+        const g = c.getContext('2d')!;
+        const cs = getComputedStyle(document.documentElement);
+        const family = cs.getPropertyValue('--font-display').trim() || 'sans-serif';
+        const weight = cs.getPropertyValue('--heading-weight').trim() || '450';
+        g.fillStyle = getComputedStyle(document.body).color || '#111';
+        g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.font = `${weight} ${Math.round(c.height * 0.5)}px ${family}`;
+        if ('letterSpacing' in g) (g as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${-Math.round(c.height * 0.015)}px`;
+        g.fillText('404', c.width / 2, c.height * 0.5);
+        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+        return t;
+      })();
+      const wall404 = new THREE.Mesh(
+        new THREE.PlaneGeometry(X * 2, Y * 2),
+        new THREE.MeshBasicMaterial({ map: wallTex, transparent: true, depthWrite: false }),
+      );
+      wall404.position.set(0, 0, Z_BACK + 0.002);
+      scene.add(wall404);
 
       // The ball: matte white
       const tex = (() => {
@@ -292,16 +313,6 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 160, background: '#eaeaea', animation: 'pageIn 0.35s 0.05s ease both' }}>
       <div ref={host} style={{ position: 'absolute', inset: 0 }} />
-      <div style={{
-        position: 'absolute', top: isMobile ? 'calc(var(--pad) + 74px)' : 'var(--pad)', left: '50%', transform: 'translateX(-50%)', pointerEvents: 'none',
-        fontFamily: 'var(--font-display)',
-        fontSize: 'var(--hero-fs, min(var(--hero-size), 7.2vw))',
-        fontWeight: 'var(--heading-weight)' as React.CSSProperties['fontWeight'],
-        lineHeight: 'var(--hero-lh, 0.8755)', letterSpacing: '-0.03em', color: 'var(--c-text)',
-      }}>404</div>
-      <div style={{ position: 'absolute', left: '50%', bottom: 'calc(var(--pad) + 60px)', transform: 'translateX(-50%)' }}>
-        <PillButton variant="primary" onClick={onGoHome}>На главную</PillButton>
-      </div>
     </div>
   );
 }

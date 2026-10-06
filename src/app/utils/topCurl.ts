@@ -21,7 +21,7 @@ export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?
     raf = 0;
     const vh = window.innerHeight, vw = window.innerWidth;
     const y0 = vh * zone;               // where the page starts to bend
-    const Rc = y0 / 1.5;                // radius of the roll: a quarter turn and a bit across the band
+    const Rc = y0;                      // the roll: its top is the top edge of the screen, so the page goes over it and up out of sight
     const P = 900;                     // the one perspective for everything
     const vx = vw / 2, vy = y0;         // the shared vanishing point
     shade.style.height = `${y0}px`;
@@ -39,7 +39,7 @@ export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?
       const ey = tall ? r.top : r.top + r.height / 2;
       if (ey >= y0) return;
       const u = y0 - ey;                // arc length along the page
-      const th = Math.min(u / Rc, 1.7);
+      const th = Math.min(u / Rc, Math.PI / 2);
       const dy = (y0 - Rc * Math.sin(th)) - ey;   // where the arc puts it, relative to where it sits
       const z = -Rc * (1 - Math.cos(th));
       const ex = r.left + r.width / 2;
@@ -47,7 +47,7 @@ export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?
       el.style.transformOrigin = tall ? '50% 0%' : '50% 50%';
       el.style.transform = `translate(${ox.toFixed(1)}px, ${oy.toFixed(1)}px) perspective(${P}px) translate(${(-ox).toFixed(1)}px, ${(-oy).toFixed(1)}px) translateY(${dy.toFixed(1)}px) translateZ(${z.toFixed(1)}px) rotateX(${(((tall ? -0.55 : 1) * th * 180) / Math.PI).toFixed(1)}deg)`;
       // The sheet stays solid as it turns; only once it has gone over the roll does it vanish
-      el.style.opacity = String(Math.max(0, Math.min(1, (1.65 - th) / 0.4)));
+      el.style.opacity = String(Math.max(0, Math.min(1, (1.57 - th) / 0.25)));
       now.add(el);
     });
     touched.forEach(el => { if (!now.has(el)) clear(el); });

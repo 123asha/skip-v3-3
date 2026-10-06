@@ -124,89 +124,181 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         jamb.position.set(wx0 - 0.025, (wy0 + wy1) / 2, Z_BACK + 0.06);
         scene.add(shade(jamb));
       }
-      // Things on the desk, after the photo
-      // — an architect's lamp: a round base, two thin aluminium arms and a cone shade
+      // Things on the desk, after the reference photos
+      const V2 = (x: number, y: number) => new THREE.Vector2(x, y);
+      // a thin rod between two points
+      const rod = (a: import('three').Vector3, b: import('three').Vector3, r: number, m: import('three').Material) => {
+        const d = b.clone().sub(a), len = d.length();
+        const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 16), m);
+        mesh.position.copy(a).addScaledVector(d, 0.5);
+        mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize());
+        return mesh;
+      };
+      const canvasTex = (w: number, h: number, draw: (g: CanvasRenderingContext2D) => void) => {
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        draw(c.getContext('2d')!);
+        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+        return t;
+      };
+      const V3 = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
+      // — a felt desk mat under the keyboard
       {
-        const alu = mat(0xc9cbce, 0.25, 0.9);
+        const sh = new THREE.Shape(); const w = 6.4, d = 3.4, r = 0.18;
+        sh.moveTo(-w / 2 + r, -d / 2); sh.lineTo(w / 2 - r, -d / 2); sh.quadraticCurveTo(w / 2, -d / 2, w / 2, -d / 2 + r);
+        sh.lineTo(w / 2, d / 2 - r); sh.quadraticCurveTo(w / 2, d / 2, w / 2 - r, d / 2); sh.lineTo(-w / 2 + r, d / 2);
+        sh.quadraticCurveTo(-w / 2, d / 2, -w / 2, d / 2 - r); sh.lineTo(-w / 2, -d / 2 + r); sh.quadraticCurveTo(-w / 2, -d / 2, -w / 2 + r, -d / 2);
+        const g = new THREE.ExtrudeGeometry(sh, { depth: 0.012, bevelEnabled: false, curveSegments: 12 });
+        g.rotateX(-Math.PI / 2);
+        const felt = canvasTex(128, 128, g2 => { g2.fillStyle = '#cfcecb'; g2.fillRect(0, 0, 128, 128); for (let i = 0; i < 2500; i++) { const v = 190 + Math.random() * 30; g2.fillStyle = `rgba(${v},${v},${v - 3},0.5)`; g2.fillRect(Math.random() * 128, Math.random() * 128, 1, 1); } });
+        felt.wrapS = felt.wrapT = THREE.RepeatWrapping; felt.repeat.set(2, 2);
+        const mesh = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0xffffff, map: felt, roughness: 1 }));
+        mesh.position.set(0.3, fy + 0.001, -0.9);
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+      }
+      // — an Artemide Tolomeo: heavy round base, polished arms with tension wires, black knobs, a truncated-cone shade
+      {
+        const alu = mat(0xd9dbde, 0.16, 1.0), black = mat(0x151515, 0.45), wire = mat(0x2a2a2a, 0.4);
         const lamp = new THREE.Group();
-        const base = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.44, 0.04, 48), alu);
-        base.position.y = 0.02;
-        const arm1 = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 2.6, 12), alu);
-        arm1.position.set(0.12, 1.3, 0); arm1.rotation.z = -0.09;
-        const arm2 = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2.9, 12), alu);
-        arm2.position.set(1.45, 2.95, 0.15); arm2.rotation.z = -1.25;
-        const joint = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 12), mat(0x1c1c1c, 0.5));
-        joint.position.set(0.24, 2.55, 0);
-        const head = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.42, 40, 1, true), new THREE.MeshStandardMaterial({ color: 0xbfc1c4, roughness: 0.3, metalness: 0.85, side: THREE.DoubleSide }));
-        head.position.set(2.75, 3.25, 0.25); head.rotation.z = 0.5;
-        lamp.add(base, arm1, arm2, joint, head);
-        lamp.position.set(-4.3, fy, -3.1);
+        lamp.add(new THREE.Mesh(new THREE.LatheGeometry([V2(0, 0), V2(0.42, 0), V2(0.44, 0.012), V2(0.43, 0.03), V2(0.12, 0.045), V2(0.05, 0.08), V2(0.035, 0.16), V2(0, 0.16)], 64), alu));
+        const p0 = V3(0, 0.16, 0), p1 = V3(0.18, 2.25, 0), p2 = V3(2.35, 2.95, 0.25);
+        lamp.add(rod(p0, p1, 0.016, alu), rod(p1, p2, 0.014, alu));
+        // tension wires and springs alongside the arms
+        lamp.add(rod(V3(-0.045, 0.5, 0), V3(0.12, 2.1, 0), 0.004, wire), rod(V3(0.25, 2.33, 0), V3(2.2, 2.98, 0.24), 0.004, wire));
+        lamp.add(rod(V3(-0.04, 0.55, 0), V3(-0.02, 0.95, 0), 0.018, alu));
+        const knob = (p: import('three').Vector3) => { const k = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.05, 24), black); k.rotation.x = Math.PI / 2; k.position.copy(p).add(V3(0, 0, 0.05)); return k; };
+        lamp.add(knob(p1), knob(V3(0.02, 0.35, 0)));
+        const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.1, 24), alu); hub.rotation.x = Math.PI / 2; hub.position.copy(p1); lamp.add(hub);
+        // the head: a short cylinder housing on the arm's end, the shade hanging from it
+        const head = new THREE.Group();
+        const housing = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.22, 32), alu);
+        housing.rotation.z = Math.PI / 2 - 0.3;
+        const hk = knob(V3(0, 0, 0)); hk.position.set(0.02, 0.04, 0.12);
+        const shadeG = new THREE.LatheGeometry([V2(0.09, 0.2), V2(0.11, 0.18), V2(0.13, 0.1), V2(0.3, -0.18), V2(0.33, -0.21), V2(0.325, -0.215)], 64);
+        const shadeM = new THREE.Mesh(shadeG, new THREE.MeshStandardMaterial({ color: 0xcfd1d4, roughness: 0.28, metalness: 0.9, side: THREE.DoubleSide }));
+        shadeM.position.set(0.22, -0.18, 0); shadeM.rotation.z = 0.42;
+        const capTop = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.03, 32), alu); capTop.position.set(0.14, 0.02, 0); capTop.rotation.z = 0.42;
+        // a white Artemide tag hanging off it
+        const tag = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.34), new THREE.MeshStandardMaterial({ roughness: 0.7, side: THREE.DoubleSide, map: canvasTex(64, 220, g => {
+          g.fillStyle = '#f7f7f5'; g.beginPath(); g.roundRect(0, 0, 64, 220, 30); g.fill();
+          g.save(); g.translate(40, 110); g.rotate(-Math.PI / 2); g.fillStyle = '#222'; g.font = 'italic 600 26px Georgia, serif'; g.textAlign = 'center'; g.fillText('Artemide', 0, 0); g.restore();
+        }), transparent: true }));
+        tag.position.set(-0.02, -0.32, 0.1); tag.rotation.y = -0.4;
+        head.add(housing, hk, shadeM, capTop, tag);
+        head.position.copy(p2);
+        lamp.add(head);
+        lamp.position.set(-4.5, fy, -3.35);
         scene.add(shade(lamp));
       }
-      // — a small orange mushroom lamp
+      // — a small orange leather mushroom lamp with stitched seams
       {
-        const orange = mat(0xd8542e, 0.75);
+        const leather = new THREE.MeshStandardMaterial({ color: 0xd9542c, roughness: 0.82, map: canvasTex(128, 128, g => { g.fillStyle = '#fff'; g.fillRect(0, 0, 128, 128); for (let i = 0; i < 3000; i++) { const v = 225 + Math.random() * 30; g.fillStyle = `rgb(${v},${v},${v})`; g.fillRect(Math.random() * 128, Math.random() * 128, 1.5, 1.5); } }) });
         const g = new THREE.Group();
-        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.12, 0.5, 32), orange);
-        stem.position.y = 0.25;
-        const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.26, 48), orange);
-        cap.position.y = 0.62;
-        const capTop = new THREE.Mesh(new THREE.SphereGeometry(0.34, 48, 12, 0, Math.PI * 2, 0, 0.35), orange);
-        capTop.position.y = 0.62 + 0.13 - 0.34 * Math.cos(0.35); capTop.scale.y = 0.6;
-        g.add(stem, cap, capTop);
-        g.position.set(-3.1, fy, -2.6);
+        g.add(new THREE.Mesh(new THREE.LatheGeometry([V2(0, 0), V2(0.12, 0), V2(0.125, 0.01), V2(0.115, 0.6), V2(0, 0.6)], 48), leather));
+        g.add(new THREE.Mesh(new THREE.LatheGeometry([V2(0, 0.58), V2(0.3, 0.58), V2(0.335, 0.6), V2(0.345, 0.64), V2(0.345, 0.82), V2(0.335, 0.86), V2(0.29, 0.885), V2(0.15, 0.9), V2(0, 0.9)], 64), leather));
+        const seam = mat(0xb5401f, 0.8);
+        for (const y of [0.625, 0.835]) { const t = new THREE.Mesh(new THREE.TorusGeometry(0.347, 0.0035, 6, 96), seam); t.rotation.x = Math.PI / 2; t.position.y = y; g.add(t); }
+        const screw = new THREE.Mesh(new THREE.SphereGeometry(0.018, 12, 8), mat(0xcfcfcf, 0.2, 1)); screw.position.set(0, 0.32, 0.118); g.add(screw);
+        g.position.set(2.15, fy, -3.0);
         scene.add(shade(g));
       }
-      // — a white desk clock on a blue stand, teal and crimson hands
+      // — a white desk clock: a deep rounded dish, raised rounded ticks, teal and crimson hands, on a bent blue stand
       {
         const g = new THREE.Group();
-        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.3, 64), mat(0xf6f5f2, 0.7));
-        body.rotation.x = Math.PI / 2; body.position.y = 0.66;
-        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.06, 16, 64), mat(0xf6f5f2, 0.7));
-        ring.position.set(0, 0.66, 0.1);
-        g.add(body, ring);
+        const white = mat(0xf7f6f3, 0.6);
+        const dish = new THREE.Mesh(new THREE.LatheGeometry([V2(0, -0.12), V2(0.5, -0.12), V2(0.57, -0.1), V2(0.62, -0.03), V2(0.62, 0.05), V2(0.59, 0.12), V2(0.54, 0.15), V2(0.5, 0.14), V2(0.47, 0.02), V2(0, 0)], 96), white);
+        dish.rotation.x = Math.PI / 2;
+        g.add(dish);
         for (let i = 0; i < 12; i++) {
           const a = (i / 12) * Math.PI * 2;
-          const tick = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.1, 0.02), mat(0xe9e7e2, 0.8));
-          tick.position.set(Math.sin(a) * 0.46, 0.66 + Math.cos(a) * 0.46, 0.16); tick.rotation.z = -a;
-          g.add(tick);
+          const t = new THREE.Mesh(new THREE.CapsuleGeometry(0.022, 0.07, 6, 12), mat(0xefeeea, 0.65));
+          t.rotation.z = -a; t.position.set(Math.sin(a) * 0.38, Math.cos(a) * 0.38, 0.018);
+          g.add(t);
         }
-        const hand = (len: number, color: number, ang: number, z: number) => {
-          const h = new THREE.Mesh(new THREE.BoxGeometry(0.05, len, 0.02), mat(color, 0.5));
-          h.geometry.translate(0, len / 2 - 0.04, 0);
-          h.position.set(0, 0.66, z); h.rotation.z = -ang;
+        const hand = (len: number, w: number, color: number, ang: number, z: number) => {
+          const h = new THREE.Mesh(new THREE.RoundedBoxGeometry(w, len, 0.02, 2, w * 0.45), mat(color, 0.45));
+          h.geometry.translate(0, len / 2 - 0.05, 0);
+          h.position.z = z; h.rotation.z = -ang;
           return h;
         };
-        g.add(hand(0.42, 0x3fb2b0, 0.15, 0.17), hand(0.3, 0xc4174a, 2.05, 0.19));
-        const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.03, 16), mat(0xf2a33a, 0.5));
-        hub.rotation.x = Math.PI / 2; hub.position.set(0, 0.66, 0.2);
-        const stand = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.02, 0.5), mat(0x1f3fb0, 0.45));
-        stand.position.set(0.05, 0.01, 0.1);
-        const back = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.02), mat(0x1f3fb0, 0.45));
-        back.position.set(0, 0.25, -0.17); back.rotation.x = -0.2;
-        g.add(hub, stand, back);
-        g.position.set(3.7, fy, -2.4); g.rotation.y = -0.35;
+        g.add(hand(0.42, 0.05, 0x46b6b4, 0.12, 0.045), hand(0.3, 0.055, 0xc8164b, 2.1, 0.07));
+        const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.04, 20), mat(0xf2a33a, 0.4)); hub.rotation.x = Math.PI / 2; hub.position.z = 0.09;
+        g.add(hub);
+        const blue = mat(0x1d3db5, 0.35, 0.3);
+        const foot = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.015, 0.5), blue); foot.position.set(0.05, -0.62 + 0.0075, -0.05);
+        const back = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.55, 0.015), blue); back.position.set(0, -0.36, -0.2); back.rotation.x = -0.18;
+        g.add(foot, back);
+        g.position.set(3.75, fy + 0.62, -2.35); g.rotation.y = -0.4;
         scene.add(shade(g));
       }
-      // — a ball vase with pencils, a notes cube, and a closed laptop
+      // — a Vitra toolbox in orange with pencils, a ball vase, a notes cube, a mug, a framed print, a closed laptop
       {
-        const vase = new THREE.Mesh(new THREE.SphereGeometry(0.42, 48, 32), mat(0xb9ab9b, 0.9));
-        vase.position.set(-5.4, fy + 0.4, -1.6);
-        scene.add(shade(vase));
-        [[0.05, 0.12, 0xf4f4f2], [-0.08, -0.05, 0x2b2b2b], [0.1, -0.1, 0x3a3a3a]].forEach(([dx, tilt, col]) => {
-          const p = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 1.2, 8), mat(col, 0.5));
-          p.position.set(-5.4 + dx, fy + 1.0, -1.6); p.rotation.z = tilt;
-          scene.add(shade(p));
+        const orange = mat(0xe8541f, 0.42);
+        const box = new THREE.Group();
+        const L = 1.3, Wd = 0.55, Hh = 0.36, t = 0.02;
+        const part = (w: number, h: number, d: number, x: number, y: number, z: number) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), orange); m.position.set(x, y, z); box.add(m); };
+        part(L, t, Wd, 0, t / 2, 0); part(L, Hh, t, 0, Hh / 2, Wd / 2); part(L, Hh, t, 0, Hh / 2, -Wd / 2); part(t, Hh, Wd, L / 2, Hh / 2, 0); part(t, Hh, Wd, -L / 2, Hh / 2, 0);
+        // the middle wall with its handle hole
+        const mid = new THREE.Shape(); mid.moveTo(-L / 2, 0); mid.lineTo(L / 2, 0); mid.lineTo(L / 2, Hh); mid.lineTo(0.28, Hh); mid.quadraticCurveTo(0.22, Hh + 0.2, 0, Hh + 0.2); mid.quadraticCurveTo(-0.22, Hh + 0.2, -0.28, Hh); mid.lineTo(-L / 2, Hh); mid.lineTo(-L / 2, 0);
+        const hole = new THREE.Path(); hole.moveTo(-0.16, Hh + 0.02); hole.lineTo(0.16, Hh + 0.02); hole.quadraticCurveTo(0.18, Hh + 0.13, 0, Hh + 0.13); hole.quadraticCurveTo(-0.18, Hh + 0.13, -0.16, Hh + 0.02);
+        mid.holes.push(hole);
+        const midG = new THREE.ExtrudeGeometry(mid, { depth: t, bevelEnabled: false, curveSegments: 16 }); midG.translate(0, 0, -t / 2);
+        box.add(new THREE.Mesh(midG, orange));
+        [[-0.45, 0.12, 0x1a1a1a, 0.1], [-0.38, 0.08, 0xf2f2f0, -0.08], [-0.3, 0.14, 0x333333, 0.15], [-0.42, -0.12, 0x2b2b2b, -0.05]].forEach(([x, z, c, tl]) => {
+          box.add(rod(V3(x, 0.02, z), V3(x + tl, 0.62, z), 0.014, mat(c, 0.5)));
         });
+        const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.42, 20), mat(0xf4f4f2, 0.4)); bottle.position.set(0.4, 0.21, -0.12); box.add(bottle);
+        box.position.set(-3.1, fy, -2.85); box.rotation.y = 0.18;
+        scene.add(shade(box));
+
+        const vase = new THREE.Mesh(new THREE.SphereGeometry(0.42, 48, 32), mat(0xbaad9d, 0.92));
+        vase.position.set(-5.3, fy + 0.4, -1.7);
+        scene.add(shade(vase));
+        [[0.05, 0.12, 0xf4f4f2], [-0.08, -0.05, 0x1f1f1f], [0.1, -0.1, 0x3a3a3a]].forEach(([dx, tl, c]) => {
+          scene.add(shade(rod(V3(-5.3 + dx, fy + 0.5, -1.7), V3(-5.3 + dx + tl, fy + 1.45, -1.7), 0.018, mat(c, 0.5))));
+          const tip = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.08, 12), mat(0xd9b98a, 0.7));
+          tip.position.set(-5.3 + dx + tl * 1.04, fy + 1.49, -1.7); tip.rotation.z = -Math.atan2(tl, 0.95);
+          scene.add(tip);
+        });
+
         const cube = new THREE.Group();
-        const box = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.42, 0.6), mat(0x5d5f63, 0.6));
-        box.position.y = 0.21;
-        const paper = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.06, 0.54), mat(0xfbfbfb, 0.9));
-        paper.position.y = 0.44;
-        cube.add(box, paper);
-        cube.position.set(-4.6, fy, -2.9); cube.rotation.y = 0.25;
+        const label = canvasTex(512, 300, g => {
+          g.fillStyle = '#5e6064'; g.fillRect(0, 0, 512, 300);
+          g.fillStyle = '#f2f2f2'; g.font = 'italic 64px "Snell Roundhand", "Brush Script MT", cursive'; g.textAlign = 'center'; g.fillText('Posting Notes', 256, 170);
+        });
+        const grey = mat(0x5e6064, 0.6);
+        const cb = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.42, 0.62), [grey, grey, grey, grey, new THREE.MeshStandardMaterial({ map: label, roughness: 0.6 }), grey]);
+        cb.position.y = 0.21;
+        const paper = new THREE.Mesh(new THREE.BoxGeometry(0.69, 0.07, 0.56), mat(0xfbfbfb, 0.9)); paper.position.y = 0.45;
+        cube.add(cb, paper);
+        cube.position.set(-4.75, fy, -2.25); cube.rotation.y = 0.3;
         scene.add(shade(cube));
-        const laptop = new THREE.Mesh(new THREE.RoundedBoxGeometry(2.6, 0.1, 1.8, 4, 0.04), mat(0xc5c7ca, 0.32, 0.85));
+
+        const mug = new THREE.Group();
+        const porcelain = mat(0xf6f6f4, 0.35);
+        mug.add(new THREE.Mesh(new THREE.LatheGeometry([V2(0, 0), V2(0.17, 0), V2(0.18, 0.02), V2(0.18, 0.4), V2(0.165, 0.4), V2(0.165, 0.05), V2(0, 0.05)], 48), porcelain));
+        const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.2, 16), porcelain); stick.rotation.z = Math.PI / 2; stick.position.set(0.27, 0.22, 0);
+        const ballH = new THREE.Mesh(new THREE.SphereGeometry(0.085, 24, 16), porcelain); ballH.position.set(0.39, 0.22, 0);
+        mug.add(stick, ballH);
+        mug.position.set(3.3, fy, -0.4); mug.rotation.y = 0.5;
+        scene.add(shade(mug));
+
+        const frame = new THREE.Group();
+        frame.add(new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.1, 0.04), mat(0x111111, 0.5)));
+        const print = new THREE.Mesh(new THREE.PlaneGeometry(1.42, 1.02), new THREE.MeshStandardMaterial({ roughness: 0.9, map: canvasTex(512, 368, g => {
+          g.fillStyle = '#f7f6f3'; g.fillRect(0, 0, 512, 368);
+          g.strokeStyle = '#3a3a3a'; g.lineWidth = 2;
+          g.beginPath(); g.ellipse(330, 190, 46, 14, 0, 0, Math.PI * 2); g.stroke();
+          g.beginPath(); g.moveTo(330, 190); g.lineTo(330, 90); g.stroke();
+          g.beginPath(); g.moveTo(300, 140); g.lineTo(360, 140); g.lineTo(350, 90); g.lineTo(310, 90); g.closePath(); g.stroke();
+          g.fillStyle = '#555'; g.font = '13px Helvetica, Arial'; g.fillText('Ode — a study of light', 60, 250); g.fillText('2026', 60, 270);
+        }) }));
+        print.position.z = 0.021;
+        frame.add(print);
+        frame.position.set(-3.3, fy + 3.1, Z_BACK + 0.03);
+        scene.add(shade(frame));
+
+        const laptop = new THREE.Mesh(new THREE.RoundedBoxGeometry(2.6, 0.1, 1.8, 4, 0.04), mat(0xc8cacd, 0.3, 0.85));
         laptop.position.set(-4.6, fy + 0.05, 1.1); laptop.rotation.y = 0.12;
         scene.add(shade(laptop));
       }
@@ -493,6 +585,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
         new THREE.LineBasicMaterial({ color: 0x111111, transparent: true, opacity: 0.7 }),
       );
+      cord.visible = false;   // the ball is still tied on, but the string isn't shown
       scene.add(cord);
       const LEN = 2.1;
 

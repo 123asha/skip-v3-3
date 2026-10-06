@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { sound } from '../sound/Sound';
 import PillButton from './PillButton';
+import svgPaths from '../../imports/Index/svg-3bjnx36a2y';
 
 // 404 alternative (localhost only): a minimalist table-tennis paddle in real 3D (three.js)
 // and a ball in a bare room. The racket follows the pointer on its own plane,
@@ -23,6 +24,8 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setClearColor(BG);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       el.appendChild(renderer.domElement);
       renderer.domElement.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;cursor:none';
 
@@ -40,7 +43,13 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
 
       scene.add(new THREE.AmbientLight(0xffffff, 1.15));
       const sun = new THREE.DirectionalLight(0xffffff, 1.5);
-      sun.position.set(-2.5, 4, 5);
+      sun.position.set(-0.8, 6, 1.2);
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(2048, 2048);
+      sun.shadow.camera.left = -X - 1; sun.shadow.camera.right = X + 1;
+      sun.shadow.camera.top = 5; sun.shadow.camera.bottom = -5;
+      sun.shadow.camera.near = 1; sun.shadow.camera.far = 14;
+      sun.shadow.radius = 5; sun.shadow.bias = -0.0004;
       scene.add(sun);
 
       // The room: only its edges, very faint
@@ -58,19 +67,40 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
       );
       floor.rotation.x = -Math.PI / 2; floor.position.set(0, -Y, (Z_RACKET + Z_BACK) / 2);
       scene.add(floor);
+      const floorShadow = new THREE.Mesh(
+        new THREE.PlaneGeometry(X * 2, Z_RACKET - Z_BACK),
+        new THREE.ShadowMaterial({ opacity: 0.22 }),
+      );
+      floorShadow.rotation.x = -Math.PI / 2; floorShadow.position.set(0, -Y + 0.002, (Z_RACKET + Z_BACK) / 2);
+      floorShadow.receiveShadow = true;
+      scene.add(floorShadow);
 
       // The ball: matte white
+      const tex = (() => {
+        const c = document.createElement('canvas'); c.width = 1024; c.height = 512;
+        const g = c.getContext('2d')!;
+        g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
+        g.fillStyle = '#111111';
+        // The logo's own paths (viewBox 52.53 × 32), one on each side of the ball
+        const paths = svgPaths.pb7e9300.match(/M[^M]+/g)!;
+        const w = 150, sc = w / 52.5283;
+        for (const cx of [256, 768]) {
+          g.save(); g.translate(cx - w / 2, 256 - 16 * sc); g.scale(sc, sc);
+          g.fill(new Path2D(paths[1]));
+          g.fill(new Path2D(paths[2]));
+          g.fill(new Path2D(paths[4]));
+          g.fill(new Path2D(paths[0] + paths[3]), 'evenodd');
+          g.restore();
+        }
+        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+        return t;
+      })();
       const ball = new THREE.Mesh(
-        new THREE.SphereGeometry(BALL_R, 48, 32),
-        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, metalness: 0 }),
+        new THREE.SphereGeometry(BALL_R, 64, 48),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, map: tex, roughness: 0.95, metalness: 0 }),
       );
+      ball.castShadow = true;
       scene.add(ball);
-      const shadow = new THREE.Mesh(
-        new THREE.CircleGeometry(BALL_R * 1.2, 32),
-        new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.16 }),
-      );
-      shadow.rotation.x = -Math.PI / 2;
-      scene.add(shadow);
 
       // A table-tennis paddle: a solid round blade — black rubber on this side,
       // pale on the other, a thin wooden rim — and a short flared handle
@@ -92,6 +122,7 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
       const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.125, 0.125, 0.04, 32), new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.8 }));
       cap.position.set(0, -RACKET_R - 0.58, 0); cap.scale.z = 0.5;
       racket.add(rim, front, back, handle, cap);
+      racket.traverse(o => { (o as import('three').Mesh).castShadow = true; });
       scene.add(racket);
       // The string: from the middle of the paddle's face to the ball
       const cord = new THREE.Line(
@@ -170,8 +201,6 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
         ball.rotation.x += b.vz * 2 + b.vy * 0.3; ball.rotation.z -= b.vx * 2;
         const gp = cord.geometry.attributes.position as import('three').BufferAttribute;
         gp.setXYZ(0, st.x, PY + st.lift + 0.04, st.z); gp.setXYZ(1, b.x, b.y, b.z); gp.needsUpdate = true;
-        shadow.position.set(b.x, -Y + 0.01, b.z);
-        shadow.scale.setScalar(Math.max(0.5, 1.3 - (b.y + Y) * 0.25));
 
         renderer.render(scene, camera);
         raf = requestAnimationFrame(tick);

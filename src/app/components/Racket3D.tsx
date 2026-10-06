@@ -65,11 +65,11 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         g.fillStyle = '#000'; g.fillRect(0, 0, 512, 512);
         g.filter = 'blur(3px)';
         g.fillStyle = '#fff';
-        for (let y = 0; y < 512; y += 26) g.fillRect(0, y + 4, 512, 13);
+        for (let y = 0; y < 512; y += 26) g.fillRect(0, y + 2, 512, 22);   // open blinds: wide bands of sun, thin slat shadows
         const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
         return t;
       })();
-      const stripes = new THREE.SpotLight(0xfff0d8, 9, 0, 0.42, 0.35, 0);
+      const stripes = new THREE.SpotLight(0xfff0d8, 11, 0, 0.42, 0.35, 0);
       stripes.position.set(7.5, 5.5, -6.5);
       stripes.target.position.set(-1.2, -Y, 0.6);
       stripes.map = blindsCookie;
@@ -115,7 +115,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         for (let y = wy0 + 0.04; y < wy1; y += 0.105) {
           const sl = new THREE.Mesh(slatGeo, slatMat);
           sl.position.set((wx0 + wx1) / 2, y, Z_BACK + 0.05);
-          sl.rotation.x = -0.35;
+          sl.rotation.x = -1.35;   // open: the slats turned almost edge-on
           sl.receiveShadow = true;
           scene.add(sl);
         }
@@ -202,36 +202,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         g.position.set(2.15, fy, -3.0);
         scene.add(shade(g));
       }
-      // — a white desk clock: a deep rounded dish, raised rounded ticks, teal and crimson hands, on a bent blue stand
-      {
-        const g = new THREE.Group();
-        const white = mat(0xf7f6f3, 0.6);
-        const dish = new THREE.Mesh(new THREE.LatheGeometry([V2(0, -0.12), V2(0.5, -0.12), V2(0.57, -0.1), V2(0.62, -0.03), V2(0.62, 0.05), V2(0.59, 0.12), V2(0.54, 0.15), V2(0.5, 0.14), V2(0.47, 0.02), V2(0, 0)], 96), white);
-        dish.rotation.x = Math.PI / 2;
-        g.add(dish);
-        for (let i = 0; i < 12; i++) {
-          const a = (i / 12) * Math.PI * 2;
-          const t = new THREE.Mesh(new THREE.CapsuleGeometry(0.022, 0.07, 6, 12), mat(0xefeeea, 0.65));
-          t.rotation.z = -a; t.position.set(Math.sin(a) * 0.38, Math.cos(a) * 0.38, 0.018);
-          g.add(t);
-        }
-        const hand = (len: number, w: number, color: number, ang: number, z: number) => {
-          const h = new THREE.Mesh(new THREE.RoundedBoxGeometry(w, len, 0.02, 2, w * 0.45), mat(color, 0.45));
-          h.geometry.translate(0, len / 2 - 0.05, 0);
-          h.position.z = z; h.rotation.z = -ang;
-          return h;
-        };
-        g.add(hand(0.42, 0.05, 0x46b6b4, 0.12, 0.045), hand(0.3, 0.055, 0xc8164b, 2.1, 0.07));
-        const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.04, 20), mat(0xf2a33a, 0.4)); hub.rotation.x = Math.PI / 2; hub.position.z = 0.09;
-        g.add(hub);
-        const blue = mat(0x1d3db5, 0.35, 0.3);
-        const foot = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.015, 0.5), blue); foot.position.set(0.05, -0.62 + 0.0075, -0.05);
-        const back = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.55, 0.015), blue); back.position.set(0, -0.36, -0.2); back.rotation.x = -0.18;
-        g.add(foot, back);
-        g.position.set(3.75, fy + 0.62, -2.35); g.rotation.y = -0.4;
-        scene.add(shade(g));
-      }
-      // — a Vitra toolbox in orange with pencils, a ball vase, a notes cube, a mug, a framed print, a closed laptop
+      // — a Vitra toolbox in orange with pencils, a ball vase, a notes cube, a mug and a closed laptop
       {
         const orange = mat(0xe8541f, 0.42);
         const box = new THREE.Group();
@@ -283,20 +254,6 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         mug.position.set(3.3, fy, -0.4); mug.rotation.y = 0.5;
         scene.add(shade(mug));
 
-        const frame = new THREE.Group();
-        frame.add(new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.1, 0.04), mat(0x111111, 0.5)));
-        const print = new THREE.Mesh(new THREE.PlaneGeometry(1.42, 1.02), new THREE.MeshStandardMaterial({ roughness: 0.9, map: canvasTex(512, 368, g => {
-          g.fillStyle = '#f7f6f3'; g.fillRect(0, 0, 512, 368);
-          g.strokeStyle = '#3a3a3a'; g.lineWidth = 2;
-          g.beginPath(); g.ellipse(330, 190, 46, 14, 0, 0, Math.PI * 2); g.stroke();
-          g.beginPath(); g.moveTo(330, 190); g.lineTo(330, 90); g.stroke();
-          g.beginPath(); g.moveTo(300, 140); g.lineTo(360, 140); g.lineTo(350, 90); g.lineTo(310, 90); g.closePath(); g.stroke();
-          g.fillStyle = '#555'; g.font = '13px Helvetica, Arial'; g.fillText('Ode — a study of light', 60, 250); g.fillText('2026', 60, 270);
-        }) }));
-        print.position.z = 0.021;
-        frame.add(print);
-        frame.position.set(-3.3, fy + 3.1, Z_BACK + 0.03);
-        scene.add(shade(frame));
 
         const laptop = new THREE.Mesh(new THREE.RoundedBoxGeometry(2.6, 0.1, 1.8, 4, 0.04), mat(0xc8cacd, 0.3, 0.85));
         laptop.position.set(-4.6, fy + 0.05, 1.1); laptop.rotation.y = 0.12;

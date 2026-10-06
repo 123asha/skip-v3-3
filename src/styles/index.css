@@ -2,7 +2,8 @@
 
 @font-face {
   font-family: 'CoFo Sans VF';
-  src: url('/fonts/cofosansvf-Trial.ttf') format('truetype');
+  src: url('/fonts/cofosansvf-Trial.woff2') format('woff2'),
+       url('/fonts/cofosansvf-Trial.ttf') format('truetype');
   font-weight: 1 999;
   font-style: normal;
   font-display: swap;

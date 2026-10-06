@@ -1,6 +1,5 @@
 import { asset } from '../utils/asset';
 import { ARTICLES } from './insightArticles';
-import { ARTICLES_EN } from './insightArticles.en';
 
 // The English site (/en/…) reads the articles in English. Worked out here
 // rather than taken from i18n, which needs a browser — the prerender runs
@@ -249,8 +248,16 @@ for (const i of INSIGHTS) {
   // (the article's own first picture isn't used as the cover — cards without
   // a cover set here show the logo placeholder)
   if (a) { i.blocks = a.blocks; }
-  const en = IS_EN && i.slug ? ARTICLES_EN[i.slug] : undefined;
-  if (en) { i.blocks = en.blocks; i.desc = en.title; i.body = en.body; }
+}
+
+/** The English site: the carried-over articles in English (called by i18n's loadLang, before the first render) */
+export function applyEnglishArticles(en: Record<string, { title: string; body: [string, string]; blocks: Block[] }>) {
+  if (!IS_EN) return;
+  // (the list below is made of copies, so it gets the English too)
+  for (const i of [...INSIGHTS, ...INSIGHTS_LIST]) {
+    const e = i.slug ? en[i.slug] : undefined;
+    if (e) { i.blocks = e.blocks; i.desc = e.title; i.body = e.body; }
+  }
 }
 
 const SORTED = [...INSIGHTS]

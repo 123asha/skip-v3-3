@@ -18,8 +18,17 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
   useEffect(() => {
     let stop = false;
     let cleanup = () => {};
+    let io: IntersectionObserver | null = null;
     (async () => {
-      const THREE = await import('three');
+      // three.js comes only when the clients are about a screen and a half away
+      await new Promise<void>(res => {
+        const a = anchor.current;
+        if (!a || !('IntersectionObserver' in window)) return res();
+        io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { io?.disconnect(); res(); } }, { rootMargin: '150% 0px' });
+        io.observe(a);
+      });
+      if (stop) return;
+      const THREE = await import('../utils/three-lite');
       if (stop || !host.current) return;
       const el = host.current;
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -238,7 +247,7 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
         renderer.domElement.remove();
       };
     })();
-    return () => { stop = true; cleanup(); };
+    return () => { stop = true; io?.disconnect(); cleanup(); };
   }, [anchor]);
 
   // At body level: inside the page's transformed layers `fixed` would not mean the screen

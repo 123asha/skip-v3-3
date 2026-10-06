@@ -1,4 +1,3 @@
-import { EN } from './i18n.en';
 
 /**
  * Two languages, one set of components. The English site lives under
@@ -41,11 +40,21 @@ const norm = (s: string) => s.replace(/&nbsp;/g, ' ').replace(/[  ]/g, ' ').r
 
 // Dictionary, keyed by normalised Russian. Multi-paragraph entries are also
 // split into their paragraphs, since pages often show them one <p> each.
+// Filled by loadLang() — the English copy is its own chunk, fetched only on the English site.
 const DICT = new Map<string, string>();
-for (const [ru, en] of Object.entries(EN)) {
-  DICT.set(norm(ru), en);
-  const rp = ru.split(/\n\s*\n/), ep = en.split(/\n\s*\n/);
-  if (rp.length > 1 && rp.length === ep.length) rp.forEach((p, i) => DICT.set(norm(p), ep[i]));
+
+/** English site: fetch the dictionary and the English articles before the first render */
+export async function loadLang() {
+  if (LANG !== 'en') return;
+  const [{ EN }, { ARTICLES_EN }, insights] = await Promise.all([
+    import('./i18n.en'), import('./content/insightArticles.en'), import('./content/insights'),
+  ]);
+  for (const [ru, en] of Object.entries(EN)) {
+    DICT.set(norm(ru), en);
+    const rp = ru.split(/\n\s*\n/), ep = en.split(/\n\s*\n/);
+    if (rp.length > 1 && rp.length === ep.length) rp.forEach((p, i) => DICT.set(norm(p), ep[i]));
+  }
+  insights.applyEnglishArticles(ARTICLES_EN);
 }
 
 export function t(text: string): string;

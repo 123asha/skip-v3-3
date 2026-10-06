@@ -1,0 +1,3 @@
+// Only the parts of three.js the site uses (the 3D ball and the 404 racket).
+// Imported by name so the bundle keeps just these instead of all of three.
+export { AmbientLight, BoxGeometry, BufferGeometry, CanvasTexture, DirectionalLight, EdgesGeometry, ExtrudeGeometry, Group, Line, LineBasicMaterial, LineDashedMaterial, LineSegments, Mesh, MeshBasicMaterial, MeshStandardMaterial, NoColorSpace, OrthographicCamera, PCFSoftShadowMap, PerspectiveCamera, Plane, PlaneGeometry, Raycaster, RepeatWrapping, SRGBColorSpace, Scene, ShaderMaterial, ShadowMaterial, Shape, SphereGeometry, Vector2, Vector3, WebGLRenderer } from 'three';

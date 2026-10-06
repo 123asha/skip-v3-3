@@ -20,7 +20,7 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
     let stop = false;
     let cleanup = () => {};
     (async () => {
-      const THREE = await import('three');
+      const THREE = await import('../utils/three-lite');
       if (stop || !host.current) return;
       const el = host.current;
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });

@@ -1,4 +1,5 @@
-import { useRef, useEffect, useLayoutEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useLayoutEffect, useState, useCallback, Suspense } from 'react';
+import { loadable, preloadPages } from './utils/loadable';
 import { createPortal } from 'react-dom';
 import { useMobile } from './hooks/useMobile';
 import { gsap } from 'gsap';
@@ -12,12 +13,12 @@ import HeroBranches from './components/HeroBranches';
 import ProjectGallery from './components/ProjectGallery';
 import Footer from './components/Footer';
 import CasesPage from './components/CasesPage';
-import InstrumentsPage from './components/InstrumentsPage';
-import ExpertizaPage from './components/ExpertizaPage';
-import ExpertizaPage2 from './components/ExpertizaPage2';
+const InstrumentsPage = loadable(() => import('./components/InstrumentsPage'));
+const ExpertizaPage = loadable(() => import('./components/ExpertizaPage'));
+const ExpertizaPage2 = loadable(() => import('./components/ExpertizaPage2'));
 import MindMapBlock from './components/MindMapBlock';
-import PolicyPage from './components/PolicyPage';
-import Index2Page from './components/Index2Page';
+const PolicyPage = loadable(() => import('./components/PolicyPage'));
+const Index2Page = loadable(() => import('./components/Index2Page'));
 import CaseTemplatePage, { SENIORS_BAR, BINAROOM, AE_PLUGIN, AE_PLATFORM, AE_LANDING } from './components/CaseTemplatePage';
 
 // Case pages that run on the case template, by address
@@ -27,10 +28,10 @@ const CASE_PAGES: Record<string, any> = {
   '/ae-platform': AE_PLATFORM,
   '/aliexpress-landing': AE_LANDING,
 };
-import GuidePage from './components/GuidePage';
+const GuidePage = loadable(() => import('./components/GuidePage'));
 import MoscowTime from './components/MoscowTime';
-import AboutPage from './components/AboutPage';
-import Racket3D from './components/Racket3D';
+const AboutPage = loadable(() => import('./components/AboutPage'));
+const Racket3D = loadable(() => import('./components/Racket3D'));
 import ClientBall from './components/ClientBall';
 import BunnyFollower from './components/BunnyFollower';
 import ContactForm from './components/ContactForm';
@@ -38,9 +39,9 @@ import { ToolsSection } from './components/ToolsSection';
 import { MediaSection } from './components/MediaSection';
 import { ExpertiseSection2 } from './components/ExpertiseSection2';
 import { CircleArrow } from './components/CircleArrow';
-import LabPage from './components/LabPage';
+const LabPage = loadable(() => import('./components/LabPage'));
 import CookieNotice from './components/CookieNotice';
-import InsightPage from './components/InsightPage';
+const InsightPage = loadable(() => import('./components/InsightPage'));
 import { insightBySlug } from './content/insights';
 import { pageMetaFor } from './content/seo';
 import { applyPageMeta } from './utils/pageMeta';
@@ -58,8 +59,8 @@ function sectionTitleFor(path: string): string | null {
   if (p === '/about' || p === '/about-skip-design') return 'Skip Design';
   return null;
 }
-import DesignSystemPage from './components/DesignSystemPage';
-import ServiceDetailPage from './components/ServiceDetailPage';
+const DesignSystemPage = loadable(() => import('./components/DesignSystemPage'));
+const ServiceDetailPage = loadable(() => import('./components/ServiceDetailPage'));
 import LinkFlip from './components/LinkFlip';
 import PeopleVideoSlot, { type VideoConfig } from './components/PeopleVideoSlot';
 import SoundIcon from './sound/SoundIcon';
@@ -395,7 +396,7 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
 }
 
 export default function App() {
-  return <AppInner />;
+  return <Suspense fallback={null}><AppInner /></Suspense>;
 }
 
 // Strip the Vite base path (/skip-design) from the browser pathname so
@@ -464,13 +465,23 @@ function AppInner() {
   // Search / share tags for the page on screen (content/seo.ts)
   useEffect(() => { { const m = pageMetaFor(pathname); applyPageMeta({ ...m, title: t(m.title), description: t(m.description) }); } }, [pathname]);
 
+  // Pages live in their own chunks: a switch waits for the code (already here
+  // after the background fetch, so normally no wait at all)
   const navigate = useCallback((path: string) => {
     window.history.pushState({}, '', _BASE + LANG_PREFIX + path);
-    setPathname(path);
+    preloadPages().then(() => setPathname(path));
+  }, []);
+
+  // Once the first screen is up, the other pages' code comes in the background
+  useEffect(() => {
+    const go = () => { preloadPages(); };
+    const ric = (window as any).requestIdleCallback as ((cb: () => void, o?: object) => number) | undefined;
+    const id = ric ? ric(go, { timeout: 4000 }) : window.setTimeout(go, 2500);
+    return () => { if (!ric) clearTimeout(id); };
   }, []);
 
   useEffect(() => {
-    const handlePop = () => setPathname(stripBase(window.location.pathname));
+    const handlePop = () => { const p = stripBase(window.location.pathname); preloadPages().then(() => setPathname(p)); };
     window.addEventListener('popstate', handlePop);
     return () => window.removeEventListener('popstate', handlePop);
   }, []);

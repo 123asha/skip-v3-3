@@ -1,7 +1,8 @@
 import { createRoot } from 'react-dom/client';
 import App from './app/App.tsx';
 import './styles/index.css';
-import { installTranslator } from './app/i18n';
+import { installTranslator, loadLang } from './app/i18n';
+import { preloadPages } from './app/utils/loadable';
 
 // Desktop scaling model:
 //  ≥980px  — no zoom. Type stays at its fixed size and only the grid columns
@@ -39,6 +40,12 @@ if ('vibrate' in navigator && window.matchMedia('(pointer: coarse)').matches) {
   }, { capture: true, passive: true });
 }
 
-installTranslator();
-createRoot(document.getElementById('root')!).render(<App />);
+// The home page is in the main bundle; any other page first fetches its own
+// chunk, so the first paint is already the page and not a blank frame
+const here = window.location.pathname.slice(import.meta.env.BASE_URL.length - 1).replace(/^\/en(?=\/|$)/, '');
+const start = here === '' || here === '/' || sessionStorage.getItem('ghpages_redirect') ? Promise.resolve() : preloadPages();
+Promise.all([start, loadLang()]).then(() => {
+  installTranslator();
+  createRoot(document.getElementById('root')!).render(<App />);
+});
   

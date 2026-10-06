@@ -237,7 +237,8 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       });
       // The top edge bounces it back; a ball that drains off the bottom starts over from the top
       if (ball.y < R) { ball.y = R; ball.vy = Math.abs(ball.vy) * 0.6; }
-      if (phone) { if (ball.y > H - R) { ball.y = H - R; ball.vy = -Math.abs(ball.vy) * 0.6; } }
+      // The form's ball is never re-dropped: like on a phone it bounces off the bottom edge and keeps playing
+      if (phone || form) { if (ball.y > H - R) { ball.y = H - R; ball.vy = -Math.abs(ball.vy) * 0.7 - 1; ball.vx *= 0.95; } }
       else if (ball.y - R > H) serve();
       spin();
     };

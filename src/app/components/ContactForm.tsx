@@ -58,8 +58,8 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
   useEffect(() => {
     const onScroll = () => {
       const el = cardRef.current;
-      // As soon as the form block is half way onto the screen
-      if (el) setAtBottom(el.getBoundingClientRect().top <= window.innerHeight / 2);
+      // A little later: once the form block's top has climbed to the upper third of the screen
+      if (el) setAtBottom(el.getBoundingClientRect().top <= window.innerHeight * 0.3);
     };
     onScroll();
     // Capture: inner pages scroll in their own container, not the window

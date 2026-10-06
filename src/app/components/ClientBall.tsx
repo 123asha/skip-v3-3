@@ -95,6 +95,12 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
           vis = true;
         }
         if (!fallen && vis && yScreen < H * 0.3) { fallen = true; vy = 0; fx = x; fy = yScreen; fr = r; window.dispatchEvent(new CustomEvent('skip-ball-fallen')); }
+        // Scrolled back up to the ticker: the ball is there again, ready to drop once more
+        if (fallen && a && yScreen > H * 0.5) {
+          fallen = false;
+          if (handed) { handed = false; }
+          window.dispatchEvent(new CustomEvent('skip-ball-return'));
+        }
         if (fallen) {
           vy = Math.min(vy + 0.9, 26); fy += vy; x = fx; yScreen = fy; r = fr;
           vis = fy - fr <= H;

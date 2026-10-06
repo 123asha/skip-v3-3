@@ -32,6 +32,7 @@ import MoscowTime from './components/MoscowTime';
 import { Pinball } from './components/Pinball';
 import AboutPage from './components/AboutPage';
 import Racket3D from './components/Racket3D';
+import ClientBall from './components/ClientBall';
 import BunnyFollower from './components/BunnyFollower';
 import ContactForm from './components/ContactForm';
 import { ToolsSection } from './components/ToolsSection';
@@ -584,6 +585,7 @@ function AppInner() {
      a slide-up transition (PeopleVideoSlot handles the animation). */
   const isMobile = useMobile();
   const [hoveredClient, setHoveredClient] = useState<string | null>(null);
+  const clientBallAnchor = useRef<HTMLDivElement>(null);
   // The circle keeps the last picture while it fades out
   const lastClientRef = useRef<PeopleClient | null>(null);
   if (hoveredClient && hoveredClient in CLIENT_PICTURES) lastClientRef.current = hoveredClient as PeopleClient;
@@ -1658,8 +1660,8 @@ function AppInner() {
               cursor: 'grab',
               userSelect: 'none',
               touchAction: 'pan-y',
-              // 2 of the 5 grid columns wide, centred (the flex parent centres it).
-              width: isMobile ? '100%' : 'calc(2 / 5 * (100% - 4 * var(--gap)) + 1 * var(--gap))',
+              // 2 of the 5 grid columns wide, plus 20%, centred (the flex parent centres it).
+              width: isMobile ? '100%' : 'calc(1.2 * (2 / 5 * (100% - 4 * var(--gap)) + 1 * var(--gap)))',
               // Taller than one line-height so descenders (g, p, у) aren't
               // clipped by the overflow that hides the off-screen names.
               height: 'calc(var(--heading-size) * 1.4)',
@@ -1717,36 +1719,17 @@ function AppInner() {
               under the names. Zero-height anchor, so it never moves the page. */}
           {!isMobile && (
             <div style={{ position: 'relative', width: '100%', height: 0 }}>
+              {/* The ping-pong ball's place: a box 70% of a grid column wide under the names */}
               <div
+                ref={clientBallAnchor}
                 aria-hidden="true"
                 style={{
-                  position: 'absolute', top: 0, left: '50%',
-                  // 70% of one grid column
+                  position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
                   width: 'calc((100vw - 2 * var(--pad) - 4 * var(--gap)) / 5 * 0.7)',
-                  aspectRatio: '1 / 1',
-                  borderRadius: '50%',
-                  overflow: 'hidden',
-                  background: 'var(--c-surface)',
-                  pointerEvents: 'none',
-                  zIndex: 3,
-                  opacity: hoveredClient ? 1 : 0,
-                  transform: `translateX(-50%) scale(${hoveredClient ? 1 : 0.9})`,
-                  transition: 'opacity 0.3s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
+                  aspectRatio: '1 / 1', pointerEvents: 'none',
                 }}
-              >
-                {PEOPLE_CLIENTS.map(name => (
-                  <img
-                    key={name}
-                    src={asset(CLIENT_PICTURES[name])}
-                    alt=""
-                    style={{
-                      position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
-                      opacity: clientPicture === name ? 1 : 0,
-                      transition: 'opacity 0.25s ease',
-                    }}
-                  />
-                ))}
-              </div>
+              />
+              <ClientBall anchor={clientBallAnchor} hovered={hoveredClient} />
             </div>
           )}
         </div>

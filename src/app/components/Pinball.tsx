@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { sound } from '../sound/Sound';
+import svgPaths from '../../imports/Index/svg-3bjnx36a2y';
 
 // 404: a bare pinball table — two flippers, three round bumpers, the hero's
 // white ball. ← → (or a tap / click on either half) work the flippers.
@@ -9,6 +10,14 @@ const LINE = 'rgba(0,0,0,0.18)';
 type Seg = { ax: number; ay: number; bx: number; by: number };
 
 // The sticker's critter, pixel by pixel (W white, G grey, D dark)
+const LOGO_PATHS = svgPaths.pb7e9300.match(/M[^M]+/g)!;
+const LOGO: { path: Path2D; rule: CanvasFillRule }[] = [
+  { path: new Path2D(LOGO_PATHS[1]), rule: 'nonzero' },
+  { path: new Path2D(LOGO_PATHS[2]), rule: 'nonzero' },
+  { path: new Path2D(LOGO_PATHS[4]), rule: 'nonzero' },
+  { path: new Path2D(LOGO_PATHS[0] + LOGO_PATHS[3]), rule: 'evenodd' },
+];
+
 const CRITTER = [
   '....W.....W....',
   '....WG....WG...',
@@ -41,10 +50,19 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
     let flip: { px: number; py: number; len: number; dir: 1 | -1; a: number; up: boolean }[] = [];
     // Sounds only while the table is on screen
     let visible = true;
-    const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0.2 });
+    const io = new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      // Only once the ticker's ball has dropped out (or there is none: phones)
+      if (form && visible && !active && (homeFallen || !document.querySelector('[data-client-ball]'))) { serve(); active = true; }
+    }, { threshold: 0.2 });
     io.observe(cv);
     const play = (kind: Parameters<typeof sound.play>[0], throttle?: number) => { if (visible && document.visibilityState === 'visible') sound.play(kind, throttle); };
     const ball = { x: 0, y: 0, vx: 0, vy: 0 };
+    // Form variant: there is no ball of its own — the one from the «Нам доверяют»
+    // section falls in (skip-ball-handoff), or, if the page was scrolled past
+    // too fast, a new one is dropped from the top when the table comes into view
+    let active = !form;
+    let homeFallen = false;
     // Phone (form variant): no lines at all — the ball just rolls the way the
     // phone is tilted and bounces off the screen's edges and the text
     const phone = form && window.matchMedia('(max-width: 768px)').matches;
@@ -113,7 +131,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
         { x: W * 0.5, y: H * 0.62, r: br, hit: 0 },
       ];
     };
-    const serve = () => { ball.x = W * (0.3 + Math.random() * 0.4); ball.y = R; ball.vx = (Math.random() - 0.5) * 2; ball.vy = 0; };
+    const serve = () => { ball.x = W * (0.15 + Math.random() * 0.7); ball.y = R; ball.vx = (Math.random() - 0.5) * 6; ball.vy = Math.random() * 2; };
 
     const flipSeg = (f: typeof flip[0]): Seg => ({
       ax: f.px, ay: f.py,
@@ -140,6 +158,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
     };
 
     const step = () => {
+      if (!active) return;
       if (phone) { ball.vx += tiltX; ball.vy += tiltY + 0.03; } else ball.vy += 0.2;
       ball.vx *= 0.999; ball.vy *= 0.999;
       const sp = Math.hypot(ball.vx, ball.vy);
@@ -206,6 +225,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
     };
 
     const draw = () => {
+      const drawBall = active;
       ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
       if (form) ctx.clearRect(0, 0, W, H); else { ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H); }
       const lineCol = form ? (dark ? 'rgba(255,255,255,0.26)' : 'rgba(0,0,0,0.26)') : '#000';
@@ -221,6 +241,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       ctx.strokeStyle = lineCol;
       flip.forEach(f => { const s = flipSeg(f); ctx.beginPath(); ctx.moveTo(s.ax, s.ay); ctx.lineTo(s.bx, s.by); ctx.stroke(); });
       ctx.setLineDash([]);
+      if (!drawBall) return;
       // The hero's ball: bright base, glint up-left, faint rim shade
       const g = ctx.createRadialGradient(ball.x - R * 0.15, ball.y - R * 0.2, 0, ball.x - R * 0.15, ball.y - R * 0.2, R * 1.3);
       if (dark) { if (form) { g.addColorStop(0, '#424242'); g.addColorStop(0.6, '#2e2e2e'); g.addColorStop(1, '#1e1e1e'); } else { g.addColorStop(0, '#3a3a3a'); g.addColorStop(0.6, '#262626'); g.addColorStop(1, '#161616'); } } else if (form) { g.addColorStop(0, '#f5f5f5'); g.addColorStop(0.6, '#ececec'); g.addColorStop(1, '#dadada'); } else { g.addColorStop(0, '#fdfdfd'); g.addColorStop(0.6, '#f4f4f4'); g.addColorStop(1, '#e2e2e2'); }
@@ -228,7 +249,25 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       const sg = ctx.createRadialGradient(ball.x - R * 0.4, ball.y - R * 0.48, 0, ball.x - R * 0.4, ball.y - R * 0.48, R * 0.7);
       sg.addColorStop(0, dark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.85)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
       ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(ball.x, ball.y, R, 0, Math.PI * 2); ctx.fill();
-      // The sticker: the black-and-white critter, no background, laid on the
+      // The sticker: for the form the Skip logo, for the 404 the black-and-white
+      // critter — laid on the ball's surface, turning with it
+      if (form) {
+        const logoW = 1.0, k = logoW / 52.5283;
+        for (const side of [1, -1]) {
+          const nz = side * M[8];
+          if (nz < 0.08) continue;
+          ctx.save();
+          ctx.globalAlpha = Math.min(1, (nz - 0.08) * 4);
+          ctx.translate(ball.x, ball.y);
+          ctx.transform(side * M[0] * R, side * M[3] * R, M[1] * R, M[4] * R, 0, 0);
+          ctx.scale(k, k); ctx.translate(-26.264, -16);
+          ctx.fillStyle = dark ? '#f2f2f2' : '#161616';
+          LOGO.forEach(p => ctx.fill(p.path, p.rule));
+          ctx.restore();
+        }
+        ctx.globalAlpha = 1;
+      } else {
+      // (the critter), no background, laid on the
       // ball's surface — it turns with the ball, so it often faces away
       const cols = CRITTER[0].length, rows = CRITTER.length, pp = 1.05 / cols;
       // One on each side of the ball (the second faces the opposite way)
@@ -254,6 +293,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
         ctx.closePath(); ctx.fill();
       }));
       ctx.globalAlpha = 1;
+      }
       }
     };
 
@@ -292,16 +332,31 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
     };
     if (form) host?.addEventListener('pointerdown', hostDown);
     window.addEventListener('pointerup', pu);
+    const onHandoff = (e: Event) => {
+      const d = (e as CustomEvent).detail as { x: number; y: number; vy: number; vx: number };
+      const box = cv.getBoundingClientRect();
+      ball.x = Math.max(R, Math.min(W - R, (d.x - box.left) * (W / box.width)));
+      ball.y = Math.max(R, (d.y - box.top) * (H / box.height));
+      ball.vx = d.vx; ball.vy = Math.min(13, d.vy * (H / box.height));
+      active = true; homeFallen = true;
+    };
+    const onFallen = () => { homeFallen = true; if (form && visible && !active) { serve(); active = true; } };
+    const onReturn = () => { active = false; homeFallen = false; };
+    if (form) { window.addEventListener('skip-ball-handoff', onHandoff); window.addEventListener('skip-ball-return', onReturn); window.addEventListener('skip-ball-fallen', onFallen); }
     window.addEventListener('resize', layout);
+    // The card around the form can change height after the first layout (fonts, the keyboard): re-fit so the ball never stretches
+    const ro = new ResizeObserver(() => layout());
+    ro.observe(cv);
     return () => {
       io.disconnect();
       cancelAnimationFrame(raf);
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku);
       window.removeEventListener('deviceorientation', onOrient); if (askTilt) document.removeEventListener('touchend', askTilt);
       cv.removeEventListener('pointerdown', pd); if (form) host?.removeEventListener('pointerdown', hostDown); window.removeEventListener('pointerup', pu);
-      window.removeEventListener('resize', layout);
+      window.removeEventListener('skip-ball-handoff', onHandoff); window.removeEventListener('skip-ball-return', onReturn); window.removeEventListener('skip-ball-fallen', onFallen);
+      window.removeEventListener('resize', layout); ro.disconnect();
     };
   }, []);
 
-  return <canvas ref={ref} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', touchAction: form ? undefined : 'none', pointerEvents: form ? 'none' : undefined, zIndex: 0 }} />;
+  return <canvas ref={ref} data-form-pinball={form ? '' : undefined} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', touchAction: form ? undefined : 'none', pointerEvents: form ? 'none' : undefined, zIndex: 0 }} />;
 }

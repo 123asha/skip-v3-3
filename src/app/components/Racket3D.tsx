@@ -100,55 +100,74 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
         new THREE.MeshStandardMaterial({ color: 0xffffff, map: tex, roughness: 0.95, metalness: 0 }),
       );
       ball.castShadow = true;
-      scene.add(ball);
+      // A holder takes the squash and stretch, so they stay vertical while the ball itself rolls
+      const ballHolder = new THREE.Group();
+      ballHolder.add(ball);
+      scene.add(ballHolder);
 
-      // A table-tennis paddle after the poster: a round red blade with a fine dot
-      // pattern, a pale wooden throat running down into the black handle, whose
-      // top is cut in a V, the handle widening a little and ending in a round tip
+      // A table-tennis paddle after the render: a slightly egg-shaped red blade
+      // with a thin edge, and a long slim flat handle of layered light wood
       const racket = new THREE.Group();
       const R0 = RACKET_R;
-      const wood = new THREE.Shape();
-      wood.moveTo(-0.575 * R0, -0.82 * R0);
-      wood.absarc(0, 0, R0, (235 * Math.PI) / 180, (-55 * Math.PI) / 180, true);
-      wood.quadraticCurveTo(0.32 * R0, -0.97 * R0, 0.23 * R0, -1.55 * R0);
-      wood.lineTo(-0.23 * R0, -1.55 * R0);
-      wood.quadraticCurveTo(-0.32 * R0, -0.97 * R0, -0.575 * R0, -0.82 * R0);
+      const bladeWood = new THREE.Shape();
+      bladeWood.moveTo(-0.5 * R0, -0.86 * R0);
+      bladeWood.absarc(0, 0, R0, (240 * Math.PI) / 180, (-60 * Math.PI) / 180, true);
+      bladeWood.quadraticCurveTo(0.2 * R0, -0.98 * R0, 0.17 * R0, -1.15 * R0);
+      bladeWood.lineTo(-0.17 * R0, -1.15 * R0);
+      bladeWood.quadraticCurveTo(-0.2 * R0, -0.98 * R0, -0.5 * R0, -0.86 * R0);
+      const edge = new THREE.Shape();
+      edge.absarc(0, 0, R0 * 1.004, 0, Math.PI * 2, false);
       const rubber = new THREE.Shape();
-      const rr = R0 * 0.975, cy = -0.52 * R0, a0 = Math.asin(cy / rr);
+      const rr = R0 * 0.968, cy = -0.55 * R0, a0 = Math.asin(cy / rr);
       rubber.moveTo(-rr * Math.cos(a0), cy);
       rubber.absarc(0, 0, rr, Math.PI - a0, a0, true);
-      rubber.quadraticCurveTo(0, cy + 0.2 * R0, -rr * Math.cos(a0), cy);
+      rubber.quadraticCurveTo(0, cy + 0.12 * R0, -rr * Math.cos(a0), cy);
+      // The handle: straight, slim, widening a little towards a rounded-square end
       const grip = new THREE.Shape();
-      grip.moveTo(-0.27 * R0, -1.18 * R0);
-      grip.lineTo(0, -1.5 * R0);
-      grip.lineTo(0.27 * R0, -1.18 * R0);
-      grip.lineTo(0.36 * R0, -2.45 * R0);
-      grip.absarc(0, -2.45 * R0, 0.36 * R0, 0, -Math.PI, true);
-      grip.lineTo(-0.27 * R0, -1.18 * R0);
+      grip.moveTo(-0.17 * R0, -1.1 * R0);
+      grip.lineTo(0.17 * R0, -1.1 * R0);
+      grip.quadraticCurveTo(0.2 * R0, -1.8 * R0, 0.27 * R0, -2.3 * R0);
+      grip.quadraticCurveTo(0.29 * R0, -2.46 * R0, 0.14 * R0, -2.46 * R0);
+      grip.lineTo(-0.14 * R0, -2.46 * R0);
+      grip.quadraticCurveTo(-0.29 * R0, -2.46 * R0, -0.27 * R0, -2.3 * R0);
+      grip.quadraticCurveTo(-0.2 * R0, -1.8 * R0, -0.17 * R0, -1.1 * R0);
       const slab = (shape: import('three').Shape, depth: number, z: number, mat: import('three').Material) => {
-        const g = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 48 });
+        const g = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 64 });
         g.translate(0, 0, z);
         return new THREE.Mesh(g, mat);
       };
-      const dots = (() => {
+      const rubberTex = (() => {
         const c = document.createElement('canvas'); c.width = c.height = 64;
         const g = c.getContext('2d')!;
-        g.fillStyle = '#c4161c'; g.fillRect(0, 0, 64, 64);
-        g.fillStyle = '#dc3d40';
+        g.fillStyle = '#d4483d'; g.fillRect(0, 0, 64, 64);
+        g.fillStyle = '#dd5a4e';
         for (const [x, y] of [[16, 16], [48, 16], [32, 48], [0, 48], [64, 48]]) { g.beginPath(); g.arc(x, y, 8, 0, Math.PI * 2); g.fill(); }
         const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
         t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(7, 7); t.anisotropy = 4;
         return t;
       })();
-      const woodMat = new THREE.MeshStandardMaterial({ color: 0xd9d3b1, roughness: 0.8 });
-      const redMat = new THREE.MeshStandardMaterial({ map: dots, roughness: 0.85 });
-      const blackMat = new THREE.MeshStandardMaterial({ color: 0x121212, roughness: 0.7 });
-      const T = 0.05, RB = 0.016;
+      // Plywood layers: fine darker lines running along the handle
+      const woodTex = (() => {
+        const c = document.createElement('canvas'); c.width = 128; c.height = 8;
+        const g = c.getContext('2d')!;
+        g.fillStyle = '#dcc7a2'; g.fillRect(0, 0, 128, 8);
+        g.fillStyle = '#b99a6c';
+        for (const x of [20, 56, 92]) g.fillRect(x, 0, 3, 8);
+        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+        t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(5, 1);
+        return t;
+      })();
+      const woodMat = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.7 });
+      const redMat = new THREE.MeshStandardMaterial({ map: rubberTex, roughness: 0.85 });
+      const edgeMat = new THREE.MeshStandardMaterial({ color: 0x8c231c, roughness: 0.8 });
+      const blackMat = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.8 });
+      const T = 0.045, RB = 0.02, TH = 0.075;
       racket.add(
-        slab(wood, T, -T / 2, woodMat),
-        slab(rubber, RB, T / 2, redMat),
-        slab(rubber, RB, -T / 2 - RB, blackMat),
-        slab(grip, T * 1.15, -T * 0.575, blackMat),
+        slab(grip, TH, -TH / 2, woodMat),
+        slab(bladeWood, T, -T / 2, woodMat),
+        slab(edge, T + 2 * RB, -T / 2 - RB, edgeMat),
+        slab(rubber, RB + 0.004, T / 2 + 0.0, redMat),
+        slab(rubber, RB + 0.004, -T / 2 - RB - 0.004, blackMat),
       );
       racket.traverse(o => { (o as import('three').Mesh).castShadow = true; });
       scene.add(racket);
@@ -167,7 +186,7 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
       const PY = -Y + 0.55;
       const st = { x: 0, z: 0.6, tx: 0, tz: 0.6, vx: 0, vz: 0, lift: 0, swing: 0 };
       const b = { x: 0.3, y: 0.9, z: 0.4, vx: 0, vy: 0, vz: 0 };
-      let hitKick = 0;
+      let hitKick = 0, squash = 0;
       b.x = st.x; b.z = st.z; b.y = PY + 1.6;
 
       // The pointer, taken onto the paddle's plane
@@ -216,7 +235,7 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
         // The floor, the walls: a ball that misses the paddle bounces off them, with a knock
         if (b.y < -Y + BALL_R) {
           b.y = -Y + BALL_R;
-          if (b.vy < -0.02) sound.play('hover', 60);
+          if (b.vy < -0.02) { sound.play('hover', 60); squash = Math.max(squash, 0.7); }
           b.vy = Math.abs(b.vy) * 0.72; b.vx *= 0.92; b.vz *= 0.92;
         }
         if (b.x > X - BALL_R) { b.x = X - BALL_R; if (b.vx > 0.02) sound.play('hover', 90); b.vx = -Math.abs(b.vx) * 0.8; }
@@ -231,11 +250,16 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
           b.vy = 0.105 + st.swing * 0.06 + Math.min(0.02, Math.hypot(st.vx, st.vz) * 0.2);
           b.vx = b.vx * 0.3 + dx * 0.05 + st.vx * 0.9;
           b.vz = b.vz * 0.3 + dz * 0.05 + st.vz * 0.9;
-          hitKick = 1;
+          hitKick = 1; squash = 1;
           sound.play('tap', 40);
         }
         hitKick *= 0.9;
-        ball.position.set(b.x, b.y, b.z);
+        // Squash on a hit (flat and wide), then stretched along its flight (tall and narrow)
+        squash *= 0.86;
+        const stretch = Math.min(0.28, Math.abs(b.vy) * 1.9);
+        const sy = (1 + stretch) * (1 - 0.42 * squash), sxz = 1 / Math.sqrt(1 + stretch) * (1 + 0.3 * squash);
+        ballHolder.scale.set(sxz, sy, sxz);
+        ballHolder.position.set(b.x, b.y - BALL_R * (1 - sy) * 0.9, b.z);
         ball.rotation.x += b.vz * 2 + b.vy * 0.3; ball.rotation.z -= b.vx * 2;
         const gp = cord.geometry.attributes.position as import('three').BufferAttribute;
         gp.setXYZ(0, st.x, PY + st.lift + 0.04, st.z); gp.setXYZ(1, b.x, b.y, b.z); gp.needsUpdate = true;

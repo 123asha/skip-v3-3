@@ -896,7 +896,7 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
   useEffect(() => {
     const root = pageRef.current;
     if (!root) return;
-    return attachTopCurl(root, '[data-exp-row], h2, p');
+    return attachTopCurl(root, '[data-exp-row], [data-svc-tile], h2, p');
   }, []);
   const rowRefs    = useRef<(HTMLDivElement | null)[]>([]);
   const panelRef   = useRef<HTMLDivElement>(null);   // single outer sticky panel

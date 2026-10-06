@@ -67,7 +67,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
     const io = new IntersectionObserver(([e]) => {
       visible = e.isIntersecting;
       // Only once the ticker's ball has dropped out (or there is none: phones)
-      if (form && visible && !active && (homeFallen || !document.querySelector('[data-client-ball]'))) { serve(); active = true; }
+      if (form && visible && !active && ((homeFallen && !homeInFlight) || !document.querySelector('[data-client-ball]'))) { serve(); active = true; }
     }, { threshold: 0.2 });
     io.observe(cv);
     const play = (kind: Parameters<typeof sound.play>[0], throttle?: number) => { if (visible && document.visibilityState === 'visible') sound.play(kind, throttle); };
@@ -77,6 +77,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
     // too fast, a new one is dropped from the top when the table comes into view
     let active = !form;
     let homeFallen = false;
+    let homeInFlight = false;   // the ticker's ball is still falling towards the table
     // Phone (form variant): no lines at all — the ball just rolls the way the
     // phone is tilted and bounces off the screen's edges and the text
     const phone = form && window.matchMedia('(max-width: 768px)').matches;
@@ -377,11 +378,15 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       ball.x = Math.max(R, Math.min(W - R, (d.x - box.left) * (W / box.width)));
       ball.y = Math.max(R, (d.y - box.top) * (H / box.height));
       ball.vx = d.vx; ball.vy = Math.min(13, d.vy * (H / box.height));
-      active = true; homeFallen = true;
+      active = true; homeFallen = true; homeInFlight = false;
     };
-    const onFallen = () => { homeFallen = true; if (form && visible && !active) { serve(); active = true; } };
-    const onReturn = () => { active = false; homeFallen = false; };
-    if (form) { window.addEventListener('skip-ball-handoff', onHandoff); window.addEventListener('skip-ball-return', onReturn); window.addEventListener('skip-ball-fallen', onFallen); }
+    // One ball only: while the ticker's ball is still in the air nothing else is dropped;
+    // if it leaves the screen without reaching the table, a ball comes in from the top
+    // once the table is in view
+    const onFallen = () => { homeFallen = true; homeInFlight = true; };
+    const onGone = () => { homeInFlight = false; if (form && visible && !active) { serve(); active = true; } };
+    const onReturn = () => { active = false; homeFallen = false; homeInFlight = false; };
+    if (form) { window.addEventListener('skip-ball-handoff', onHandoff); window.addEventListener('skip-ball-return', onReturn); window.addEventListener('skip-ball-fallen', onFallen); window.addEventListener('skip-ball-gone', onGone); }
     window.addEventListener('resize', layout);
     // The card around the form can change height after the first layout (fonts, the keyboard): re-fit so the ball never stretches
     const ro = new ResizeObserver(() => layout());
@@ -392,7 +397,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku);
       window.removeEventListener('deviceorientation', onOrient); if (askTilt) document.removeEventListener('touchend', askTilt);
       cv.removeEventListener('pointerdown', pd); if (form) host?.removeEventListener('pointerdown', hostDown); window.removeEventListener('pointerup', pu);
-      window.removeEventListener('skip-ball-handoff', onHandoff); window.removeEventListener('skip-ball-return', onReturn); window.removeEventListener('skip-ball-fallen', onFallen);
+      window.removeEventListener('skip-ball-handoff', onHandoff); window.removeEventListener('skip-ball-return', onReturn); window.removeEventListener('skip-ball-fallen', onFallen); window.removeEventListener('skip-ball-gone', onGone);
       window.removeEventListener('resize', layout); ro.disconnect();
     };
   }, []);

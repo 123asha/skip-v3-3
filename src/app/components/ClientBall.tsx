@@ -78,7 +78,7 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
 
       // Texture u = 0.25 faces the camera at rotation.y = 0, and its twin at π
       const FACE = 0;
-      let handed = false;
+      let handed = false, gone = false;
       let fallen = false, vy = 0, fy = 0, fx = 0, fr = 1, shown = '', raf = 0;
       const tick = () => {
         resize();
@@ -97,13 +97,14 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
         if (!fallen && vis && yScreen < H * 0.3) { fallen = true; vy = 0; fx = x; fy = yScreen; fr = r; window.dispatchEvent(new CustomEvent('skip-ball-fallen')); }
         // Scrolled back up to the ticker: the ball is there again, ready to drop once more
         if (fallen && a && yScreen > H * 0.5) {
-          fallen = false;
+          fallen = false; gone = false;
           if (handed) { handed = false; }
           window.dispatchEvent(new CustomEvent('skip-ball-return'));
         }
         if (fallen) {
           vy = Math.min(vy + 0.9, 26); fy += vy; x = fx; yScreen = fy; r = fr;
           vis = fy - fr <= H;
+          if (!vis && !handed && !gone) { gone = true; window.dispatchEvent(new CustomEvent('skip-ball-gone')); }
           // Reaching the contact form's table on screen: the game ball takes over from here
           const table = document.querySelector('[data-form-pinball]');
           const tr = table?.getBoundingClientRect();

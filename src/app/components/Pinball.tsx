@@ -294,7 +294,10 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       ctx.setLineDash([]);
       if (!drawBall) return;
       // While the page end is inverted the ball is drawn pre-inverted, so it still reads white
-      const dk = dark || (form && document.documentElement.hasAttribute('data-inverted'));
+      // The inversion layer fades in over half a second; everything passes through mid-grey at
+      // its halfway point, so the ball changes palette exactly there and never flashes
+      const ov = form ? document.querySelector<HTMLElement>('[data-invert-overlay]') : null;
+      const dk = dark || (!!ov && parseFloat(getComputedStyle(ov).opacity) > 0.5);
       // The hero's ball: bright base, glint up-left, faint rim shade
       const g = ctx.createRadialGradient(ball.x - R * 0.15, ball.y - R * 0.2, 0, ball.x - R * 0.15, ball.y - R * 0.2, R * 1.3);
       if (dk) { if (form) { g.addColorStop(0, '#424242'); g.addColorStop(0.6, '#2e2e2e'); g.addColorStop(1, '#1e1e1e'); } else { g.addColorStop(0, '#3a3a3a'); g.addColorStop(0.6, '#262626'); g.addColorStop(1, '#161616'); } } else if (form) { g.addColorStop(0, '#f5f5f5'); g.addColorStop(0.6, '#ececec'); g.addColorStop(1, '#dadada'); } else { g.addColorStop(0, '#fdfdfd'); g.addColorStop(0.6, '#f4f4f4'); g.addColorStop(1, '#e2e2e2'); }

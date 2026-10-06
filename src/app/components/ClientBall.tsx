@@ -117,6 +117,10 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
           if (handed) vis = false;
         }
         renderer.domElement.style.visibility = vis ? 'visible' : 'hidden';
+        // Under the page-end inversion the ball is drawn inverted too, switching exactly
+        // at the layer's mid-grey point so it stays white without a flash
+        const ov = document.querySelector<HTMLElement>('[data-invert-overlay]');
+        renderer.domElement.style.filter = ov && parseFloat(getComputedStyle(ov).opacity) > 0.5 ? 'invert(1)' : '';
         if (vis) {
           // Which sticker: the hovered client's, else the logo
           const want = hoverRef.current && !fallen ? hoverRef.current : '';

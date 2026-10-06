@@ -483,5 +483,3 @@ input::placeholder {
 /* On a black page (the About page, or the inverted end of any page) the footer address is plain white */
 html[data-dark] [data-footer-mail] { opacity: 1 !important; }
 
-/* The end-of-page inversion must not turn the ticker's ball dark */
-html[data-inverted] [data-client-ball] canvas { filter: invert(1); }

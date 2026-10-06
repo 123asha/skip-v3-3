@@ -269,6 +269,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
         {invertOn && !noInvert && createPortal(
           <div
             aria-hidden="true"
+            data-invert-overlay=""
             style={{
               position: 'fixed', inset: 0, zIndex: 9990, pointerEvents: 'none',
               backdropFilter: 'invert(1)', WebkitBackdropFilter: 'invert(1)',

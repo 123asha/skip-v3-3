@@ -53,24 +53,16 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
         g.fill(new Path2D(paths[0] + paths[3]), 'evenodd');
         g.restore();
       };
-      const makeTex = (label: string | null) => {
+      const makeTex = (_label: string | null) => {
         const c = document.createElement('canvas'); c.width = 1024; c.height = 512;
         const g = c.getContext('2d')!;
         g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
         g.fillStyle = '#111111';
-        for (const cx of [256, 768]) {
-          if (!label) { drawLogo(g, cx, 170); continue; }
-          let size = 84;
-          g.font = `450 ${size}px "CoFo Sans VF", sans-serif`;
-          while (g.measureText(label).width > 250 && size > 18) { size -= 2; g.font = `450 ${size}px "CoFo Sans VF", sans-serif`; }
-          g.textAlign = 'center'; g.textBaseline = 'middle';
-          g.fillText(label, cx, 256);
-        }
+        for (const cx of [256, 768]) drawLogo(g, cx, 170);
         const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
         return t;
       };
       const texSkip = makeTex(null);
-      const texFor = new Map<string, import('three').Texture>();
       const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: texSkip, roughness: 0.95, metalness: 0 });
       const ball = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), mat);
       ball.rotation.x = 0.35;
@@ -79,7 +71,26 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
       // Texture u = 0.25 faces the camera at rotation.y = 0, and its twin at π
       const FACE = 0;
       let handed = false, gone = false;
-      let fallen = false, vy = 0, fy = 0, fx = 0, fr = 1, shown = '', raf = 0;
+      // The dotted line to the hovered name, and the ball's lean towards it
+      const lineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+      const lineMat = new THREE.LineDashedMaterial({ color: 0x111111, dashSize: 3, gapSize: 6, transparent: true, opacity: 0 });
+      const cord = new THREE.Line(lineGeo, lineMat);
+      cord.position.z = -50;
+      scene.add(cord);
+      let lx = 0, ly = 0, lineA = 0, lastTarget: { x: number; y: number } | null = null;
+      const nameBox = (name: string, bx: number) => {
+        // The name's place under the ticker: of the two copies, the one nearest the ball
+        let best: DOMRect | null = null, bd = Infinity;
+        document.querySelectorAll('p').forEach(pEl => {
+          // The ticker's names (the flip effect doubles their text)
+          if (pEl.style.cursor !== 'pointer' || !pEl.textContent?.includes(name)) return;
+          const rc = pEl.getBoundingClientRect();
+          const d = Math.abs((rc.left + rc.right) / 2 - bx);
+          if (rc.width > 0 && d < bd) { bd = d; best = rc; }
+        });
+        return best as DOMRect | null;
+      };
+      let fallen = false, vy = 0, fy = 0, fx = 0, fr = 1, raf = 0;
       const tick = () => {
         resize();
         const hb = el.getBoundingClientRect();
@@ -122,21 +133,31 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
         const ov = document.querySelector<HTMLElement>('[data-invert-overlay]');
         renderer.domElement.style.filter = ov && parseFloat(getComputedStyle(ov).opacity) > 0.5 ? 'invert(1)' : '';
         if (vis) {
-          // Which sticker: the hovered client's, else the logo
+          // Always the Skip logo. Over a client's name the ball leans a little towards
+          // that name and is joined to it by a dotted line
           const want = hoverRef.current && !fallen ? hoverRef.current : '';
-          if (want !== shown) {
-            shown = want;
-            if (!want) mat.map = texSkip;
-            else { if (!texFor.has(want)) texFor.set(want, makeTex(want)); mat.map = texFor.get(want)!; }
-            mat.needsUpdate = true;
+          let tx = x, ty = yScreen, hasT = false;
+          if (want) {
+            const rc = nameBox(want, hb.left + x * zk);
+            if (rc) { lastTarget = { x: ((rc.left + rc.right) / 2 - hb.left) / zk, y: (rc.bottom - hb.top) / zk }; hasT = true; }
           }
+          if (hasT && lastTarget) {
+            const dx = lastTarget.x - x, dy = lastTarget.y - yScreen, d = Math.hypot(dx, dy) || 1;
+            const lean = Math.min(d * 0.22, r * 0.45);
+            tx = x + (dx / d) * lean; ty = yScreen + (dy / d) * lean;
+          }
+          lx += (tx - x - lx) * 0.12; ly += (ty - yScreen - ly) * 0.12;
+          lineA += ((hasT ? 0.9 : 0) - lineA) * 0.15;
+          x += lx; yScreen += ly;
           ball.scale.setScalar(r);
           ball.position.set(x, H - yScreen, 0);
-          // Turns about its vertical axis; a hovered ball eases round to show its sticker face-on
-          if (want) {
-            const target = Math.round((ball.rotation.y - FACE) / Math.PI) * Math.PI + FACE;
-            ball.rotation.y += (target - ball.rotation.y) * 0.08;
-          } else ball.rotation.y += 0.011;
+          if (lastTarget && lineA > 0.01) {
+            const pa = lineGeo.attributes.position as import('three').BufferAttribute;
+            pa.setXYZ(0, x, H - yScreen, 0); pa.setXYZ(1, lastTarget.x, H - lastTarget.y, 0); pa.needsUpdate = true;
+            cord.computeLineDistances();
+            lineMat.opacity = lineA; cord.visible = true;
+          } else cord.visible = false;
+          ball.rotation.y += 0.011;
           ball.rotation.x += (0.2 - ball.rotation.x) * 0.05;
           renderer.render(scene, camera);
         }
@@ -148,7 +169,7 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
         cancelAnimationFrame(raf);
         window.removeEventListener('resize', resize);
         renderer.dispose();
-        texSkip.dispose(); texFor.forEach(t => t.dispose());
+        texSkip.dispose(); lineGeo.dispose(); lineMat.dispose();
         mat.dispose(); ball.geometry.dispose();
         renderer.domElement.remove();
       };

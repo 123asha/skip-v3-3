@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { sound } from '../sound/Sound';
 import svgPaths from '../../imports/Index/svg-3bjnx36a2y';
-import { asset } from '../utils/asset';
 
 // 404: a bare pinball table — two flippers, three round bumpers, the hero's
 // white ball. ← → (or a tap / click on either half) work the flippers.
@@ -19,22 +18,22 @@ const LOGO: { path: Path2D; rule: CanvasFillRule }[] = [
   { path: new Path2D(LOGO_PATHS[0] + LOGO_PATHS[3]), rule: 'evenodd' },
 ];
 
-// The sticker for the sphere: the site's favicon (a black ball with its white glint),
-// as a coverage mask (dark = ink); filled in once the picture has loaded
+// The sticker for the sphere: the Skip logo as in the header, as a coverage
+// mask (dark = ink) the size of the logo's own box (52.53 × 32)
 const MASK_W = 256, MASK_H = 156;
 const LOGO_MASK = new Uint8Array(MASK_W * MASK_H);
-if (typeof Image !== 'undefined') {
-  const fav = new Image();
-  fav.onload = () => {
-    const c = document.createElement('canvas'); c.width = MASK_W; c.height = MASK_H;
-    const g = c.getContext('2d')!;
-    g.fillStyle = '#fff'; g.fillRect(0, 0, MASK_W, MASK_H);
-    const sz = MASK_H * 0.96;
-    g.drawImage(fav, (MASK_W - sz) / 2, (MASK_H - sz) / 2, sz, sz);
-    const px = g.getImageData(0, 0, MASK_W, MASK_H).data;
-    for (let i = 0; i < LOGO_MASK.length; i++) LOGO_MASK[i] = 255 - px[i * 4];
-  };
-  fav.src = asset('/fav-black-nobg.png');
+if (typeof document !== 'undefined') {
+  const c = document.createElement('canvas'); c.width = MASK_W; c.height = MASK_H;
+  const g = c.getContext('2d')!;
+  g.fillStyle = '#fff'; g.fillRect(0, 0, MASK_W, MASK_H);
+  g.fillStyle = '#000';
+  const paths = svgPaths.pb7e9300.match(/M[^M]+/g)!;
+  const sc = MASK_W / 52.5283;
+  g.scale(sc, sc);
+  g.fill(new Path2D(paths[1])); g.fill(new Path2D(paths[2])); g.fill(new Path2D(paths[4]));
+  g.fill(new Path2D(paths[0] + paths[3]), 'evenodd');
+  const px = g.getImageData(0, 0, MASK_W, MASK_H).data;
+  for (let i = 0; i < LOGO_MASK.length; i++) LOGO_MASK[i] = 255 - px[i * 4];
 }
 
 const CRITTER = [
@@ -135,6 +134,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       const box = cv.getBoundingClientRect();
       cv.width = Math.round(box.width * dpr); cv.height = Math.round(box.height * dpr);
       R = Math.max(24, Math.min(W, H) * 0.05);
+      if (form) cv.dataset.ballR = String(R);   // the ticker's ball above takes the same size
       const fw = Math.min(W * (W < 600 ? 0.27 : 0.16), 200);           // flipper length
       const gap = R * 2.6;                           // drain between them
       const fy = H - Math.max(130, H * 0.2);

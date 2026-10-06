@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import svgPaths from '../../imports/Index/svg-3bjnx36a2y';
 import { sound } from '../sound/Sound';
-import { asset } from '../utils/asset';
 
 // The ping-pong ball under the «Нам доверяют» ticker. It turns slowly on its
 // spot; its sticker is the Skip Design logo, or — while a client's name is
@@ -64,21 +63,16 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
         g.fill(new Path2D(paths[0] + paths[3]), 'evenodd');
         g.restore();
       };
-      // The sticker: the favicon — a black ball with its white glint — on each side of the ball
-      const fav = new Image();
+      // The sticker: the Skip logo as in the header, on each side of the ball
       const makeTex = (_label: string | null) => {
         const c = document.createElement('canvas'); c.width = 1024; c.height = 512;
         const g = c.getContext('2d')!;
-        const paint = () => {
-          g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
-          if (fav.complete && fav.naturalWidth) for (const cx of [256, 768]) g.drawImage(fav, cx - 85, 256 - 85, 170, 170);
-        };
-        paint();
-        fav.addEventListener('load', () => { paint(); t.needsUpdate = true; });
+        g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
+        g.fillStyle = '#111111';
+        for (const cx of [256, 768]) drawLogo(g, cx, 230);
         const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
         return t;
       };
-      fav.src = asset('/fav-black-nobg.png');
       const texSkip = makeTex(null);
       // The shading of the service balls, exactly: a bright soft base (#fdfdfd → #f4f4f4 → #e9e9e9),
       // a glint at the upper left and a faint shade at the lower right, laid over the sticker
@@ -146,7 +140,9 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
         let x = fx, yScreen = fy, r = fr, vis = false;
         if (a && a.width > 0) {
           // The anchor is a ball-sized box: the ball sits in it
-          r = (a.width / 2) * 0.6;
+          // As big as the ball it becomes in the form below (Pinball's R), so it doesn't change size on the way
+          const fr0 = Number((document.querySelector('[data-form-pinball]') as HTMLElement | null)?.dataset.ballR);
+          r = fr0 > 0 ? fr0 : (a.width / 2) * 0.6;
           x = a.left + a.width / 2; yScreen = a.top + a.height / 2;
           vis = true;
         }

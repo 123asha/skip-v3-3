@@ -74,42 +74,47 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       floorShadow.receiveShadow = true;
       scene.add(floorShadow);
 
-      // «404», painted on the back wall: smaller, a little faded, with the grain of paint on plaster
+      // «404», pressed into the back wall: a shade along the upper inner edges (the light
+      // comes from above), a light catch along the lower ones, the floor of the letters a touch darker
       await document.fonts.ready;
       if (stop) { renderer.dispose(); renderer.domElement.remove(); return; }
       const wallTex = (() => {
-        const c = document.createElement('canvas'); c.width = 2048; c.height = Math.round(2048 * Y / X);
-        const g = c.getContext('2d')!;
+        const W = 2048, H = Math.round(2048 * Y / X);
+        const mk = () => { const c = document.createElement('canvas'); c.width = W; c.height = H; return [c, c.getContext('2d')!] as const; };
         const cs = getComputedStyle(document.documentElement);
         const family = cs.getPropertyValue('--font-display').trim() || 'sans-serif';
         const weight = cs.getPropertyValue('--heading-weight').trim() || '450';
-        g.fillStyle = '#2b2b2b';
-        g.textAlign = 'center'; g.textBaseline = 'middle';
-        g.font = `${weight} ${Math.round(c.height * 0.22)}px ${family}`;
-        if ('letterSpacing' in g) (g as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${-Math.round(c.height * 0.006)}px`;
-        g.fillText('404', c.width / 2, c.height * 0.34);
-        // the wall shows through the paint: fine specks and a few worn patches
-        g.globalCompositeOperation = 'destination-out';
-        for (let i = 0; i < 26000; i++) {
-          g.globalAlpha = 0.15 + Math.random() * 0.5;
-          g.fillRect(Math.random() * c.width, Math.random() * c.height, 1 + Math.random() * 2.5, 1 + Math.random() * 2.5);
-        }
-        for (let i = 0; i < 90; i++) {
-          const x = Math.random() * c.width, y = Math.random() * c.height, r = 6 + Math.random() * 30;
-          const gr = g.createRadialGradient(x, y, 0, x, y, r);
-          gr.addColorStop(0, 'rgba(0,0,0,0.35)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
-          g.globalAlpha = 1; g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
-        }
-        g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
-        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+        const fs = Math.round(H * 0.46);
+        // the letters as a mask
+        const [mask, gm] = mk();
+        gm.fillStyle = '#000'; gm.textAlign = 'center'; gm.textBaseline = 'middle';
+        gm.font = `${weight} ${fs}px ${family}`;
+        if ('letterSpacing' in gm) (gm as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${-Math.round(fs * 0.03)}px`;
+        gm.fillText('404', W / 2, H * 0.42);
+        // the wall around them (a sheet with letter-shaped holes)
+        const [rim, gr] = mk();
+        gr.fillStyle = '#000'; gr.fillRect(0, 0, W, H);
+        gr.globalCompositeOperation = 'destination-out'; gr.drawImage(mask, 0, 0);
+        // the rim's shadow (or light) thrown into the holes, kept inside the letters
+        const inner = (color: string, dx: number, dy: number, blur: number) => {
+          const [c, g] = mk();
+          g.shadowColor = color; g.shadowBlur = blur; g.shadowOffsetX = dx + W; g.shadowOffsetY = dy;
+          g.drawImage(rim, -W, 0);
+          g.shadowColor = 'transparent';
+          g.globalCompositeOperation = 'destination-in'; g.drawImage(mask, 0, 0);
+          return c;
+        };
+        const [out, g] = mk();
+        g.globalAlpha = 0.07; g.drawImage(mask, 0, 0); g.globalAlpha = 1;
+        g.drawImage(inner('rgba(0,0,0,0.55)', 3, 14, 18), 0, 0);
+        g.drawImage(inner('rgba(255,255,255,0.9)', -2, -7, 6), 0, 0);
+        const t = new THREE.CanvasTexture(out); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
         return t;
       })();
       const wall404 = new THREE.Mesh(
         new THREE.PlaneGeometry(X * 2, Y * 2),
-        // lit like the wall it is on, slightly see-through like thin paint
-        new THREE.MeshStandardMaterial({ map: wallTex, transparent: true, opacity: 0.82, roughness: 1, metalness: 0, depthWrite: false }),
+        new THREE.MeshBasicMaterial({ map: wallTex, transparent: true, depthWrite: false }),
       );
-      wall404.receiveShadow = true;
       wall404.position.set(0, 0, Z_BACK + 0.002);
       scene.add(wall404);
 

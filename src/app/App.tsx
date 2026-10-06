@@ -29,7 +29,6 @@ const CASE_PAGES: Record<string, any> = {
 };
 import GuidePage from './components/GuidePage';
 import MoscowTime from './components/MoscowTime';
-import { Pinball } from './components/Pinball';
 import AboutPage from './components/AboutPage';
 import Racket3D from './components/Racket3D';
 import ClientBall from './components/ClientBall';
@@ -305,42 +304,6 @@ function Preloader({ onReveal, onGone }: { onReveal: () => void; onGone: () => v
   );
 }
 
-// ── 404 page — minimal pinball, «404» on top, «Назад домой» ────────────────────
-function NotFoundPage({ onGoHome }: { onGoHome: () => void }) {
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 160,
-      background: '#eaeaea',
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      animation: 'pageIn 0.35s 0.05s ease both',
-    }}>
-      {/* A bare pinball table, the hero's ball, ← → flippers */}
-      <Pinball />
-      {/* «404» at the top centre like every page's title — the home headline's size, in the usual dark */}
-      <div style={{
-        position: 'absolute', top: 'var(--pad)', left: '50%', transform: 'translateX(-50%)', pointerEvents: 'none',
-        fontFamily: 'var(--font-display)',
-        fontSize: 'var(--hero-fs, min(var(--hero-size), 7.2vw))',
-        fontWeight: 'var(--heading-weight)' as React.CSSProperties['fontWeight'],
-        lineHeight: 'var(--hero-lh, 0.8755)',
-        letterSpacing: '-0.03em',
-        color: 'var(--c-text)',
-      }}>404</div>
-      {/* How to play */}
-      <div style={{
-        position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: 'calc(var(--pad) + 28px)', pointerEvents: 'none',
-        fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)', color: 'var(--c-text)',
-        opacity: 'var(--opacity-muted)' as any, whiteSpace: 'nowrap',
-      }}>← →</div>
-      {/* The way back: a black pill in the middle of the screen, a little above centre */}
-      <div data-pin-obstacle="" style={{ position: 'relative', marginTop: '-22vh' }}>
-        <PillButton variant="primary" onClick={onGoHome}>На главную</PillButton>
-      </div>
-    </div>
-  );
-}
-
 // Split the logo SVG into animatable groups
 const logoPaths = (() => {
   const all = svgPaths.pb7e9300.match(/M[^M]+/g)!;
@@ -462,7 +425,7 @@ function AppInner() {
   });
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
-  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/services-2', '/policy', '/index2', '/case-template', '/Seniorsbar', ...Object.keys(CASE_PAGES), '/guide', '/lab', '/insights', '/system', '/brand', '/visual', '/digital', '/about-skip-design', '/404-3d'];
+  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/services-2', '/policy', '/index2', '/case-template', '/Seniorsbar', ...Object.keys(CASE_PAGES), '/guide', '/lab', '/insights', '/system', '/brand', '/visual', '/digital', '/about-skip-design'];
   const page = pathname === '/cases' ? 'cases'
              : pathname === '/instruments' ? 'instruments'
              : (pathname === '/expertiza' || pathname === '/services') ? 'expertiza'
@@ -475,8 +438,6 @@ function AppInner() {
              : CASE_PAGES[pathname] ? 'binaroom'
              : pathname === '/guide' ? 'guide'
              : pathname === '/about-skip-design' ? 'about'
-             // An alternative 404 with a 3D racket — a local-development sketch only
-             : pathname === '/404-3d' && import.meta.env.DEV ? 'notfound3d'
              // /lab is the old address of the insights page — still opens it
              : pathname === '/insights' || pathname === '/lab' ? 'lab'
              // An insight's own article page (unknown slugs fall through to 404)
@@ -1493,7 +1454,6 @@ function AppInner() {
         onNavigatePolicy={() => navigateWithExit('/policy')}
         onGridMode={setGridVisible}
       />}
-      {page === 'notfound3d' && <Racket3D onGoHome={() => navigateWithExit('/')} />}
       {page === 'about' && <AboutPage
         onNavigatePolicy={() => navigateWithExit('/policy')}
         onGridMode={setGridVisible}
@@ -1529,7 +1489,7 @@ function AppInner() {
       {page === 'svc-brand'   && <ServiceDetailPage serviceIdx={0} onBack={() => navigateWithExit('/services')} />}
       {page === 'svc-visual'  && <ServiceDetailPage serviceIdx={1} onBack={() => navigateWithExit('/services')} />}
       {page === 'svc-digital' && <ServiceDetailPage serviceIdx={2} onBack={() => navigateWithExit('/services')} />}
-      {page === 'notfound' && <NotFoundPage onGoHome={() => navigateWithExit('/')} />}
+      {page === 'notfound' && <Racket3D onGoHome={() => navigateWithExit('/')} />}
 
       <div
         ref={mainRef}

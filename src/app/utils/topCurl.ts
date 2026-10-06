@@ -34,9 +34,10 @@ export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?
       if (el.parentElement?.closest(selector)) return;
       const r = el.getBoundingClientRect();
       if (r.height === 0) return;
-      // A tall piece (a card) hinges at its top edge like a sheet folding over; a small one turns about its middle
+      // A tall piece (a card) is carried by its bottom edge — it stays flat until that edge reaches the band, then turns over
+      // the same way as everything else; a small one turns about its middle
       const tall = r.height > 90;
-      const ey = tall ? r.top : r.top + r.height / 2;
+      const ey = tall ? r.bottom : r.top + r.height / 2;
       if (ey >= y0) return;
       const u = y0 - ey;                // arc length along the page
       const th = Math.min(u / Rc, Math.PI / 2);
@@ -44,8 +45,8 @@ export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?
       const z = -Rc * (1 - Math.cos(th));
       const ex = r.left + r.width / 2;
       const ox = vx - ex, oy = vy - ey;
-      el.style.transformOrigin = tall ? '50% 0%' : '50% 50%';
-      el.style.transform = `translate(${ox.toFixed(1)}px, ${oy.toFixed(1)}px) perspective(${P}px) translate(${(-ox).toFixed(1)}px, ${(-oy).toFixed(1)}px) translateY(${dy.toFixed(1)}px) translateZ(${z.toFixed(1)}px) rotateX(${(((tall ? -0.55 : 1) * th * 180) / Math.PI).toFixed(1)}deg)`;
+      el.style.transformOrigin = tall ? '50% 100%' : '50% 50%';
+      el.style.transform = `translate(${ox.toFixed(1)}px, ${oy.toFixed(1)}px) perspective(${P}px) translate(${(-ox).toFixed(1)}px, ${(-oy).toFixed(1)}px) translateY(${dy.toFixed(1)}px) translateZ(${z.toFixed(1)}px) rotateX(${((th * 180) / Math.PI).toFixed(1)}deg)`;
       // The sheet stays solid as it turns; only once it has gone over the roll does it vanish
       el.style.opacity = String(Math.max(0, Math.min(1, (1.57 - th) / 0.25)));
       now.add(el);

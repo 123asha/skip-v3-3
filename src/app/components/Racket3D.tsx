@@ -26,7 +26,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       el.appendChild(renderer.domElement);
-      renderer.domElement.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;cursor:none';
+      renderer.domElement.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 50);
@@ -74,7 +74,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       floorShadow.receiveShadow = true;
       scene.add(floorShadow);
 
-      // «404», written on the back wall in the site's display type
+      // «404», painted on the back wall: smaller, a little faded, with the grain of paint on plaster
       await document.fonts.ready;
       if (stop) { renderer.dispose(); renderer.domElement.remove(); return; }
       const wallTex = (() => {
@@ -83,18 +83,33 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const cs = getComputedStyle(document.documentElement);
         const family = cs.getPropertyValue('--font-display').trim() || 'sans-serif';
         const weight = cs.getPropertyValue('--heading-weight').trim() || '450';
-        g.fillStyle = getComputedStyle(document.body).color || '#111';
+        g.fillStyle = '#2b2b2b';
         g.textAlign = 'center'; g.textBaseline = 'middle';
-        g.font = `${weight} ${Math.round(c.height * 0.5)}px ${family}`;
-        if ('letterSpacing' in g) (g as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${-Math.round(c.height * 0.015)}px`;
-        g.fillText('404', c.width / 2, c.height * 0.5);
+        g.font = `${weight} ${Math.round(c.height * 0.22)}px ${family}`;
+        if ('letterSpacing' in g) (g as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${-Math.round(c.height * 0.006)}px`;
+        g.fillText('404', c.width / 2, c.height * 0.34);
+        // the wall shows through the paint: fine specks and a few worn patches
+        g.globalCompositeOperation = 'destination-out';
+        for (let i = 0; i < 26000; i++) {
+          g.globalAlpha = 0.15 + Math.random() * 0.5;
+          g.fillRect(Math.random() * c.width, Math.random() * c.height, 1 + Math.random() * 2.5, 1 + Math.random() * 2.5);
+        }
+        for (let i = 0; i < 90; i++) {
+          const x = Math.random() * c.width, y = Math.random() * c.height, r = 6 + Math.random() * 30;
+          const gr = g.createRadialGradient(x, y, 0, x, y, r);
+          gr.addColorStop(0, 'rgba(0,0,0,0.35)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+          g.globalAlpha = 1; g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
+        }
+        g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
         const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
         return t;
       })();
       const wall404 = new THREE.Mesh(
         new THREE.PlaneGeometry(X * 2, Y * 2),
-        new THREE.MeshBasicMaterial({ map: wallTex, transparent: true, depthWrite: false }),
+        // lit like the wall it is on, slightly see-through like thin paint
+        new THREE.MeshStandardMaterial({ map: wallTex, transparent: true, opacity: 0.82, roughness: 1, metalness: 0, depthWrite: false }),
       );
+      wall404.receiveShadow = true;
       wall404.position.set(0, 0, Z_BACK + 0.002);
       scene.add(wall404);
 

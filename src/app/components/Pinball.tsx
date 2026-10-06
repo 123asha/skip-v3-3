@@ -18,6 +18,20 @@ const LOGO: { path: Path2D; rule: CanvasFillRule }[] = [
   { path: new Path2D(LOGO_PATHS[0] + LOGO_PATHS[3]), rule: 'evenodd' },
 ];
 
+// The logo as a coverage mask for the sphere sticker
+const MASK_W = 256, MASK_H = 156;
+const LOGO_MASK: Uint8Array = (() => {
+  const c = document.createElement('canvas'); c.width = MASK_W; c.height = MASK_H;
+  const g = c.getContext('2d')!;
+  const k = (MASK_W * 0.92) / 52.5283;
+  g.translate(MASK_W / 2 - 26.264 * k, MASK_H / 2 - 16 * k); g.scale(k, k);
+  g.fillStyle = '#000';
+  LOGO.forEach(p => g.fill(p.path, p.rule));
+  const px = g.getImageData(0, 0, MASK_W, MASK_H).data, out = new Uint8Array(MASK_W * MASK_H);
+  for (let i = 0; i < out.length; i++) out[i] = px[i * 4 + 3];
+  return out;
+})();
+
 const CRITTER = [
   '....W.....W....',
   '....WG....WG...',
@@ -88,10 +102,14 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
     }
     // The ball's orientation (3×3, row-major): starts a little turned away
     let M = [0.9, 0, 0.436, 0, 1, 0, -0.436, 0, 0.9];
+    // The ball turns the way it travels (like a rolling ball), the spin easing
+    // towards that, so it carries on turning through the air instead of tumbling at random
+    const w = [0, 0, 0];
     const spin = () => {
-      // Rolls with its motion, plus a slow tumble of its own about every axis
-      const wx = ball.vy / R * 0.9 + 0.011, wy = -ball.vx / R * 0.9 + 0.017, wz = 0.007;
-      const th = Math.hypot(wx, wy, wz); if (!th) return;
+      w[0] += (-ball.vy / R * 0.55 - w[0]) * 0.06;
+      w[1] += (ball.vx / R * 0.55 - w[1]) * 0.06;
+      const wx = w[0], wy = w[1], wz = 0;
+      const th = Math.hypot(wx, wy, wz); if (th < 1e-4) return;
       const k = [wx / th, wy / th, wz / th], c = Math.cos(th), sn = Math.sin(th), v = 1 - c;
       const Rm = [
         c + k[0] * k[0] * v, k[0] * k[1] * v - k[2] * sn, k[0] * k[2] * v + k[1] * sn,
@@ -224,6 +242,37 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       spin();
     };
 
+    // The logo wrapped onto the sphere: each pixel of the ball is traced back to
+    // its point on the surface (undoing the ball's turn), and the logo is read there —
+    // one sticker on each side
+    const off = document.createElement('canvas');
+    const stickerOnSphere = (inkLight: boolean) => {
+      const sc = cv.width / W, n = Math.max(8, Math.round(2 * R * sc));
+      if (off.width !== n) { off.width = off.height = n; }
+      const oc = off.getContext('2d')!;
+      const img = oc.createImageData(n, n), d = img.data;
+      const ink = inkLight ? 242 : 22;
+      const SA = 1.5, SB = SA * MASK_H / MASK_W;
+      const h = n / 2;
+      for (let py = 0; py < n; py++) for (let px = 0; px < n; px++) {
+        const nx = (px + 0.5 - h) / h, ny = (py + 0.5 - h) / h, r2 = nx * nx + ny * ny;
+        if (r2 >= 1) continue;
+        const nz = Math.sqrt(1 - r2);
+        const vx = M[0] * nx + M[3] * ny + M[6] * nz, vy = M[1] * nx + M[4] * ny + M[7] * nz, vz = M[2] * nx + M[5] * ny + M[8] * nz;
+        for (const side of [1, -1]) {
+          const sz = side * vz; if (sz <= 0.05) continue;
+          const u = 0.5 + Math.atan2(side * vx, sz) / SA, v = 0.5 + Math.asin(vy) / SB;
+          if (u < 0 || u >= 1 || v < 0 || v >= 1) continue;
+          const a = LOGO_MASK[(Math.floor(v * MASK_H)) * MASK_W + Math.floor(u * MASK_W)];
+          if (!a) continue;
+          const o = (py * n + px) * 4;
+          d[o] = d[o + 1] = d[o + 2] = ink; d[o + 3] = Math.min(255, a * Math.min(1, (sz - 0.05) * 5));
+        }
+      }
+      oc.putImageData(img, 0, 0);
+      ctx.drawImage(off, ball.x - R, ball.y - R, 2 * R, 2 * R);
+    };
+
     const draw = () => {
       const drawBall = active;
       ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
@@ -242,30 +291,19 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       flip.forEach(f => { const s = flipSeg(f); ctx.beginPath(); ctx.moveTo(s.ax, s.ay); ctx.lineTo(s.bx, s.by); ctx.stroke(); });
       ctx.setLineDash([]);
       if (!drawBall) return;
+      // While the page end is inverted the ball is drawn pre-inverted, so it still reads white
+      const dk = dark || (form && document.documentElement.hasAttribute('data-inverted'));
       // The hero's ball: bright base, glint up-left, faint rim shade
       const g = ctx.createRadialGradient(ball.x - R * 0.15, ball.y - R * 0.2, 0, ball.x - R * 0.15, ball.y - R * 0.2, R * 1.3);
-      if (dark) { if (form) { g.addColorStop(0, '#424242'); g.addColorStop(0.6, '#2e2e2e'); g.addColorStop(1, '#1e1e1e'); } else { g.addColorStop(0, '#3a3a3a'); g.addColorStop(0.6, '#262626'); g.addColorStop(1, '#161616'); } } else if (form) { g.addColorStop(0, '#f5f5f5'); g.addColorStop(0.6, '#ececec'); g.addColorStop(1, '#dadada'); } else { g.addColorStop(0, '#fdfdfd'); g.addColorStop(0.6, '#f4f4f4'); g.addColorStop(1, '#e2e2e2'); }
+      if (dk) { if (form) { g.addColorStop(0, '#424242'); g.addColorStop(0.6, '#2e2e2e'); g.addColorStop(1, '#1e1e1e'); } else { g.addColorStop(0, '#3a3a3a'); g.addColorStop(0.6, '#262626'); g.addColorStop(1, '#161616'); } } else if (form) { g.addColorStop(0, '#f5f5f5'); g.addColorStop(0.6, '#ececec'); g.addColorStop(1, '#dadada'); } else { g.addColorStop(0, '#fdfdfd'); g.addColorStop(0.6, '#f4f4f4'); g.addColorStop(1, '#e2e2e2'); }
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ball.x, ball.y, R, 0, Math.PI * 2); ctx.fill();
       const sg = ctx.createRadialGradient(ball.x - R * 0.4, ball.y - R * 0.48, 0, ball.x - R * 0.4, ball.y - R * 0.48, R * 0.7);
-      sg.addColorStop(0, dark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.85)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
+      sg.addColorStop(0, dk ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.85)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
       ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(ball.x, ball.y, R, 0, Math.PI * 2); ctx.fill();
       // The sticker: for the form the Skip logo, for the 404 the black-and-white
       // critter — laid on the ball's surface, turning with it
       if (form) {
-        const logoW = 1.0, k = logoW / 52.5283;
-        for (const side of [1, -1]) {
-          const nz = side * M[8];
-          if (nz < 0.08) continue;
-          ctx.save();
-          ctx.globalAlpha = Math.min(1, (nz - 0.08) * 4);
-          ctx.translate(ball.x, ball.y);
-          ctx.transform(side * M[0] * R, side * M[3] * R, M[1] * R, M[4] * R, 0, 0);
-          ctx.scale(k, k); ctx.translate(-26.264, -16);
-          ctx.fillStyle = dark ? '#f2f2f2' : '#161616';
-          LOGO.forEach(p => ctx.fill(p.path, p.rule));
-          ctx.restore();
-        }
-        ctx.globalAlpha = 1;
+        stickerOnSphere(dk);
       } else {
       // (the critter), no background, laid on the
       // ball's surface — it turns with the ball, so it often faces away

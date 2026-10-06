@@ -39,7 +39,8 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
   useEffect(() => {
     if (noInvert || !(atBottom && invertShown)) return;
     document.documentElement.setAttribute('data-dark', '');
-    return () => { document.documentElement.removeAttribute('data-dark'); };
+    document.documentElement.setAttribute('data-inverted', '');
+    return () => { document.documentElement.removeAttribute('data-dark'); document.documentElement.removeAttribute('data-inverted'); };
   }, [atBottom, invertShown, noInvert]);
   useEffect(() => {
     if (atBottom) {

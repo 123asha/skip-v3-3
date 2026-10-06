@@ -207,7 +207,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         slab(rubber, RB + 0.004, T / 2 + 0.0, redMat),
         slab(rubber, RB + 0.004, -T / 2 - RB - 0.004, blackMat),
       );
-      racket.traverse(o => { (o as import('three').Mesh).castShadow = true; });
+      // It catches the ball's shadow too: the shadow closes in on the ball as it lands, so a hit reads as a hit
+      racket.traverse(o => { const m = o as import('three').Mesh; m.castShadow = true; m.receiveShadow = true; });
       scene.add(racket);
       // The string: from the middle of the paddle's face to the ball
       const cord = new THREE.Line(

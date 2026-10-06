@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { sound } from '../sound/Sound';
 import svgPaths from '../../imports/Index/svg-3bjnx36a2y';
+import { asset } from '../utils/asset';
 
 // 404: a bare pinball table — two flippers, three round bumpers, the hero's
 // white ball. ← → (or a tap / click on either half) work the flippers.
@@ -18,19 +19,23 @@ const LOGO: { path: Path2D; rule: CanvasFillRule }[] = [
   { path: new Path2D(LOGO_PATHS[0] + LOGO_PATHS[3]), rule: 'evenodd' },
 ];
 
-// The logo as a coverage mask for the sphere sticker
+// The sticker for the sphere: the site's favicon (a black ball with its white glint),
+// as a coverage mask (dark = ink); filled in once the picture has loaded
 const MASK_W = 256, MASK_H = 156;
-const LOGO_MASK: Uint8Array = (() => {
-  const c = document.createElement('canvas'); c.width = MASK_W; c.height = MASK_H;
-  const g = c.getContext('2d')!;
-  const k = (MASK_W * 0.92) / 52.5283;
-  g.translate(MASK_W / 2 - 26.264 * k, MASK_H / 2 - 16 * k); g.scale(k, k);
-  g.fillStyle = '#000';
-  LOGO.forEach(p => g.fill(p.path, p.rule));
-  const px = g.getImageData(0, 0, MASK_W, MASK_H).data, out = new Uint8Array(MASK_W * MASK_H);
-  for (let i = 0; i < out.length; i++) out[i] = px[i * 4 + 3];
-  return out;
-})();
+const LOGO_MASK = new Uint8Array(MASK_W * MASK_H);
+if (typeof Image !== 'undefined') {
+  const fav = new Image();
+  fav.onload = () => {
+    const c = document.createElement('canvas'); c.width = MASK_W; c.height = MASK_H;
+    const g = c.getContext('2d')!;
+    g.fillStyle = '#fff'; g.fillRect(0, 0, MASK_W, MASK_H);
+    const sz = MASK_H * 0.96;
+    g.drawImage(fav, (MASK_W - sz) / 2, (MASK_H - sz) / 2, sz, sz);
+    const px = g.getImageData(0, 0, MASK_W, MASK_H).data;
+    for (let i = 0; i < LOGO_MASK.length; i++) LOGO_MASK[i] = 255 - px[i * 4];
+  };
+  fav.src = asset('/fav-black-nobg.png');
+}
 
 const CRITTER = [
   '....W.....W....',
@@ -297,14 +302,27 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
       // The inversion layer fades in over half a second; everything passes through mid-grey at
       // its halfway point, so the ball changes palette exactly there and never flashes
       const ov = form ? document.querySelector<HTMLElement>('[data-invert-overlay]') : null;
-      const dk = dark || (!!ov && parseFloat(getComputedStyle(ov).opacity) > 0.5);
+      const inv = !!ov && parseFloat(getComputedStyle(ov).opacity) > 0.5;
+      const dk = dark || inv;
       // The hero's ball: bright base, glint up-left, faint rim shade
       const g = ctx.createRadialGradient(ball.x - R * 0.15, ball.y - R * 0.2, 0, ball.x - R * 0.15, ball.y - R * 0.2, R * 1.3);
-      if (dk) { if (form) { g.addColorStop(0, '#424242'); g.addColorStop(0.6, '#2e2e2e'); g.addColorStop(1, '#1e1e1e'); } else { g.addColorStop(0, '#3a3a3a'); g.addColorStop(0.6, '#262626'); g.addColorStop(1, '#161616'); } } else if (form) { g.addColorStop(0, '#f5f5f5'); g.addColorStop(0.6, '#ececec'); g.addColorStop(1, '#dadada'); } else { g.addColorStop(0, '#fdfdfd'); g.addColorStop(0.6, '#f4f4f4'); g.addColorStop(1, '#e2e2e2'); }
+      // The colours of the service balls: #fdfdfd → #f4f4f4 → #e9e9e9 (drawn pre-inverted
+      // while the page-end inversion is on, so they still come out the same)
+      if (inv) { g.addColorStop(0, '#020202'); g.addColorStop(0.6, '#0b0b0b'); g.addColorStop(1, '#161616'); }
+      else if (dark) { g.addColorStop(0, '#3a3a3a'); g.addColorStop(0.6, '#262626'); g.addColorStop(1, '#161616'); }
+      else { g.addColorStop(0, '#fdfdfd'); g.addColorStop(0.6, '#f4f4f4'); g.addColorStop(1, '#e9e9e9'); }
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ball.x, ball.y, R, 0, Math.PI * 2); ctx.fill();
       const sg = ctx.createRadialGradient(ball.x - R * 0.4, ball.y - R * 0.48, 0, ball.x - R * 0.4, ball.y - R * 0.48, R * 0.7);
-      sg.addColorStop(0, dk ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.85)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
+      const hi = inv ? '0,0,0' : '255,255,255';
+      sg.addColorStop(0, dark && !inv ? 'rgba(255,255,255,0.18)' : `rgba(${hi},0.85)`); sg.addColorStop(1, `rgba(${hi},0)`);
       ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(ball.x, ball.y, R, 0, Math.PI * 2); ctx.fill();
+      if (!dark || inv) {
+        // The faint shade on the lower right, as on the service balls
+        const rg = ctx.createRadialGradient(ball.x + R * 0.45, ball.y + R * 0.5, 0, ball.x + R * 0.45, ball.y + R * 0.5, R * 0.95);
+        const rc = inv ? '255,255,255' : '0,0,0';
+        rg.addColorStop(0, `rgba(${rc},0.10)`); rg.addColorStop(0.75, `rgba(${rc},0.02)`); rg.addColorStop(1, `rgba(${rc},0)`);
+        ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(ball.x, ball.y, R, 0, Math.PI * 2); ctx.fill();
+      }
       // The sticker: for the form the Skip logo, for the 404 the black-and-white
       // critter — laid on the ball's surface, turning with it
       if (form) {

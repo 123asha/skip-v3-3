@@ -115,6 +115,7 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
   // Behind the text: one graph of lettered balls, as on the home page. As the
   // page scrolls its nodes drift into other formations and rewire themselves
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const servicesRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const cv = canvasRef.current!, page = pageRef.current!;
     const ctx = cv.getContext('2d')!;
@@ -137,19 +138,39 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
     };
     size();
     pts.forEach((p, i) => { const q = ring(i); p.x = q.x * W; p.y = q.y * H; });
+    // Past the services list — once only about 30% of it is still in view at the top —
+    // every ball drops out of the graph and settles in a row along the bottom;
+    // scrolling back up, they rise into the formation again
+    const vel = pts.map(() => ({ vy: 0, vx: 0 }));
+    let fallen = false;
     const tick = () => {
+      const tbl = servicesRef.current?.getBoundingClientRect();
+      const shouldFall = !!tbl && tbl.height > 0 && tbl.bottom < tbl.height * 0.3;
+      if (shouldFall && !fallen) {
+        fallen = true;
+        vel.forEach(v => { v.vy = Math.random() * 2; v.vx = (Math.random() - 0.5) * 4; });
+      } else if (!shouldFall && fallen) fallen = false;
       const max = page.scrollHeight - page.clientHeight;
       const prog = max > 0 ? Math.min(1, Math.max(0, page.scrollTop / max)) : 0;
       const f = Math.min(FORMS.length - 1, Math.floor(prog * FORMS.length));
       const form = FORMS[f];
-      pts.forEach((p, i) => {
+      if (fallen) {
+        const slot = (i: number) => W * (0.08 + 0.84 * (i + 0.5) / N);
+        pts.forEach((p, i) => {
+          const v = vel[i];
+          v.vy += 0.55; p.y += v.vy; p.x += v.vx; v.vx *= 0.985;
+          // The row along the bottom: each ball drifts to its slot as it comes to rest
+          if (p.y > H - R) { p.y = H - R; v.vy = -v.vy * 0.38; if (Math.abs(v.vy) < 1.2) v.vy = 0; v.vx += (slot(i) - p.x) * 0.012; }
+          p.x = Math.max(R, Math.min(W - R, p.x));
+        });
+      } else pts.forEach((p, i) => {
         const q = form.at(i);
         p.x += (q.x * W - p.x) * 0.05; p.y += (q.y * H - p.y) * 0.05;
       });
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, W, H);
       ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.setLineDash([2, 11]);
-      form.edges.forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(pts[a].x, pts[a].y); ctx.lineTo(pts[b].x, pts[b].y); ctx.stroke(); });
+      if (!fallen) form.edges.forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(pts[a].x, pts[a].y); ctx.lineTo(pts[b].x, pts[b].y); ctx.stroke(); });
       ctx.setLineDash([]);
       // Outlines only: the links stop at the rings, the inside stays empty
       ctx.globalCompositeOperation = 'destination-out';
@@ -199,7 +220,7 @@ export default function AboutPage({ onNavigatePolicy, onGridMode }: { onNavigate
           })()}
         </div>
         {/* «Наши услуги» on the third column, the list on the fourth */}
-        <div style={{
+        <div ref={servicesRef} style={{
           marginTop: 'var(--space-xl)',
           display: 'grid', columnGap: 'var(--gap)',
           gridTemplateColumns: isMobile ? '1fr' : 'repeat(5, minmax(0, 1fr))',

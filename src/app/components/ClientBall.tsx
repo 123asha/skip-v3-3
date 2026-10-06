@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import svgPaths from '../../imports/Index/svg-3bjnx36a2y';
+import { sound } from '../sound/Sound';
+import { asset } from '../utils/asset';
 
 // The ping-pong ball under the «Нам доверяют» ticker. It turns slowly on its
 // spot; its sticker is the Skip Design logo, or — while a client's name is
@@ -53,17 +55,46 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
         g.fill(new Path2D(paths[0] + paths[3]), 'evenodd');
         g.restore();
       };
+      // The sticker: the favicon — a black ball with its white glint — on each side of the ball
+      const fav = new Image();
       const makeTex = (_label: string | null) => {
         const c = document.createElement('canvas'); c.width = 1024; c.height = 512;
         const g = c.getContext('2d')!;
-        g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
-        g.fillStyle = '#111111';
-        for (const cx of [256, 768]) drawLogo(g, cx, 170);
+        const paint = () => {
+          g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
+          if (fav.complete && fav.naturalWidth) for (const cx of [256, 768]) g.drawImage(fav, cx - 85, 256 - 85, 170, 170);
+        };
+        paint();
+        fav.addEventListener('load', () => { paint(); t.needsUpdate = true; });
         const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
         return t;
       };
+      fav.src = asset('/fav-black-nobg.png');
       const texSkip = makeTex(null);
-      const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: texSkip, roughness: 0.95, metalness: 0 });
+      // The shading of the service balls, exactly: a bright soft base (#fdfdfd → #f4f4f4 → #e9e9e9),
+      // a glint at the upper left and a faint shade at the lower right, laid over the sticker
+      texSkip.colorSpace = THREE.NoColorSpace;
+      const mat = new THREE.ShaderMaterial({
+        uniforms: { map: { value: texSkip } },
+        vertexShader: `
+          varying vec2 vUv; varying vec3 vN;
+          void main() { vUv = uv; vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+        fragmentShader: `
+          uniform sampler2D map; varying vec2 vUv; varying vec3 vN;
+          void main() {
+            vec2 p = vN.xy;
+            float d = length(p - vec2(-0.15, 0.2)) / 1.3;
+            vec3 c0 = vec3(0.992), c1 = vec3(0.957), c2 = vec3(0.914);
+            vec3 col = d < 0.6 ? mix(c0, c1, d / 0.6) : mix(c1, c2, clamp((d - 0.6) / 0.4, 0.0, 1.0));
+            float s = clamp(1.0 - length(p - vec2(-0.4, 0.48)) / 0.7, 0.0, 1.0) * 0.85;
+            col = mix(col, vec3(1.0), s);
+            float q = length(p - vec2(0.45, -0.5)) / 0.95;
+            float a = q < 0.75 ? mix(0.10, 0.02, q / 0.75) : mix(0.02, 0.0, clamp((q - 0.75) / 0.25, 0.0, 1.0));
+            col *= 1.0 - a;
+            col *= texture2D(map, vUv).rgb;
+            gl_FragColor = vec4(col, 1.0);
+          }`,
+      });
       const ball = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), mat);
       ball.rotation.x = 0.35;
       scene.add(ball);
@@ -81,6 +112,7 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
       // line, and bounces to rest, squashing on each landing
       const ap = { on: false, oy: 0, v: 0, sq: 0, f: 0, wasIn: false };
       const startAppear = (r0: number) => { ap.on = true; ap.oy = -r0 * 1.3; ap.v = 0; ap.sq = 0; ap.f = 0; };
+      let hoverT = 0, knocked = false;
       let lx = 0, ly = 0, lineA = 0, lastTarget: { x: number; y: number } | null = null;
       const nameBox = (name: string, bx: number) => {
         // The name's place under the ticker: of the two copies, the one nearest the ball
@@ -150,12 +182,19 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
             const rc = nameBox(want, hb.left + x * zk);
             if (rc) { lastTarget = { x: ((rc.left + rc.right) / 2 - hb.left) / zk, y: (rc.bottom - hb.top) / zk }; hasT = true; }
           }
+          // While a name is hovered the ball keeps lunging at it, knocks against it and
+          // drops back — to and fro — until the pointer moves away
           if (hasT && lastTarget) {
             const dx = lastTarget.x - x, dy = lastTarget.y - yScreen, d = Math.hypot(dx, dy) || 1;
-            const lean = Math.min(d * 0.22, r * 0.45);
-            tx = x + (dx / d) * lean; ty = yScreen + (dy / d) * lean;
-          }
-          lx += (tx - x - lx) * 0.12; ly += (ty - yScreen - ly) * 0.12;
+            const reach = Math.min(Math.max(d - r * 0.95, 0), 130);
+            hoverT += 1 / 60;
+            const ph = Math.abs(Math.sin(hoverT * 3.4));
+            if (ph > 0.96 && !knocked) { knocked = true; ap.sq = Math.max(ap.sq, 0.7); sound.play('tap', 120); }
+            if (ph < 0.7) knocked = false;
+            tx = x + (dx / d) * reach * ph; ty = yScreen + (dy / d) * reach * ph;
+          } else { hoverT = 0; knocked = false; }
+          const k = hasT ? 0.45 : 0.12;
+          lx += (tx - x - lx) * k; ly += (ty - yScreen - ly) * k;
           lineA += ((hasT ? 0.9 : 0) - lineA) * 0.15;
           x += lx; yScreen += ly;
           let sx = 1, sy = 1;

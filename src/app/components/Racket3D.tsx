@@ -102,26 +102,54 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
       ball.castShadow = true;
       scene.add(ball);
 
-      // A table-tennis paddle: a solid round blade — black rubber on this side,
-      // pale on the other, a thin wooden rim — and a short flared handle
+      // A table-tennis paddle after the poster: a round red blade with a fine dot
+      // pattern, a pale wooden throat running down into the black handle, whose
+      // top is cut in a V, the handle widening a little and ending in a round tip
       const racket = new THREE.Group();
-      const rubberBlack = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.9 });
-      const rubberPale = new THREE.MeshStandardMaterial({ color: 0xf4f4f4, roughness: 0.9 });
-      const wood = new THREE.MeshStandardMaterial({ color: 0xd9c3a0, roughness: 0.75 });
-      const T = 0.055;
-      const rim = new THREE.Mesh(new THREE.CylinderGeometry(RACKET_R, RACKET_R, T, 96), wood);
-      rim.rotation.x = Math.PI / 2;
-      const front = new THREE.Mesh(new THREE.CylinderGeometry(RACKET_R * 0.985, RACKET_R * 0.985, 0.012, 96), rubberBlack);
-      front.rotation.x = Math.PI / 2; front.position.z = T / 2 + 0.004;
-      const back = new THREE.Mesh(new THREE.CylinderGeometry(RACKET_R * 0.985, RACKET_R * 0.985, 0.012, 96), rubberPale);
-      back.rotation.x = Math.PI / 2; back.position.z = -T / 2 - 0.004;
-      // The handle: slightly flared towards the end, flat like a paddle's
-      const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.125, 0.62, 32), wood);
-      handle.position.set(0, -RACKET_R - 0.26, 0);
-      handle.scale.z = 0.5;
-      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.125, 0.125, 0.04, 32), new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.8 }));
-      cap.position.set(0, -RACKET_R - 0.58, 0); cap.scale.z = 0.5;
-      racket.add(rim, front, back, handle, cap);
+      const R0 = RACKET_R;
+      const wood = new THREE.Shape();
+      wood.moveTo(-0.575 * R0, -0.82 * R0);
+      wood.absarc(0, 0, R0, (235 * Math.PI) / 180, (-55 * Math.PI) / 180, true);
+      wood.quadraticCurveTo(0.32 * R0, -0.97 * R0, 0.23 * R0, -1.55 * R0);
+      wood.lineTo(-0.23 * R0, -1.55 * R0);
+      wood.quadraticCurveTo(-0.32 * R0, -0.97 * R0, -0.575 * R0, -0.82 * R0);
+      const rubber = new THREE.Shape();
+      const rr = R0 * 0.975, cy = -0.52 * R0, a0 = Math.asin(cy / rr);
+      rubber.moveTo(-rr * Math.cos(a0), cy);
+      rubber.absarc(0, 0, rr, Math.PI - a0, a0, true);
+      rubber.quadraticCurveTo(0, cy + 0.2 * R0, -rr * Math.cos(a0), cy);
+      const grip = new THREE.Shape();
+      grip.moveTo(-0.27 * R0, -1.18 * R0);
+      grip.lineTo(0, -1.5 * R0);
+      grip.lineTo(0.27 * R0, -1.18 * R0);
+      grip.lineTo(0.36 * R0, -2.45 * R0);
+      grip.absarc(0, -2.45 * R0, 0.36 * R0, 0, -Math.PI, true);
+      grip.lineTo(-0.27 * R0, -1.18 * R0);
+      const slab = (shape: import('three').Shape, depth: number, z: number, mat: import('three').Material) => {
+        const g = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 48 });
+        g.translate(0, 0, z);
+        return new THREE.Mesh(g, mat);
+      };
+      const dots = (() => {
+        const c = document.createElement('canvas'); c.width = c.height = 64;
+        const g = c.getContext('2d')!;
+        g.fillStyle = '#c4161c'; g.fillRect(0, 0, 64, 64);
+        g.fillStyle = '#dc3d40';
+        for (const [x, y] of [[16, 16], [48, 16], [32, 48], [0, 48], [64, 48]]) { g.beginPath(); g.arc(x, y, 8, 0, Math.PI * 2); g.fill(); }
+        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+        t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(7, 7); t.anisotropy = 4;
+        return t;
+      })();
+      const woodMat = new THREE.MeshStandardMaterial({ color: 0xd9d3b1, roughness: 0.8 });
+      const redMat = new THREE.MeshStandardMaterial({ map: dots, roughness: 0.85 });
+      const blackMat = new THREE.MeshStandardMaterial({ color: 0x121212, roughness: 0.7 });
+      const T = 0.05, RB = 0.016;
+      racket.add(
+        slab(wood, T, -T / 2, woodMat),
+        slab(rubber, RB, T / 2, redMat),
+        slab(rubber, RB, -T / 2 - RB, blackMat),
+        slab(grip, T * 1.15, -T * 0.575, blackMat),
+      );
       racket.traverse(o => { (o as import('three').Mesh).castShadow = true; });
       scene.add(racket);
       // The string: from the middle of the paddle's face to the ball

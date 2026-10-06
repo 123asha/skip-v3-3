@@ -165,74 +165,103 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       ballHolder.add(ball);
       scene.add(ballHolder);
 
-      // A table-tennis paddle after the render: a slightly egg-shaped red blade
-      // with a thin edge, and a long slim flat handle of layered light wood
+      // An Apple Magic Keyboard, lying flat, keys up: a thin rounded aluminium slab
+      // with white keys in the real layout — the ball is batted with it
       const racket = new THREE.Group();
-      const R0 = RACKET_R;
-      const bladeWood = new THREE.Shape();
-      bladeWood.moveTo(-0.5 * R0, -0.86 * R0);
-      bladeWood.absarc(0, 0, R0, (240 * Math.PI) / 180, (-60 * Math.PI) / 180, true);
-      bladeWood.quadraticCurveTo(0.2 * R0, -0.98 * R0, 0.17 * R0, -1.15 * R0);
-      bladeWood.lineTo(-0.17 * R0, -1.15 * R0);
-      bladeWood.quadraticCurveTo(-0.2 * R0, -0.98 * R0, -0.5 * R0, -0.86 * R0);
-      const edge = new THREE.Shape();
-      edge.absarc(0, 0, R0 * 1.004, 0, Math.PI * 2, false);
-      const rubber = new THREE.Shape();
-      const rr = R0 * 0.968, cy = -0.55 * R0, a0 = Math.asin(cy / rr);
-      rubber.moveTo(-rr * Math.cos(a0), cy);
-      rubber.absarc(0, 0, rr, Math.PI - a0, a0, true);
-      rubber.quadraticCurveTo(0, cy + 0.12 * R0, -rr * Math.cos(a0), cy);
-      // The handle: straight, slim, widening a little towards a rounded-square end
-      const grip = new THREE.Shape();
-      grip.moveTo(-0.17 * R0, -1.1 * R0);
-      grip.lineTo(0.17 * R0, -1.1 * R0);
-      grip.quadraticCurveTo(0.2 * R0, -1.8 * R0, 0.27 * R0, -2.3 * R0);
-      grip.quadraticCurveTo(0.29 * R0, -2.46 * R0, 0.14 * R0, -2.46 * R0);
-      grip.lineTo(-0.14 * R0, -2.46 * R0);
-      grip.quadraticCurveTo(-0.29 * R0, -2.46 * R0, -0.27 * R0, -2.3 * R0);
-      grip.quadraticCurveTo(-0.2 * R0, -1.8 * R0, -0.17 * R0, -1.1 * R0);
-      const slab = (shape: import('three').Shape, depth: number, z: number, mat: import('three').Material) => {
-        const g = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 64 });
-        g.translate(0, 0, z);
-        return new THREE.Mesh(g, mat);
+      const U = 0.138, GAP = 0.013, MARGIN = 0.055;         // key pitch, gap between keys, rim
+      type K = { label: string; w: number; h?: number; dz?: number; small?: boolean };
+      const k = (label: string, w = 1, small = false): K => ({ label, w, small });
+      const ROWS: K[][] = [
+        [k('esc', 1, true), ...Array.from({ length: 12 }, (_, i) => k(`F${i + 1}`, 1, true)), k('', 1)].map(x => ({ ...x, w: 14.5 / 14, h: 0.5 })),
+        [k('`'), ...'1234567890-='.split('').map(c => k(c)), k('delete', 1.5, true)],
+        [k('tab', 1.5, true), ...'QWERTYUIOP[]\\'.split('').map(c => k(c))],
+        [k('caps lock', 1.75, true), ...'ASDFGHJKL;\''.split('').map(c => k(c)), k('return', 1.75, true)],
+        [k('shift', 2.25, true), ...'ZXCVBNM,./'.split('').map(c => k(c)), k('shift', 2.25, true)],
+        [k('fn', 1, true), k('control', 1, true), k('option', 1, true), k('command', 1.25, true), k('', 5), k('command', 1.25, true), k('option', 1, true),
+          k('◀', 1), { label: '▲', w: 1, h: 0.5, dz: -0.25 }, k('▶', 1)],
+      ];
+      const KW = 14.5 * U + 2 * MARGIN, KD = 5.5 * U + 2 * MARGIN;
+      const BASE_H = 0.045, KEY_H = 0.016, TOP_H = BASE_H + KEY_H;   // the key tops are where the ball is hit
+      // The base: a rounded slab, extruded upwards
+      const baseShape = new THREE.Shape();
+      const cr = 0.07;
+      baseShape.moveTo(-KW / 2 + cr, -KD / 2);
+      baseShape.lineTo(KW / 2 - cr, -KD / 2); baseShape.quadraticCurveTo(KW / 2, -KD / 2, KW / 2, -KD / 2 + cr);
+      baseShape.lineTo(KW / 2, KD / 2 - cr); baseShape.quadraticCurveTo(KW / 2, KD / 2, KW / 2 - cr, KD / 2);
+      baseShape.lineTo(-KW / 2 + cr, KD / 2); baseShape.quadraticCurveTo(-KW / 2, KD / 2, -KW / 2, KD / 2 - cr);
+      baseShape.lineTo(-KW / 2, -KD / 2 + cr); baseShape.quadraticCurveTo(-KW / 2, -KD / 2, -KW / 2 + cr, -KD / 2);
+      const baseGeo = new THREE.ExtrudeGeometry(baseShape, { depth: BASE_H - 0.01, bevelEnabled: true, bevelThickness: 0.005, bevelSize: 0.006, bevelSegments: 3, curveSegments: 12 });
+      baseGeo.rotateX(-Math.PI / 2); baseGeo.translate(0, 0.005, 0);
+      const alu = new THREE.MeshStandardMaterial({ color: 0xd9dadd, roughness: 0.42, metalness: 0.25 });
+      const base = new THREE.Mesh(baseGeo, alu);
+      racket.add(base);
+      // Keys: their tops share one picture of the whole layout with the legends
+      const keyTex = (() => {
+        const PX = 140;                                  // canvas px per key unit
+        const c = document.createElement('canvas'); c.width = Math.round(14.5 * PX); c.height = Math.round(5.5 * PX);
+        const g = c.getContext('2d')!;
+        g.fillStyle = '#f7f7f8'; g.fillRect(0, 0, c.width, c.height);
+        g.fillStyle = '#4a4a4c'; g.textBaseline = 'middle';
+        let zy = 0;
+        ROWS.forEach((row, ri) => {
+          const rh = ri === 0 ? 0.5 : 1;
+          let x = 0;
+          row.forEach(key => {
+            const kh = key.h ?? rh, ky = zy + (key.dz ?? 0) + (rh - kh) / 2 + (key.dz ? 0 : 0);
+            if (key.label) {
+              const small = key.small || key.label.length > 1;
+              g.font = `${small ? 400 : 400} ${Math.round(PX * (small ? 0.17 : 0.3))}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
+              if (small) { g.textAlign = 'left'; g.fillText(key.label, x * PX + PX * 0.14, (ky + kh) * PX - PX * 0.18 * Math.min(1, kh * 1.6)); }
+              else { g.textAlign = 'center'; g.fillText(key.label, (x + key.w / 2) * PX, (ky + kh / 2) * PX); }
+              if (key.label === '▲') { g.textAlign = 'center'; g.fillText('▼', (x + key.w / 2) * PX, (ky + kh + 0.25) * PX); }
+            }
+            x += key.w;
+          });
+          zy += rh;
+        });
+        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+        return t;
+      })();
+      const keyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, map: keyTex, roughness: 0.55 });
+      const keySide = new THREE.MeshStandardMaterial({ color: 0xf1f1f3, roughness: 0.6 });
+      type KeyMesh = { mesh: import('three').Mesh; x0: number; x1: number; z0: number; z1: number; press: number };
+      const keys: KeyMesh[] = [];
+      const ox = -14.5 * U / 2, oz = -5.5 * U / 2;
+      const addKey = (x: number, z: number, w: number, d: number) => {
+        // x, z, w, d in key units, from the back-left corner of the key area
+        const geo = new THREE.BoxGeometry(w * U - GAP, KEY_H, d * U - GAP);
+        // the top face (+y: vertices 8–11) shows its own patch of the layout picture
+        const uv = geo.attributes.uv;
+        const u0 = x / 14.5, u1 = (x + w) / 14.5, v0 = 1 - z / 5.5, v1 = 1 - (z + d) / 5.5;
+        uv.setXY(8, u0, v1); uv.setXY(9, u1, v1); uv.setXY(10, u0, v0); uv.setXY(11, u1, v0);
+        const mesh = new THREE.Mesh(geo, [keySide, keySide, keyMat, keySide, keySide, keySide]);
+        const cx = ox + (x + w / 2) * U, cz = oz + (z + d / 2) * U;
+        mesh.position.set(cx, BASE_H + KEY_H / 2, cz);
+        racket.add(mesh);
+        keys.push({ mesh, x0: cx - (w * U) / 2, x1: cx + (w * U) / 2, z0: cz - (d * U) / 2, z1: cz + (d * U) / 2, press: 0 });
       };
-      const rubberTex = (() => {
-        const c = document.createElement('canvas'); c.width = c.height = 64;
-        const g = c.getContext('2d')!;
-        g.fillStyle = '#d4483d'; g.fillRect(0, 0, 64, 64);
-        g.fillStyle = '#dd5a4e';
-        for (const [x, y] of [[16, 16], [48, 16], [32, 48], [0, 48], [64, 48]]) { g.beginPath(); g.arc(x, y, 8, 0, Math.PI * 2); g.fill(); }
-        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
-        t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(7, 7); t.anisotropy = 4;
-        return t;
-      })();
-      // Plywood layers: fine darker lines running along the handle
-      const woodTex = (() => {
-        const c = document.createElement('canvas'); c.width = 128; c.height = 8;
-        const g = c.getContext('2d')!;
-        g.fillStyle = '#dcc7a2'; g.fillRect(0, 0, 128, 8);
-        g.fillStyle = '#b99a6c';
-        for (const x of [20, 56, 92]) g.fillRect(x, 0, 3, 8);
-        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
-        t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(5, 1);
-        return t;
-      })();
-      const woodMat = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.7 });
-      const redMat = new THREE.MeshStandardMaterial({ map: rubberTex, roughness: 0.85 });
-      const edgeMat = new THREE.MeshStandardMaterial({ color: 0x8c231c, roughness: 0.8 });
-      const blackMat = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.8 });
-      const T = 0.045, RB = 0.02, TH = 0.075;
-      racket.add(
-        slab(grip, TH, -TH / 2, woodMat),
-        slab(bladeWood, T, -T / 2, woodMat),
-        slab(edge, T + 2 * RB, -T / 2 - RB, edgeMat),
-        slab(rubber, RB + 0.004, T / 2 + 0.0, redMat),
-        slab(rubber, RB + 0.004, -T / 2 - RB - 0.004, blackMat),
-      );
-      // It catches the ball's shadow too: the shadow closes in on the ball as it lands, so a hit reads as a hit
+      {
+        let zy = 0;
+        ROWS.forEach((row, ri) => {
+          const rh = ri === 0 ? 0.5 : 1;
+          let x = 0;
+          row.forEach(key => {
+            const kh = key.h ?? rh;
+            if (key.label === '▲') { addKey(x, zy, key.w, 0.5); addKey(x, zy + 0.5, key.w, 0.5); }
+            else addKey(x, zy + (rh - kh) / 2, key.w, kh);
+            x += key.w;
+          });
+          zy += rh;
+        });
+      }
       racket.traverse(o => { const m = o as import('three').Mesh; m.castShadow = true; m.receiveShadow = true; });
+      // A key pressed where the ball lands
+      const pressAt = (lx: number, lz: number) => {
+        const key = keys.find(q => lx >= q.x0 && lx <= q.x1 && lz >= q.z0 && lz <= q.z1);
+        if (key) key.press = 1;
+      };
       scene.add(racket);
-      // The string: from the middle of the paddle's face to the ball
+      // The string: from the middle of the keyboard to the ball
       const cord = new THREE.Line(
         new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
         new THREE.LineBasicMaterial({ color: 0x111111, transparent: true, opacity: 0.7 }),
@@ -240,7 +269,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       scene.add(cord);
       const LEN = 2.1;
 
-      // Juggling: the paddle lies flat, black side up, at the bottom of the room;
+      // Juggling: the keyboard lies flat, keys up, at the bottom of the room;
       // the ball falls onto it and is knocked back up from below. The pointer
       // slides the paddle across the floor (left–right, near–far); a press
       // swings it up for a harder hit.
@@ -256,8 +285,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const r = renderer.domElement.getBoundingClientRect();
         ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
         if (ray.ray.intersectPlane(plane, hit)) {
-          st.tx = Math.max(-X + 0.5, Math.min(X - 0.5, hit.x));
-          st.tz = Math.max(Z_BACK + 0.6, Math.min(Z_RACKET + 0.2, hit.z));
+          st.tx = Math.max(-X + KW / 2 + 0.05, Math.min(X - KW / 2 - 0.05, hit.x));
+          st.tz = Math.max(Z_BACK + KD / 2 + 0.1, Math.min(Z_RACKET, hit.z));
         }
       };
       const onDown = () => { st.swing = 1; };
@@ -272,9 +301,9 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         st.vx = st.x - px; st.vz = st.z - pz;
         st.swing *= 0.82;
         st.lift = st.swing * 0.35;
-        racket.position.set(st.x, PY + st.lift, st.z);
-        racket.rotation.set(-Math.PI / 2 - st.vz * 3.5, 0, -st.vx * 3.5 + 0.12);
-        racket.rotation.order = 'YXZ';
+        racket.position.set(st.x, PY + st.lift - TOP_H, st.z);
+        racket.rotation.set(st.vz * 2.5, 0, -st.vx * 2.5);
+        keys.forEach(q => { q.press *= 0.82; q.mesh.position.y = BASE_H + KEY_H / 2 - q.press * 0.011; });
 
         // Ball, tied to the middle of the paddle by its string
         b.vy -= 0.0034;
@@ -304,7 +333,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         if (b.z < Z_BACK + BALL_R) { b.z = Z_BACK + BALL_R; b.vz = Math.abs(b.vz) * 0.8; }
         if (b.z > Z_RACKET + 0.4) { b.z = Z_RACKET + 0.4; b.vz = -Math.abs(b.vz) * 0.8; }
         // The paddle's face
-        const top = PY + st.lift + 0.04;
+        const top = PY + st.lift;
         dx = b.x - st.x; dz = b.z - st.z;
         if (b.vy < 0 && b.y - BALL_R < top && b.y - BALL_R > top - 0.3) {
           b.y = top + BALL_R;
@@ -312,6 +341,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           b.vx = b.vx * 0.3 + dx * 0.05 + st.vx * 0.9;
           b.vz = b.vz * 0.3 + dz * 0.05 + st.vz * 0.9;
           hitKick = 1; squash = 1;
+          pressAt(b.x - st.x, b.z - st.z);
           sound.play('tap', 40);
         }
         hitKick *= 0.9;
@@ -323,7 +353,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         ballHolder.position.set(b.x, b.y - BALL_R * (1 - sy) * 0.9, b.z);
         ball.rotation.x += b.vz * 2 + b.vy * 0.3; ball.rotation.z -= b.vx * 2;
         const gp = cord.geometry.attributes.position as import('three').BufferAttribute;
-        gp.setXYZ(0, st.x, PY + st.lift + 0.04, st.z); gp.setXYZ(1, b.x, b.y, b.z); gp.needsUpdate = true;
+        gp.setXYZ(0, st.x, PY + st.lift, st.z); gp.setXYZ(1, b.x, b.y, b.z); gp.needsUpdate = true;
 
         renderer.render(scene, camera);
         raf = requestAnimationFrame(tick);

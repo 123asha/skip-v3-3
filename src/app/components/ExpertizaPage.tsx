@@ -13,6 +13,7 @@ import { ExpertiseSection2, EXPERTISE_LEVELS, EXPERTISE_DEFAULT_LEVEL, OPEN_KEY 
 import { PARA_GAP } from './CaseTemplatePage';
 import { usePinchSteps } from '../hooks/usePinchSteps';
 import { playKnock } from '../utils/knock';
+import { attachTopCurl } from '../utils/topCurl';
 import DownRightArrow from './DownRightArrow';
 
 // ── Service data ──────────────────────────────────────────────────────────────
@@ -891,6 +892,12 @@ const ZOOM_ABOVE: React.CSSProperties = {
 
 export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavigatePolicy?: () => void; onGridMode?: (on: boolean) => void }) {
   const pageRef    = useRef<HTMLDivElement>(null);
+  // Test: the page curls away at the top as it scrolls
+  useEffect(() => {
+    const root = pageRef.current;
+    if (!root) return;
+    return attachTopCurl(root, '[data-exp-row], h2, p');
+  }, []);
   const rowRefs    = useRef<(HTMLDivElement | null)[]>([]);
   const panelRef   = useRef<HTMLDivElement>(null);   // single outer sticky panel
   const contentRef = useRef<HTMLDivElement>(null);   // content wrapper inside the outer panel

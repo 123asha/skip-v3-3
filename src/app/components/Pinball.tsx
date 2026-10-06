@@ -344,7 +344,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
     const loop = () => { step(); step(); draw(); raf = requestAnimationFrame(loop); };
     layout(); serve(); loop();
 
-    const set = (side: 0 | 1, up: boolean) => { flip[side].up = up; };
+    const set = (side: 0 | 1, up: boolean) => { if (flip[side]) flip[side].up = up; };
     const key = (up: boolean) => (e: KeyboardEvent) => {
       if ((e.target as HTMLElement | null)?.closest?.('input, textarea, [contenteditable]')) return;
       if (e.key === 'ArrowLeft' || e.key === 'z' || e.key === 'Shift') set(0, up);

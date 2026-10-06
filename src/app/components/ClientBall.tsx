@@ -77,6 +77,10 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
       const cord = new THREE.Line(lineGeo, lineMat);
       cord.position.z = -50;
       scene.add(cord);
+      // Appearing: the ball drops in from a little above its place, under the «Нам доверяют»
+      // line, and bounces to rest, squashing on each landing
+      const ap = { on: false, oy: 0, v: 0, sq: 0, f: 0, wasIn: false };
+      const startAppear = (r0: number) => { ap.on = true; ap.oy = -r0 * 1.3; ap.v = 0; ap.sq = 0; ap.f = 0; };
       let lx = 0, ly = 0, lineA = 0, lastTarget: { x: number; y: number } | null = null;
       const nameBox = (name: string, bx: number) => {
         // The name's place under the ticker: of the two copies, the one nearest the ball
@@ -105,10 +109,15 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
           x = a.left + a.width / 2; yScreen = a.top + a.height / 2;
           vis = true;
         }
+        if (!fallen) {
+          const inView = !!a && a.top < H * 0.9 && a.top + a.height > 0;
+          if (inView && !ap.wasIn) startAppear(r);
+          ap.wasIn = inView;
+        }
         if (!fallen && vis && yScreen < H * 0.3) { fallen = true; vy = 0; fx = x; fy = yScreen; fr = r; window.dispatchEvent(new CustomEvent('skip-ball-fallen')); }
         // Scrolled back up to the ticker: the ball is there again, ready to drop once more
         if (fallen && a && yScreen > H * 0.5) {
-          fallen = false; gone = false;
+          fallen = false; gone = false; startAppear(r);
           if (handed) { handed = false; }
           window.dispatchEvent(new CustomEvent('skip-ball-return'));
         }
@@ -149,8 +158,24 @@ export default function ClientBall({ anchor, hovered }: { anchor: React.RefObjec
           lx += (tx - x - lx) * 0.12; ly += (ty - yScreen - ly) * 0.12;
           lineA += ((hasT ? 0.9 : 0) - lineA) * 0.15;
           x += lx; yScreen += ly;
-          ball.scale.setScalar(r);
-          ball.position.set(x, H - yScreen, 0);
+          let sx = 1, sy = 1;
+          if (ap.on && !fallen) {
+            ap.f++;
+            ap.v += 0.7; ap.oy += ap.v;
+            if (ap.oy >= 0) {
+              ap.oy = 0;
+              if (ap.v > 2) ap.sq = Math.min(0.5, ap.v / 36);
+              ap.v = -ap.v * 0.4;
+              if (Math.abs(ap.v) < 1.4) { ap.v = 0; ap.on = false; }
+            }
+            yScreen += ap.oy;
+            const grow = Math.min(1, 0.35 + ap.f / 12);
+            sx = sy = grow;
+          }
+          ap.sq *= 0.84;
+          sx *= 1 + 0.12 * ap.sq; sy *= 1 - 0.14 * ap.sq;
+          ball.scale.set(r * sx, r * sy, r * sx);
+          ball.position.set(x, H - (yScreen + r * (1 - sy)), 0);
           if (lastTarget && lineA > 0.01) {
             const pa = lineGeo.attributes.position as import('three').BufferAttribute;
             pa.setXYZ(0, x, H - yScreen, 0); pa.setXYZ(1, lastTarget.x, H - lastTarget.y, 0); pa.needsUpdate = true;

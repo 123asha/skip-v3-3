@@ -424,10 +424,10 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
 
   useReveal(pageRef);
 
-  // Cards roll over the top edge as they leave (no shading here)
+  // Cards roll over the top edge as they leave
   useEffect(() => {
     const root = pageRef.current;
-    return root ? attachTopCurl(root, '[data-case-card]', { shade: false }) : undefined;
+    return root ? attachTopCurl(root, '[data-case-card]') : undefined;
   }, []);
 
   // Cards rise into place from below as they scroll into view, each once.

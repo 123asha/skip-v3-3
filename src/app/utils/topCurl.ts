@@ -17,14 +17,9 @@ const SLOT = 10;   // px height of one slot of the band
 type Layer = { box: HTMLDivElement; slots: HTMLDivElement[]; copies: HTMLElement[]; w: number; h: number; at: number; stale: boolean; mo: MutationObserver;
   moving: { o: HTMLElement; c: HTMLElement[] }[] };
 
-export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?: number; shade?: boolean } = {}) {
+export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?: number } = {}) {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return () => {};
   const zone = opts.zone ?? 0.13;
-  // The curved part of the sheet is shaded: darker towards the turning edge
-  const shade = document.createElement('div');
-  shade.setAttribute('aria-hidden', 'true');
-  shade.style.cssText = 'position:fixed;left:0;right:0;top:0;pointer-events:none;z-index:162;opacity:0;transition:opacity 0.2s;background:linear-gradient(to bottom, rgba(0,0,0,0.20) 0%, rgba(0,0,0,0.08) 55%, rgba(0,0,0,0) 100%)';
-  if (opts.shade !== false) document.body.appendChild(shade);
   let raf = 0, later = 0;
 
   // Small pieces: their flat place on the page (in scroll coordinates), measured while
@@ -109,8 +104,6 @@ export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?
     const vx = vw / 2, vy = y0;         // the shared vanishing point
     const n = Math.ceil(y0 / SLOT);
     const st = root.scrollTop;
-    shade.style.height = `${y0}px`;
-    shade.style.opacity = st > 4 ? '1' : '0';
     const arc = (ex: number, ey: number) => {
       const th = Math.min((y0 - ey) / Rc, Math.PI / 2);
       const dy = (y0 - Rc * Math.sin(th)) - ey;
@@ -201,6 +194,5 @@ export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?
     cancelAnimationFrame(raf); clearTimeout(later);
     touched.forEach(clear);
     layers.forEach((_, el) => dropLayer(el));
-    shade.remove();
   };
 }

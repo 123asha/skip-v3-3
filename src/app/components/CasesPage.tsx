@@ -15,6 +15,7 @@ function img(path: string): { image: string; ar: AR } {
 import { useReveal } from '../hooks/useReveal';
 import { bounceChips, settleChips } from '../utils/chipBounce';
 import { driftTo } from '../utils/parallaxInertia';
+import { attachTopCurl } from '../utils/topCurl';
 
 interface Props {
   onBack: () => void;
@@ -422,6 +423,12 @@ export default function CasesPage({ onBack, onCaseClick, onNavigatePolicy, onGri
   };
 
   useReveal(pageRef);
+
+  // Cards roll over the top edge as they leave (no shading here)
+  useEffect(() => {
+    const root = pageRef.current;
+    return root ? attachTopCurl(root, '[data-case-card]', { shade: false }) : undefined;
+  }, []);
 
   // Cards rise into place from below as they scroll into view, each once.
   // The card's content moves, not the card box — the box is what the zoom

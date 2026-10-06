@@ -30,6 +30,7 @@ const SECTIONS: PageMeta[] = [
   { path: '/cases', title: `Проекты — ${SITE}`, description: 'Проекты студии Skip Design: брендинг, сайты и цифровые продукты — от стратегии до визуальной системы.' },
   { path: '/services', title: `Услуги и решения — ${SITE}`, description: 'Исследования, платформа бренда, нейминг, визуальные системы, сайты и продуктовый дизайн: что делает студия Skip Design и как.' },
   { path: '/insights', title: `Инсайты — ${SITE}`, description: 'Статьи, фреймворки и памятки студии Skip Design о бренд-стратегии, продукте, метафорах и ИИ в дизайне.' },
+  { path: '/about', title: `О студии — ${SITE}`, description: 'Skip Design — команда стратегов, дизайнеров и менеджеров: как мы работаем и во что верим.' },
   { path: '/Seniorsbar', title: `Senior*s bar — кейс ${SITE}`, description: 'Кейс студии Skip Design: бренд и сайт для бара Senior*s в Тбилиси.' },
   { path: '/plugin-aliexpress', title: `Плагин AliExpress — кейс ${SITE}`, description: 'Кейс студии Skip Design: обновили дизайн плагина AE Platform для продавцов-участников партнёрской программы AliExpress.' },
   { path: '/ae-platform', title: `AE Platform — кейс ${SITE}`, description: 'Кейс студии Skip Design: обновили дизайн B2B-платформы AE Platform для продавцов-участников партнёрской программы AliExpress.' },
@@ -76,7 +77,7 @@ export function allPages(): PageMeta[] {
 /** The metadata for an address the app is showing (falls back to the home page's) */
 export function pageMetaFor(path: string): PageMeta {
   const p = path.replace(/\/$/, '') || '/';
-  const alias = p === '/lab' ? '/insights' : p === '/expertiza' ? '/services' : p;
+  const alias = p === '/lab' ? '/insights' : p === '/expertiza' ? '/services' : p === '/about-skip-design' ? '/about' : p;
   if (alias.startsWith('/insights/')) {
     const i = insightBySlug(alias.slice('/insights/'.length));
     if (i) return articleMeta(i);

@@ -55,7 +55,7 @@ function sectionTitleFor(path: string): string | null {
   if (p === '/services' || p === '/services-2' || p === '/expertiza') return 'Услуги и решения студии';
   if (p === '/insights' || p === '/lab') return 'Инсайты команды';
   if (p === '') return 'Skip Design';
-  if (p === '/about-skip-design') return 'Skip Design';
+  if (p === '/about' || p === '/about-skip-design') return 'Skip Design';
   return null;
 }
 import DesignSystemPage from './components/DesignSystemPage';
@@ -425,7 +425,7 @@ function AppInner() {
   });
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
-  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/services-2', '/policy', '/index2', '/case-template', '/Seniorsbar', ...Object.keys(CASE_PAGES), '/guide', '/lab', '/insights', '/system', '/brand', '/visual', '/digital', '/about-skip-design'];
+  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/services-2', '/policy', '/index2', '/case-template', '/Seniorsbar', ...Object.keys(CASE_PAGES), '/guide', '/lab', '/insights', '/system', '/brand', '/visual', '/digital', '/about-skip-design', '/about'];
   const page = pathname === '/cases' ? 'cases'
              : pathname === '/instruments' ? 'instruments'
              : (pathname === '/expertiza' || pathname === '/services') ? 'expertiza'
@@ -437,7 +437,7 @@ function AppInner() {
              : pathname === '/Seniorsbar' ? 'seniors'
              : CASE_PAGES[pathname] ? 'binaroom'
              : pathname === '/guide' ? 'guide'
-             : pathname === '/about-skip-design' ? 'about'
+             : (pathname === '/about' || pathname === '/about-skip-design') ? 'about'
              // /lab is the old address of the insights page — still opens it
              : pathname === '/insights' || pathname === '/lab' ? 'lab'
              // An insight's own article page (unknown slugs fall through to 404)

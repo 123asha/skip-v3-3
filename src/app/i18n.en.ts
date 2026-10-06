@@ -458,6 +458,8 @@ export const EN: Record<string, string> = {
   // ── Page titles and descriptions (search / share tags) ──
   'Проекты — Skip Design': 'Projects — Skip Design',
   'Услуги и решения — Skip Design': 'Services and solutions — Skip Design',
+  'О студии — Skip Design': 'About — Skip Design',
+  'Skip Design — команда стратегов, дизайнеров и менеджеров: как мы работаем и во что верим.': 'Skip Design is a team of strategists, designers and managers: how we work and what we believe in.',
   'Инсайты — Skip Design': 'Insights — Skip Design',
   'Политика конфиденциальности — Skip Design': 'Privacy policy — Skip Design',
   'Senior*s bar — кейс Skip Design': 'Senior*s bar — Skip Design case',

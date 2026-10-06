@@ -12,6 +12,18 @@ const BALL_R = 0.17, RACKET_R = 0.62;
 
 export default function Racket3D(_: { onGoHome?: () => void }) {
   const host = useRef<HTMLDivElement>(null);
+  const grain = useRef<HTMLDivElement>(null);
+  // The grain: one tile of soft noise, made once
+  useEffect(() => {
+    const c = document.createElement('canvas'); c.width = c.height = 256;
+    const g = c.getContext('2d')!, img = g.createImageData(256, 256);
+    for (let i = 0; i < img.data.length; i += 4) {
+      const v = 128 + (Math.random() + Math.random() + Math.random() - 1.5) * 120;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+    if (grain.current) grain.current.style.backgroundImage = `url(${c.toDataURL()})`;
+  }, []);
 
   useEffect(() => {
     let stop = false;
@@ -25,6 +37,9 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       renderer.setClearColor(BG);
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      // A filmic grade, as in a studio render: soft highlights, gentle contrast
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.12;
       el.appendChild(renderer.domElement);
       renderer.domElement.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
 
@@ -40,15 +55,17 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       resize();
       window.addEventListener('resize', resize);
 
-      scene.add(new THREE.AmbientLight(0xffffff, 1.15));
-      const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+      // Warm key light from above, cool fill from the sky and a warm bounce from the floor
+      scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+      scene.add(new THREE.HemisphereLight(0xeef2ff, 0xf3e6d6, 0.9));
+      const sun = new THREE.DirectionalLight(0xfff1e2, 1.9);
       sun.position.set(-0.8, 6, 1.2);
       sun.castShadow = true;
       sun.shadow.mapSize.set(2048, 2048);
       sun.shadow.camera.left = -X - 1; sun.shadow.camera.right = X + 1;
       sun.shadow.camera.top = 5; sun.shadow.camera.bottom = -5;
       sun.shadow.camera.near = 1; sun.shadow.camera.far = 14;
-      sun.shadow.radius = 5; sun.shadow.bias = -0.0004;
+      sun.shadow.radius = 9; sun.shadow.bias = -0.0004;
       scene.add(sun);
 
       // The room: only its edges, very faint
@@ -334,6 +351,16 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 160, background: '#eaeaea', animation: 'pageIn 0.35s 0.05s ease both' }}>
       <div ref={host} style={{ position: 'absolute', inset: 0 }} />
+      {/* Film grain and a soft vignette over the render */}
+      <div aria-hidden="true" style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: 'radial-gradient(120% 90% at 50% 45%, rgba(0,0,0,0) 55%, rgba(40,30,20,0.16) 100%)',
+      }} />
+      <div aria-hidden="true" ref={grain} style={{
+        position: 'absolute', inset: '-50%', pointerEvents: 'none', opacity: 0.32, mixBlendMode: 'overlay',
+        animation: 'grain404 0.5s steps(5) infinite',
+      }} />
+      <style>{`@keyframes grain404{0%{transform:translate(0,0)}20%{transform:translate(-7%,4%)}40%{transform:translate(5%,-6%)}60%{transform:translate(-4%,-3%)}80%{transform:translate(6%,5%)}100%{transform:translate(0,0)}}`}</style>
     </div>
   );
 }

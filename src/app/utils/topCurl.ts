@@ -64,7 +64,10 @@ export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?
     const box = document.createElement('div');
     box.setAttribute('aria-hidden', 'true');
     box.setAttribute('data-curl-layer', '');
-    box.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;z-index:5';
+    // At body level (inside the scrolling page Safari ties a fixed box to the page, and the copies drift),
+    // but wearing the page's own class, so the stylesheet's rules for the cards still reach the copies
+    box.className = root.className;
+    box.style.cssText = 'position:fixed;inset:auto;left:0;top:0;width:0;height:0;overflow:visible;background:none;animation:none;transform:none;padding:0;margin:0;pointer-events:none;z-index:161';
     const slots: HTMLDivElement[] = [], copies: HTMLElement[] = [];
     for (let j = 0; j < n; j++) {
       const s = document.createElement('div');
@@ -73,9 +76,7 @@ export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?
       s.appendChild(c); box.appendChild(s);
       slots.push(s); copies.push(c);
     }
-    // Inside the page, so the stylesheet's descendant rules still reach the copies,
-    // but out of the card's own list, so the page's scripts don't take them for cards
-    root.appendChild(box);
+    document.body.appendChild(box);
     copies.forEach(c => syncAnims(el, c));
     // When the card changes (a ball drops in, a slide turns) its copies are made again, a little later
     const mo = new MutationObserver(recs => {
@@ -102,7 +103,10 @@ export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?
     const Rc = y0;                      // the roll: its top is the top edge of the screen
     const P = 900;                      // the one perspective for everything
     const vx = vw / 2, vy = y0;         // the shared vanishing point
-    const n = Math.ceil(y0 / SLOT);
+    // The band shows the flat page from y0 up past the top edge: a quarter turn of the
+    // roll (Rc·π/2 of page), so the sheet reaches the very top of the screen
+    const n = Math.ceil((Rc * Math.PI) / 2 / SLOT);
+    const yTop = y0 - n * SLOT;         // the highest flat line the band still shows (above the screen)
     const st = root.scrollTop;
     const arc = (ex: number, ey: number) => {
       const th = Math.min((y0 - ey) / Rc, Math.PI / 2);
@@ -111,7 +115,7 @@ export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?
       const ox = vx - ex, oy = vy - ey;
       return {
         tf: `translate(${ox.toFixed(1)}px, ${oy.toFixed(1)}px) perspective(${P}px) translate(${(-ox).toFixed(1)}px, ${(-oy).toFixed(1)}px) translateY(${dy.toFixed(1)}px) translateZ(${z.toFixed(1)}px) rotateX(${((th * 180) / Math.PI).toFixed(2)}deg)`,
-        op: Math.max(0, Math.min(1, (1.57 - th) / 0.25)),
+        op: Math.max(0, Math.min(1, (Math.PI / 2 - th) / 0.08)),   // gone only when edge-on
       };
     };
 
@@ -144,9 +148,9 @@ export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?
           else if (!later) later = window.setTimeout(() => { later = 0; onScroll(); }, 260);
         }
         // Copies are made ahead, while the card is still below the band — one card a frame
-        if (!l && top < y0 + vh * 0.6 && bottom > 0 && !built) { l = buildLayer(el, W, H, n); built++; }
+        if (!l && top < y0 + vh * 0.6 && bottom > yTop && !built) { l = buildLayer(el, W, H, n); built++; }
         if (!l) continue;
-        if (top >= y0 || bottom <= 0) {
+        if (top >= y0 || bottom <= yTop) {
           if (el.style.clipPath) el.style.clipPath = '';
           l.slots.forEach(hide);
           continue;

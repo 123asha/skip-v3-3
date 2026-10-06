@@ -1,3 +1,4 @@
+import TableBallRain from './TableBallRain';
 import ZoomControl from './ZoomControl';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
@@ -891,6 +892,7 @@ const ZOOM_ABOVE: React.CSSProperties = {
 
 export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavigatePolicy?: () => void; onGridMode?: (on: boolean) => void }) {
   const pageRef    = useRef<HTMLDivElement>(null);
+  const tableRef   = useRef<HTMLDivElement>(null);
   const rowRefs    = useRef<(HTMLDivElement | null)[]>([]);
   const panelRef   = useRef<HTMLDivElement>(null);   // single outer sticky panel
   const contentRef = useRef<HTMLDivElement>(null);   // content wrapper inside the outer panel
@@ -1037,7 +1039,7 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
           the first block under the title now, so it carries the title →
           content gap (the title is absolutely positioned) in place of its own
           section spacing. */}
-      <div style={{ display: 'flow-root', position: 'relative', marginTop: 'calc(var(--inner-content-top) - var(--space-xl))' }}>
+      <div ref={tableRef} style={{ display: 'flow-root', position: 'relative', marginTop: 'calc(var(--inner-content-top) - var(--space-xl))' }}>
         {/* ⌘ ⊖ ⊕ — top-left, ~40px above where the table starts (desktop;
             phones have no fold control). Folds/unfolds the table below. */}
         {!isMobile && (
@@ -1053,7 +1055,8 @@ export default function ExpertizaPage({ onNavigatePolicy, onGridMode }: { onNavi
         <ExpertiseSection2 level={level} showHeading={false} />
       </div>
 
-      <IntroBlock />
+      {/* Almost past the table, the closed services' balls tumble out of it into this block */}
+      <TableBallRain table={tableRef}><IntroBlock /></TableBallRain>
 
       <TileBlocks />
 

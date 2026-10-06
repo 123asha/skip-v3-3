@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { sound } from '../sound/Sound';
 import PillButton from './PillButton';
+import { useMobile } from '../hooks/useMobile';
 import svgPaths from '../../imports/Index/svg-3bjnx36a2y';
 
 // 404 alternative (localhost only): a minimalist table-tennis paddle in real 3D (three.js)
@@ -12,6 +13,7 @@ const X = 2.6, Y = 1.5, Z_BACK = -4, Z_RACKET = 2.2;
 const BALL_R = 0.17, RACKET_R = 0.62;
 
 export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
+  const isMobile = useMobile();
   const host = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -291,7 +293,7 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
     <div style={{ position: 'fixed', inset: 0, zIndex: 160, background: '#eaeaea', animation: 'pageIn 0.35s 0.05s ease both' }}>
       <div ref={host} style={{ position: 'absolute', inset: 0 }} />
       <div style={{
-        position: 'absolute', top: 'var(--pad)', left: '50%', transform: 'translateX(-50%)', pointerEvents: 'none',
+        position: 'absolute', top: isMobile ? 'calc(var(--pad) + 74px)' : 'var(--pad)', left: '50%', transform: 'translateX(-50%)', pointerEvents: 'none',
         fontFamily: 'var(--font-display)',
         fontSize: 'var(--hero-fs, min(var(--hero-size), 7.2vw))',
         fontWeight: 'var(--heading-weight)' as React.CSSProperties['fontWeight'],

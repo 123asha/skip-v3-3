@@ -8,7 +8,12 @@
  */
 export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?: number } = {}) {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return () => {};
-  const zone = opts.zone ?? 0.3;
+  const zone = opts.zone ?? 0.13;
+  // The curved part of the sheet is shaded: darker towards the turning edge
+  const shade = document.createElement('div');
+  shade.setAttribute('aria-hidden', 'true');
+  shade.style.cssText = 'position:fixed;left:0;right:0;top:0;pointer-events:none;z-index:150;opacity:0;transition:opacity 0.2s';
+  document.body.appendChild(shade);
   let raf = 0;
   const touched = new Set<HTMLElement>();
   const clear = (el: HTMLElement) => { el.style.transform = ''; el.style.opacity = ''; el.style.transformOrigin = ''; };
@@ -17,8 +22,11 @@ export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?
     const vh = window.innerHeight, vw = window.innerWidth;
     const y0 = vh * zone;               // where the page starts to bend
     const Rc = y0 / 1.5;                // radius of the roll: a quarter turn and a bit across the band
-    const P = 1000;                     // the one perspective for everything
+    const P = 900;                     // the one perspective for everything
     const vx = vw / 2, vy = y0;         // the shared vanishing point
+    shade.style.height = `${y0}px`;
+    shade.style.background = 'linear-gradient(to bottom, rgba(0,0,0,0.20) 0%, rgba(0,0,0,0.08) 55%, rgba(0,0,0,0) 100%)';
+    shade.style.opacity = root.scrollTop > 4 ? '1' : '0';
     const now = new Set<HTMLElement>();
     root.querySelectorAll<HTMLElement>(selector).forEach(el => {
       const r = el.getBoundingClientRect();
@@ -33,7 +41,8 @@ export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?
       const ox = vx - ex, oy = vy - ey;
       el.style.transformOrigin = '50% 50%';
       el.style.transform = `translate(${ox.toFixed(1)}px, ${oy.toFixed(1)}px) perspective(${P}px) translate(${(-ox).toFixed(1)}px, ${(-oy).toFixed(1)}px) translateY(${dy.toFixed(1)}px) translateZ(${z.toFixed(1)}px) rotateX(${((th * 180) / Math.PI).toFixed(1)}deg)`;
-      el.style.opacity = String(Math.max(0, 1 - Math.pow(th / 1.5, 1.6)));
+      // The sheet stays solid as it turns; only once it has gone over the roll does it vanish
+      el.style.opacity = String(Math.max(0, Math.min(1, (1.65 - th) / 0.4)));
       now.add(el);
     });
     touched.forEach(el => { if (!now.has(el)) clear(el); });
@@ -48,5 +57,6 @@ export function attachTopCurl(root: HTMLElement, selector: string, opts: { zone?
     window.removeEventListener('resize', onScroll);
     cancelAnimationFrame(raf);
     touched.forEach(clear);
+    shade.remove();
   };
 }

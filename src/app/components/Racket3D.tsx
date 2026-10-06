@@ -93,6 +93,13 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
       cap.position.set(0, -RACKET_R - 0.58, 0); cap.scale.z = 0.5;
       racket.add(rim, front, back, handle, cap);
       scene.add(racket);
+      // The string: from the middle of the paddle's face to the ball
+      const cord = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+        new THREE.LineBasicMaterial({ color: 0x111111, transparent: true, opacity: 0.7 }),
+      );
+      scene.add(cord);
+      const LEN = 2.1;
 
       // Juggling: the paddle lies flat, black side up, at the bottom of the room;
       // the ball falls onto it and is knocked back up from below. The pointer
@@ -101,9 +108,8 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
       const PY = -Y + 0.55;
       const st = { x: 0, z: 0.6, tx: 0, tz: 0.6, vx: 0, vz: 0, lift: 0, swing: 0 };
       const b = { x: 0.3, y: 0.9, z: 0.4, vx: 0, vy: 0, vz: 0 };
-      let lost = 0, hitKick = 0;
-      const serve = () => { b.x = (Math.random() - 0.5) * 2; b.z = (Math.random() - 0.5) * 2 + 0.2; b.y = Y - 0.3; b.vx = b.vz = 0; b.vy = 0; };
-      serve();
+      let hitKick = 0;
+      b.x = st.x; b.z = st.z; b.y = PY + 1.6;
 
       // The pointer, taken onto the paddle's plane
       const ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -PY), hit = new THREE.Vector3();
@@ -131,35 +137,39 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
         racket.rotation.set(-Math.PI / 2 - st.vz * 3.5, 0, -st.vx * 3.5 + 0.12);
         racket.rotation.order = 'YXZ';
 
-        // Ball
+        // Ball, tied to the middle of the paddle by its string
         b.vy -= 0.0034;
+        // Falling, it is steered back over the paddle, so it always comes down on it
+        b.vx += (st.x - b.x) * 0.0016; b.vz += (st.z - b.z) * 0.0016;
+        b.vx *= 0.995; b.vz *= 0.995;
         b.x += b.vx; b.y += b.vy; b.z += b.vz;
-        if (b.x > X - BALL_R) { b.x = X - BALL_R; b.vx = -Math.abs(b.vx) * 0.9; }
-        if (b.x < -X + BALL_R) { b.x = -X + BALL_R; b.vx = Math.abs(b.vx) * 0.9; }
-        if (b.z < Z_BACK + BALL_R) { b.z = Z_BACK + BALL_R; b.vz = Math.abs(b.vz) * 0.9; }
-        if (b.z > Z_RACKET + 0.4) { b.z = Z_RACKET + 0.4; b.vz = -Math.abs(b.vz) * 0.9; }
+        // The string: once taut it stops the ball and pulls it back
+        const cx = st.x, cy = PY + st.lift, cz = st.z;
+        let dx = b.x - cx, dy = b.y - cy, dz = b.z - cz;
+        const dist = Math.hypot(dx, dy, dz);
+        if (dist > LEN) {
+          const nx = dx / dist, ny = dy / dist, nz = dz / dist;
+          b.x = cx + nx * LEN; b.y = cy + ny * LEN; b.z = cz + nz * LEN;
+          const out = b.vx * nx + b.vy * ny + b.vz * nz;
+          if (out > 0) { b.vx -= 1.5 * out * nx; b.vy -= 1.5 * out * ny; b.vz -= 1.5 * out * nz; }
+        }
         if (b.y > Y - BALL_R) { b.y = Y - BALL_R; b.vy = -Math.abs(b.vy) * 0.6; }
         // The paddle's face
         const top = PY + st.lift + 0.04;
-        if (b.vy < 0 && b.y - BALL_R < top && b.y - BALL_R > top - 0.25) {
-          const dx = b.x - st.x, dz = b.z - st.z;
-          if (Math.hypot(dx, dz) < RACKET_R + BALL_R * 0.5) {
-            b.y = top + BALL_R;
-            b.vy = 0.095 + st.swing * 0.06 + Math.min(0.02, Math.hypot(st.vx, st.vz) * 0.2);
-            b.vx = b.vx * 0.3 + dx * 0.05 + st.vx * 0.9;
-            b.vz = b.vz * 0.3 + dz * 0.05 + st.vz * 0.9;
-            hitKick = 1;
-            sound.play('tap', 40);
-          }
-        }
-        // Dropped on the floor: it bounces a little, then a new ball falls from the top
-        if (b.y < -Y + BALL_R) {
-          b.y = -Y + BALL_R; b.vy = Math.abs(b.vy) * 0.4; b.vx *= 0.8; b.vz *= 0.8;
-          if (++lost > 70) { lost = 0; serve(); }
+        dx = b.x - st.x; dz = b.z - st.z;
+        if (b.vy < 0 && b.y - BALL_R < top && b.y - BALL_R > top - 0.3) {
+          b.y = top + BALL_R;
+          b.vy = 0.105 + st.swing * 0.06 + Math.min(0.02, Math.hypot(st.vx, st.vz) * 0.2);
+          b.vx = b.vx * 0.3 + dx * 0.05 + st.vx * 0.9;
+          b.vz = b.vz * 0.3 + dz * 0.05 + st.vz * 0.9;
+          hitKick = 1;
+          sound.play('tap', 40);
         }
         hitKick *= 0.9;
         ball.position.set(b.x, b.y, b.z);
         ball.rotation.x += b.vz * 2 + b.vy * 0.3; ball.rotation.z -= b.vx * 2;
+        const gp = cord.geometry.attributes.position as import('three').BufferAttribute;
+        gp.setXYZ(0, st.x, PY + st.lift + 0.04, st.z); gp.setXYZ(1, b.x, b.y, b.z); gp.needsUpdate = true;
         shadow.position.set(b.x, -Y + 0.01, b.z);
         shadow.scale.setScalar(Math.max(0.5, 1.3 - (b.y + Y) * 0.25));
 

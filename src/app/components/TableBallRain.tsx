@@ -4,7 +4,8 @@ import { playKnock } from '../utils/knock';
 
 // Services page: once the services table has almost scrolled away, the balls
 // of its closed services (one per service whose ball isn't showing) tumble
-// out of its bottom edge, scatter across the screen and settle at the bottom
+// out of its rows — the lowest rows first, each ball dropping from where it was —
+// fall across the screen and settle at the bottom
 // of the block below (children) — tied together by dashed links, as the
 // letter balls are on the home page. Look: the service balls' own shading.
 // Scrolled back up past the table, they're cleared, ready to fall again.
@@ -22,7 +23,7 @@ export default function TableBallRain({ table, children }: { table: RefObject<HT
     if (!w || !cv || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const ctx = cv.getContext('2d')!;
     const root = (w.closest('[class*="_page_"]') as HTMLElement | null) ?? window;
-    let W = 0, H = 0, TOP = 0, floor = 0, spawnY = 0, dpr = 1, R = 24;
+    let W = 0, H = 0, TOP = 0, floor = 0, dpr = 1, R = 24, zk = 1, wTop = 0;
     let balls: Ball[] = [];
     let links: [number, number, number][] = [];   // a, b, rest length
     let fallen = false, raf = 0, still = 0;
@@ -30,14 +31,15 @@ export default function TableBallRain({ table, children }: { table: RefObject<HT
     // Canvas: from a little above the table's bottom edge down to the next block's top
     const layout = () => {
       const wr = w.getBoundingClientRect();
-      const zk = wr.width / (w.offsetWidth || 1) || 1;          // CSS zoom
+      zk = wr.width / (w.offsetWidth || 1) || 1;                // CSS zoom
       const tb = table.current?.getBoundingClientRect();
       const next = w.nextElementSibling as HTMLElement | null;
       const floorY = ((next ? next.getBoundingClientRect().top : wr.bottom) - wr.top) / zk;
       const above = tb ? (wr.top - tb.bottom) / zk : 0;            // table bottom → this block's top
-      TOP = Math.max(0, above) + 160;
+      // reaches up over the table's lower rows, so the balls can come out of them
+      TOP = Math.max(0, above) + window.innerHeight / zk;
       W = w.offsetWidth; H = TOP + floorY;
-      floor = H; spawnY = TOP - Math.max(0, above);
+      floor = H; wTop = wr.top;
       R = Math.max(15, Math.min(30, W * 0.018));
       dpr = Math.min(2, window.devicePixelRatio || 1);
       cv.style.top = `${-TOP}px`; cv.style.height = `${H}px`;
@@ -50,13 +52,25 @@ export default function TableBallRain({ table, children }: { table: RefObject<HT
       const open = table.current?.querySelectorAll('.svcBall:not(.svcBallLeaving)').length ?? 0;
       const n = Math.max(0, TOTAL - open);
       const now = performance.now();
-      const tw = table.current ? table.current.offsetWidth : W;
-      const x0 = (W - tw) / 2;
-      balls = Array.from({ length: n }, (_, i) => ({
-        x: x0 + tw * (0.08 + Math.random() * 0.84), y: spawnY - R,
-        vx: (Math.random() - 0.5) * 16, vy: -(2 + Math.random() * 6),
-        r: R * (0.8 + Math.random() * 0.35), born: now + i * 45, knockAt: 0, on: false,
-      }));
+      // The table's rows still on screen, in this canvas's coordinates (lowest first)
+      const toY = (sy: number) => (sy - wTop) / zk + TOP;
+      const wl = w.getBoundingClientRect().left;
+      const rows = [...(table.current?.querySelectorAll<HTMLElement>('[data-exp-row]') ?? [])]
+        .map(el => el.getBoundingClientRect())
+        .filter(rc => rc.height > 0 && rc.bottom > 0 && rc.top < window.innerHeight)
+        .sort((a, b) => b.top - a.top);
+      const tb = table.current?.getBoundingClientRect();
+      balls = Array.from({ length: n }, (_, i) => {
+        // spread over the lowest rows: a few balls per row, each at its own place along it
+        const rc = rows[Math.min(rows.length - 1, Math.floor(i / Math.max(1, Math.ceil(n / Math.max(1, Math.min(rows.length, 6))))))];
+        const left = rc ? rc.left : (tb?.left ?? 0), width = rc ? rc.width : (tb?.width ?? W * zk);
+        const sy = rc ? (rc.top + rc.bottom) / 2 : (tb ? tb.bottom - R : 0);
+        return {
+          x: (left - wl) / zk + (width / zk) * (0.06 + Math.random() * 0.88), y: toY(sy),
+          vx: (Math.random() - 0.5) * 2.4, vy: Math.random() * 0.6,
+          r: R * (0.8 + Math.random() * 0.35), born: now + i * 70 + Math.random() * 60, knockAt: 0, on: false,
+        };
+      });
       // Links: each ball to one of the few before it (a loose chain) and now and then a second
       links = [];
       for (let i = 1; i < n; i++) {
@@ -89,7 +103,7 @@ export default function TableBallRain({ table, children }: { table: RefObject<HT
         if (!a.on || !b.on) continue;
         const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1;
         if (d <= rest) continue;
-        const f = (d - rest) * 0.0025, fx = (dx / d) * f, fy = (dy / d) * f;
+        const f = (d - rest) * 0.0012, fx = (dx / d) * f, fy = (dy / d) * f;
         a.vx += fx; a.vy += fy; b.vx -= fx; b.vy -= fy;
       }
       // Ball against ball
@@ -122,7 +136,10 @@ export default function TableBallRain({ table, children }: { table: RefObject<HT
       ctx.setLineDash([]);
       for (const b of balls) {
         if (!b.on) continue;
-        const { x, y, r } = b;
+        // each ball swells out of its row in a blink before it drops
+        const k = Math.min(1, (now - b.born) / 160);
+        const { x, y } = b, r = b.r * (k < 1 ? 1 - Math.pow(1 - k, 3) : 1);
+        if (r < 0.5) continue;
         // a soft contact shadow, stronger the nearer the floor
         const hgt = floor - (y + r), sa = Math.max(0, 1 - hgt / (r * 4)) * 0.09;
         if (sa > 0.002) {

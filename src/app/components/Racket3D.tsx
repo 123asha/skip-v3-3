@@ -185,6 +185,16 @@ export default function Racket3D({ onGoHome }: { onGoHome: () => void }) {
           if (out > 0) { b.vx -= 1.5 * out * nx; b.vy -= 1.5 * out * ny; b.vz -= 1.5 * out * nz; }
         }
         if (b.y > Y - BALL_R) { b.y = Y - BALL_R; b.vy = -Math.abs(b.vy) * 0.6; }
+        // The floor, the walls: a ball that misses the paddle bounces off them, with a knock
+        if (b.y < -Y + BALL_R) {
+          b.y = -Y + BALL_R;
+          if (b.vy < -0.02) sound.play('hover', 60);
+          b.vy = Math.abs(b.vy) * 0.72; b.vx *= 0.92; b.vz *= 0.92;
+        }
+        if (b.x > X - BALL_R) { b.x = X - BALL_R; if (b.vx > 0.02) sound.play('hover', 90); b.vx = -Math.abs(b.vx) * 0.8; }
+        if (b.x < -X + BALL_R) { b.x = -X + BALL_R; if (b.vx < -0.02) sound.play('hover', 90); b.vx = Math.abs(b.vx) * 0.8; }
+        if (b.z < Z_BACK + BALL_R) { b.z = Z_BACK + BALL_R; b.vz = Math.abs(b.vz) * 0.8; }
+        if (b.z > Z_RACKET + 0.4) { b.z = Z_RACKET + 0.4; b.vz = -Math.abs(b.vz) * 0.8; }
         // The paddle's face
         const top = PY + st.lift + 0.04;
         dx = b.x - st.x; dz = b.z - st.z;

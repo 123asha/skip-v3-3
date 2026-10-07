@@ -1613,6 +1613,7 @@ function AppInner() {
 
         {/* Trusted-by clients — moved below Cases */}
         <div
+          data-clients-section=""
           className={s.section}
           style={{
             display: 'flex',

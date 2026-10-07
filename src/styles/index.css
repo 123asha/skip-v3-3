@@ -263,6 +263,8 @@
 
   /* Section spacing — uses the proportional vertical token */
   [class*="_section_"] { margin-top: var(--space-xl) !important; }
+  /* «Нам доверяют» gets more air on both sides: one --space-lg more than a section gap (above; below it adds to the next section's gap) */
+  [data-clients-section] { margin-top: calc(var(--space-xl) + var(--space-lg)) !important; margin-bottom: var(--space-lg) !important; }
   /* …except a section that sits right under its own heading (flushTop) —
      that gap is the heading's, so the heading stays nearer its content
      than the block above */

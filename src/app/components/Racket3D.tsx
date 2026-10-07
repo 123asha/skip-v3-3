@@ -314,22 +314,21 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const cam = new THREE.Mesh(new THREE.CircleGeometry(0.008, 16), new THREE.MeshBasicMaterial({ color: 0x222222 }));
         cam.position.set(0, H / 2 - 0.035, D / 2 + 0.0045);
         mac.add(cam);
-        // a Skip Design sticker on the chin: the logo and the name on white
-        const sticker = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.15), new THREE.MeshStandardMaterial({ roughness: 0.55, transparent: true, map: canvasTex(560, 200, g => {
-          g.fillStyle = '#fbfaf8'; g.beginPath(); g.roundRect(4, 4, 552, 192, 40); g.fill();
-          g.strokeStyle = 'rgba(0,0,0,0.06)'; g.lineWidth = 3; g.stroke();
-          g.fillStyle = '#111';
+        // a die-cut sticker of the Skip logo on the chin: the logo in black with a white border following its shape
+        const sticker = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.17), new THREE.MeshStandardMaterial({ roughness: 0.5, transparent: true, map: canvasTex(520, 340, g => {
           const paths = svgPaths.pb7e9300.match(/M[^M]+/g)!;
-          const lw = 150, sc = lw / 52.5283;
-          g.save(); g.translate(46, 100 - 16 * sc); g.scale(sc, sc);
-          g.fill(new Path2D(paths[1])); g.fill(new Path2D(paths[2])); g.fill(new Path2D(paths[4])); g.fill(new Path2D(paths[0] + paths[3]), 'evenodd');
-          g.restore();
-          const cs = getComputedStyle(document.documentElement);
-          g.font = `${cs.getPropertyValue('--heading-weight').trim() || '450'} 54px ${cs.getPropertyValue('--font-display').trim() || 'sans-serif'}`;
-          g.textBaseline = 'middle'; g.fillText('Skip Design', 228, 104);
+          const lw = 400, sc = lw / 52.5283;
+          g.translate(60, 170 - 16 * sc); g.scale(sc, sc);
+          const shapes = [new Path2D(paths[1]), new Path2D(paths[2]), new Path2D(paths[4]), new Path2D(paths[0] + paths[3])];
+          // the white border: the letters stroked thick, then filled, in white
+          g.lineJoin = 'round'; g.lineCap = 'round';
+          g.strokeStyle = 'rgba(0,0,0,0.08)'; g.lineWidth = 7.4; shapes.forEach(p => g.stroke(p));
+          g.strokeStyle = '#fbfaf8'; g.fillStyle = '#fbfaf8'; g.lineWidth = 6.6; shapes.forEach(p => { g.stroke(p); g.fill(p); });
+          g.fillStyle = '#111';
+          g.fill(shapes[0]); g.fill(shapes[1]); g.fill(shapes[2]); g.fill(shapes[3], 'evenodd');
         }) }));
-        sticker.position.set(-0.85, -H / 2 + (H - BEZ_H) / 2 - 0.01, D / 2 + 0.003);
-        sticker.rotation.z = 0.05;
+        sticker.position.set(-0.9, -H / 2 + (H - BEZ_H) / 2 - 0.01, D / 2 + 0.003);
+        sticker.rotation.z = 0.06;
         mac.add(sticker);
         // the stand: one bent aluminium plate — a leaning upright and a flat foot
         // from behind the body it leans back down to the desk, then runs forward flat under the screen
@@ -473,9 +472,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
         return t;
       })();
-      const skirtMat = new THREE.MeshPhysicalMaterial({ color: 0xe9e2d7, roughness: 0.4, clearcoat: 0.3 });
       const topMat = new THREE.MeshPhysicalMaterial({ color: 0xf3eee6, roughness: 0.35, clearcoat: 0.35 });
-      const skirtAccent = new THREE.MeshPhysicalMaterial({ color: 0xc96a43, roughness: 0.35, clearcoat: 0.4 });
       const topAccent = new THREE.MeshPhysicalMaterial({ color: 0xdb7d52, roughness: 0.3, clearcoat: 0.5 });
       const legendMat = new THREE.MeshBasicMaterial({ map: legendTex, transparent: true, depthWrite: false });
       type KeyMesh = {
@@ -491,16 +488,13 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         row.forEach(k => {
           const kw = k.w * U - GAP, kd = U - GAP;
           const body = new THREE.Group();
-          // the skirt: the keycap's wide lower part
-          const skirt = new THREE.Mesh(new THREE.RoundedBoxGeometry(kw, SKIRT_H, kd, 3, 0.012), k.accent ? skirtAccent : skirtMat);
-          skirt.position.y = SKIRT_H / 2;
-          // the top: smaller, soft, nudged a touch towards the back like a sculpted cap
-          const inset = U * 0.13;
-          const tw = kw - 2 * inset, td = kd - 2 * inset;
-          const top = new THREE.Mesh(new THREE.RoundedBoxGeometry(tw, CAP_H * 2, td, 4, 0.016), k.accent ? topAccent : topMat);
-          top.position.set(0, SKIRT_H, -U * 0.025);
-          body.add(skirt, top);
-          // the legend, on the top's face
+          // one flat, softly rounded keycap
+          const KH = SKIRT_H + CAP_H;
+          const cap = new THREE.Mesh(new THREE.RoundedBoxGeometry(kw, KH, kd, 4, 0.014), k.accent ? topAccent : topMat);
+          cap.position.y = KH / 2;
+          body.add(cap);
+          // the legend, on its top
+          const tw = kw * 0.94, td = kd * 0.94;
           const lg = new THREE.PlaneGeometry(tw, td);
           lg.rotateX(-Math.PI / 2);
           const uv = lg.attributes.uv;
@@ -509,7 +503,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           const v0 = 1 - (ri + 0.5 - halfD) / ROWN, v1 = 1 - (ri + 0.5 + halfD) / ROWN;
           uv.setXY(0, u0, v0); uv.setXY(1, u1, v0); uv.setXY(2, u0, v1); uv.setXY(3, u1, v1);
           const legend = new THREE.Mesh(lg, legendMat);
-          legend.position.set(0, SKIRT_H + CAP_H + 0.0008, -U * 0.025);
+          legend.position.set(0, KH + 0.0008, 0);
           body.add(legend);
           const cx = ox + (x + k.w / 2) * U, cz = oz + (ri + 0.5) * U;
           body.position.set(cx, PLATE_Y, cz);

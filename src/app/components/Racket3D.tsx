@@ -174,56 +174,6 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         return t;
       };
       const V3 = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
-      // — a felt desk mat under the keyboard
-      {
-        const sh = new THREE.Shape(); const w = 6.4, d = 3.4, r = 0.18;
-        sh.moveTo(-w / 2 + r, -d / 2); sh.lineTo(w / 2 - r, -d / 2); sh.quadraticCurveTo(w / 2, -d / 2, w / 2, -d / 2 + r);
-        sh.lineTo(w / 2, d / 2 - r); sh.quadraticCurveTo(w / 2, d / 2, w / 2 - r, d / 2); sh.lineTo(-w / 2 + r, d / 2);
-        sh.quadraticCurveTo(-w / 2, d / 2, -w / 2, d / 2 - r); sh.lineTo(-w / 2, -d / 2 + r); sh.quadraticCurveTo(-w / 2, -d / 2, -w / 2 + r, -d / 2);
-        const g = new THREE.ExtrudeGeometry(sh, { depth: 0.012, bevelEnabled: false, curveSegments: 12 });
-        g.rotateX(-Math.PI / 2);
-        const felt = canvasTex(128, 128, g2 => { g2.fillStyle = '#d9d2c8'; g2.fillRect(0, 0, 128, 128); for (let i = 0; i < 2500; i++) { const v = 190 + Math.random() * 30; g2.fillStyle = `rgba(${v},${v},${v - 3},0.5)`; g2.fillRect(Math.random() * 128, Math.random() * 128, 1, 1); } });
-        felt.wrapS = felt.wrapT = THREE.RepeatWrapping; felt.repeat.set(2, 2);
-        const mesh = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0xffffff, map: felt, roughness: 1 }));
-        mesh.position.set(0.3, fy + 0.001, -1.4);
-        mesh.receiveShadow = true;
-        scene.add(mesh);
-      }
-      // — an Artemide Tolomeo: heavy round base, polished arms with tension wires, black knobs, a truncated-cone shade
-      {
-        const alu = mat(0xd9dbde, 0.16, 1.0), black = mat(0x151515, 0.45), wire = mat(0x2a2a2a, 0.4);
-        const lamp = new THREE.Group();
-        lamp.add(new THREE.Mesh(new THREE.LatheGeometry([V2(0, 0), V2(0.42, 0), V2(0.44, 0.012), V2(0.43, 0.03), V2(0.12, 0.045), V2(0.05, 0.08), V2(0.035, 0.16), V2(0, 0.16)], 64), alu));
-        const p0 = V3(0, 0.16, 0), p1 = V3(0.18, 2.25, 0), p2 = V3(2.35, 2.95, 0.25);
-        lamp.add(rod(p0, p1, 0.016, alu), rod(p1, p2, 0.014, alu));
-        // tension wires and springs alongside the arms
-        lamp.add(rod(V3(-0.045, 0.5, 0), V3(0.12, 2.1, 0), 0.004, wire), rod(V3(0.25, 2.33, 0), V3(2.2, 2.98, 0.24), 0.004, wire));
-        lamp.add(rod(V3(-0.04, 0.55, 0), V3(-0.02, 0.95, 0), 0.018, alu));
-        const knob = (p: import('three').Vector3) => { const k = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.05, 24), black); k.rotation.x = Math.PI / 2; k.position.copy(p).add(V3(0, 0, 0.05)); return k; };
-        lamp.add(knob(p1), knob(V3(0.02, 0.35, 0)));
-        const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.1, 24), alu); hub.rotation.x = Math.PI / 2; hub.position.copy(p1); lamp.add(hub);
-        // the head: a short cylinder housing on the arm's end, the shade hanging from it
-        const head = new THREE.Group();
-        const housing = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.22, 32), alu);
-        housing.rotation.z = Math.PI / 2 - 0.3;
-        const hk = knob(V3(0, 0, 0)); hk.position.set(0.02, 0.04, 0.12);
-        const shadeG = new THREE.LatheGeometry([V2(0.09, 0.2), V2(0.11, 0.18), V2(0.13, 0.1), V2(0.3, -0.18), V2(0.33, -0.21), V2(0.325, -0.215)], 64);
-        const shadeM = new THREE.Mesh(shadeG, new THREE.MeshStandardMaterial({ color: 0xcfd1d4, roughness: 0.28, metalness: 0.9, side: THREE.DoubleSide }));
-        shadeM.position.set(0.22, -0.18, 0); shadeM.rotation.z = 0.42;
-        const capTop = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.03, 32), alu); capTop.position.set(0.14, 0.02, 0); capTop.rotation.z = 0.42;
-        // a white Artemide tag hanging off it
-        const tag = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.34), new THREE.MeshStandardMaterial({ roughness: 0.7, side: THREE.DoubleSide, map: canvasTex(64, 220, g => {
-          g.fillStyle = '#f7f7f5'; g.beginPath(); g.roundRect(0, 0, 64, 220, 30); g.fill();
-          g.save(); g.translate(40, 110); g.rotate(-Math.PI / 2); g.fillStyle = '#222'; g.font = 'italic 600 26px Georgia, serif'; g.textAlign = 'center'; g.fillText('Artemide', 0, 0); g.restore();
-        }), transparent: true }));
-        tag.position.set(-0.02, -0.32, 0.1); tag.rotation.y = -0.4;
-        head.add(housing, hk, shadeM, capTop, tag);
-        head.position.copy(p2);
-        lamp.add(head);
-        colliders.push(head, lamp.children[0]);
-        lamp.position.set(-4.5, fy, -3.35);
-        scene.add(shade(lamp));
-      }
       // — the lamp from the reference: two stacked glossy peach "doughnuts" of glass,
       // glowing, on a slim two-tone stem and a flat disc foot, with a cable and a knob
       {
@@ -247,10 +197,21 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         // the cable, curling over the desk to a round knob
         const curve = new THREE.CatmullRomCurve3([V3(0.3, 0.02, 0.1), V3(0.7, 0.015, 0.5), V3(0.4, 0.015, 1.0), V3(-0.3, 0.015, 0.9), V3(-0.6, 0.015, 0.4)]);
         g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 64, 0.012, 8, false), cream));
-        const knobB = new THREE.Mesh(new THREE.SphereGeometry(0.06, 24, 16), mat(0xb59f86, 0.5)); knobB.position.set(-0.62, 0.06, 0.38); g.add(knobB);
         g.position.set(2.35, fy, -3.0);
         g.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh) { m.castShadow = m.material !== glass; m.receiveShadow = true; } });
         scene.add(g);
+      }
+      // — an Apple Magic Mouse: a smooth white glossy shell on a thin aluminium base
+      {
+        const mouse = new THREE.Group();
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.02, 64), mat(0xd8dadd, 0.3, 0.8));
+        base.scale.set(0.19, 1, 0.385); base.position.y = 0.012;
+        const shell = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 32, 0, Math.PI * 2, 0, Math.PI / 2),
+          new THREE.MeshPhysicalMaterial({ color: 0xfbfbfa, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.08 }));
+        shell.scale.set(0.2, 0.085, 0.395); shell.position.y = 0.02;
+        mouse.add(base, shell);
+        mouse.position.set(1.75, fy, -1.5); mouse.rotation.y = -0.12;
+        scene.add(shade(mouse)); colliders.push(mouse);
       }
       // — a ball vase, a notes cube, a mug and a closed laptop
       {
@@ -364,7 +325,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         bend.rotation.z = Math.PI / 2; bend.position.set(0, FOOT_Y + 0.012, -0.43);
         mac.add(up, foot, bend);
         colliders.push(shell, bezel, foot);
-        mac.position.set(0, fy + 0.635 + H / 2, -3.15);
+        mac.position.set(0, fy + 0.635 + H / 2, -2.55);
         mac.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh && m !== screen && m !== cam) { m.castShadow = true; m.receiveShadow = true; } });
         scene.add(mac);
       }
@@ -608,7 +569,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       const b = { x: 0.3, y: 0.9, z: 0.4, vx: 0, vy: 0, vz: 0 };
       let hitKick = 0, squash = 0;
       // Docking: the keyboard parked in front of the monitor sets the ball free
-      const DOCK_Z = -2.2, DOCK_IN = -2.55, DOCK_OUT = -1.0;
+      const DOCK_Z = -1.6, DOCK_IN = -1.95, DOCK_OUT = -0.6;
       let docked = false, dockT = 0, reel = false, freeKick = false;
       b.x = st.x; b.z = st.z; b.y = PY + 1.6;
 
@@ -622,7 +583,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
         if (ray.ray.intersectPlane(plane, hit)) {
           st.tx = Math.max(-X + KW / 2 + 0.05, Math.min(X - KW / 2 - 0.05, hit.x));
-          st.tz = Math.max(Z_BACK + KD / 2 + 0.1, Math.min(Z_RACKET, hit.z));
+          st.tz = Math.max(DOCK_Z - 0.45, Math.min(Z_RACKET, hit.z));
         }
       };
       const onDown = () => { st.swing = 1; };

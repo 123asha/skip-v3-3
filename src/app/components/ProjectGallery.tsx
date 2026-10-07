@@ -84,10 +84,7 @@ function ProjectCard({ project, onClick, aspect, scrubVideo, shape }: { project:
   const isMobile = useMobile();
   return (
     <CaseCard
-      // two a row on a phone, as on the cases page: every preview 4:5, just the name under each
-      stackMeta={isMobile && !scrubVideo}
-      tall={isMobile && !scrubVideo}
-      ar={isMobile && !scrubVideo ? V : shape === 'vertical' ? V : shape ? H : project.ar}
+      ar={shape === 'vertical' ? V : shape ? H : project.ar}
       aspect={aspect}
       scrubVideo={scrubVideo}
       title={project.title}
@@ -175,12 +172,10 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: (href?: 
 
       <div
         className={s.grid}
-        data-mob-cols={isMobile ? 2 : undefined}
         style={{
           display: 'grid',
           // phones: two cases a row, the flower video across both
-          // phones: two a row, as the cases page's two-column view (the flower video across both)
-          gridTemplateColumns: isMobile ? '1fr 1fr' : 'var(--cases-cols)',
+          gridTemplateColumns: isMobile ? '1fr' : 'var(--cases-cols)',
           columnGap: 'var(--gap)',
           rowGap: 'var(--cases-row-gap)',
           padding: '0 var(--pad)',
@@ -188,12 +183,13 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: (href?: 
           alignItems: 'start',
         }}
       >
-        {slots.map(slot => (
+        {/* Phone: just the first case, the flower video and the third case */}
+        {(isMobile ? [slots[0], slots[2], slots[3]] : slots).map(slot => (
           <div
             key={slot.project.id}
             data-case-card=""
             style={{
-              gridColumn: isMobile ? (slot.scrubVideo ? '1 / -1' : 'auto') : slot.col,
+              gridColumn: isMobile ? 'auto' : slot.col,
               gridRow: isMobile ? 'auto' : slot.row,
               minWidth: 0,
               // Desktop: the flower video takes half the side padding each way

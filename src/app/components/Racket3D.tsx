@@ -568,13 +568,11 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const g = c.getContext('2d')!;
         g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
         g.fillStyle = '#111111';
-        // a band round the ball's equator, like a rim: a dark stripe with «error ·» running all the
-        // way round in white (seamless — the texture wraps at its edges)
+        // «error ·» running all the way round the ball's equator like a rim, in black on the white
+        // ball (seamless — the texture wraps at its edges)
         const cs = getComputedStyle(document.documentElement);
-        const BAND = 64;
-        g.fillStyle = '#161616'; g.fillRect(0, 256 - BAND / 2, 1024, BAND);
         g.font = `${cs.getPropertyValue('--heading-weight').trim() || '450'} 40px ${cs.getPropertyValue('--font-display').trim() || 'sans-serif'}`;
-        g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#fbfaf8';
+        g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#161616';
         const N = 7;
         for (let i = 0; i < N; i++) g.fillText('error ·', (i + 0.5) * (1024 / N), 258);
         const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;

@@ -900,7 +900,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       const look = { x: 0, y: 0, tx: 0, ty: 0 };
       const onMove = (e: PointerEvent) => {
         const r = renderer.domElement.getBoundingClientRect();
-        look.tx = ((e.clientX - r.left) / r.width) * 2 - 1; look.ty = ((e.clientY - r.top) / r.height) * 2 - 1;
+        if (!tilted) { look.tx = ((e.clientX - r.left) / r.width) * 2 - 1; look.ty = ((e.clientY - r.top) / r.height) * 2 - 1; }
         ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
         if (ray.ray.intersectPlane(plane, hit)) {
           st.tx = Math.max(-X + KW / 2 + 0.05, Math.min(X - KW / 2 - 0.05, hit.x));
@@ -910,13 +910,31 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       const onDown = () => { st.swing = 1; };
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerdown', onDown);
+      // Phone: the camera stands further back, and swings round as the phone is tilted (as the ball on the home page rolls)
+      const phone = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768;
+      let tilted = false;
+      const onOrient = (ev: DeviceOrientationEvent) => {
+        if (ev.gamma == null || ev.beta == null) return;
+        tilted = true;
+        look.tx = Math.max(-1, Math.min(1, ev.gamma / 30));
+        look.ty = Math.max(-1, Math.min(1, (ev.beta - 45) / 30));
+      };
+      const DOE = (window as unknown as { DeviceOrientationEvent?: { requestPermission?: () => Promise<string> } }).DeviceOrientationEvent;
+      const askTilt = () => {
+        window.removeEventListener('pointerdown', askTilt);
+        if (DOE?.requestPermission) DOE.requestPermission().then(r => { if (r === 'granted') window.addEventListener('deviceorientation', onOrient); }).catch(() => {});
+      };
+      if (phone) {
+        if (DOE?.requestPermission) window.addEventListener('pointerdown', askTilt);
+        else window.addEventListener('deviceorientation', onOrient);
+      }
 
       let raf = 0;
       const tick = () => {
         look.x += (look.tx - look.x) * 0.04; look.y += (look.ty - look.y) * 0.04;
         // the camera swings round the desk on an arc (about ±22° sideways, a little up and down)
         {
-          const tx = 0, ty = -0.1, tz = -1.3, R = Math.hypot(1.7, 7.6), p0 = Math.atan2(1.7, 7.6);
+          const tx = 0, ty = -0.1, tz = -1.3, R = Math.hypot(1.7, 7.6) * (phone ? 1.55 : 1), p0 = Math.atan2(1.7, 7.6);
           const yaw = look.x * 0.38, pitch = p0 - look.y * 0.1;
           camera.position.set(tx + R * Math.sin(yaw) * Math.cos(pitch), ty + R * Math.sin(pitch), tz + R * Math.cos(yaw) * Math.cos(pitch));
           camera.lookAt(tx, ty, tz);
@@ -1175,6 +1193,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         window.removeEventListener('resize', resize);
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerdown', onDown);
+        window.removeEventListener('pointerdown', askTilt);
+        window.removeEventListener('deviceorientation', onOrient);
         renderer.dispose();
         scene.traverse(o => {
           const m = o as import('three').Mesh;

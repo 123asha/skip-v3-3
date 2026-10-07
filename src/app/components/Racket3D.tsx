@@ -224,8 +224,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         // the cable, curling over the desk to a round knob
         const curve = new THREE.CatmullRomCurve3([V3(0.3, 0.02, 0.1), V3(0.7, 0.015, 0.5), V3(0.4, 0.015, 1.0), V3(-0.3, 0.015, 0.9), V3(-0.6, 0.015, 0.4)]);
         g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 64, 0.012, 8, false), cream));
-        g.position.set(2.8, fy, -3.45);
-        prop(g.children.filter(c => colliders.includes(c)), g, ao(2.8, -3.45, 0.6, 0.6, 0.3), 2.2);
+        g.position.set(2.75, fy, -3.15);
+        prop(g.children.filter(c => colliders.includes(c)), g, ao(2.75, -3.15, 0.6, 0.6, 0.3), 2.2);
         g.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh) { m.castShadow = m.material !== glass; m.receiveShadow = true; } });
         scene.add(g);
       }
@@ -271,10 +271,9 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         scene.add(shade(mouse)); colliders.push(mouse);
         prop([mouse], mouse, ao(1.75, -1.5, 0.3, 0.52, 0.42, -0.12), 0.6);
       }
-      // The rest of the desk, composed off-balance on purpose: the iMac in the middle; the tall
-      // things gathered on the right (the lamp at the back, the cacti a step in front of it, the
-      // mouse); the left kept light — a pen stand tucked in the far corner, a kraft notebook
-      // turned at an angle with the mug beside it — and open oak behind the monitor's left side
+      // The rest of the desk: the iMac in the middle; cacti at the back left balancing the lamp
+      // at the back right; a clear acrylic pen stand and a kraft notebook with a gel pen on the
+      // left, the mouse and a mug on the right; plenty of empty oak between
       {
         let seed = 11; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
         // — cacti in a white ceramic pot with a gravel top: a tall ribbed column with one arm
@@ -334,9 +333,9 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           const elbow = new THREE.Mesh(new THREE.SphereGeometry(0.1, 24, 16), skin); elbow.position.set(0.1, 1.04, 0); elbow.scale.set(1.3, 0.9, 1);
           const short = column(0.45, 0.16); short.position.set(0.2, 0.5, 0.12);
           g.add(tall, arm, elbow, short);
-          g.position.set(3.55, fy, -2.35);
+          g.position.set(-2.85, fy, -3.1);
           scene.add(shade(g)); colliders.push(pot);
-          prop([pot], g, ao(3.55, -2.35, 0.6, 0.6, 0.45), 3);
+          prop([pot], g, ao(-2.85, -3.1, 0.6, 0.6, 0.45), 3);
         }
         // — a MUJI acrylic pen stand (clear), with MUJI gel pens and a pencil
         {
@@ -350,9 +349,9 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
             const pen = rod(V3(x, 0.03, z), V3(x + tl, 0.98, z - tl * 0.4), 0.022, mat(col, 0.45));
             g.add(pen);
           }
-          g.position.set(-2.55, fy, -3.05);
+          g.position.set(-1.95, fy, -2.35);
           scene.add(g); box.castShadow = false; colliders.push(box);
-          prop([box], g, ao(-2.55, -3.05, 0.36, 0.36, 0.3), 0.9);
+          prop([box], g, ao(-1.95, -2.35, 0.36, 0.36, 0.3), 0.9);
           g.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh && m !== box) m.castShadow = true; });
         }
         // — a MUJI kraft-paper notebook, slightly askew, with a black gel pen on it
@@ -367,9 +366,9 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           const pen = rod(V3(-0.32, 0.075, 0.45), V3(0.3, 0.075, -0.15), 0.024, mat(0x1b1b1b, 0.4));
           const clip = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.012, 0.12), mat(0x1b1b1b, 0.4)); clip.position.set(0.22, 0.1, -0.08); clip.rotation.y = 0.78;
           g.add(cover, pages, label, pen, clip);
-          g.position.set(-2.85, fy, -1.35); g.rotation.y = 0.45;
+          g.position.set(-2.55, fy, -0.45); g.rotation.y = 0.22;
           scene.add(shade(g)); colliders.push(cover);
-          prop([cover], g, ao(-2.85, -1.35, 0.62, 0.85, 0.22, 0.45), 1.1);
+          prop([cover], g, ao(-2.55, -0.45, 0.62, 0.85, 0.22, 0.22), 1.1);
         }
         // — a white porcelain mug (front right)
         {
@@ -379,9 +378,9 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           const handle = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.022, 12, 32, Math.PI * 1.2), porcelain);
           handle.position.set(0.18, 0.22, 0); handle.rotation.z = -Math.PI * 0.6;
           mug.add(handle);
-          mug.position.set(-1.85, fy, -0.3); mug.rotation.y = 2.4;
+          mug.position.set(2.85, fy, -0.35); mug.rotation.y = 0.5;
           scene.add(shade(mug)); colliders.push(mug);
-          prop([mug], mug, ao(-1.85, -0.3, 0.3, 0.3, 0.45), 0.8, 'mug');
+          prop([mug], mug, ao(2.85, -0.35, 0.3, 0.3, 0.45), 0.8, 'mug');
         }
       }
       // An iMac (24", silver) at the back of the desk, «404» on its screen

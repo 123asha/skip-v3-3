@@ -34,8 +34,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 220);
-      camera.position.set(0, 1.25, 5.4);
-      camera.lookAt(0, -0.5, -1.3);
+      camera.position.set(0, 1.45, 6.0);
+      camera.lookAt(0, -0.3, -1.3);
       const resize = () => {
         const w = el.clientWidth, h = el.clientHeight;
         renderer.setSize(w, h, false);
@@ -373,7 +373,11 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       await document.fonts.ready;
       if (stop) { renderer.dispose(); renderer.domElement.remove(); return; }
       {
-        const W = 2.6, H = 1.95, D = 0.05, BEZ_H = 1.52;
+        // A real 24" iMac (1 unit ≈ 14.5 cm, the scale of the keyboard and the desk): 54.7 cm wide,
+        // the body 36.6 cm tall and 11.5 mm thin, lifted 9.5 cm off the desk; a 16:9 screen with an
+        // even white border of about 1.3 cm; a 4.6 cm silver chin; a 13 × 14.7 cm bent-plate stand
+        const W = 3.77, H = 2.52, D = 0.08, BORDER = 0.09, LIFT = 0.655;
+        const BEZ_H = (W - 2 * BORDER) * 9 / 16 + 2 * BORDER;
         // Apple's silver: a light, soft-satin aluminium
         const silver = new THREE.MeshStandardMaterial({ color: 0xe6e7e9, roughness: 0.38, metalness: 0.35 });
         const mac = new THREE.Group();
@@ -465,12 +469,12 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           screenFx(0);
           return t;
         })();
-        const SW = W - 0.16, SH = SW * 9 / 16;
+        const SW = W - 2 * BORDER, SH = SW * 9 / 16;
         const screen = new THREE.Mesh(new THREE.PlaneGeometry(SW, SH), new THREE.MeshBasicMaterial({ map: screenTex, toneMapped: false }));
-        screen.position.set(0, H / 2 - BEZ_H / 2 - 0.002 + 0.01, D / 2 + 0.0045);
+        screen.position.set(0, H / 2 - BEZ_H / 2 - 0.002, D / 2 + 0.0045);
         mac.add(screen);
         const cam = new THREE.Mesh(new THREE.CircleGeometry(0.008, 16), new THREE.MeshBasicMaterial({ color: 0x222222 }));
-        cam.position.set(0, H / 2 - 0.035, D / 2 + 0.0045);
+        cam.position.set(0, H / 2 - 0.045, D / 2 + 0.0045);
         mac.add(cam);
         // Round stickers on the chin: our favicon, and the logo
         // on white, black, terracotta and sage — different sizes, stuck on a little askew
@@ -503,26 +507,26 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           mac.add(m);
         };
         const chinY = -H / 2 + (H - BEZ_H) / 2 - 0.01;
-        addSticker('fav', -0.98, chinY + 0.02, 0.075, 0);
-        addSticker('white', -0.8, chinY - 0.04, 0.06, 0.3);
-        addSticker('terracotta', -0.68, chinY + 0.05, 0.045, -0.2);
-        addSticker('black', 0.86, chinY - 0.02, 0.07, 0.15);
-        addSticker('sage', 1.0, chinY + 0.06, 0.045, -0.4);
+        // all of them our favicon, many times over, in a loose cluster at each end of the chin
+        ([[-1.55, 0.02, 0.1, 0], [-1.33, -0.05, 0.075, 0.9], [-1.17, 0.06, 0.06, 2.1], [-1.02, -0.04, 0.05, -0.7],
+          [1.08, 0.03, 0.07, 1.4], [1.27, -0.04, 0.09, -0.4], [1.47, 0.05, 0.06, 2.8], [1.6, -0.06, 0.045, 0.3]] as const)
+          .forEach(([x, y, r, rot]) => addSticker('fav', x, chinY + y, r, rot));
         // the stand: one bent aluminium plate — a leaning upright and a flat foot
         // from behind the body it leans back down to the desk, then runs forward flat under the screen
-        const FOOT_Y = -H / 2 - 0.635 + 0.0125;               // the foot lies on the desktop
-        const topP = new THREE.Vector3(0, -H / 2 + 0.5, -D / 2 - 0.012), lowP = new THREE.Vector3(0, FOOT_Y + 0.01, -0.42);
+        const SW_ST = 0.9, FOOT_D = 1.01, FOOT_T = 0.04;
+        const FOOT_Y = -H / 2 - LIFT + FOOT_T / 2;            // the foot lies on the desktop
+        const topP = new THREE.Vector3(0, -H / 2 + 0.8, -D / 2 - 0.02), lowP = new THREE.Vector3(0, FOOT_Y + 0.02, -0.69);
         const dv = topP.clone().sub(lowP), upLen = dv.length();
-        const up = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.5, upLen, 0.025, 2, 0.01), silver);
+        const up = new THREE.Mesh(new THREE.RoundedBoxGeometry(SW_ST, upLen, 0.035, 2, 0.012), silver);
         up.position.copy(lowP).addScaledVector(dv, 0.5);
         up.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dv.normalize());
-        const foot = new THREE.Mesh(new THREE.RoundedBoxGeometry(0.5, 0.025, 0.58, 2, 0.01), silver);
-        foot.position.set(0, FOOT_Y, -0.15);
-        const bend = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5, 16), silver);
-        bend.rotation.z = Math.PI / 2; bend.position.set(0, FOOT_Y + 0.012, -0.43);
+        const foot = new THREE.Mesh(new THREE.RoundedBoxGeometry(SW_ST, FOOT_T, FOOT_D, 2, 0.012), silver);
+        foot.position.set(0, FOOT_Y, -0.69 + FOOT_D / 2);
+        const bend = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, SW_ST, 16), silver);
+        bend.rotation.z = Math.PI / 2; bend.position.set(0, FOOT_Y + 0.015, -0.69);
         mac.add(up, foot, bend);
         colliders.push(shell, bezel, foot);
-        mac.position.set(0, fy + 0.635 + H / 2, -2.1);
+        mac.position.set(0, fy + LIFT + H / 2, -2.1);
         ao(0, -2.25, 0.45, 0.5, 0.35);
         mac.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh && m !== screen && m !== cam) { m.castShadow = true; m.receiveShadow = true; } });
         scene.add(mac);
@@ -814,8 +818,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       let raf = 0;
       const tick = () => {
         look.x += (look.tx - look.x) * 0.04; look.y += (look.ty - look.y) * 0.04;
-        camera.position.set(look.x * 1.15, 1.25 - look.y * 0.45, 5.4);
-        camera.lookAt(0, -0.5, -1.3);
+        camera.position.set(look.x * 1.15, 1.45 - look.y * 0.45, 6.0);
+        camera.lookAt(0, -0.3, -1.3);
         // Paddle
         const px = st.x, pz = st.z;
         st.x += (st.tx - st.x) * 0.2; st.z += (st.tz - st.z) * 0.2;

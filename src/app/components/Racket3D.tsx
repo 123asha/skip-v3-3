@@ -413,9 +413,9 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           {
             const tg = tm.getContext('2d')!;
             tg.fillStyle = '#000'; tg.textAlign = 'center'; tg.textBaseline = 'middle';
-            tg.font = `${weight} ${Math.round(DH0 * 0.36)}px ${family}`;
+            tg.font = `${weight} ${Math.round(DH0 * 0.52)}px ${family}`;
             if ('letterSpacing' in tg) (tg as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${-Math.round(DH0 * 0.011)}px`;
-            tg.fillText('404', DW0 / 2, DH0 * 0.5);
+            tg.fillText('404', DW0 / 2, DH0 * 0.52);
           }
           // The picture on the screen is redrawn from this one with interference over it, in
           // black and white like an old television: a faint static and scan lines always, a slow
@@ -451,7 +451,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
             ntg.globalCompositeOperation = 'source-over';
             ntg.imageSmoothingEnabled = false;
             ntg.drawImage(snow[(i0 + 1 + Math.floor(Math.random() * (snow.length - 1))) % snow.length], 0, 0, DW, DH);
-            ntg.fillStyle = 'rgba(10,10,10,0.38)'; ntg.fillRect(0, 0, DW, DH);     // the letters: dark snow
+            ntg.fillStyle = 'rgba(90,90,88,0.42)'; ntg.fillRect(0, 0, DW, DH);     // the letters: greyer snow
             ntg.globalCompositeOperation = 'destination-in';
             ntg.drawImage(tm, 0, 0, DW, DH);
             frg.drawImage(nt, 0, 0);

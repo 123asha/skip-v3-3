@@ -1,12 +1,13 @@
 import { useEffect, useRef } from 'react';
-import { sound } from '../sound/Sound';
+import { sound, sharedAudio, SOUND_BUS } from '../sound/Sound';
 import svgPaths from '../../imports/Index/svg-3bjnx36a2y';
+import { asset } from '../utils/asset';
 
 // 404 alternative (localhost only): a minimalist table-tennis paddle in real 3D (three.js)
 // and a ball in a bare room. The racket follows the pointer on its own plane,
 // tilting with its motion; the ball flies back and forth between the racket,
 // the walls, the floor and the ceiling.
-const BG = 0xd6edf6;   // the sky at the horizon
+const BG = 0xe6e1da;   // the room's grey, also shown before the scene is drawn
 const X = 2.6, Y = 1.5, Z_BACK = -4, Z_RACKET = 0.3;   // (the desk's front edge is at z ≈ 0.9)
 const BALL_R = 0.17, RACKET_R = 0.62;
 
@@ -23,8 +24,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
       renderer.setClearColor(BG);
       renderer.shadowMap.enabled = true;
-      // soft-edged shadows, as in a studio render
-      renderer.shadowMap.type = THREE.PCFShadowMap;
+      // soft shadows (variance maps), as in a studio render
+      renderer.shadowMap.type = THREE.VSMShadowMap;
       // A filmic grade, as in a studio render: soft highlights, gentle contrast
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 0.95;
@@ -57,7 +58,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       sun.shadow.camera.left = -7; sun.shadow.camera.right = 7;
       sun.shadow.camera.top = 7; sun.shadow.camera.bottom = -7;
       sun.shadow.camera.near = 1; sun.shadow.camera.far = 16;
-      sun.shadow.radius = 7; sun.shadow.bias = -0.0004;
+      sun.shadow.radius = 6; sun.shadow.blurSamples = 12; sun.shadow.bias = -0.0006;
       scene.add(sun);
       // Low sun through a window off to the left: it throws the window's panes, slanted,
       // across the wall and the desk, with soft leaf shadows from a plant outside
@@ -87,7 +88,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       stripes.shadow.mapSize.set(1024, 1024);
       stripes.shadow.camera.near = 4; stripes.shadow.camera.far = 30;
       stripes.shadow.bias = -0.0004; stripes.shadow.normalBias = 0.02;
-      stripes.shadow.radius = 6;
+      stripes.shadow.radius = 4; stripes.shadow.blurSamples = 10;
       scene.add(stripes, stripes.target);
 
       const shade = (m: import('three').Object3D) => { m.traverse(o => { const q = o as import('three').Mesh; if (q.isMesh) { q.castShadow = true; q.receiveShadow = true; } }); return m; };
@@ -158,6 +159,22 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       // Things on the desk, after the reference photos
       // (the ones the ball bounces off once it's free — see the docking below)
       const colliders: import('three').Object3D[] = [];
+      // Contact shadows: a soft darkening on the desk right under each thing, where the
+      // light can't reach (ambient occlusion) — it's what makes them sit on the desk
+      const aoTex = (() => {
+        const c = document.createElement('canvas'); c.width = c.height = 128;
+        const g = c.getContext('2d')!, gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+        gr.addColorStop(0, '#fff'); gr.addColorStop(0.5, '#9a9a9a'); gr.addColorStop(1, '#000');
+        g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+        return new THREE.CanvasTexture(c);
+      })();
+      const ao = (x: number, z: number, rx: number, rz: number, op = 0.35, rotY = 0) => {
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0x2a2018, alphaMap: aoTex, transparent: true, opacity: op, depthWrite: false }));
+        m.rotation.set(-Math.PI / 2, 0, rotY); m.scale.set(rx * 2, rz * 2, 1);
+        m.position.set(x, -Y + 0.003, z);
+        scene.add(m);
+        return m;
+      };
       const V2 = (x: number, y: number) => new THREE.Vector2(x, y);
       // a thin rod between two points
       const rod = (a: import('three').Vector3, b: import('three').Vector3, r: number, m: import('three').Material) => {
@@ -198,6 +215,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const curve = new THREE.CatmullRomCurve3([V3(0.3, 0.02, 0.1), V3(0.7, 0.015, 0.5), V3(0.4, 0.015, 1.0), V3(-0.3, 0.015, 0.9), V3(-0.6, 0.015, 0.4)]);
         g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 64, 0.012, 8, false), cream));
         g.position.set(2.75, fy, -3.15);
+        ao(2.75, -3.15, 0.6, 0.6, 0.3);
         g.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh) { m.castShadow = m.material !== glass; m.receiveShadow = true; } });
         scene.add(g);
       }
@@ -240,45 +258,69 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const mouse = new THREE.Group();
         mouse.add(base, shell);
         mouse.position.set(1.75, fy, -1.5); mouse.rotation.y = -0.12;
+        ao(1.75, -1.5, 0.3, 0.52, 0.42, -0.12);
         scene.add(shade(mouse)); colliders.push(mouse);
       }
-      // The rest of the desk, composed: the iMac in the middle; a trailing plant at the
+      // The rest of the desk, composed: the iMac in the middle; a snake plant at the
       // back left balancing the lamp at the back right; MUJI things in front of them —
       // a clear acrylic pen stand and a kraft notebook with a gel pen on the left, the
       // mouse and a mug on the right; plenty of empty oak between
       {
-        const leafMat = new THREE.MeshStandardMaterial({ color: 0x4f8a45, roughness: 0.55, side: THREE.DoubleSide });
-        const leafMat2 = new THREE.MeshStandardMaterial({ color: 0x6aa257, roughness: 0.55, side: THREE.DoubleSide });
-        const leafShape = (() => { const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.bezierCurveTo(0.09, 0.03, 0.1, 0.12, 0, 0.2); sh.bezierCurveTo(-0.1, 0.12, -0.09, 0.03, 0, 0); return sh; })();
-        const leafGeo = new THREE.ShapeGeometry(leafShape, 8);
         let seed = 11; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-        const leaf = (p: import('three').Vector3, scale: number, tilt: number, yaw: number) => {
-          const m = new THREE.Mesh(leafGeo, rnd() < 0.5 ? leafMat : leafMat2);
-          m.position.copy(p); m.scale.setScalar(scale);
-          m.rotation.set(tilt, yaw, (rnd() - 0.5) * 0.6);
-          m.castShadow = true;
-          return m;
-        };
-        // — a pothos in a white ceramic pot (back left), a few vines trailing over the rim
+        // — a snake plant (Sansevieria) in a matte concrete pot: tall, fleshy, sword-like
+        // leaves with a slight twist, dark green banded with pale stripes, yellow edges
         {
           const g = new THREE.Group();
-          const pot = new THREE.Mesh(new THREE.LatheGeometry([V2(0, 0), V2(0.27, 0), V2(0.3, 0.04), V2(0.33, 0.52), V2(0.31, 0.53), V2(0.29, 0.1), V2(0, 0.1)], 48), mat(0xf4f2ee, 0.5));
+          const concrete = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, map: canvasTex(256, 256, cg => {
+            cg.fillStyle = '#bfbab2'; cg.fillRect(0, 0, 256, 256);
+            for (let i = 0; i < 5000; i++) { const v = 150 + Math.random() * 70; cg.fillStyle = `rgba(${v},${v - 3},${v - 8},0.35)`; cg.fillRect(Math.random() * 256, Math.random() * 256, 1 + Math.random() * 2, 1 + Math.random() * 2); }
+          }) });
+          const pot = new THREE.Mesh(new THREE.LatheGeometry([V2(0, 0), V2(0.33, 0), V2(0.36, 0.03), V2(0.4, 0.62), V2(0.37, 0.63), V2(0.35, 0.12), V2(0, 0.12)], 56), concrete);
           g.add(pot);
-          const soil = new THREE.Mesh(new THREE.CircleGeometry(0.3, 32), mat(0x3b2e25, 0.95)); soil.rotation.x = -Math.PI / 2; soil.position.y = 0.48; g.add(soil);
-          // a bushy crown
-          for (let i = 0; i < 46; i++) {
-            const a = rnd() * Math.PI * 2, r = rnd() * 0.32, h = 0.55 + rnd() * 0.55;
-            g.add(leaf(V3(Math.cos(a) * r, h, Math.sin(a) * r), 1.1 + rnd() * 0.7, -0.4 - rnd() * 0.9, a + Math.PI / 2));
-          }
-          // trailing vines down the front and side of the pot and onto the desk
-          for (const [a0, len] of [[0.6, 0.9], [1.5, 0.7], [2.6, 0.5]] as const) {
-            for (let k = 0; k < 9; k++) {
-              const t = k / 8, r = 0.33 + t * 0.12;
-              g.add(leaf(V3(Math.cos(a0 + t * 0.3) * r, 0.52 - t * len, Math.sin(a0 + t * 0.3) * r), 0.9 + rnd() * 0.4, 0.6 + rnd() * 0.6, a0 + Math.PI / 2));
+          const soil = new THREE.Mesh(new THREE.CircleGeometry(0.36, 40), mat(0x33271f, 1)); soil.rotation.x = -Math.PI / 2; soil.position.y = 0.57; g.add(soil);
+          // the leaf picture: wavy pale bands across dark green, a yellow margin each side
+          const leafTex = canvasTex(128, 512, lg => {
+            lg.fillStyle = '#2f5427'; lg.fillRect(0, 0, 128, 512);
+            for (let y = 0; y < 512; y += 9 + Math.random() * 10) {
+              lg.strokeStyle = `rgba(${150 + Math.random() * 40},${180 + Math.random() * 30},${120 + Math.random() * 30},${0.25 + Math.random() * 0.3})`;
+              lg.lineWidth = 2 + Math.random() * 4;
+              lg.beginPath(); lg.moveTo(10, y);
+              for (let x = 10; x <= 118; x += 12) lg.lineTo(x, y + Math.sin(x * 0.12 + y) * 4);
+              lg.stroke();
             }
+            for (let i = 0; i < 1400; i++) { lg.fillStyle = `rgba(0,20,0,${Math.random() * 0.12})`; lg.fillRect(Math.random() * 128, Math.random() * 512, 2, 2); }
+            const edge = lg.createLinearGradient(0, 0, 128, 0);
+            edge.addColorStop(0, '#c9b65a'); edge.addColorStop(0.08, '#b8a94e'); edge.addColorStop(0.12, 'rgba(0,0,0,0)'); edge.addColorStop(0.88, 'rgba(0,0,0,0)'); edge.addColorStop(0.92, '#b8a94e'); edge.addColorStop(1, '#c9b65a');
+            lg.fillStyle = edge; lg.fillRect(0, 0, 128, 512);
+          });
+          const leafMats = [0xffffff, 0xe8efe0, 0xd8e4cc].map(tint => new THREE.MeshStandardMaterial({ map: leafTex, color: tint, roughness: 0.38, side: THREE.DoubleSide }));
+          // one leaf: a long tapered blade, gently folded along its middle, twisting and leaning as it rises
+          const blade = (h: number, w: number, twist: number, lean: number) => {
+            const geo = new THREE.PlaneGeometry(1, 1, 6, 28);
+            const pos = geo.attributes.position;
+            for (let i = 0; i < pos.count; i++) {
+              const u = pos.getX(i) + 0.5, v = pos.getY(i) + 0.5;           // 0…1 across, 0…1 up
+              const width = w * Math.pow(Math.sin(Math.PI * Math.min(1, v * 0.62 + 0.38)), 0.8) * (1 - Math.pow(v, 6));
+              let x = (u - 0.5) * width, z = Math.abs(u - 0.5) * width * 0.55;   // folded into a shallow V
+              const a = twist * v, ca = Math.cos(a), sa = Math.sin(a);
+              [x, z] = [x * ca - z * sa, x * sa + z * ca];
+              pos.setXYZ(i, x, v * h, z + lean * v * v * h);
+            }
+            geo.computeVertexNormals();
+            return geo;
+          };
+          for (let i = 0; i < 11; i++) {
+            const a = rnd() * Math.PI * 2, r = 0.05 + rnd() * 0.17;
+            const h = 1.3 + rnd() * 1.1, w = 0.17 + rnd() * 0.08;
+            const m = new THREE.Mesh(blade(h, w, (rnd() - 0.5) * 1.6, 0.06 + rnd() * 0.18), leafMats[i % leafMats.length]);
+            m.position.set(Math.cos(a) * r, 0.55, Math.sin(a) * r);
+            m.rotation.y = -a + Math.PI / 2 + (rnd() - 0.5) * 0.6;
+            m.castShadow = true;
+            g.add(m);
           }
-          g.position.set(-2.85, fy, -3.15);
+          g.position.set(-2.85, fy, -3.1);
           scene.add(shade(g)); colliders.push(pot);
+          ao(-2.85, -3.1, 0.6, 0.6, 0.45);
         }
         // — a MUJI acrylic pen stand (clear), with MUJI gel pens and a pencil
         {
@@ -293,6 +335,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
             g.add(pen);
           }
           g.position.set(-1.95, fy, -2.35);
+          ao(-1.95, -2.35, 0.36, 0.36, 0.3);
           scene.add(g); box.castShadow = false; colliders.push(box);
           g.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh && m !== box) m.castShadow = true; });
         }
@@ -309,6 +352,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           const clip = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.012, 0.12), mat(0x1b1b1b, 0.4)); clip.position.set(0.22, 0.1, -0.08); clip.rotation.y = 0.78;
           g.add(cover, pages, label, pen, clip);
           g.position.set(-2.55, fy, -0.45); g.rotation.y = 0.22;
+          ao(-2.55, -0.45, 0.62, 0.85, 0.22, 0.22);
           scene.add(shade(g)); colliders.push(cover);
         }
         // — a white porcelain mug (front right)
@@ -320,6 +364,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           handle.position.set(0.18, 0.22, 0); handle.rotation.z = -Math.PI * 0.6;
           mug.add(handle);
           mug.position.set(2.85, fy, -0.35); mug.rotation.y = 0.5;
+          ao(2.85, -0.35, 0.3, 0.3, 0.45);
           scene.add(shade(mug)); colliders.push(mug);
         }
       }
@@ -427,21 +472,23 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const cam = new THREE.Mesh(new THREE.CircleGeometry(0.008, 16), new THREE.MeshBasicMaterial({ color: 0x222222 }));
         cam.position.set(0, H / 2 - 0.035, D / 2 + 0.0045);
         mac.add(cam);
-        // a die-cut sticker of the Skip logo on the chin: the logo in black with a white border following its shape
-        const sticker = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.17), new THREE.MeshStandardMaterial({ roughness: 0.5, transparent: true, map: canvasTex(520, 340, g => {
-          const paths = svgPaths.pb7e9300.match(/M[^M]+/g)!;
-          const lw = 400, sc = lw / 52.5283;
-          g.translate(60, 170 - 16 * sc); g.scale(sc, sc);
-          const shapes = [new Path2D(paths[1]), new Path2D(paths[2]), new Path2D(paths[4]), new Path2D(paths[0] + paths[3])];
-          // the white border: the letters stroked thick, then filled, in white
-          g.lineJoin = 'round'; g.lineCap = 'round';
-          g.strokeStyle = 'rgba(0,0,0,0.08)'; g.lineWidth = 7.4; shapes.forEach(p => g.stroke(p));
-          g.strokeStyle = '#fbfaf8'; g.fillStyle = '#fbfaf8'; g.lineWidth = 6.6; shapes.forEach(p => { g.stroke(p); g.fill(p); });
-          g.fillStyle = '#111';
-          g.fill(shapes[0]); g.fill(shapes[1]); g.fill(shapes[2]); g.fill(shapes[3], 'evenodd');
-        }) }));
-        sticker.position.set(-0.9, -H / 2 + (H - BEZ_H) / 2 - 0.01, D / 2 + 0.003);
-        sticker.rotation.z = 0.06;
+        // a round sticker on the chin, our favicon: the black ball with its white glint, on a thin white edge
+        const stickerTex = canvasTex(256, 256, () => {});
+        {
+          const fav = new Image();
+          fav.onload = () => {
+            const c = stickerTex.image as HTMLCanvasElement, g = c.getContext('2d')!;
+            g.clearRect(0, 0, 256, 256);
+            g.fillStyle = '#fbfaf8'; g.beginPath(); g.arc(128, 128, 126, 0, Math.PI * 2); g.fill();
+            g.save(); g.beginPath(); g.arc(128, 128, 116, 0, Math.PI * 2); g.clip();
+            g.drawImage(fav, 128 - 118, 128 - 118, 236, 236);
+            g.restore();
+            stickerTex.needsUpdate = true;
+          };
+          fav.src = asset('/fav-black-nobg.png');
+        }
+        const sticker = new THREE.Mesh(new THREE.CircleGeometry(0.075, 48), new THREE.MeshStandardMaterial({ map: stickerTex, roughness: 0.45, transparent: true }));
+        sticker.position.set(-0.95, -H / 2 + (H - BEZ_H) / 2 - 0.01, D / 2 + 0.003);
         mac.add(sticker);
         // the stand: one bent aluminium plate — a leaning upright and a flat foot
         // from behind the body it leans back down to the desk, then runs forward flat under the screen
@@ -458,6 +505,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         mac.add(up, foot, bend);
         colliders.push(shell, bezel, foot);
         mac.position.set(0, fy + 0.635 + H / 2, -2.55);
+        ao(0, -2.7, 0.45, 0.5, 0.35);
         mac.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh && m !== screen && m !== cam) { m.castShadow = true; m.receiveShadow = true; } });
         scene.add(mac);
       }
@@ -631,10 +679,32 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       racket.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh && m.material !== legendMat) { m.castShadow = !keyMeshes.has(m); m.receiveShadow = true; } });
       // Where the ball lands, the key is knocked clean off (and a neighbour or two
       // now and then): it flies up, tumbles and lands on the desk, where it stays
+      // A plastic crack when keys are knocked off: a sharp snap of filtered noise, a second
+      // smaller click, and the low knock of the key coming loose
+      const playBreak = (power: number) => {
+        const ctx = sharedAudio(); if (!ctx || !SOUND_BUS.on) return;
+        const now = ctx.currentTime;
+        const snap = (at: number, gain: number, freq: number, dur: number) => {
+          const len = Math.ceil(ctx.sampleRate * dur), buf = ctx.createBuffer(1, len, ctx.sampleRate), ch = buf.getChannelData(0);
+          for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+          const src = ctx.createBufferSource(); src.buffer = buf;
+          const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = 1.4;
+          const gn = ctx.createGain(); gn.gain.value = gain;
+          src.connect(bp).connect(gn).connect(ctx.destination); src.start(now + at);
+        };
+        snap(0, 0.5 + power * 0.4, 3200 + Math.random() * 900, 0.05);
+        snap(0.03 + Math.random() * 0.02, 0.25, 5200, 0.03);
+        const osc = ctx.createOscillator(), og = ctx.createGain();
+        osc.type = 'triangle'; osc.frequency.setValueAtTime(260, now); osc.frequency.exponentialRampToValueAtTime(90, now + 0.09);
+        og.gain.setValueAtTime(0.18, now); og.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+        osc.connect(og).connect(ctx.destination); osc.start(now); osc.stop(now + 0.14);
+      };
       const pressAt = (lx: number, lz: number, power: number) => {
         const hit = keys.filter(q => q.state === 'on' && lx >= q.x0 - U * 0.6 && lx <= q.x1 + U * 0.6 && lz >= q.z0 - U * 0.6 && lz <= q.z1 + U * 0.6);
         hit.sort((a, b) => Math.hypot((a.x0 + a.x1) / 2 - lx, (a.z0 + a.z1) / 2 - lz) - Math.hypot((b.x0 + b.x1) / 2 - lx, (b.z0 + b.z1) / 2 - lz));
-        hit.slice(0, 1 + (Math.random() < 0.35 ? 1 : 0) + (power > 0.5 ? 1 : 0)).forEach((q, i) => {
+        const off = hit.slice(0, 1 + (Math.random() < 0.35 ? 1 : 0) + (power > 0.5 ? 1 : 0));
+        if (off.length) playBreak(power);
+        off.forEach((q, i) => {
           scene.attach(q.body);                              // keeps where it is, now loose in the room
           q.state = 'fly'; q.t = 0;
           const kx = (q.x0 + q.x1) / 2 - lx, kz = (q.z0 + q.z1) / 2 - lz;
@@ -726,7 +796,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       let raf = 0;
       const tick = () => {
         look.x += (look.tx - look.x) * 0.04; look.y += (look.ty - look.y) * 0.04;
-        camera.position.set(look.x * 0.6, 1.25 - look.y * 0.26, 5.4);
+        camera.position.set(look.x * 1.15, 1.25 - look.y * 0.45, 5.4);
         camera.lookAt(0, -0.5, -1.3);
         // Paddle
         const px = st.x, pz = st.z;
@@ -880,7 +950,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
   }, []);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 160, background: '#d6edf6', animation: 'pageIn 0.35s 0.05s ease both' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 160, background: '#e6e1da', animation: 'pageIn 0.35s 0.05s ease both' }}>
       <div ref={host} style={{ position: 'absolute', inset: 0 }} />
     </div>
   );

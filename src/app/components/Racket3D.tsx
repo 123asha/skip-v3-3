@@ -161,13 +161,17 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       const colliders: import('three').Object3D[] = [];
       // Things the ball can knock about (everything on the desk but the iMac): it shoves them
       // across the oak, spins them a little, pushes them off the edge — the mug can break
-      type Prop = { root: import('three').Object3D; mass: number; kind?: 'mug'; vx: number; vz: number; w: number; vy: number;
+      type Snd = 'porcelain' | 'glass' | 'concrete' | 'acrylic' | 'paper' | 'pen' | 'plastic' | 'wood' | 'wall' | 'metal';
+      type Prop = { root: import('three').Object3D; mass: number; kind?: 'mug' | 'pen'; snd: Snd; vx: number; vz: number; w: number; vy: number;
+        hy: number; hv: number;                                  // a light thing's hop: height and its speed
         pos0?: import('three').Vector3; yaw0: number; aoM?: import('three').Mesh; ao0?: import('three').Vector3; aoRot0: number; fall: boolean; gone: boolean };
       const propOf = new Map<import('three').Object3D, Prop>();
+      let penOn: { pen: Prop; under: Prop } | null = null;    // the pen lying on the notebook
       const props: Prop[] = [];
-      const prop = (hits: import('three').Object3D[], root: import('three').Object3D, aoM: import('three').Mesh | undefined, mass: number, kind?: 'mug') => {
-        const e: Prop = { root, mass, kind, vx: 0, vz: 0, w: 0, vy: 0, yaw0: root.rotation.y, aoM, aoRot0: aoM ? aoM.rotation.z : 0, fall: false, gone: false };
+      const prop = (hits: import('three').Object3D[], root: import('three').Object3D, aoM: import('three').Mesh | undefined, mass: number, snd: Snd, kind?: 'mug' | 'pen') => {
+        const e: Prop = { root, mass, kind, snd, vx: 0, vz: 0, w: 0, vy: 0, hy: 0, hv: 0, yaw0: root.rotation.y, aoM, aoRot0: aoM ? aoM.rotation.z : 0, fall: false, gone: false };
         hits.forEach(h => propOf.set(h, e)); props.push(e);
+        return e;
       };
       // Contact shadows: a soft darkening on the desk right under each thing, where the
       // light can't reach (ambient occlusion) — it's what makes them sit on the desk
@@ -225,7 +229,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const curve = new THREE.CatmullRomCurve3([V3(0.3, 0.02, 0.1), V3(0.7, 0.015, 0.5), V3(0.4, 0.015, 1.0), V3(-0.3, 0.015, 0.9), V3(-0.6, 0.015, 0.4)]);
         g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 64, 0.012, 8, false), cream));
         g.position.set(2.75, fy, -3.15);
-        prop(g.children.filter(c => colliders.includes(c)), g, ao(2.75, -3.15, 0.6, 0.6, 0.3), 2.2);
+        prop(g.children.filter(c => colliders.includes(c)), g, ao(2.75, -3.15, 0.6, 0.6, 0.3), 2.2, 'glass');
         g.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh) { m.castShadow = m.material !== glass; m.receiveShadow = true; } });
         scene.add(g);
       }
@@ -269,7 +273,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         mouse.add(base, shell);
         mouse.position.set(1.75, fy, -1.5); mouse.rotation.y = -0.12;
         scene.add(shade(mouse)); colliders.push(mouse);
-        prop([mouse], mouse, ao(1.75, -1.5, 0.3, 0.52, 0.42, -0.12), 0.6);
+        prop([mouse], mouse, ao(1.75, -1.5, 0.3, 0.52, 0.42, -0.12), 0.6, 'plastic');
       }
       // The rest of the desk: the iMac in the middle; a snake plant at the back left balancing the lamp
       // at the back right; a clear acrylic pen stand and a kraft notebook with a gel pen on the
@@ -329,7 +333,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           }
           g.position.set(-2.85, fy, -3.1);
           scene.add(shade(g)); colliders.push(pot);
-          prop([pot], g, ao(-2.85, -3.1, 0.6, 0.6, 0.45), 3);
+          prop([pot], g, ao(-2.85, -3.1, 0.6, 0.6, 0.45), 3, 'concrete');
         }
         // — a MUJI acrylic pen stand (clear), with MUJI gel pens and a pencil
         {
@@ -345,7 +349,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           }
           g.position.set(-1.95, fy, -2.35);
           scene.add(g); box.castShadow = false; colliders.push(box);
-          prop([box], g, ao(-1.95, -2.35, 0.36, 0.36, 0.3), 0.9);
+          prop([box], g, ao(-1.95, -2.35, 0.36, 0.36, 0.3), 0.9, 'acrylic');
           g.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh && m !== box) m.castShadow = true; });
         }
         // — a MUJI kraft-paper notebook, slightly askew, with a black gel pen on it
@@ -359,10 +363,15 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           label.rotation.x = -Math.PI / 2; label.position.set(0, 0.052, -0.38);
           const pen = rod(V3(-0.32, 0.075, 0.45), V3(0.3, 0.075, -0.15), 0.024, mat(0x1b1b1b, 0.4));
           const clip = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.012, 0.12), mat(0x1b1b1b, 0.4)); clip.position.set(0.22, 0.1, -0.08); clip.rotation.y = 0.78;
-          g.add(cover, pages, label, pen, clip);
+          g.add(cover, pages, label);
+          // the pen is loose on it: a thing of its own
+          const penG = new THREE.Group(); penG.add(pen, clip);
           g.position.set(-2.55, fy, -0.45); g.rotation.y = 0.22;
           scene.add(shade(g)); colliders.push(cover);
-          prop([cover], g, ao(-2.55, -0.45, 0.62, 0.85, 0.22, 0.22), 1.1);
+          prop([cover], g, ao(-2.55, -0.45, 0.62, 0.85, 0.22, 0.22), 1.1, 'paper');
+          penG.position.copy(g.position); penG.rotation.y = g.rotation.y;
+          scene.add(shade(penG)); colliders.push(pen);
+          penOn = { pen: prop([pen], penG, undefined, 0.22, 'pen', 'pen'), under: propOf.get(cover)! };
         }
         // — a white porcelain mug (front right)
         {
@@ -374,7 +383,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           mug.add(handle);
           mug.position.set(2.85, fy, -0.35); mug.rotation.y = 0.5;
           scene.add(shade(mug)); colliders.push(mug);
-          prop([mug], mug, ao(2.85, -0.35, 0.3, 0.3, 0.45), 0.8, 'mug');
+          prop([mug], mug, ao(2.85, -0.35, 0.3, 0.3, 0.45), 0.8, 'porcelain', 'mug');
         }
       }
       // An iMac (24", silver) at the back of the desk, «404» on its screen
@@ -454,7 +463,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
             ntg.globalCompositeOperation = 'source-over';
             ntg.imageSmoothingEnabled = false;
             ntg.drawImage(snow[(i0 + 1 + Math.floor(Math.random() * (snow.length - 1))) % snow.length], 0, 0, DW, DH);
-            ntg.fillStyle = 'rgba(110,110,108,0.32)'; ntg.fillRect(0, 0, DW, DH);     // the letters: a lighter grey snow
+            ntg.fillStyle = 'rgba(130,130,128,0.26)'; ntg.fillRect(0, 0, DW, DH);     // the letters: a lighter grey snow
             ntg.globalCompositeOperation = 'destination-in';
             // the shape wavers a little from frame to frame, like a weak signal
             ntg.drawImage(tm, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 2, DW, DH);
@@ -768,16 +777,40 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         g2.gain.setValueAtTime(0.0001, now); g2.gain.setValueAtTime(0.09, now + 0.012); g2.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
         osc.connect(lp).connect(g2).connect(ctx.destination); osc.start(now + 0.012); osc.stop(now + 0.08);
       };
-      // A soft knock for the ball against everything but the keyboard (quieter than the site's taps)
-      let lastSoft = 0;
-      const softKnock = (strength = 0.5) => {
+      // Each thing sounds like what it's made of when the ball hits it
+      let lastHit = 0;
+      const hitSound = (k: Snd, strength: number) => {
         const ctx = sharedAudio(); if (!ctx || !SOUND_BUS.on) return;
-        const t = performance.now(); if (t - lastSoft < 60) return; lastSoft = t;
-        const now = ctx.currentTime, osc = ctx.createOscillator(), g = ctx.createGain();
-        const f = 620 * (1 + (Math.random() - 0.5) * 0.15);
-        osc.type = 'sine'; osc.frequency.setValueAtTime(f, now); osc.frequency.exponentialRampToValueAtTime(f * 0.7, now + 0.07);
-        g.gain.setValueAtTime(0.06 + Math.min(1, strength) * 0.05, now); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
-        osc.connect(g).connect(ctx.destination); osc.start(now); osc.stop(now + 0.09);
+        const tnow = performance.now(); if (tnow - lastHit < 45) return; lastHit = tnow;
+        const now = ctx.currentTime, st = Math.min(1, Math.max(0.2, strength));
+        const out = ctx.createGain(); out.gain.value = 0.55 * st; out.connect(ctx.destination);
+        const tone = (f: number, dur: number, gain: number, type: OscillatorType = 'sine', f2?: number) => {
+          const o = ctx.createOscillator(), g = ctx.createGain();
+          o.type = type; o.frequency.setValueAtTime(f * (1 + (Math.random() - 0.5) * 0.06), now);
+          if (f2) o.frequency.exponentialRampToValueAtTime(f2, now + dur);
+          g.gain.setValueAtTime(gain, now); g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+          o.connect(g).connect(out); o.start(now); o.stop(now + dur + 0.02);
+        };
+        const noise = (dur: number, gain: number, type: BiquadFilterType, freq: number, q = 1) => {
+          const len = Math.ceil(ctx.sampleRate * dur), buf = ctx.createBuffer(1, len, ctx.sampleRate), ch = buf.getChannelData(0);
+          for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.5);
+          const src = ctx.createBufferSource(); src.buffer = buf;
+          const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+          const g = ctx.createGain(); g.gain.value = gain;
+          src.connect(f).connect(g).connect(out); src.start(now);
+        };
+        switch (k) {
+          case 'porcelain': tone(2300, 0.14, 0.22); tone(3900, 0.09, 0.1); break;
+          case 'glass': tone(1650, 0.4, 0.15); tone(2480, 0.3, 0.08); tone(4200, 0.18, 0.04); break;
+          case 'concrete': noise(0.06, 0.45, 'lowpass', 500); tone(170, 0.1, 0.3, 'sine', 110); break;
+          case 'acrylic': noise(0.03, 0.4, 'bandpass', 2600, 2); tone(1200, 0.05, 0.07, 'triangle'); break;
+          case 'paper': noise(0.08, 0.38, 'lowpass', 900); break;
+          case 'pen': noise(0.02, 0.32, 'highpass', 4000); tone(2800, 0.035, 0.06); break;
+          case 'plastic': noise(0.03, 0.36, 'bandpass', 1800, 2); tone(900, 0.045, 0.07, 'triangle'); break;
+          case 'wood': tone(320, 0.09, 0.26, 'sine', 230); noise(0.03, 0.16, 'bandpass', 1200, 1.5); break;
+          case 'wall': tone(140, 0.11, 0.26, 'sine', 100); noise(0.04, 0.14, 'lowpass', 400); break;
+          case 'metal': tone(1180, 0.28, 0.12); tone(2870, 0.22, 0.06); tone(4500, 0.12, 0.03); break;
+        }
       };
       const pressAt = (lx: number, lz: number, power: number) => {
         const hit = keys.filter(q => q.state === 'on' && lx >= q.x0 - U * 0.6 && lx <= q.x1 + U * 0.6 && lz >= q.z0 - U * 0.6 && lz <= q.z1 + U * 0.6);
@@ -930,11 +963,11 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         // The floor, the walls: a ball that misses the paddle bounces off them, with a knock
         if (b.y < -Y + BALL_R) {
           b.y = -Y + BALL_R;
-          if (b.vy < -0.02) { softKnock(-b.vy / 0.12); squash = Math.max(squash, 0.7); }
+          if (b.vy < -0.02) { hitSound('wood', -b.vy / 0.12); squash = Math.max(squash, 0.7); }
           b.vy = Math.abs(b.vy) * 0.72; b.vx *= 0.92; b.vz *= 0.92;
         }
-        if (b.x > X - BALL_R) { b.x = X - BALL_R; if (b.vx > 0.02) softKnock(0.4); b.vx = -Math.abs(b.vx) * 0.8; }
-        if (b.x < -X + BALL_R) { b.x = -X + BALL_R; if (b.vx < -0.02) softKnock(0.4); b.vx = Math.abs(b.vx) * 0.8; }
+        if (b.x > X - BALL_R) { b.x = X - BALL_R; if (b.vx > 0.02) hitSound('wall', 0.4); b.vx = -Math.abs(b.vx) * 0.8; }
+        if (b.x < -X + BALL_R) { b.x = -X + BALL_R; if (b.vx < -0.02) hitSound('wall', 0.4); b.vx = Math.abs(b.vx) * 0.8; }
         if (b.z < Z_BACK + BALL_R) { b.z = Z_BACK + BALL_R; b.vz = Math.abs(b.vz) * 0.8; }
         if (b.z > Z_RACKET + 0.4) { b.z = Z_RACKET + 0.4; b.vz = -Math.abs(b.vz) * 0.8; }
         collideProps();
@@ -988,12 +1021,13 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const vn = b.vx * nx + b.vy * ny + b.vz * nz;
         if (vn < 0) {
           b.vx -= 1.85 * vn * nx; b.vy -= 1.85 * vn * ny; b.vz -= 1.85 * vn * nz;
-          if (vn < -0.015) { softKnock(-vn / 0.1); squash = Math.max(squash, 0.6); }
+          if (vn < -0.015) { hitSound(e ? e.snd : 'metal', -vn / 0.1); squash = Math.max(squash, 0.6); }
           if (e) {
             // the thing takes the blow: shoved away from the ball, spun a little
             // (with the keyboard parked the ball means it: it shoves much harder, and things go off the desk)
             const imp = -vn * (docked ? 2.6 : 1.1) / e.mass, hl = Math.hypot(nx, nz) || 1;
             e.vx -= (nx / hl) * imp; e.vz -= (nz / hl) * imp; e.w += (Math.random() - 0.5) * imp * 3;
+            if (e.kind === 'pen') { e.hv = Math.min(0.08, 0.03 + imp * 0.4); e.w += (Math.random() - 0.5) * 0.4; }
             // only the mug can break
             if (e.kind === 'mug' && -vn > 0.05) shatter(e);
           }
@@ -1068,11 +1102,22 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
             if (r.position.y < fy - 7) { r.visible = false; e.gone = true; }
             continue;
           }
+          if (e.kind === 'pen' && penOn) {
+            // it rests on the notebook while that is under it; otherwise on the desk
+            const u = penOn.under, apart = u.gone || u.fall || Math.hypot(r.position.x - u.root.position.x, r.position.z - u.root.position.z) > 0.45;
+            const base = apart ? fy - 0.05 : u.root.position.y;
+            if (e.hv !== 0 || e.hy > 0) {
+              e.hv -= 0.0034; e.hy += e.hv;
+              if (e.hy <= 0) { e.hy = 0; if (e.hv < -0.012) { hitSound('pen', -e.hv / 0.05); e.hv = -e.hv * 0.35; } else e.hv = 0; }
+              r.rotation.z = Math.sin(e.hy * 20) * 0.3;
+            }
+            r.position.y += (base + e.hy - r.position.y) * (e.hy > 0 ? 1 : 0.25);
+          }
           if (Math.abs(e.vx) + Math.abs(e.vz) + Math.abs(e.w) < 1e-5) continue;
           r.position.x += e.vx; r.position.z += e.vz; r.rotation.y += e.w;
           e.vx *= 0.9; e.vz *= 0.9; e.w *= 0.86;
           if (r.position.z < Z_BACK + 0.35) { r.position.z = Z_BACK + 0.35; e.vz = Math.abs(e.vz) * 0.3; }
-          if (Math.abs(r.position.x) > 4.2 || r.position.z > 0.9) { e.fall = true; e.vy = 0; softKnock(0.3); }
+          if (Math.abs(r.position.x) > 4.2 || r.position.z > 0.9) { e.fall = true; e.vy = 0; hitSound(e.snd, 0.25); }
           if (e.aoM && e.ao0 && e.pos0) {
             e.aoM.position.set(e.ao0.x + r.position.x - e.pos0.x, e.ao0.y, e.ao0.z + r.position.z - e.pos0.z);
             e.aoM.rotation.z = e.aoRot0 - (r.rotation.y - e.yaw0);
@@ -1096,7 +1141,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         // the desktop: it keeps bouncing, and now and then heads for something on the desk
         if (b.y < fy + BALL_R) {
           b.y = fy + BALL_R;
-          if (b.vy < -0.02) { softKnock(-b.vy / 0.12); squash = Math.max(squash, 0.7); }
+          if (b.vy < -0.02) { hitSound('wood', -b.vy / 0.12); squash = Math.max(squash, 0.7); }
           b.vy = Math.max(Math.abs(b.vy) * 0.85, 0.075 + Math.random() * 0.035);
           // on the hunt: the nearest thing still standing, aimed so the arc comes down on it
           const alive = props.filter(e => !e.gone && !e.fall);
@@ -1110,7 +1155,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           } else { b.vx *= 0.95; b.vz *= 0.95; }
         }
         // the room: back wall, the desk's ends, a little in front, a ceiling
-        if (b.z < Z_BACK + BALL_R) { b.z = Z_BACK + BALL_R; b.vz = Math.abs(b.vz) * 0.8; softKnock(0.4); }
+        if (b.z < Z_BACK + BALL_R) { b.z = Z_BACK + BALL_R; b.vz = Math.abs(b.vz) * 0.8; hitSound('wall', 0.4); }
         if (b.z > 0.7) { b.z = 0.7; b.vz = -Math.abs(b.vz) * 0.8; }
         if (Math.abs(b.x) > 4.0) { b.x = Math.sign(b.x) * 4.0; b.vx = -b.vx * 0.8; }
         if (b.y > 3.5) { b.y = 3.5; b.vy = -Math.abs(b.vy); }

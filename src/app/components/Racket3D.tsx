@@ -428,9 +428,9 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           { const lg = lines.getContext('2d')!; for (let y = 0; y < DH; y += 3) { lg.fillStyle = 'rgba(0,0,0,0.05)'; lg.fillRect(0, y, 4, 1); } }
           const linesPat = dg.createPattern(lines, 'repeat')!;
           // a few frames of static, made once and shuffled
-          const snow = Array.from({ length: 4 }, () => {
-            const n = document.createElement('canvas'); n.width = 240; n.height = 135;
-            const ng = n.getContext('2d')!, img = ng.createImageData(240, 135);
+          const snow = Array.from({ length: 6 }, () => {
+            const n = document.createElement('canvas'); n.width = 360; n.height = 203;
+            const ng = n.getContext('2d')!, img = ng.createImageData(360, 203);
             for (let i = 0; i < img.data.length; i += 4) { const v = Math.random() < 0.5 ? Math.random() * 60 : 195 + Math.random() * 60; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
             ng.putImageData(img, 0, 0);
             return n;
@@ -441,12 +441,17 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           const frg = fr.getContext('2d')!;
           const nt = document.createElement('canvas'); nt.width = DW; nt.height = DH;
           const ntg = nt.getContext('2d')!;
+          // the whole screen is snow; «404» is the same snow, only denser and darker — written in noise
           const compose = () => {
-            frg.drawImage(c, 0, 0, DW, DH);
+            frg.imageSmoothingEnabled = false;
+            const i0 = Math.floor(Math.random() * snow.length);
+            frg.globalCompositeOperation = 'source-over';
+            frg.drawImage(snow[i0], 0, 0, DW, DH);
+            frg.fillStyle = 'rgba(236,236,232,0.62)'; frg.fillRect(0, 0, DW, DH);   // the field: pale snow
             ntg.globalCompositeOperation = 'source-over';
             ntg.imageSmoothingEnabled = false;
-            ntg.drawImage(snow[Math.floor(Math.random() * snow.length)], 0, 0, DW, DH);
-            ntg.fillStyle = 'rgba(20,20,20,0.55)'; ntg.fillRect(0, 0, DW, DH);     // darker, so the number reads
+            ntg.drawImage(snow[(i0 + 1 + Math.floor(Math.random() * (snow.length - 1))) % snow.length], 0, 0, DW, DH);
+            ntg.fillStyle = 'rgba(10,10,10,0.38)'; ntg.fillRect(0, 0, DW, DH);     // the letters: dark snow
             ntg.globalCompositeOperation = 'destination-in';
             ntg.drawImage(tm, 0, 0, DW, DH);
             frg.drawImage(nt, 0, 0);
@@ -483,8 +488,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
               dg.drawImage(fr, 0, 0, DW, DH);
               // a faint static even when calm
               dg.imageSmoothingEnabled = false;
-              dg.globalAlpha = 0.06;
-              dg.drawImage(snow[frame % snow.length], 0, 0, DW, DH);
+              dg.globalAlpha = 0.0;
               dg.globalAlpha = 1;
             }
             // the rolling band and the scan lines

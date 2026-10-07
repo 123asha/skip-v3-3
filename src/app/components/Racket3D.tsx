@@ -878,6 +878,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         keys.forEach(q => { if (q.state !== 'on') return; q.press *= 0.82; q.body.position.y = q.y0 - q.press * 0.014; });
         flyKeys();
         moveProps();
+        clearUnderKeyboard();
 
         const free = docked && dockT > 0.4;
         if (free) { freeBall(); finishBall(); screenFx?.(performance.now()); renderer.render(scene, camera); raf = requestAnimationFrame(tick); return; }
@@ -977,8 +978,28 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         }
       };
       // Every prop's box follows the prop as it moves
-      const collideProps = () => {
+      const ensureBoxes = () => {
         if (!boxes) { scene.updateMatrixWorld(true); boxes = colliders.map(o => new THREE.Box3().setFromObject(o)); props.forEach(e => { e.pos0 = e.root.position.clone(); if (e.aoM) e.ao0 = e.aoM.position.clone(); }); }
+      };
+      // The keyboard, low on the desk, can't sit on anything: whatever is under it is moved out of the way
+      const clearUnderKeyboard = () => {
+        if (dockT < 0.15) return;
+        ensureBoxes();
+        const kx0 = st.x - KW / 2 - 0.03, kx1 = st.x + KW / 2 + 0.03, kz0 = st.z - KD / 2 - 0.03, kz1 = st.z + KD / 2 + 0.03;
+        colliders.forEach((o, i) => {
+          const e = propOf.get(o); if (!e || e.gone || e.fall || !e.pos0) return;
+          const bx = boxes![i], ox = e.root.position.x - e.pos0.x, oz = e.root.position.z - e.pos0.z;
+          const x0 = bx.min.x + ox, x1 = bx.max.x + ox, z0 = bx.min.z + oz, z1 = bx.max.z + oz;
+          if (x1 <= kx0 || x0 >= kx1 || z1 <= kz0 || z0 >= kz1) return;
+          // out along the shortest way
+          const pushes = [kx0 - x1, kx1 - x0, kz0 - z1, kz1 - z0];
+          const k = pushes.reduce((bi, v, j) => (Math.abs(v) < Math.abs(pushes[bi]) ? j : bi), 0);
+          if (k < 2) e.root.position.x += pushes[k]; else e.root.position.z += pushes[k];
+          if (e.aoM && e.ao0) e.aoM.position.set(e.ao0.x + e.root.position.x - e.pos0.x, e.ao0.y, e.ao0.z + e.root.position.z - e.pos0.z);
+        });
+      };
+      const collideProps = () => {
+        ensureBoxes();
         colliders.forEach((o, i) => {
           const bx = boxes![i], e = propOf.get(o);
           if (e?.gone || e?.fall) return;

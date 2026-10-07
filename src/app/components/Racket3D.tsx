@@ -355,49 +355,65 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           if ('letterSpacing' in g) (g as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = '0px';
           g.fillStyle = '#8a8a88';
           g.fillText('Страница не найдена', 800, 640);
-          // The picture on the screen is redrawn from this one with interference over it:
-          // faint scan lines and a slow rolling band always, and now and then a short burst
-          // of tearing — slices of the picture jerked sideways, colour bars, snow, a flicker
+          // The picture on the screen is redrawn from this one with interference over it, in
+          // black and white like an old television: a faint static and scan lines always, a slow
+          // rolling band, and now and then a burst — heavy snow, the picture rolling and its
+          // lines jerked sideways, grey bars, a flicker
           const DW = 720, DH = 405;
           const d = document.createElement('canvas'); d.width = DW; d.height = DH;
           const dg = d.getContext('2d')!;
           const lines = document.createElement('canvas'); lines.width = 4; lines.height = DH;
-          { const lg = lines.getContext('2d')!; for (let y = 0; y < DH; y += 3) { lg.fillStyle = 'rgba(0,0,0,0.045)'; lg.fillRect(0, y, 4, 1); } }
+          { const lg = lines.getContext('2d')!; for (let y = 0; y < DH; y += 3) { lg.fillStyle = 'rgba(0,0,0,0.05)'; lg.fillRect(0, y, 4, 1); } }
           const linesPat = dg.createPattern(lines, 'repeat')!;
+          // a few frames of static, made once and shuffled
+          const snow = Array.from({ length: 4 }, () => {
+            const n = document.createElement('canvas'); n.width = 240; n.height = 135;
+            const ng = n.getContext('2d')!, img = ng.createImageData(240, 135);
+            for (let i = 0; i < img.data.length; i += 4) { const v = Math.random() < 0.5 ? Math.random() * 60 : 195 + Math.random() * 60; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
+            ng.putImageData(img, 0, 0);
+            return n;
+          });
           const t = new THREE.CanvasTexture(d); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
-          let burst = 0, frame = 0;
+          let burst = 0, frame = 0, roll = 0;
           screenFx = (now: number) => {
             if ((frame++ % 3) !== 0) return;                       // 20 fps is plenty for a screen
             dg.globalCompositeOperation = 'source-over'; dg.globalAlpha = 1;
-            dg.drawImage(c, 0, 0, DW, DH);
-            if (burst <= 0 && Math.random() < 0.012) burst = 5 + Math.floor(Math.random() * 12);
+            dg.imageSmoothingEnabled = true;
+            if (burst <= 0 && Math.random() < 0.014) { burst = 5 + Math.floor(Math.random() * 12); roll = Math.random() < 0.5 ? (Math.random() - 0.5) * DH * 0.6 : 0; }
             if (burst > 0) {
               burst--;
-              // torn slices
-              for (let k = 0, n = 2 + Math.floor(Math.random() * 6); k < n; k++) {
-                const y = Math.random() * DH, h = 3 + Math.random() * 36, dx = (Math.random() - 0.5) * 90;
-                dg.drawImage(c, 0, (y / DH) * 900, 1600, (h / DH) * 900, dx, y, DW, h);
+              // the picture rolls (vertical hold), wrapping round
+              const oy = ((roll * (burst / 12)) % DH + DH) % DH;
+              dg.drawImage(c, 0, oy, DW, DH); dg.drawImage(c, 0, oy - DH, DW, DH);
+              // lines jerked sideways (horizontal hold)
+              for (let k = 0, n = 3 + Math.floor(Math.random() * 6); k < n; k++) {
+                const y = Math.random() * DH, h = 2 + Math.random() * 30, dx = (Math.random() - 0.5) * 110;
+                dg.drawImage(d, 0, y, DW, h, dx, y, DW, h);
               }
-              // colour bars
-              dg.globalCompositeOperation = 'multiply';
+              // heavy snow
+              dg.imageSmoothingEnabled = false;
+              dg.globalAlpha = 0.35 + Math.random() * 0.3;
+              dg.drawImage(snow[Math.floor(Math.random() * snow.length)], 0, 0, DW, DH);
+              dg.globalAlpha = 1;
+              // grey bars
               for (let k = 0, n = 1 + Math.floor(Math.random() * 3); k < n; k++) {
-                dg.fillStyle = ['#ffb3c0', '#b3f0ff', '#d6c4ff'][k % 3];
-                dg.fillRect(0, Math.random() * DH, DW, 2 + Math.random() * 10);
+                dg.fillStyle = Math.random() < 0.5 ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.22)';
+                dg.fillRect(0, Math.random() * DH, DW, 3 + Math.random() * 16);
               }
-              dg.globalCompositeOperation = 'source-over';
-              // snow
-              for (let k = 0; k < 420; k++) {
-                const v = Math.random() < 0.5 ? 0 : 255;
-                dg.fillStyle = `rgba(${v},${v},${v},${0.08 + Math.random() * 0.25})`;
-                dg.fillRect(Math.random() * DW, Math.random() * DH, 1 + Math.random() * 3, 1);
-              }
-              if (Math.random() < 0.3) { dg.fillStyle = 'rgba(255,255,255,0.18)'; dg.fillRect(0, 0, DW, DH); }
+              if (Math.random() < 0.3) { dg.fillStyle = Math.random() < 0.5 ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.18)'; dg.fillRect(0, 0, DW, DH); }
+            } else {
+              dg.drawImage(c, 0, 0, DW, DH);
+              // a faint static even when calm
+              dg.imageSmoothingEnabled = false;
+              dg.globalAlpha = 0.06;
+              dg.drawImage(snow[frame % snow.length], 0, 0, DW, DH);
+              dg.globalAlpha = 1;
             }
             // the rolling band and the scan lines
             const by = ((now / 1000) * 70) % (DH + 120) - 60;
-            const band = dg.createLinearGradient(0, by - 50, 0, by + 50);
-            band.addColorStop(0, 'rgba(255,255,255,0)'); band.addColorStop(0.5, 'rgba(255,255,255,0.07)'); band.addColorStop(1, 'rgba(255,255,255,0)');
-            dg.fillStyle = band; dg.fillRect(0, by - 50, DW, 100);
+            const band = dg.createLinearGradient(0, by - 40, 0, by + 40);
+            band.addColorStop(0, 'rgba(255,255,255,0)'); band.addColorStop(0.5, 'rgba(255,255,255,0.08)'); band.addColorStop(1, 'rgba(255,255,255,0)');
+            dg.fillStyle = band; dg.fillRect(0, by - 40, DW, 80);
             dg.fillStyle = linesPat; dg.fillRect(0, 0, DW, DH);
             t.needsUpdate = true;
           };

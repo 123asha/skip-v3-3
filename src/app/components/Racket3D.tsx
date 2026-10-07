@@ -20,7 +20,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       if (stop || !host.current) return;
       const el = host.current;
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
       renderer.setClearColor(BG);
       renderer.shadowMap.enabled = true;
       // soft-edged shadows, as in a studio render
@@ -53,7 +53,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       // Almost straight overhead: shadows lie right under what casts them
       sun.position.set(-0.25, 8, 0.35);
       sun.castShadow = true;
-      sun.shadow.mapSize.set(2048, 2048);
+      sun.shadow.mapSize.set(1024, 1024);
       sun.shadow.camera.left = -7; sun.shadow.camera.right = 7;
       sun.shadow.camera.top = 7; sun.shadow.camera.bottom = -7;
       sun.shadow.camera.near = 1; sun.shadow.camera.far = 16;
@@ -84,7 +84,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       stripes.target.position.set(1.8, 0.2, -4);
       stripes.map = paneCookie;
       stripes.castShadow = true;
-      stripes.shadow.mapSize.set(2048, 2048);
+      stripes.shadow.mapSize.set(1024, 1024);
       stripes.shadow.camera.near = 4; stripes.shadow.camera.far = 30;
       stripes.shadow.bias = -0.0004; stripes.shadow.normalBias = 0.02;
       stripes.shadow.radius = 6;
@@ -109,7 +109,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
           return t;
         })();
-        const DW = 13, DZ0 = Z_BACK, DZ1 = 0.9, TH = 0.08, LEGS = 2.7;
+        const DW = 8.4, DZ0 = Z_BACK, DZ1 = 0.9, TH = 0.12, LEGS = 4.8;   // about 125 × 72 cm, 73 cm high
         const top = new THREE.Mesh(new THREE.RoundedBoxGeometry(DW, TH, DZ1 - DZ0, 3, 0.02), new THREE.MeshStandardMaterial({ map: oak, roughness: 0.55 }));
         top.position.set(0, fy - TH / 2, (DZ0 + DZ1) / 2);
         scene.add(shade(top));
@@ -122,8 +122,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const apron = new THREE.Mesh(new THREE.BoxGeometry(DW - 0.6, 0.16, 0.04), white);
         apron.position.set(0, fy - TH - 0.08, DZ1 - 0.22);
         scene.add(shade(apron));
-        const drawer = new THREE.Mesh(new THREE.RoundedBoxGeometry(4.2, 0.62, 2.4, 3, 0.04), new THREE.MeshStandardMaterial({ map: oak, roughness: 0.5 }));
-        drawer.position.set(2.6, fy - TH - 0.31, DZ1 - 1.25);
+        const drawer = new THREE.Mesh(new THREE.RoundedBoxGeometry(2.8, 0.5, 2.4, 3, 0.04), new THREE.MeshStandardMaterial({ map: oak, roughness: 0.5 }));
+        drawer.position.set(2.2, fy - TH - 0.25, DZ1 - 1.25);
         scene.add(shade(drawer));
         const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 30), mat(0xd8d4cd, 0.85));
         floor.rotation.x = -Math.PI / 2; floor.position.set(0, fy - TH - LEGS, 0);
@@ -184,7 +184,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const stemTop = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.04, 0.42, 24), peach); stemTop.position.y = 0.85;
         const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.03, 32), peach); collar.position.y = 1.07;
         g.add(stemLow, stemTop, collar);
-        const glass = new THREE.MeshPhysicalMaterial({ color: 0xffd2a8, emissive: 0xffa868, emissiveIntensity: 0.55, roughness: 0.18, transmission: 0.25, thickness: 0.3, clearcoat: 1, clearcoatRoughness: 0.12 });
+        const glass = new THREE.MeshPhysicalMaterial({ color: 0xffd2a8, emissive: 0xffa868, emissiveIntensity: 0.55, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.12 });   // (no transmission: it costs a whole extra render pass)
         for (const [y, r] of [[1.2, 0.36], [1.47, 0.32]] as const) {
           const t = new THREE.Mesh(new THREE.TorusGeometry(r, 0.13, 32, 72), glass);
           t.rotation.x = Math.PI / 2; t.position.y = y; t.scale.z = 0.95;
@@ -197,7 +197,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         // the cable, curling over the desk to a round knob
         const curve = new THREE.CatmullRomCurve3([V3(0.3, 0.02, 0.1), V3(0.7, 0.015, 0.5), V3(0.4, 0.015, 1.0), V3(-0.3, 0.015, 0.9), V3(-0.6, 0.015, 0.4)]);
         g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 64, 0.012, 8, false), cream));
-        g.position.set(2.35, fy, -3.0);
+        g.position.set(2.75, fy, -3.15);
         g.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh) { m.castShadow = m.material !== glass; m.receiveShadow = true; } });
         scene.add(g);
       }
@@ -242,45 +242,86 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         mouse.position.set(1.75, fy, -1.5); mouse.rotation.y = -0.12;
         scene.add(shade(mouse)); colliders.push(mouse);
       }
-      // — a ball vase, a notes cube, a mug and a closed laptop
+      // The rest of the desk, composed: the iMac in the middle; a trailing plant at the
+      // back left balancing the lamp at the back right; MUJI things in front of them —
+      // a clear acrylic pen stand and a kraft notebook with a gel pen on the left, the
+      // mouse and a mug on the right; plenty of empty oak between
       {
-
-        const vase = new THREE.Mesh(new THREE.SphereGeometry(0.42, 48, 32), mat(0xc9b9a6, 0.9));
-        vase.position.set(-5.3, fy + 0.4, -1.7);
-        scene.add(shade(vase)); colliders.push(vase);
-        [[0.05, 0.12, 0xf4f4f2], [-0.08, -0.05, 0x1f1f1f], [0.1, -0.1, 0x3a3a3a]].forEach(([dx, tl, c]) => {
-          scene.add(shade(rod(V3(-5.3 + dx, fy + 0.5, -1.7), V3(-5.3 + dx + tl, fy + 1.45, -1.7), 0.018, mat(c, 0.5))));
-          const tip = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.08, 12), mat(0xd9b98a, 0.7));
-          tip.position.set(-5.3 + dx + tl * 1.04, fy + 1.49, -1.7); tip.rotation.z = -Math.atan2(tl, 0.95);
-          scene.add(tip);
-        });
-
-        const cube = new THREE.Group();
-        const label = canvasTex(512, 300, g => {
-          g.fillStyle = '#9fae94'; g.fillRect(0, 0, 512, 300);
-          g.fillStyle = '#f2f2f2'; g.font = 'italic 64px "Snell Roundhand", "Brush Script MT", cursive'; g.textAlign = 'center'; g.fillText('Posting Notes', 256, 170);
-        });
-        const grey = new THREE.MeshPhysicalMaterial({ color: 0x9fae94, roughness: 0.35, clearcoat: 0.5 });   // sage
-        const cb = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.42, 0.62), [grey, grey, grey, grey, new THREE.MeshStandardMaterial({ map: label, roughness: 0.6 }), grey]);
-        cb.position.y = 0.21;
-        const paper = new THREE.Mesh(new THREE.BoxGeometry(0.69, 0.07, 0.56), mat(0xfbfbfb, 0.9)); paper.position.y = 0.45;
-        cube.add(cb, paper);
-        cube.position.set(-4.75, fy, -2.25); cube.rotation.y = 0.3;
-        scene.add(shade(cube)); colliders.push(cube);
-
-        const mug = new THREE.Group();
-        const porcelain = new THREE.MeshPhysicalMaterial({ color: 0xefe7da, roughness: 0.25, clearcoat: 0.8, clearcoatRoughness: 0.2 });
-        mug.add(new THREE.Mesh(new THREE.LatheGeometry([V2(0, 0), V2(0.17, 0), V2(0.18, 0.02), V2(0.18, 0.4), V2(0.165, 0.4), V2(0.165, 0.05), V2(0, 0.05)], 48), porcelain));
-        const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.2, 16), porcelain); stick.rotation.z = Math.PI / 2; stick.position.set(0.27, 0.22, 0);
-        const ballH = new THREE.Mesh(new THREE.SphereGeometry(0.085, 24, 16), porcelain); ballH.position.set(0.39, 0.22, 0);
-        mug.add(stick, ballH);
-        mug.position.set(3.3, fy, -0.4); mug.rotation.y = 0.5;
-        scene.add(shade(mug)); colliders.push(mug);
-
-
-        const laptop = new THREE.Mesh(new THREE.RoundedBoxGeometry(2.6, 0.1, 1.8, 4, 0.04), mat(0xc8cacd, 0.3, 0.85));
-        laptop.position.set(-4.4, fy + 0.05, -0.9); laptop.rotation.y = 0.12;
-        scene.add(shade(laptop)); colliders.push(laptop);
+        const leafMat = new THREE.MeshStandardMaterial({ color: 0x4f8a45, roughness: 0.55, side: THREE.DoubleSide });
+        const leafMat2 = new THREE.MeshStandardMaterial({ color: 0x6aa257, roughness: 0.55, side: THREE.DoubleSide });
+        const leafShape = (() => { const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.bezierCurveTo(0.09, 0.03, 0.1, 0.12, 0, 0.2); sh.bezierCurveTo(-0.1, 0.12, -0.09, 0.03, 0, 0); return sh; })();
+        const leafGeo = new THREE.ShapeGeometry(leafShape, 8);
+        let seed = 11; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+        const leaf = (p: import('three').Vector3, scale: number, tilt: number, yaw: number) => {
+          const m = new THREE.Mesh(leafGeo, rnd() < 0.5 ? leafMat : leafMat2);
+          m.position.copy(p); m.scale.setScalar(scale);
+          m.rotation.set(tilt, yaw, (rnd() - 0.5) * 0.6);
+          m.castShadow = true;
+          return m;
+        };
+        // — a pothos in a white ceramic pot (back left), a few vines trailing over the rim
+        {
+          const g = new THREE.Group();
+          const pot = new THREE.Mesh(new THREE.LatheGeometry([V2(0, 0), V2(0.27, 0), V2(0.3, 0.04), V2(0.33, 0.52), V2(0.31, 0.53), V2(0.29, 0.1), V2(0, 0.1)], 48), mat(0xf4f2ee, 0.5));
+          g.add(pot);
+          const soil = new THREE.Mesh(new THREE.CircleGeometry(0.3, 32), mat(0x3b2e25, 0.95)); soil.rotation.x = -Math.PI / 2; soil.position.y = 0.48; g.add(soil);
+          // a bushy crown
+          for (let i = 0; i < 46; i++) {
+            const a = rnd() * Math.PI * 2, r = rnd() * 0.32, h = 0.55 + rnd() * 0.55;
+            g.add(leaf(V3(Math.cos(a) * r, h, Math.sin(a) * r), 1.1 + rnd() * 0.7, -0.4 - rnd() * 0.9, a + Math.PI / 2));
+          }
+          // trailing vines down the front and side of the pot and onto the desk
+          for (const [a0, len] of [[0.6, 0.9], [1.5, 0.7], [2.6, 0.5]] as const) {
+            for (let k = 0; k < 9; k++) {
+              const t = k / 8, r = 0.33 + t * 0.12;
+              g.add(leaf(V3(Math.cos(a0 + t * 0.3) * r, 0.52 - t * len, Math.sin(a0 + t * 0.3) * r), 0.9 + rnd() * 0.4, 0.6 + rnd() * 0.6, a0 + Math.PI / 2));
+            }
+          }
+          g.position.set(-2.85, fy, -3.15);
+          scene.add(shade(g)); colliders.push(pot);
+        }
+        // — a MUJI acrylic pen stand (clear), with MUJI gel pens and a pencil
+        {
+          const g = new THREE.Group();
+          const acrylic = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.05, transparent: true, opacity: 0.22, clearcoat: 1, side: THREE.DoubleSide, depthWrite: false });
+          const box = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.62, 0.42), acrylic); box.position.y = 0.31;
+          const edges = new THREE.LineSegments(new THREE.EdgesGeometry(box.geometry), new THREE.LineBasicMaterial({ color: 0xcfd6d8, transparent: true, opacity: 0.8 }));
+          edges.position.y = 0.31;
+          g.add(box, edges);
+          for (const [x, z, tl, col] of [[-0.08, -0.06, 0.08, 0x1d1d1d], [0.06, 0.05, -0.06, 0x1d1d1d], [0.08, -0.08, 0.12, 0xe9e9e6], [-0.05, 0.08, -0.1, 0xd9c29a]] as const) {
+            const pen = rod(V3(x, 0.03, z), V3(x + tl, 0.98, z - tl * 0.4), 0.022, mat(col, 0.45));
+            g.add(pen);
+          }
+          g.position.set(-1.95, fy, -2.35);
+          scene.add(g); box.castShadow = false; colliders.push(box);
+          g.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh && m !== box) m.castShadow = true; });
+        }
+        // — a MUJI kraft-paper notebook, slightly askew, with a black gel pen on it
+        {
+          const g = new THREE.Group();
+          const kraft = mat(0xc4a57a, 0.85);
+          const cover = new THREE.Mesh(new THREE.BoxGeometry(0.98, 0.05, 1.42), [kraft, kraft, kraft, kraft, kraft, kraft]);
+          cover.position.y = 0.025;
+          const pages = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.036, 1.4), mat(0xf6f3ec, 0.9)); pages.position.set(0.01, 0.025, 0);
+          const label = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.14), new THREE.MeshStandardMaterial({ roughness: 0.9, map: canvasTex(300, 100, gg => { gg.fillStyle = '#f2ece0'; gg.fillRect(0, 0, 300, 100); gg.strokeStyle = '#8a7a63'; gg.lineWidth = 2; for (const y of [40, 66]) { gg.beginPath(); gg.moveTo(20, y); gg.lineTo(280, y); gg.stroke(); } }) }));
+          label.rotation.x = -Math.PI / 2; label.position.set(0, 0.052, -0.38);
+          const pen = rod(V3(-0.32, 0.075, 0.45), V3(0.3, 0.075, -0.15), 0.024, mat(0x1b1b1b, 0.4));
+          const clip = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.012, 0.12), mat(0x1b1b1b, 0.4)); clip.position.set(0.22, 0.1, -0.08); clip.rotation.y = 0.78;
+          g.add(cover, pages, label, pen, clip);
+          g.position.set(-2.55, fy, -0.45); g.rotation.y = 0.22;
+          scene.add(shade(g)); colliders.push(cover);
+        }
+        // — a white porcelain mug (front right)
+        {
+          const mug = new THREE.Group();
+          const porcelain = new THREE.MeshStandardMaterial({ color: 0xf3f1ec, roughness: 0.28 });
+          mug.add(new THREE.Mesh(new THREE.LatheGeometry([V2(0, 0), V2(0.17, 0), V2(0.18, 0.02), V2(0.18, 0.4), V2(0.165, 0.4), V2(0.165, 0.05), V2(0, 0.05)], 48), porcelain));
+          const handle = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.022, 12, 32, Math.PI * 1.2), porcelain);
+          handle.position.set(0.18, 0.22, 0); handle.rotation.z = -Math.PI * 0.6;
+          mug.add(handle);
+          mug.position.set(2.85, fy, -0.35); mug.rotation.y = 0.5;
+          scene.add(shade(mug)); colliders.push(mug);
+        }
       }
       // An iMac (24", silver) at the back of the desk, «404» on its screen
       let screenFx: ((now: number) => void) | null = null;
@@ -301,7 +342,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           const c = document.createElement('canvas'); c.width = 1600; c.height = 900;
           const g = c.getContext('2d')!;
           const bg = g.createLinearGradient(0, 0, 1600, 900);
-          bg.addColorStop(0, '#fbf1ea'); bg.addColorStop(1, '#f6e4d9');
+          bg.addColorStop(0, '#f5f5f3'); bg.addColorStop(1, '#e9e9e7');
           g.fillStyle = bg; g.fillRect(0, 0, 1600, 900);
           const cs = getComputedStyle(document.documentElement);
           const family = cs.getPropertyValue('--font-display').trim() || 'sans-serif';
@@ -312,12 +353,12 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           g.fillText('404', 800, 430);
           g.font = `400 34px ${family}`;
           if ('letterSpacing' in g) (g as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = '0px';
-          g.fillStyle = '#7a7470';
+          g.fillStyle = '#8a8a88';
           g.fillText('Страница не найдена', 800, 640);
           // The picture on the screen is redrawn from this one with interference over it:
           // faint scan lines and a slow rolling band always, and now and then a short burst
           // of tearing — slices of the picture jerked sideways, colour bars, snow, a flicker
-          const DW = 960, DH = 540;
+          const DW = 720, DH = 405;
           const d = document.createElement('canvas'); d.width = DW; d.height = DH;
           const dg = d.getContext('2d')!;
           const lines = document.createElement('canvas'); lines.width = 4; lines.height = DH;
@@ -326,7 +367,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           const t = new THREE.CanvasTexture(d); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
           let burst = 0, frame = 0;
           screenFx = (now: number) => {
-            if ((frame++ & 1) === 1) return;                       // 30 fps is plenty
+            if ((frame++ % 3) !== 0) return;                       // 20 fps is plenty for a screen
             dg.globalCompositeOperation = 'source-over'; dg.globalAlpha = 1;
             dg.drawImage(c, 0, 0, DW, DH);
             if (burst <= 0 && Math.random() < 0.012) burst = 5 + Math.floor(Math.random() * 12);
@@ -528,8 +569,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
         return t;
       })();
-      const topMat = new THREE.MeshPhysicalMaterial({ color: 0xf3eee6, roughness: 0.35, clearcoat: 0.35 });
-      const topAccent = new THREE.MeshPhysicalMaterial({ color: 0xdb7d52, roughness: 0.3, clearcoat: 0.5 });
+      const topMat = new THREE.MeshStandardMaterial({ color: 0xf3eee6, roughness: 0.4 });
+      const topAccent = new THREE.MeshStandardMaterial({ color: 0xdb7d52, roughness: 0.35 });
       const legendMat = new THREE.MeshBasicMaterial({ map: legendTex, transparent: true, depthWrite: false });
       type KeyMesh = {
         body: import('three').Object3D; x0: number; x1: number; z0: number; z1: number; press: number; y0: number;
@@ -538,6 +579,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         from?: { p: import('three').Vector3; q: import('three').Quaternion };
       };
       const keys: KeyMesh[] = [];
+      const keyMeshes = new Set<import('three').Object3D>();
       const ox = -COLS * U / 2, oz = -ROWN * U / 2;
       ROWS.forEach((row, ri) => {
         let x = 0;
@@ -548,7 +590,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           const KH = SKIRT_H + CAP_H;
           const cap = new THREE.Mesh(new THREE.RoundedBoxGeometry(kw, KH, kd, 4, 0.014), k.accent ? topAccent : topMat);
           cap.position.y = KH / 2;
-          body.add(cap);
+          body.add(cap); keyMeshes.add(cap);
           // the legend, on its top
           const tw = kw * 0.94, td = kd * 0.94;
           const lg = new THREE.PlaneGeometry(tw, td);
@@ -569,7 +611,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           x += k.w;
         });
       });
-      racket.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh && m.material !== legendMat) { m.castShadow = true; m.receiveShadow = true; } });
+      // the case casts the keyboard's shadow; the many keys don't need to (a lot of draws saved)
+      racket.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh && m.material !== legendMat) { m.castShadow = !keyMeshes.has(m); m.receiveShadow = true; } });
       // Where the ball lands, the key is knocked clean off (and a neighbour or two
       // now and then): it flies up, tumbles and lands on the desk, where it stays
       const pressAt = (lx: number, lz: number, power: number) => {
@@ -794,7 +837,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         // the room: back wall, the desk's ends, a little in front, a ceiling
         if (b.z < Z_BACK + BALL_R) { b.z = Z_BACK + BALL_R; b.vz = Math.abs(b.vz) * 0.8; sound.play('hover', 90); }
         if (b.z > 0.7) { b.z = 0.7; b.vz = -Math.abs(b.vz) * 0.8; }
-        if (Math.abs(b.x) > 6.2) { b.x = Math.sign(b.x) * 6.2; b.vx = -b.vx * 0.8; }
+        if (Math.abs(b.x) > 4.0) { b.x = Math.sign(b.x) * 4.0; b.vx = -b.vx * 0.8; }
         if (b.y > 3.5) { b.y = 3.5; b.vy = -Math.abs(b.vy); }
         for (const bx of boxes) bounceOff(bx.min.x, bx.min.y, bx.min.z, bx.max.x, bx.max.y, bx.max.z);
         // the docked keyboard

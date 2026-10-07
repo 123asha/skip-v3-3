@@ -224,8 +224,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         // the cable, curling over the desk to a round knob
         const curve = new THREE.CatmullRomCurve3([V3(0.3, 0.02, 0.1), V3(0.7, 0.015, 0.5), V3(0.4, 0.015, 1.0), V3(-0.3, 0.015, 0.9), V3(-0.6, 0.015, 0.4)]);
         g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 64, 0.012, 8, false), cream));
-        g.position.set(2.75, fy, -3.15);
-        prop(g.children.filter(c => colliders.includes(c)), g, ao(2.75, -3.15, 0.6, 0.6, 0.3), 2.2);
+        g.position.set(2.8, fy, -3.45);
+        prop(g.children.filter(c => colliders.includes(c)), g, ao(2.8, -3.45, 0.6, 0.6, 0.3), 2.2);
         g.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh) { m.castShadow = m.material !== glass; m.receiveShadow = true; } });
         scene.add(g);
       }
@@ -271,66 +271,72 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         scene.add(shade(mouse)); colliders.push(mouse);
         prop([mouse], mouse, ao(1.75, -1.5, 0.3, 0.52, 0.42, -0.12), 0.6);
       }
-      // The rest of the desk, composed: the iMac in the middle; a snake plant at the
-      // back left balancing the lamp at the back right; MUJI things in front of them —
-      // a clear acrylic pen stand and a kraft notebook with a gel pen on the left, the
-      // mouse and a mug on the right; plenty of empty oak between
+      // The rest of the desk, composed off-balance on purpose: the iMac in the middle; the tall
+      // things gathered on the right (the lamp at the back, the cacti a step in front of it, the
+      // mouse); the left kept light — a pen stand tucked in the far corner, a kraft notebook
+      // turned at an angle with the mug beside it — and open oak behind the monitor's left side
       {
         let seed = 11; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-        // — a snake plant (Sansevieria) in a matte concrete pot: tall, fleshy, sword-like
-        // leaves with a slight twist, dark green banded with pale stripes, yellow edges
+        // — cacti in a white ceramic pot with a gravel top: a tall ribbed column with one arm
+        // curving up, and a short round one beside it; fine pale spines along the ribs
         {
           const g = new THREE.Group();
-          const concrete = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, map: canvasTex(256, 256, cg => {
-            cg.fillStyle = '#bfbab2'; cg.fillRect(0, 0, 256, 256);
-            for (let i = 0; i < 5000; i++) { const v = 150 + Math.random() * 70; cg.fillStyle = `rgba(${v},${v - 3},${v - 8},0.35)`; cg.fillRect(Math.random() * 256, Math.random() * 256, 1 + Math.random() * 2, 1 + Math.random() * 2); }
-          }) });
-          const pot = new THREE.Mesh(new THREE.LatheGeometry([V2(0, 0), V2(0.33, 0), V2(0.36, 0.03), V2(0.4, 0.62), V2(0.37, 0.63), V2(0.35, 0.12), V2(0, 0.12)], 56), concrete);
+          const pot = new THREE.Mesh(new THREE.LatheGeometry([V2(0, 0), V2(0.34, 0), V2(0.37, 0.03), V2(0.41, 0.56), V2(0.385, 0.57), V2(0.36, 0.1), V2(0, 0.1)], 56), mat(0xf3f1ec, 0.4));
           g.add(pot);
-          const soil = new THREE.Mesh(new THREE.CircleGeometry(0.36, 40), mat(0x33271f, 1)); soil.rotation.x = -Math.PI / 2; soil.position.y = 0.57; g.add(soil);
-          // the leaf picture: wavy pale bands across dark green, a yellow margin each side
-          const leafTex = canvasTex(128, 512, lg => {
-            lg.fillStyle = '#2f5427'; lg.fillRect(0, 0, 128, 512);
-            for (let y = 0; y < 512; y += 9 + Math.random() * 10) {
-              lg.strokeStyle = `rgba(${150 + Math.random() * 40},${180 + Math.random() * 30},${120 + Math.random() * 30},${0.25 + Math.random() * 0.3})`;
-              lg.lineWidth = 2 + Math.random() * 4;
-              lg.beginPath(); lg.moveTo(10, y);
-              for (let x = 10; x <= 118; x += 12) lg.lineTo(x, y + Math.sin(x * 0.12 + y) * 4);
-              lg.stroke();
-            }
-            for (let i = 0; i < 1400; i++) { lg.fillStyle = `rgba(0,20,0,${Math.random() * 0.12})`; lg.fillRect(Math.random() * 128, Math.random() * 512, 2, 2); }
-            const edge = lg.createLinearGradient(0, 0, 128, 0);
-            edge.addColorStop(0, '#c9b65a'); edge.addColorStop(0.08, '#b8a94e'); edge.addColorStop(0.12, 'rgba(0,0,0,0)'); edge.addColorStop(0.88, 'rgba(0,0,0,0)'); edge.addColorStop(0.92, '#b8a94e'); edge.addColorStop(1, '#c9b65a');
-            lg.fillStyle = edge; lg.fillRect(0, 0, 128, 512);
+          // gravel
+          const gravel = new THREE.Group();
+          for (let i = 0; i < 140; i++) {
+            const a = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * 0.36;
+            const st = new THREE.Mesh(new THREE.DodecahedronGeometry(0.018 + rnd() * 0.018, 0), mat([0xd8d2c6, 0xbdb6a8, 0xe8e4dc][i % 3], 0.9));
+            st.position.set(Math.cos(a) * r, 0.52 + rnd() * 0.02, Math.sin(a) * r); st.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3);
+            gravel.add(st);
+          }
+          g.add(gravel);
+          const cactusTex = canvasTex(64, 256, cg => {
+            const gr = cg.createLinearGradient(0, 0, 64, 0);
+            gr.addColorStop(0, '#2f5a32'); gr.addColorStop(0.5, '#4f7d47'); gr.addColorStop(1, '#2f5a32');
+            cg.fillStyle = gr; cg.fillRect(0, 0, 64, 256);
+            for (let i = 0; i < 500; i++) { cg.fillStyle = `rgba(${Math.random() < 0.5 ? '220,230,190' : '10,30,10'},${Math.random() * 0.08})`; cg.fillRect(Math.random() * 64, Math.random() * 256, 2, 2); }
           });
-          const leafMats = [0xffffff, 0xe8efe0, 0xd8e4cc].map(tint => new THREE.MeshStandardMaterial({ map: leafTex, color: tint, roughness: 0.38, side: THREE.DoubleSide }));
-          // one leaf: a long tapered blade, gently folded along its middle, twisting and leaning as it rises
-          const blade = (h: number, w: number, twist: number, lean: number) => {
-            const geo = new THREE.PlaneGeometry(1, 1, 6, 28);
+          const skin = new THREE.MeshStandardMaterial({ map: cactusTex, roughness: 0.62 });
+          const spineMat = new THREE.MeshBasicMaterial({ color: 0xe9e2c9 });
+          const RIBS = 9;
+          // a ribbed column: radius bulging at the ribs, rounded top
+          const column = (h: number, r: number) => {
+            const geo = new THREE.CylinderGeometry(1, 1, 1, RIBS * 8, 24, false);
             const pos = geo.attributes.position;
             for (let i = 0; i < pos.count; i++) {
-              const u = pos.getX(i) + 0.5, v = pos.getY(i) + 0.5;           // 0…1 across, 0…1 up
-              const width = w * Math.pow(Math.sin(Math.PI * Math.min(1, v * 0.62 + 0.38)), 0.8) * (1 - Math.pow(v, 6));
-              let x = (u - 0.5) * width, z = Math.abs(u - 0.5) * width * 0.55;   // folded into a shallow V
-              const a = twist * v, ca = Math.cos(a), sa = Math.sin(a);
-              [x, z] = [x * ca - z * sa, x * sa + z * ca];
-              pos.setXYZ(i, x, v * h, z + lean * v * v * h);
+              const x = pos.getX(i), y = pos.getY(i) + 0.5, z = pos.getZ(i);
+              const th = Math.atan2(z, x), rib = 0.86 + 0.14 * Math.pow(Math.abs(Math.cos((th * RIBS) / 2)), 0.6);
+              const top = y > 0.82 ? Math.sqrt(Math.max(0, 1 - ((y - 0.82) / 0.18) ** 2)) : 1;
+              const rr = r * rib * (0.35 + 0.65 * top);
+              const len = Math.hypot(x, z) || 1;
+              pos.setXYZ(i, (x / len) * rr, y * h, (z / len) * rr);
             }
             geo.computeVertexNormals();
-            return geo;
+            const m = new THREE.Mesh(geo, skin);
+            // spines: tiny pale tufts along each rib
+            const pts: number[] = [];
+            for (let k = 0; k < RIBS; k++) {
+              const th = (k / RIBS) * Math.PI * 2;
+              for (let y = 0.06; y < 0.95; y += 0.07) {
+                const rr = r * (y > 0.82 ? Math.sqrt(Math.max(0, 1 - ((y - 0.82) / 0.18) ** 2)) * 0.65 + 0.35 : 1) + 0.004;
+                pts.push(Math.cos(th) * rr, y * h, Math.sin(th) * rr);
+              }
+            }
+            const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pts), 3));
+            m.add(new THREE.Points(pg, new THREE.PointsMaterial({ color: 0xeee6cc, size: 0.022, sizeAttenuation: true })));
+            void spineMat;
+            return m;
           };
-          for (let i = 0; i < 11; i++) {
-            const a = rnd() * Math.PI * 2, r = 0.05 + rnd() * 0.17;
-            const h = 1.3 + rnd() * 1.1, w = 0.17 + rnd() * 0.08;
-            const m = new THREE.Mesh(blade(h, w, (rnd() - 0.5) * 1.6, 0.06 + rnd() * 0.18), leafMats[i % leafMats.length]);
-            m.position.set(Math.cos(a) * r, 0.55, Math.sin(a) * r);
-            m.rotation.y = -a + Math.PI / 2 + (rnd() - 0.5) * 0.6;
-            m.castShadow = true;
-            g.add(m);
-          }
-          g.position.set(-2.85, fy, -3.1);
+          const tall = column(1.55, 0.15); tall.position.set(-0.07, 0.5, 0.02); tall.rotation.z = 0.04;
+          const arm = column(0.55, 0.1); arm.position.set(0.15, 1.05, 0.0); arm.rotation.z = -0.12;
+          const elbow = new THREE.Mesh(new THREE.SphereGeometry(0.1, 24, 16), skin); elbow.position.set(0.1, 1.04, 0); elbow.scale.set(1.3, 0.9, 1);
+          const short = column(0.45, 0.16); short.position.set(0.2, 0.5, 0.12);
+          g.add(tall, arm, elbow, short);
+          g.position.set(3.55, fy, -2.35);
           scene.add(shade(g)); colliders.push(pot);
-          prop([pot], g, ao(-2.85, -3.1, 0.6, 0.6, 0.45), 3);
+          prop([pot], g, ao(3.55, -2.35, 0.6, 0.6, 0.45), 3);
         }
         // — a MUJI acrylic pen stand (clear), with MUJI gel pens and a pencil
         {
@@ -344,9 +350,9 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
             const pen = rod(V3(x, 0.03, z), V3(x + tl, 0.98, z - tl * 0.4), 0.022, mat(col, 0.45));
             g.add(pen);
           }
-          g.position.set(-1.95, fy, -2.35);
+          g.position.set(-2.55, fy, -3.05);
           scene.add(g); box.castShadow = false; colliders.push(box);
-          prop([box], g, ao(-1.95, -2.35, 0.36, 0.36, 0.3), 0.9);
+          prop([box], g, ao(-2.55, -3.05, 0.36, 0.36, 0.3), 0.9);
           g.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh && m !== box) m.castShadow = true; });
         }
         // — a MUJI kraft-paper notebook, slightly askew, with a black gel pen on it
@@ -361,9 +367,9 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           const pen = rod(V3(-0.32, 0.075, 0.45), V3(0.3, 0.075, -0.15), 0.024, mat(0x1b1b1b, 0.4));
           const clip = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.012, 0.12), mat(0x1b1b1b, 0.4)); clip.position.set(0.22, 0.1, -0.08); clip.rotation.y = 0.78;
           g.add(cover, pages, label, pen, clip);
-          g.position.set(-2.55, fy, -0.45); g.rotation.y = 0.22;
+          g.position.set(-2.85, fy, -1.35); g.rotation.y = 0.45;
           scene.add(shade(g)); colliders.push(cover);
-          prop([cover], g, ao(-2.55, -0.45, 0.62, 0.85, 0.22, 0.22), 1.1);
+          prop([cover], g, ao(-2.85, -1.35, 0.62, 0.85, 0.22, 0.45), 1.1);
         }
         // — a white porcelain mug (front right)
         {
@@ -373,9 +379,9 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           const handle = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.022, 12, 32, Math.PI * 1.2), porcelain);
           handle.position.set(0.18, 0.22, 0); handle.rotation.z = -Math.PI * 0.6;
           mug.add(handle);
-          mug.position.set(2.85, fy, -0.35); mug.rotation.y = 0.5;
+          mug.position.set(-1.85, fy, -0.3); mug.rotation.y = 2.4;
           scene.add(shade(mug)); colliders.push(mug);
-          prop([mug], mug, ao(2.85, -0.35, 0.3, 0.3, 0.45), 0.8, 'mug');
+          prop([mug], mug, ao(-1.85, -0.3, 0.3, 0.3, 0.45), 0.8, 'mug');
         }
       }
       // An iMac (24", silver) at the back of the desk, «404» on its screen

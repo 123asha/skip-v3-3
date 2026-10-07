@@ -730,10 +730,38 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         og.gain.setValueAtTime(0.18, now); og.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
         osc.connect(og).connect(ctx.destination); osc.start(now); osc.stop(now + 0.14);
       };
+      // A mechanical keyboard's clack when keys come off: the switch's click and the cap popping loose
+      const playKeyClack = (power: number) => {
+        const ctx = sharedAudio(); if (!ctx || !SOUND_BUS.on) return;
+        const now = ctx.currentTime;
+        const len = Math.ceil(ctx.sampleRate * 0.012), buf = ctx.createBuffer(1, len, ctx.sampleRate), ch = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
+        const src = ctx.createBufferSource(); src.buffer = buf;
+        const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 3500;
+        const g1 = ctx.createGain(); g1.gain.value = 0.35 + power * 0.25;
+        src.connect(hp).connect(g1).connect(ctx.destination); src.start(now);
+        const osc = ctx.createOscillator(), g2 = ctx.createGain();
+        osc.type = 'square'; osc.frequency.setValueAtTime(1150, now + 0.012); osc.frequency.exponentialRampToValueAtTime(420, now + 0.05);
+        const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2400;
+        g2.gain.setValueAtTime(0.0001, now); g2.gain.setValueAtTime(0.09, now + 0.012); g2.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+        osc.connect(lp).connect(g2).connect(ctx.destination); osc.start(now + 0.012); osc.stop(now + 0.08);
+      };
+      // A soft knock for the ball against everything but the keyboard (quieter than the site's taps)
+      let lastSoft = 0;
+      const softKnock = (strength = 0.5) => {
+        const ctx = sharedAudio(); if (!ctx || !SOUND_BUS.on) return;
+        const t = performance.now(); if (t - lastSoft < 60) return; lastSoft = t;
+        const now = ctx.currentTime, osc = ctx.createOscillator(), g = ctx.createGain();
+        const f = 620 * (1 + (Math.random() - 0.5) * 0.15);
+        osc.type = 'sine'; osc.frequency.setValueAtTime(f, now); osc.frequency.exponentialRampToValueAtTime(f * 0.7, now + 0.07);
+        g.gain.setValueAtTime(0.06 + Math.min(1, strength) * 0.05, now); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+        osc.connect(g).connect(ctx.destination); osc.start(now); osc.stop(now + 0.09);
+      };
       const pressAt = (lx: number, lz: number, power: number) => {
         const hit = keys.filter(q => q.state === 'on' && lx >= q.x0 - U * 0.6 && lx <= q.x1 + U * 0.6 && lz >= q.z0 - U * 0.6 && lz <= q.z1 + U * 0.6);
         hit.sort((a, b) => Math.hypot((a.x0 + a.x1) / 2 - lx, (a.z0 + a.z1) / 2 - lz) - Math.hypot((b.x0 + b.x1) / 2 - lx, (b.z0 + b.z1) / 2 - lz));
         const off = hit.slice(0, 1 + (Math.random() < 0.35 ? 1 : 0) + (power > 0.5 ? 1 : 0));
+        if (off.length) playKeyClack(power);
         off.forEach((q, i) => {
           scene.attach(q.body);                              // keeps where it is, now loose in the room
           q.state = 'fly'; q.t = 0;
@@ -825,8 +853,13 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       let raf = 0;
       const tick = () => {
         look.x += (look.tx - look.x) * 0.04; look.y += (look.ty - look.y) * 0.04;
-        camera.position.set(look.x * 1.15, 1.6 - look.y * 0.45, 6.3);
-        camera.lookAt(0, -0.1, -1.3);
+        // the camera swings round the desk on an arc (about ±22° sideways, a little up and down)
+        {
+          const tx = 0, ty = -0.1, tz = -1.3, R = Math.hypot(1.7, 7.6), p0 = Math.atan2(1.7, 7.6);
+          const yaw = look.x * 0.38, pitch = p0 - look.y * 0.1;
+          camera.position.set(tx + R * Math.sin(yaw) * Math.cos(pitch), ty + R * Math.sin(pitch), tz + R * Math.cos(yaw) * Math.cos(pitch));
+          camera.lookAt(tx, ty, tz);
+        }
         // Paddle
         const px = st.x, pz = st.z;
         st.x += (st.tx - st.x) * 0.2; st.z += (st.tz - st.z) * 0.2;
@@ -874,11 +907,11 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         // The floor, the walls: a ball that misses the paddle bounces off them, with a knock
         if (b.y < -Y + BALL_R) {
           b.y = -Y + BALL_R;
-          if (b.vy < -0.02) { sound.play('hover', 60); squash = Math.max(squash, 0.7); }
+          if (b.vy < -0.02) { softKnock(-b.vy / 0.12); squash = Math.max(squash, 0.7); }
           b.vy = Math.abs(b.vy) * 0.72; b.vx *= 0.92; b.vz *= 0.92;
         }
-        if (b.x > X - BALL_R) { b.x = X - BALL_R; if (b.vx > 0.02) sound.play('hover', 90); b.vx = -Math.abs(b.vx) * 0.8; }
-        if (b.x < -X + BALL_R) { b.x = -X + BALL_R; if (b.vx < -0.02) sound.play('hover', 90); b.vx = Math.abs(b.vx) * 0.8; }
+        if (b.x > X - BALL_R) { b.x = X - BALL_R; if (b.vx > 0.02) softKnock(0.4); b.vx = -Math.abs(b.vx) * 0.8; }
+        if (b.x < -X + BALL_R) { b.x = -X + BALL_R; if (b.vx < -0.02) softKnock(0.4); b.vx = Math.abs(b.vx) * 0.8; }
         if (b.z < Z_BACK + BALL_R) { b.z = Z_BACK + BALL_R; b.vz = Math.abs(b.vz) * 0.8; }
         if (b.z > Z_RACKET + 0.4) { b.z = Z_RACKET + 0.4; b.vz = -Math.abs(b.vz) * 0.8; }
         collideProps();
@@ -892,8 +925,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           b.vx = b.vx * 0.3 + dx * 0.05 + st.vx * 0.9;
           b.vz = b.vz * 0.3 + dz * 0.05 + st.vz * 0.9;
           hitKick = 1; squash = 1;
+          if (!keys.some(q => q.state === 'on' && b.x - st.x >= q.x0 - U * 0.6 && b.x - st.x <= q.x1 + U * 0.6 && b.z - st.z >= q.z0 - U * 0.6 && b.z - st.z <= q.z1 + U * 0.6)) sound.play('tap', 40);
           pressAt(b.x - st.x, b.z - st.z, Math.min(1, -vyIn / 0.12));
-          sound.play('tap', 40);
         }
         finishBall();
         screenFx?.(performance.now());
@@ -932,7 +965,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const vn = b.vx * nx + b.vy * ny + b.vz * nz;
         if (vn < 0) {
           b.vx -= 1.85 * vn * nx; b.vy -= 1.85 * vn * ny; b.vz -= 1.85 * vn * nz;
-          if (vn < -0.015) { sound.play('tap', 70); squash = Math.max(squash, 0.6); }
+          if (vn < -0.015) { softKnock(-vn / 0.1); squash = Math.max(squash, 0.6); }
           if (e) {
             // the thing takes the blow: shoved away from the ball, spun a little
             // (with the keyboard parked the ball means it: it shoves much harder, and things go off the desk)
@@ -996,7 +1029,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           r.position.x += e.vx; r.position.z += e.vz; r.rotation.y += e.w;
           e.vx *= 0.9; e.vz *= 0.9; e.w *= 0.86;
           if (r.position.z < Z_BACK + 0.35) { r.position.z = Z_BACK + 0.35; e.vz = Math.abs(e.vz) * 0.3; }
-          if (Math.abs(r.position.x) > 4.2 || r.position.z > 0.9) { e.fall = true; e.vy = 0; sound.play('hover', 160); }
+          if (Math.abs(r.position.x) > 4.2 || r.position.z > 0.9) { e.fall = true; e.vy = 0; softKnock(0.3); }
           if (e.aoM && e.ao0 && e.pos0) {
             e.aoM.position.set(e.ao0.x + r.position.x - e.pos0.x, e.ao0.y, e.ao0.z + r.position.z - e.pos0.z);
             e.aoM.rotation.z = e.aoRot0 - (r.rotation.y - e.yaw0);
@@ -1020,7 +1053,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         // the desktop: it keeps bouncing, and now and then heads for something on the desk
         if (b.y < fy + BALL_R) {
           b.y = fy + BALL_R;
-          if (b.vy < -0.02) { sound.play('hover', 60); squash = Math.max(squash, 0.7); }
+          if (b.vy < -0.02) { softKnock(-b.vy / 0.12); squash = Math.max(squash, 0.7); }
           b.vy = Math.max(Math.abs(b.vy) * 0.85, 0.075 + Math.random() * 0.035);
           // on the hunt: the nearest thing still standing, aimed so the arc comes down on it
           const alive = props.filter(e => !e.gone && !e.fall);
@@ -1034,7 +1067,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           } else { b.vx *= 0.95; b.vz *= 0.95; }
         }
         // the room: back wall, the desk's ends, a little in front, a ceiling
-        if (b.z < Z_BACK + BALL_R) { b.z = Z_BACK + BALL_R; b.vz = Math.abs(b.vz) * 0.8; sound.play('hover', 90); }
+        if (b.z < Z_BACK + BALL_R) { b.z = Z_BACK + BALL_R; b.vz = Math.abs(b.vz) * 0.8; softKnock(0.4); }
         if (b.z > 0.7) { b.z = 0.7; b.vz = -Math.abs(b.vz) * 0.8; }
         if (Math.abs(b.x) > 4.0) { b.x = Math.sign(b.x) * 4.0; b.vx = -b.vx * 0.8; }
         if (b.y > 3.5) { b.y = 3.5; b.vy = -Math.abs(b.vy); }

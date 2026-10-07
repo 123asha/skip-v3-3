@@ -283,6 +283,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         scene.add(shade(laptop)); colliders.push(laptop);
       }
       // An iMac (24", silver) at the back of the desk, «404» on its screen
+      let screenFx: ((now: number) => void) | null = null;
       await document.fonts.ready;
       if (stop) { renderer.dispose(); renderer.domElement.remove(); return; }
       {
@@ -313,8 +314,53 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           if ('letterSpacing' in g) (g as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = '0px';
           g.fillStyle = '#7a7470';
           g.fillText('Страница не найдена', 800, 640);
-          // the camera dot in the bezel is drawn by its own mesh
-          const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+          // The picture on the screen is redrawn from this one with interference over it:
+          // faint scan lines and a slow rolling band always, and now and then a short burst
+          // of tearing — slices of the picture jerked sideways, colour bars, snow, a flicker
+          const DW = 960, DH = 540;
+          const d = document.createElement('canvas'); d.width = DW; d.height = DH;
+          const dg = d.getContext('2d')!;
+          const lines = document.createElement('canvas'); lines.width = 4; lines.height = DH;
+          { const lg = lines.getContext('2d')!; for (let y = 0; y < DH; y += 3) { lg.fillStyle = 'rgba(0,0,0,0.045)'; lg.fillRect(0, y, 4, 1); } }
+          const linesPat = dg.createPattern(lines, 'repeat')!;
+          const t = new THREE.CanvasTexture(d); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+          let burst = 0, frame = 0;
+          screenFx = (now: number) => {
+            if ((frame++ & 1) === 1) return;                       // 30 fps is plenty
+            dg.globalCompositeOperation = 'source-over'; dg.globalAlpha = 1;
+            dg.drawImage(c, 0, 0, DW, DH);
+            if (burst <= 0 && Math.random() < 0.012) burst = 5 + Math.floor(Math.random() * 12);
+            if (burst > 0) {
+              burst--;
+              // torn slices
+              for (let k = 0, n = 2 + Math.floor(Math.random() * 6); k < n; k++) {
+                const y = Math.random() * DH, h = 3 + Math.random() * 36, dx = (Math.random() - 0.5) * 90;
+                dg.drawImage(c, 0, (y / DH) * 900, 1600, (h / DH) * 900, dx, y, DW, h);
+              }
+              // colour bars
+              dg.globalCompositeOperation = 'multiply';
+              for (let k = 0, n = 1 + Math.floor(Math.random() * 3); k < n; k++) {
+                dg.fillStyle = ['#ffb3c0', '#b3f0ff', '#d6c4ff'][k % 3];
+                dg.fillRect(0, Math.random() * DH, DW, 2 + Math.random() * 10);
+              }
+              dg.globalCompositeOperation = 'source-over';
+              // snow
+              for (let k = 0; k < 420; k++) {
+                const v = Math.random() < 0.5 ? 0 : 255;
+                dg.fillStyle = `rgba(${v},${v},${v},${0.08 + Math.random() * 0.25})`;
+                dg.fillRect(Math.random() * DW, Math.random() * DH, 1 + Math.random() * 3, 1);
+              }
+              if (Math.random() < 0.3) { dg.fillStyle = 'rgba(255,255,255,0.18)'; dg.fillRect(0, 0, DW, DH); }
+            }
+            // the rolling band and the scan lines
+            const by = ((now / 1000) * 70) % (DH + 120) - 60;
+            const band = dg.createLinearGradient(0, by - 50, 0, by + 50);
+            band.addColorStop(0, 'rgba(255,255,255,0)'); band.addColorStop(0.5, 'rgba(255,255,255,0.07)'); band.addColorStop(1, 'rgba(255,255,255,0)');
+            dg.fillStyle = band; dg.fillRect(0, by - 50, DW, 100);
+            dg.fillStyle = linesPat; dg.fillRect(0, 0, DW, DH);
+            t.needsUpdate = true;
+          };
+          screenFx(0);
           return t;
         })();
         const SW = W - 0.16, SH = SW * 9 / 16;
@@ -642,7 +688,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         flyKeys();
 
         const free = docked && dockT > 0.4;
-        if (free) { freeBall(); finishBall(); renderer.render(scene, camera); raf = requestAnimationFrame(tick); return; }
+        if (free) { freeBall(); finishBall(); screenFx?.(performance.now()); renderer.render(scene, camera); raf = requestAnimationFrame(tick); return; }
         // Ball, tied to the middle of the paddle by its string
         b.vy -= 0.0034;
         // Falling, it is steered back over the paddle, so it always comes down on it
@@ -690,6 +736,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           sound.play('tap', 40);
         }
         finishBall();
+        screenFx?.(performance.now());
         renderer.render(scene, camera);
         raf = requestAnimationFrame(tick);
       };

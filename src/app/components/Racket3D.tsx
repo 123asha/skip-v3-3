@@ -447,14 +447,14 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
             const ng = n.getContext('2d')!, img = ng.createImageData(DW, DH);
             for (let i = 0; i < img.data.length; i += 4) {
               const r = Math.random();
-              const v = r < dark ? 60 + Math.random() * 60 : r < dark + grey ? 190 + Math.random() * 25 : 232 + Math.random() * 18;
+              const v = r < dark ? 55 + Math.random() * 55 : r < dark + grey ? 150 + Math.random() * 35 : 205 + Math.random() * 25;
               img.data[i] = v; img.data[i + 1] = v; img.data[i + 2] = v - 2; img.data[i + 3] = 255;
             }
             ng.putImageData(img, 0, 0);
             return n;
           };
-          const snow = Array.from({ length: 6 }, () => snowTile(0.06, 0.16));
-          const snowDense = Array.from({ length: 6 }, () => snowTile(0.45, 0.2));
+          const snow = Array.from({ length: 6 }, () => snowTile(0.16, 0.34));   // light grey with clear specks — it shouldn't melt into the white bezel
+          const snowDense = Array.from({ length: 6 }, () => snowTile(0.55, 0.25));
           const t = new THREE.CanvasTexture(d); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
           // each frame: the plain screen, and «404» filled with static (dark, crawling)
           const fr = document.createElement('canvas'); fr.width = DW; fr.height = DH;

@@ -33,8 +33,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 220);
-      camera.position.set(0, 1.5, 6.8);
-      camera.lookAt(0, -0.45, -0.4);
+      camera.position.set(0, 1.25, 5.4);
+      camera.lookAt(0, -0.5, -1.3);
       const resize = () => {
         const w = el.clientWidth, h = el.clientHeight;
         renderer.setSize(w, h, false);
@@ -62,14 +62,16 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       // The sun, outside the window: it comes in only through the window opening (the
       // wall around it blocks it) and between the blind's slats, whose real shadows
       // lay the stripes across the desk — so it's plain where the light comes from
-      const stripes = new THREE.SpotLight(0xffe9cc, 15, 0, 0.55, 0.35, 0);
-      stripes.position.set(6.5, 4.6, -8.5);
-      stripes.target.position.set(-1.4, -Y, 0.6);
+      // a low afternoon sun, a little to the right: its patch comes in through the window
+      // and lies slanted across the desk, softly striped by the blind
+      const stripes = new THREE.SpotLight(0xffe2bf, 9, 0, 0.3, 0.8, 0);
+      stripes.position.set(14, 3.4, -8);
+      stripes.target.position.set(-1.2, -Y, -1.0);
       stripes.castShadow = true;
       stripes.shadow.mapSize.set(2048, 2048);
       stripes.shadow.camera.near = 2; stripes.shadow.camera.far = 26;
       stripes.shadow.bias = -0.0004; stripes.shadow.normalBias = 0.02;
-      stripes.shadow.radius = 4;
+      stripes.shadow.radius = 7;
       scene.add(stripes, stripes.target);
 
       const shade = (m: import('three').Object3D) => { m.traverse(o => { const q = o as import('three').Mesh; if (q.isMesh) { q.castShadow = true; q.receiveShadow = true; } }); return m; };
@@ -94,7 +96,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         return t;
       })();
       // the wall, with the window cut out of it (it casts the sun's shadow everywhere else)
-      const WX0 = 1.9, WX1 = 8.9, WY0 = fy + 0.35, WY1 = fy + 9;
+      const WX0 = 2.3, WX1 = 6.6, WY0 = fy + 0.9, WY1 = fy + 4.9;
       {
         const sh = new THREE.Shape();
         sh.moveTo(-9, fy); sh.lineTo(9, fy); sh.lineTo(9, fy + 10); sh.lineTo(-9, fy + 10); sh.lineTo(-9, fy);
@@ -121,14 +123,17 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         for (let y = wy0 + 0.04; y < wy1; y += 0.105) {
           const sl = new THREE.Mesh(slatGeo, slatMat);
           sl.position.set((wx0 + wx1) / 2, y, Z_BACK + 0.05);
-          sl.rotation.x = -0.62;   // half closed: sun comes through in bands between them
+          sl.rotation.x = -0.5;   // partly open: bright bands with the slats' thin shadows between them
           sl.receiveShadow = true; sl.castShadow = true;
           scene.add(sl);
         }
-        // the window frame's inner edge
-        const jamb = new THREE.Mesh(new THREE.BoxGeometry(0.05, wy1 - wy0, 0.16), mat(0xe2e0dc, 0.6));
-        jamb.position.set(wx0 - 0.025, (wy0 + wy1) / 2, Z_BACK + 0.06);
-        scene.add(shade(jamb));
+        // the window's frame, its reveal and a sill
+        const frameM = mat(0xf2efea, 0.5);
+        const fr = (w: number, h: number, d: number, x: number, y: number, z: number) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), frameM); m.position.set(x, y, z); scene.add(shade(m)); };
+        fr(0.06, wy1 - wy0, 0.22, wx0 - 0.03, (wy0 + wy1) / 2, Z_BACK - 0.08);
+        fr(0.06, wy1 - wy0, 0.22, wx1 + 0.03, (wy0 + wy1) / 2, Z_BACK - 0.08);
+        fr(wx1 - wx0 + 0.12, 0.06, 0.22, (wx0 + wx1) / 2, wy1 + 0.03, Z_BACK - 0.08);
+        fr(wx1 - wx0 + 0.3, 0.05, 0.3, (wx0 + wx1) / 2, wy0 - 0.025, Z_BACK + 0.06);
       }
       // Things on the desk, after the reference photos
       // (the ones the ball bounces off once it's free — see the docking below)
@@ -227,25 +232,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         g.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh) { m.castShadow = m.material !== glass; m.receiveShadow = true; } });
         scene.add(g);
       }
-      // — a Vitra toolbox in orange with pencils, a ball vase, a notes cube, a mug and a closed laptop
+      // — a ball vase, a notes cube, a mug and a closed laptop
       {
-        const orange = new THREE.MeshPhysicalMaterial({ color: 0xd9784e, roughness: 0.32, clearcoat: 0.6, clearcoatRoughness: 0.25 });   // terracotta, glossy
-        const box = new THREE.Group();
-        const L = 1.3, Wd = 0.55, Hh = 0.36, t = 0.02;
-        const part = (w: number, h: number, d: number, x: number, y: number, z: number) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), orange); m.position.set(x, y, z); box.add(m); };
-        part(L, t, Wd, 0, t / 2, 0); part(L, Hh, t, 0, Hh / 2, Wd / 2); part(L, Hh, t, 0, Hh / 2, -Wd / 2); part(t, Hh, Wd, L / 2, Hh / 2, 0); part(t, Hh, Wd, -L / 2, Hh / 2, 0);
-        // the middle wall with its handle hole
-        const mid = new THREE.Shape(); mid.moveTo(-L / 2, 0); mid.lineTo(L / 2, 0); mid.lineTo(L / 2, Hh); mid.lineTo(0.28, Hh); mid.quadraticCurveTo(0.22, Hh + 0.2, 0, Hh + 0.2); mid.quadraticCurveTo(-0.22, Hh + 0.2, -0.28, Hh); mid.lineTo(-L / 2, Hh); mid.lineTo(-L / 2, 0);
-        const hole = new THREE.Path(); hole.moveTo(-0.16, Hh + 0.02); hole.lineTo(0.16, Hh + 0.02); hole.quadraticCurveTo(0.18, Hh + 0.13, 0, Hh + 0.13); hole.quadraticCurveTo(-0.18, Hh + 0.13, -0.16, Hh + 0.02);
-        mid.holes.push(hole);
-        const midG = new THREE.ExtrudeGeometry(mid, { depth: t, bevelEnabled: false, curveSegments: 16 }); midG.translate(0, 0, -t / 2);
-        box.add(new THREE.Mesh(midG, orange));
-        [[-0.45, 0.12, 0x1a1a1a, 0.1], [-0.38, 0.08, 0xf2f2f0, -0.08], [-0.3, 0.14, 0x333333, 0.15], [-0.42, -0.12, 0x2b2b2b, -0.05]].forEach(([x, z, c, tl]) => {
-          box.add(rod(V3(x, 0.02, z), V3(x + tl, 0.62, z), 0.014, mat(c, 0.5)));
-        });
-        const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.42, 20), mat(0xf4f4f2, 0.4)); bottle.position.set(0.4, 0.21, -0.12); box.add(bottle);
-        box.position.set(-3.1, fy, -2.85); box.rotation.y = 0.18;
-        scene.add(shade(box)); colliders.push(box);
 
         const vase = new THREE.Mesh(new THREE.SphereGeometry(0.42, 48, 32), mat(0xc9b9a6, 0.9));
         vase.position.set(-5.3, fy + 0.4, -1.7);
@@ -326,6 +314,23 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const cam = new THREE.Mesh(new THREE.CircleGeometry(0.008, 16), new THREE.MeshBasicMaterial({ color: 0x222222 }));
         cam.position.set(0, H / 2 - 0.035, D / 2 + 0.0045);
         mac.add(cam);
+        // a Skip Design sticker on the chin: the logo and the name on white
+        const sticker = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.15), new THREE.MeshStandardMaterial({ roughness: 0.55, transparent: true, map: canvasTex(560, 200, g => {
+          g.fillStyle = '#fbfaf8'; g.beginPath(); g.roundRect(4, 4, 552, 192, 40); g.fill();
+          g.strokeStyle = 'rgba(0,0,0,0.06)'; g.lineWidth = 3; g.stroke();
+          g.fillStyle = '#111';
+          const paths = svgPaths.pb7e9300.match(/M[^M]+/g)!;
+          const lw = 150, sc = lw / 52.5283;
+          g.save(); g.translate(46, 100 - 16 * sc); g.scale(sc, sc);
+          g.fill(new Path2D(paths[1])); g.fill(new Path2D(paths[2])); g.fill(new Path2D(paths[4])); g.fill(new Path2D(paths[0] + paths[3]), 'evenodd');
+          g.restore();
+          const cs = getComputedStyle(document.documentElement);
+          g.font = `${cs.getPropertyValue('--heading-weight').trim() || '450'} 54px ${cs.getPropertyValue('--font-display').trim() || 'sans-serif'}`;
+          g.textBaseline = 'middle'; g.fillText('Skip Design', 228, 104);
+        }) }));
+        sticker.position.set(-0.85, -H / 2 + (H - BEZ_H) / 2 - 0.01, D / 2 + 0.003);
+        sticker.rotation.z = 0.05;
+        mac.add(sticker);
         // the stand: one bent aluminium plate — a leaning upright and a flat foot
         // from behind the body it leans back down to the desk, then runs forward flat under the screen
         const FOOT_Y = -H / 2 - 0.635 + 0.0125;               // the foot lies on the desktop
@@ -613,8 +618,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       let raf = 0;
       const tick = () => {
         look.x += (look.tx - look.x) * 0.04; look.y += (look.ty - look.y) * 0.04;
-        camera.position.set(look.x * 0.6, 1.5 - look.y * 0.26, 6.8);
-        camera.lookAt(0, -0.45, -0.4);
+        camera.position.set(look.x * 0.6, 1.25 - look.y * 0.26, 5.4);
+        camera.lookAt(0, -0.5, -1.3);
         // Paddle
         const px = st.x, pz = st.z;
         st.x += (st.tx - st.x) * 0.2; st.z += (st.tz - st.z) * 0.2;

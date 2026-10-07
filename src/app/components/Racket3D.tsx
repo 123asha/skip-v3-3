@@ -414,7 +414,11 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
             tg.fillStyle = '#000'; tg.textAlign = 'center'; tg.textBaseline = 'middle';
             tg.font = `${weight} ${Math.round(DH0 * 0.52)}px ${family}`;
             if ('letterSpacing' in tg) (tg as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${-Math.round(DH0 * 0.011)}px`;
-            tg.fillText('404', DW0 / 2, DH0 * 0.52);
+            // soft, smeared edges: the letters are drawn only as a blurred shadow
+            tg.shadowColor = '#000'; tg.shadowBlur = 16; tg.shadowOffsetX = DW0 * 2;
+            tg.fillText('404', DW0 / 2 - DW0 * 2, DH0 * 0.52);
+            tg.shadowBlur = 5;
+            tg.fillText('404', DW0 / 2 - DW0 * 2, DH0 * 0.52);
           }
           // The picture on the screen is redrawn from this one with interference over it, in
           // black and white like an old television: a faint static and scan lines always, a slow
@@ -452,7 +456,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
             ntg.drawImage(snow[(i0 + 1 + Math.floor(Math.random() * (snow.length - 1))) % snow.length], 0, 0, DW, DH);
             ntg.fillStyle = 'rgba(90,90,88,0.42)'; ntg.fillRect(0, 0, DW, DH);     // the letters: greyer snow
             ntg.globalCompositeOperation = 'destination-in';
-            ntg.drawImage(tm, 0, 0, DW, DH);
+            // the shape wavers a little from frame to frame, like a weak signal
+            ntg.drawImage(tm, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 2, DW, DH);
             frg.drawImage(nt, 0, 0);
           };
           let burst = 0, frame = 0, roll = 0;

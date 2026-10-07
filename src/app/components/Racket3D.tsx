@@ -734,7 +734,6 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const hit = keys.filter(q => q.state === 'on' && lx >= q.x0 - U * 0.6 && lx <= q.x1 + U * 0.6 && lz >= q.z0 - U * 0.6 && lz <= q.z1 + U * 0.6);
         hit.sort((a, b) => Math.hypot((a.x0 + a.x1) / 2 - lx, (a.z0 + a.z1) / 2 - lz) - Math.hypot((b.x0 + b.x1) / 2 - lx, (b.z0 + b.z1) / 2 - lz));
         const off = hit.slice(0, 1 + (Math.random() < 0.35 ? 1 : 0) + (power > 0.5 ? 1 : 0));
-        if (off.length) playBreak(power);
         off.forEach((q, i) => {
           scene.attach(q.body);                              // keeps where it is, now loose in the room
           q.state = 'fly'; q.t = 0;
@@ -754,7 +753,6 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
             const floorY = fy + 0.004;
             if (o.position.y < floorY) {
               o.position.y = floorY;
-              if (q.v.y < -0.015) sound.play('hover', 140);
               q.v.y = Math.abs(q.v.y) * 0.32; q.v.x *= 0.6; q.v.z *= 0.6; q.w.multiplyScalar(0.5);
               if (q.v.y < 0.01) { q.state = 'rest'; q.t = 0; }
             }
@@ -939,7 +937,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
             // the thing takes the blow: shoved away from the ball, spun a little
             const imp = -vn * 1.1 / e.mass, hl = Math.hypot(nx, nz) || 1;
             e.vx -= (nx / hl) * imp; e.vz -= (nz / hl) * imp; e.w += (Math.random() - 0.5) * imp * 3;
-            if (e.kind === 'mug' && -vn > 0.06) shatter(e);
+            // with the keyboard parked, the ball is out to wreck things: whatever it hits breaks
+            if (docked || (e.kind === 'mug' && -vn > 0.06)) shatter(e);
           }
         }
       };
@@ -956,18 +955,29 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       // The mug breaks: it's gone, and a few porcelain shards fly and settle on the desk
       type Shard = { m: import('three').Mesh; v: import('three').Vector3; w: import('three').Vector3; rest: boolean };
       const shards: Shard[] = [];
-      const shardMat = new THREE.MeshStandardMaterial({ color: 0xf3f1ec, roughness: 0.3, flatShading: true });
+      const shardBox = new THREE.Box3();
+      // Anything breaks into shards in its own colours, with a crack
       const shatter = (e: Prop) => {
-        if (e.gone) return;
+        if (e.gone || e.fall) return;
         e.gone = true; e.root.visible = false; if (e.aoM) e.aoM.visible = false;
         playBreak(1);
-        const c = e.root.position;
-        for (let i = 0; i < 9; i++) {
-          const m = new THREE.Mesh(new THREE.TetrahedronGeometry(0.05 + Math.random() * 0.07, 0), shardMat);
-          m.position.set(c.x + (Math.random() - 0.5) * 0.25, fy + 0.1 + Math.random() * 0.3, c.z + (Math.random() - 0.5) * 0.25);
+        e.root.updateMatrixWorld(true);
+        shardBox.setFromObject(e.root);
+        const c = shardBox.getCenter(new THREE.Vector3()), sz = shardBox.getSize(new THREE.Vector3());
+        const cols: number[] = [];
+        e.root.traverse(o => {
+          const m = (o as import('three').Mesh).material as import('three').MeshStandardMaterial | undefined;
+          if (m && 'color' in m && m.color && cols.length < 4) { const h = m.color.getHex(); if (!cols.includes(h)) cols.push(h); }
+        });
+        const mats = (cols.length ? cols : [0xeeeeee]).map(col => new THREE.MeshStandardMaterial({ color: col, roughness: 0.4, flatShading: true }));
+        const n = 10 + Math.round(Math.min(10, (sz.x + sz.y + sz.z) * 3));
+        const big = Math.min(0.16, 0.04 + (sz.x + sz.z) * 0.05);
+        for (let i = 0; i < n; i++) {
+          const m = new THREE.Mesh(new THREE.TetrahedronGeometry(big * (0.4 + Math.random() * 0.8), 0), mats[i % mats.length]);
+          m.position.set(c.x + (Math.random() - 0.5) * sz.x * 0.8, Math.max(fy + 0.05, c.y + (Math.random() - 0.5) * sz.y * 0.8), c.z + (Math.random() - 0.5) * sz.z * 0.8);
           m.castShadow = true; scene.add(m);
-          const a = Math.random() * Math.PI * 2, sp = 0.02 + Math.random() * 0.04;
-          shards.push({ m, v: V3(Math.cos(a) * sp, 0.03 + Math.random() * 0.05, Math.sin(a) * sp), w: V3(Math.random() * 0.4, Math.random() * 0.4, Math.random() * 0.4), rest: false });
+          const a = Math.random() * Math.PI * 2, sp = 0.02 + Math.random() * 0.05;
+          shards.push({ m, v: V3(Math.cos(a) * sp, 0.02 + Math.random() * 0.06, Math.sin(a) * sp), w: V3(Math.random() * 0.4, Math.random() * 0.4, Math.random() * 0.4), rest: false });
         }
       };
       // Props sliding (with friction), turning, falling off the desk; shards settling
@@ -995,7 +1005,10 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           if (sh.rest) continue;
           sh.v.y -= 0.0034; sh.m.position.add(sh.v);
           sh.m.rotation.x += sh.w.x; sh.m.rotation.y += sh.w.y; sh.m.rotation.z += sh.w.z;
-          if (sh.m.position.y < fy + 0.03) { sh.m.position.y = fy + 0.03; sh.v.y = Math.abs(sh.v.y) * 0.3; sh.v.x *= 0.6; sh.v.z *= 0.6; sh.w.multiplyScalar(0.5); if (sh.v.y < 0.008) sh.rest = true; }
+          // on the desk, or past its edges down to the floor
+          const onDesk = Math.abs(sh.m.position.x) < 4.2 && sh.m.position.z < 0.9 && sh.m.position.z > Z_BACK;
+          const groundY = onDesk ? fy + 0.03 : fy - 4.9;
+          if (sh.m.position.y < groundY) { sh.m.position.y = groundY; sh.v.y = Math.abs(sh.v.y) * 0.3; sh.v.x *= 0.6; sh.v.z *= 0.6; sh.w.multiplyScalar(0.5); if (sh.v.y < 0.008) sh.rest = true; }
         }
       };
       const freeBall = () => {
@@ -1008,10 +1021,15 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           b.y = fy + BALL_R;
           if (b.vy < -0.02) { sound.play('hover', 60); squash = Math.max(squash, 0.7); }
           b.vy = Math.max(Math.abs(b.vy) * 0.85, 0.075 + Math.random() * 0.035);
-          if (Math.random() < 0.55 && boxes.length) {
-            const tb = boxes[Math.floor(Math.random() * boxes.length)], c = tb.getCenter(closest);
-            const hx = c.x - b.x, hz = c.z - b.z, hd = Math.hypot(hx, hz) || 1, sp = 0.035 + Math.random() * 0.03;
-            b.vx = hx / hd * sp; b.vz = hz / hd * sp;
+          // on the hunt: the nearest thing still standing, aimed so the arc comes down on it
+          const alive = props.filter(e => !e.gone && !e.fall);
+          if (alive.length) {
+            let tgt = alive[0], best = Infinity;
+            for (const e of alive) { const d = Math.hypot(e.root.position.x - b.x, e.root.position.z - b.z); if (d < best) { best = d; tgt = e; } }
+            b.vy = 0.1 + Math.random() * 0.02;
+            const flight = (2 * b.vy) / 0.0034;                     // frames until it comes back down
+            const hx = tgt.root.position.x - b.x, hz = tgt.root.position.z - b.z;
+            b.vx = hx / flight; b.vz = hz / flight;
           } else { b.vx *= 0.95; b.vz *= 0.95; }
         }
         // the room: back wall, the desk's ends, a little in front, a ceiling

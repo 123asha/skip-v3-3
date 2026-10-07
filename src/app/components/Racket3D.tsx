@@ -934,7 +934,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         look.x += (look.tx - look.x) * 0.04; look.y += (look.ty - look.y) * 0.04;
         // the camera swings round the desk on an arc (about ±22° sideways, a little up and down)
         {
-          const tx = 0, ty = -0.1, tz = -1.3, R = Math.hypot(1.7, 7.6) * (phone ? 2.0 : 1), p0 = Math.atan2(1.7, 7.6);
+          const tx = 0, ty = -0.1, tz = -1.3, R = Math.hypot(1.7, 7.6) * (phone ? 1.7 : 1), p0 = Math.atan2(1.7, 7.6);
           const yaw = look.x * 0.38, pitch = p0 - look.y * 0.1;
           camera.position.set(tx + R * Math.sin(yaw) * Math.cos(pitch), ty + R * Math.sin(pitch), tz + R * Math.cos(yaw) * Math.cos(pitch));
           camera.lookAt(tx, ty, tz);

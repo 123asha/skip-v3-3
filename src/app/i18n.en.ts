@@ -62,6 +62,8 @@ export const EN: Record<string, string> = {
     'We process cookies using Yandex Metrica. By staying on the site you agree to the use of cookies and to the processing of personal data in accordance with the',
   'Политики конфиденциальности': 'Privacy Policy',
   'Политикой': 'Policy',
+  'Продолжая использовать сайт, вы даете согласие на обработку данных с вашего устройства на условиях ': 'By continuing to use the site you consent to the processing of data from your device under the',
+  'Политики обработки персональных данных': 'Personal Data Processing Policy',
   'Хорошо': 'OK',
   'От смысла до фирменного стиля': 'From meaning to brand identity',
   'Стартапам и новым продуктам': 'For startups and new products',

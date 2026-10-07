@@ -39,12 +39,12 @@ export default function CookieNotice({ onPolicy }: { onPolicy?: () => void }) {
       }}
     >
       <p style={{ ...ts, margin: 0, flex: 1 }}>
-        {typo('Мы осуществляем обработку файлов cookie с использованием Яндекс.Метрика. Оставаясь на сайте, вы соглашаетесь на использование cookie и на обработку персональных данных в соответствии с ')}
+        {typo('Продолжая использовать сайт, вы даете согласие на обработку данных с вашего устройства на условиях ')}
         <a
           href="#"
           onClick={e => { e.preventDefault(); onPolicy?.(); }}
           style={{ color: 'inherit', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}
-        >Политикой</a>.
+        >Политики обработки персональных данных</a>
       </p>
       <PillButton compact fullWidth={isMobile} onClick={accept}>Хорошо</PillButton>
     </div>

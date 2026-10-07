@@ -259,8 +259,9 @@ export default function CaseCard({
       // (index.css, --m-bleed), and the card's own overflow would cut that off
       <div className={s.card} onClick={onClick} style={{ overflow: 'visible', ...(onClick ? null : { cursor: 'default' }) }}>
         {/* Two per row: every picture 4:5, so the rows line up */}
-        <div className={`${s.cardImage}${stackMeta || tall ? ` ${s.cardTall}` : ''}`} style={{ aspectRatio: ar, width: '100%', flex: 'none', ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}>
-          {slides && slides.length > 1 ? (
+        {/* The flower video on a phone: an upright 4:5 picture with no caption (it doesn't open a case yet) */}
+        <div className={`${s.cardImage}${stackMeta || tall || scrubVideo ? ` ${s.cardTall}` : ''}`} style={{ aspectRatio: ar, width: '100%', flex: 'none', ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}>
+          {!scrubVideo && slides && slides.length > 1 ? (
             // One a row: the case's pictures as a strip swiped sideways, with
             // «n / N» at the bottom; a tap still opens the case
             <>
@@ -287,7 +288,7 @@ export default function CaseCard({
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1 }} />
           )}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: stackMeta ? '1fr' : 'minmax(90px, 1fr) minmax(0, 3fr)', gap: stackMeta ? 0 : 'var(--gap)', alignItems: 'flex-start', paddingTop: 10 }}>
+        {!scrubVideo && <div style={{ display: 'grid', gridTemplateColumns: stackMeta ? '1fr' : 'minmax(90px, 1fr) minmax(0, 3fr)', gap: stackMeta ? 0 : 'var(--gap)', alignItems: 'flex-start', paddingTop: 10 }}>
           <p className={`${s.cardMetaText} ${s.cardLink}`} style={{ margin: 0, ...metaStyle }}>{title}</p>
           <div style={{ minWidth: 0 }}>
             {/* Categories first, then (one per row only) the description */}
@@ -295,7 +296,7 @@ export default function CaseCard({
             {/* Level with the name — the 4px only parts it from categories above */}
             {!stackMeta && <p className={s.cardMetaText} style={{ margin: 0, marginTop: services ? 4 : 0, maxWidth: 520, ...metaStyle }}>{typo(desc)}</p>}
           </div>
-        </div>
+        </div>}
       </div>
     );
   }

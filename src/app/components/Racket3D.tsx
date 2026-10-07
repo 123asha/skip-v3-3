@@ -434,7 +434,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           const snow = Array.from({ length: 6 }, () => {
             const n = document.createElement('canvas'); n.width = 360; n.height = 203;
             const ng = n.getContext('2d')!, img = ng.createImageData(360, 203);
-            for (let i = 0; i < img.data.length; i += 4) { const v = Math.random() < 0.5 ? Math.random() * 60 : 195 + Math.random() * 60; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
+            for (let i = 0; i < img.data.length; i += 4) { const v = Math.random() < 0.5 ? 95 + Math.random() * 55 : 185 + Math.random() * 55; /* a softer, lighter grey */ img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
             ng.putImageData(img, 0, 0);
             return n;
           });
@@ -450,11 +450,11 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
             const i0 = Math.floor(Math.random() * snow.length);
             frg.globalCompositeOperation = 'source-over';
             frg.drawImage(snow[i0], 0, 0, DW, DH);
-            frg.fillStyle = 'rgba(236,236,232,0.62)'; frg.fillRect(0, 0, DW, DH);   // the field: pale snow
+            frg.fillStyle = 'rgba(238,238,234,0.66)'; frg.fillRect(0, 0, DW, DH);   // the field: pale snow
             ntg.globalCompositeOperation = 'source-over';
             ntg.imageSmoothingEnabled = false;
             ntg.drawImage(snow[(i0 + 1 + Math.floor(Math.random() * (snow.length - 1))) % snow.length], 0, 0, DW, DH);
-            ntg.fillStyle = 'rgba(90,90,88,0.42)'; ntg.fillRect(0, 0, DW, DH);     // the letters: greyer snow
+            ntg.fillStyle = 'rgba(80,80,78,0.4)'; ntg.fillRect(0, 0, DW, DH);     // the letters: greyer snow
             ntg.globalCompositeOperation = 'destination-in';
             // the shape wavers a little from frame to frame, like a weak signal
             ntg.drawImage(tm, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 2, DW, DH);
@@ -462,11 +462,11 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           };
           let burst = 0, frame = 0, roll = 0;
           screenFx = (now: number) => {
-            if ((frame++ % 3) !== 0) return;                       // 20 fps is plenty for a screen
+            if ((frame++ % 5) !== 0) return;                       // 12 fps: a slow, lazy flicker
             dg.globalCompositeOperation = 'source-over'; dg.globalAlpha = 1;
             dg.imageSmoothingEnabled = true;
             compose();
-            if (burst <= 0 && Math.random() < 0.014) { burst = 5 + Math.floor(Math.random() * 12); roll = Math.random() < 0.5 ? (Math.random() - 0.5) * DH * 0.6 : 0; }
+            if (burst <= 0 && Math.random() < 0.012) { burst = 4 + Math.floor(Math.random() * 8); roll = Math.random() < 0.5 ? (Math.random() - 0.5) * DH * 0.6 : 0; }
             if (burst > 0) {
               burst--;
               // the picture rolls (vertical hold), wrapping round
@@ -496,7 +496,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
               dg.globalAlpha = 1;
             }
             // the rolling band and the scan lines
-            const by = ((now / 1000) * 70) % (DH + 120) - 60;
+            const by = ((now / 1000) * 35) % (DH + 120) - 60;
             const band = dg.createLinearGradient(0, by - 40, 0, by + 40);
             band.addColorStop(0, 'rgba(255,255,255,0)'); band.addColorStop(0.5, 'rgba(255,255,255,0.08)'); band.addColorStop(1, 'rgba(255,255,255,0)');
             dg.fillStyle = band; dg.fillRect(0, by - 40, DW, 80);

@@ -123,13 +123,13 @@ function buildHomeLayout(projects: Project[]): Slot[] {
   const rest = shuffle(projects.filter(p => ![1, 2, 3, 4].includes(p.id)));
   const wide = rest.find(p => p.ar === H) ?? rest[0];
   return [
-    { project: a, col: '1 / 3', row: 1, shape: 'square' },
-    { project: b, col: '3 / 5', row: 1, shape: 'vertical' },   // right next to the first, no empty column between
-    { project: wide, col: '1 / 6', row: 2, aspect: WIDE_ASPECT, scrubVideo: videoAsset(WIDE_VIDEO) },
-    // Third row mirrors the first: the pair side by side, shifted right,
-    // with the first column left empty
-    { project: c, col: '2 / 4', row: 3, shape: 'vertical' },
-    { project: d, col: '4 / 6', row: 3, shape: 'square' },
+    // Two cases a row, as on the cases page's two-column view (same gaps, each
+    // preview in its own proportions); the flower video across the full width between
+    { project: a, col: '1', row: 1 },
+    { project: b, col: '2', row: 1 },
+    { project: wide, col: '1 / -1', row: 2, aspect: WIDE_ASPECT, scrubVideo: videoAsset(WIDE_VIDEO) },
+    { project: c, col: '1', row: 3 },
+    { project: d, col: '2', row: 3 },
   ];
 }
 
@@ -177,7 +177,7 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: (href?: 
         style={{
           display: 'grid',
           // phones: two cases a row, the flower video across both
-          gridTemplateColumns: isMobile ? '1fr 1fr' : 'var(--cases-cols)',
+          gridTemplateColumns: 'repeat(2, 1fr)',
           columnGap: 'var(--gap)',
           rowGap: 'var(--cases-row-gap)',
           padding: '0 var(--pad)',
@@ -193,8 +193,6 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: (href?: 
               gridColumn: isMobile ? (slot.scrubVideo ? '1 / -1' : 'auto') : slot.col,
               gridRow: isMobile ? 'auto' : slot.row,
               minWidth: 0,
-              // Desktop: the flower video takes half the side padding each way
-              ...(!isMobile && slot.scrubVideo ? { marginLeft: 'calc(var(--pad) / -2)', marginRight: 'calc(var(--pad) / -2)' } : null),
             }}
           >
             <ProjectCard project={slot.project} aspect={slot.aspect} scrubVideo={slot.scrubVideo} shape={slot.shape} onClick={slot.scrubVideo || slot.project.id === 1 || slot.project.noLink ? undefined : () => (/^https?:/.test(slot.project.href ?? '') ? window.open(slot.project.href, '_blank', 'noopener') : onCaseClick?.(slot.project.href))} />

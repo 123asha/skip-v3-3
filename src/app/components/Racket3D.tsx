@@ -437,16 +437,24 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           const d = document.createElement('canvas'); d.width = DW; d.height = DH;
           const dg = d.getContext('2d')!;
           const lines = document.createElement('canvas'); lines.width = 4; lines.height = DH;
-          { const lg = lines.getContext('2d')!; for (let y = 0; y < DH; y += 3) { lg.fillStyle = 'rgba(0,0,0,0.05)'; lg.fillRect(0, y, 4, 1); } }
+          { const lg = lines.getContext('2d')!; for (let y = 0; y < DH; y += 3) { lg.fillStyle = 'rgba(0,0,0,0.025)'; lg.fillRect(0, y, 4, 1); } }
           const linesPat = dg.createPattern(lines, 'repeat')!;
           // a few frames of static, made once and shuffled
-          const snow = Array.from({ length: 6 }, () => {
-            const n = document.createElement('canvas'); n.width = 360; n.height = 203;
-            const ng = n.getContext('2d')!, img = ng.createImageData(360, 203);
-            for (let i = 0; i < img.data.length; i += 4) { const v = Math.random() < 0.5 ? 95 + Math.random() * 55 : 185 + Math.random() * 55; /* a softer, lighter grey */ img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
+          // Snow at the screen's own resolution (a fine grain): a bright field with sparse dark
+          // specks, and a denser set for the letters — same grain, just more specks
+          const snowTile = (dark: number, grey: number) => {
+            const n = document.createElement('canvas'); n.width = DW; n.height = DH;
+            const ng = n.getContext('2d')!, img = ng.createImageData(DW, DH);
+            for (let i = 0; i < img.data.length; i += 4) {
+              const r = Math.random();
+              const v = r < dark ? 60 + Math.random() * 60 : r < dark + grey ? 190 + Math.random() * 25 : 232 + Math.random() * 18;
+              img.data[i] = v; img.data[i + 1] = v; img.data[i + 2] = v - 2; img.data[i + 3] = 255;
+            }
             ng.putImageData(img, 0, 0);
             return n;
-          });
+          };
+          const snow = Array.from({ length: 6 }, () => snowTile(0.06, 0.16));
+          const snowDense = Array.from({ length: 6 }, () => snowTile(0.45, 0.2));
           const t = new THREE.CanvasTexture(d); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
           // each frame: the plain screen, and «404» filled with static (dark, crawling)
           const fr = document.createElement('canvas'); fr.width = DW; fr.height = DH;
@@ -458,12 +466,10 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
             frg.imageSmoothingEnabled = false;
             const i0 = Math.floor(Math.random() * snow.length);
             frg.globalCompositeOperation = 'source-over';
-            frg.drawImage(snow[i0], 0, 0, DW, DH);
-            frg.fillStyle = 'rgba(238,238,234,0.66)'; frg.fillRect(0, 0, DW, DH);   // the field: pale snow
+            frg.drawImage(snow[i0], 0, 0);                                         // the field: bright snow
             ntg.globalCompositeOperation = 'source-over';
             ntg.imageSmoothingEnabled = false;
-            ntg.drawImage(snow[(i0 + 1 + Math.floor(Math.random() * (snow.length - 1))) % snow.length], 0, 0, DW, DH);
-            ntg.fillStyle = 'rgba(130,130,128,0.26)'; ntg.fillRect(0, 0, DW, DH);     // the letters: a lighter grey snow
+            ntg.drawImage(snowDense[Math.floor(Math.random() * snowDense.length)], 0, 0);   // the letters: denser specks
             ntg.globalCompositeOperation = 'destination-in';
             // the shape wavers a little from frame to frame, like a weak signal
             ntg.drawImage(tm, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 2, DW, DH);
@@ -488,15 +494,15 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
               }
               // heavy snow
               dg.imageSmoothingEnabled = false;
-              dg.globalAlpha = 0.35 + Math.random() * 0.3;
-              dg.drawImage(snow[Math.floor(Math.random() * snow.length)], 0, 0, DW, DH);
+              dg.globalAlpha = 0.25 + Math.random() * 0.2;
+              dg.drawImage(snowDense[Math.floor(Math.random() * snowDense.length)], 0, 0, DW, DH);
               dg.globalAlpha = 1;
               // grey bars
               for (let k = 0, n = 1 + Math.floor(Math.random() * 3); k < n; k++) {
-                dg.fillStyle = Math.random() < 0.5 ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.22)';
+                dg.fillStyle = Math.random() < 0.6 ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.1)';
                 dg.fillRect(0, Math.random() * DH, DW, 3 + Math.random() * 16);
               }
-              if (Math.random() < 0.3) { dg.fillStyle = Math.random() < 0.5 ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.18)'; dg.fillRect(0, 0, DW, DH); }
+              if (Math.random() < 0.3) { dg.fillStyle = Math.random() < 0.7 ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.08)'; dg.fillRect(0, 0, DW, DH); }
             } else {
               dg.drawImage(fr, 0, 0, DW, DH);
               // a faint static even when calm

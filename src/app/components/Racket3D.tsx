@@ -407,14 +407,16 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           const cs = getComputedStyle(document.documentElement);
           const family = cs.getPropertyValue('--font-display').trim() || 'sans-serif';
           const weight = cs.getPropertyValue('--heading-weight').trim() || '450';
-          g.fillStyle = '#1b1b1b'; g.textAlign = 'center'; g.textBaseline = 'middle';
-          g.font = `${weight} 300px ${family}`;
-          if ('letterSpacing' in g) (g as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = '-9px';
-          g.fillText('404', 800, 430);
-          g.font = `400 34px ${family}`;
-          if ('letterSpacing' in g) (g as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = '0px';
-          g.fillStyle = '#8a8a88';
-          g.fillText('Страница не найдена', 800, 640);
+          // «404» is drawn every frame out of static (see below); here only its shape, as a mask
+          const DW0 = 720, DH0 = 405;
+          const tm = document.createElement('canvas'); tm.width = DW0; tm.height = DH0;
+          {
+            const tg = tm.getContext('2d')!;
+            tg.fillStyle = '#000'; tg.textAlign = 'center'; tg.textBaseline = 'middle';
+            tg.font = `${weight} ${Math.round(DH0 * 0.36)}px ${family}`;
+            if ('letterSpacing' in tg) (tg as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${-Math.round(DH0 * 0.011)}px`;
+            tg.fillText('404', DW0 / 2, DH0 * 0.5);
+          }
           // The picture on the screen is redrawn from this one with interference over it, in
           // black and white like an old television: a faint static and scan lines always, a slow
           // rolling band, and now and then a burst — heavy snow, the picture rolling and its
@@ -434,17 +436,33 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
             return n;
           });
           const t = new THREE.CanvasTexture(d); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+          // each frame: the plain screen, and «404» filled with static (dark, crawling)
+          const fr = document.createElement('canvas'); fr.width = DW; fr.height = DH;
+          const frg = fr.getContext('2d')!;
+          const nt = document.createElement('canvas'); nt.width = DW; nt.height = DH;
+          const ntg = nt.getContext('2d')!;
+          const compose = () => {
+            frg.drawImage(c, 0, 0, DW, DH);
+            ntg.globalCompositeOperation = 'source-over';
+            ntg.imageSmoothingEnabled = false;
+            ntg.drawImage(snow[Math.floor(Math.random() * snow.length)], 0, 0, DW, DH);
+            ntg.fillStyle = 'rgba(20,20,20,0.55)'; ntg.fillRect(0, 0, DW, DH);     // darker, so the number reads
+            ntg.globalCompositeOperation = 'destination-in';
+            ntg.drawImage(tm, 0, 0, DW, DH);
+            frg.drawImage(nt, 0, 0);
+          };
           let burst = 0, frame = 0, roll = 0;
           screenFx = (now: number) => {
             if ((frame++ % 3) !== 0) return;                       // 20 fps is plenty for a screen
             dg.globalCompositeOperation = 'source-over'; dg.globalAlpha = 1;
             dg.imageSmoothingEnabled = true;
+            compose();
             if (burst <= 0 && Math.random() < 0.014) { burst = 5 + Math.floor(Math.random() * 12); roll = Math.random() < 0.5 ? (Math.random() - 0.5) * DH * 0.6 : 0; }
             if (burst > 0) {
               burst--;
               // the picture rolls (vertical hold), wrapping round
               const oy = ((roll * (burst / 12)) % DH + DH) % DH;
-              dg.drawImage(c, 0, oy, DW, DH); dg.drawImage(c, 0, oy - DH, DW, DH);
+              dg.drawImage(fr, 0, oy, DW, DH); dg.drawImage(fr, 0, oy - DH, DW, DH);
               // lines jerked sideways (horizontal hold)
               for (let k = 0, n = 3 + Math.floor(Math.random() * 6); k < n; k++) {
                 const y = Math.random() * DH, h = 2 + Math.random() * 30, dx = (Math.random() - 0.5) * 110;
@@ -462,7 +480,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
               }
               if (Math.random() < 0.3) { dg.fillStyle = Math.random() < 0.5 ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.18)'; dg.fillRect(0, 0, DW, DH); }
             } else {
-              dg.drawImage(c, 0, 0, DW, DH);
+              dg.drawImage(fr, 0, 0, DW, DH);
               // a faint static even when calm
               dg.imageSmoothingEnabled = false;
               dg.globalAlpha = 0.06;
@@ -547,17 +565,11 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const g = c.getContext('2d')!;
         g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
         g.fillStyle = '#111111';
-        // The logo's own paths (viewBox 52.53 × 32), one on each side of the ball
-        const paths = svgPaths.pb7e9300.match(/M[^M]+/g)!;
-        const w = 150, sc = w / 52.5283;
-        for (const cx of [256, 768]) {
-          g.save(); g.translate(cx - w / 2, 256 - 16 * sc); g.scale(sc, sc);
-          g.fill(new Path2D(paths[1]));
-          g.fill(new Path2D(paths[2]));
-          g.fill(new Path2D(paths[4]));
-          g.fill(new Path2D(paths[0] + paths[3]), 'evenodd');
-          g.restore();
-        }
+        // «error» on each side of the ball, in the site's type
+        const cs = getComputedStyle(document.documentElement);
+        g.font = `${cs.getPropertyValue('--heading-weight').trim() || '450'} 92px ${cs.getPropertyValue('--font-display').trim() || 'sans-serif'}`;
+        g.textAlign = 'center'; g.textBaseline = 'middle';
+        for (const cx of [256, 768]) g.fillText('error', cx, 256);
         const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
         return t;
       })();

@@ -412,7 +412,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           {
             const tg = tm.getContext('2d')!;
             tg.fillStyle = '#000'; tg.textAlign = 'center'; tg.textBaseline = 'middle';
-            tg.font = `${weight} ${Math.round(DH0 * 0.52)}px ${family}`;
+            tg.font = `${weight} ${Math.round(DH0 * 0.66)}px ${family}`;
             if ('letterSpacing' in tg) (tg as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${-Math.round(DH0 * 0.011)}px`;
             // soft, smeared edges: the letters are drawn only as a blurred shadow
             tg.shadowColor = '#000'; tg.shadowBlur = 16; tg.shadowOffsetX = DW0 * 2;
@@ -454,7 +454,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
             ntg.globalCompositeOperation = 'source-over';
             ntg.imageSmoothingEnabled = false;
             ntg.drawImage(snow[(i0 + 1 + Math.floor(Math.random() * (snow.length - 1))) % snow.length], 0, 0, DW, DH);
-            ntg.fillStyle = 'rgba(80,80,78,0.4)'; ntg.fillRect(0, 0, DW, DH);     // the letters: greyer snow
+            ntg.fillStyle = 'rgba(110,110,108,0.32)'; ntg.fillRect(0, 0, DW, DH);     // the letters: a lighter grey snow
             ntg.globalCompositeOperation = 'destination-in';
             // the shape wavers a little from frame to frame, like a weak signal
             ntg.drawImage(tm, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 2, DW, DH);

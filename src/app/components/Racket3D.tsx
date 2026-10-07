@@ -7,7 +7,7 @@ import svgPaths from '../../imports/Index/svg-3bjnx36a2y';
 // tilting with its motion; the ball flies back and forth between the racket,
 // the walls, the floor and the ceiling.
 const BG = 0xd6edf6;   // the sky at the horizon
-const X = 2.6, Y = 1.5, Z_BACK = -4, Z_RACKET = 2.2;
+const X = 2.6, Y = 1.5, Z_BACK = -4, Z_RACKET = 0.3;   // (the desk's front edge is at z ≈ 0.9)
 const BALL_R = 0.17, RACKET_R = 0.62;
 
 export default function Racket3D(_: { onGoHome?: () => void }) {
@@ -27,7 +27,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       renderer.shadowMap.type = THREE.PCFShadowMap;
       // A filmic grade, as in a studio render: soft highlights, gentle contrast
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.05;
+      renderer.toneMappingExposure = 0.95;
       el.appendChild(renderer.domElement);
       renderer.domElement.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
 
@@ -47,9 +47,9 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       // wall, a window with blinds the sun comes through in stripes, and a few things
       // on the desk. The game is played on the desktop.
       scene.background = new THREE.Color(0xe6e1da);
-      scene.add(new THREE.AmbientLight(0xfff6ee, 0.42));
-      scene.add(new THREE.HemisphereLight(0xfffaf3, 0xeadfd2, 0.5));
-      const sun = new THREE.DirectionalLight(0xfff6ec, 0.75);
+      scene.add(new THREE.AmbientLight(0xfff6ee, 0.34));
+      scene.add(new THREE.HemisphereLight(0xfffaf3, 0xeadfd2, 0.42));
+      const sun = new THREE.DirectionalLight(0xfff6ec, 0.5);
       // Almost straight overhead: shadows lie right under what casts them
       sun.position.set(-0.25, 8, 0.35);
       sun.castShadow = true;
@@ -59,34 +59,82 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       sun.shadow.camera.near = 1; sun.shadow.camera.far = 16;
       sun.shadow.radius = 7; sun.shadow.bias = -0.0004;
       scene.add(sun);
-      // The sun, outside the window: it comes in only through the window opening (the
-      // wall around it blocks it) and between the blind's slats, whose real shadows
-      // lay the stripes across the desk — so it's plain where the light comes from
-      // a low afternoon sun, a little to the right: its patch comes in through the window
-      // and lies slanted across the desk, softly striped by the blind
-      const stripes = new THREE.SpotLight(0xffe2bf, 9, 0, 0.3, 0.8, 0);
-      stripes.position.set(14, 3.4, -8);
-      stripes.target.position.set(-1.2, -Y, -1.0);
+      // Low sun through a window off to the left: it throws the window's panes, slanted,
+      // across the wall and the desk, with soft leaf shadows from a plant outside
+      const paneCookie = (() => {
+        const c = document.createElement('canvas'); c.width = c.height = 512;
+        const g = c.getContext('2d')!;
+        g.fillStyle = '#000'; g.fillRect(0, 0, 512, 512);
+        g.filter = 'blur(3px)';
+        g.fillStyle = '#fff';
+        // two tall panes side by side, a bar across each
+        for (const x0 of [150, 268]) { g.fillRect(x0, 110, 100, 120); g.fillRect(x0, 244, 100, 150); }
+        // leaves, in shade
+        g.fillStyle = '#000';
+        let seed = 3; const r = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+        for (let i = 0; i < 26; i++) {
+          const cx = 260 + r() * 130, cy = 100 + r() * 140, rx = 8 + r() * 16, ry = 4 + r() * 7;
+          g.save(); g.translate(cx, cy); g.rotate(r() * Math.PI); g.beginPath(); g.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2); g.fill(); g.restore();
+        }
+        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+        return t;
+      })();
+      const stripes = new THREE.SpotLight(0xffd9a8, 26, 0, 0.42, 0.15, 0);
+      stripes.position.set(-11, 5.5, 3.5);
+      stripes.target.position.set(1.8, 0.2, -4);
+      stripes.map = paneCookie;
       stripes.castShadow = true;
       stripes.shadow.mapSize.set(2048, 2048);
-      stripes.shadow.camera.near = 2; stripes.shadow.camera.far = 26;
+      stripes.shadow.camera.near = 4; stripes.shadow.camera.far = 30;
       stripes.shadow.bias = -0.0004; stripes.shadow.normalBias = 0.02;
-      stripes.shadow.radius = 7;
+      stripes.shadow.radius = 6;
       scene.add(stripes, stripes.target);
 
       const shade = (m: import('three').Object3D) => { m.traverse(o => { const q = o as import('three').Mesh; if (q.isMesh) { q.castShadow = true; q.receiveShadow = true; } }); return m; };
       const mat = (color: number, roughness = 0.6, metalness = 0) => new THREE.MeshStandardMaterial({ color, roughness, metalness });
       const fy = -Y;                                            // the desktop's surface
-      // The desk
-      const desk = new THREE.Mesh(new THREE.BoxGeometry(18, 0.1, 12), mat(0xf1ece5, 0.55));
-      desk.position.set(0, fy - 0.05, 0.6);
-      desk.receiveShadow = true;
-      scene.add(desk);
+      // The desk: a light oak top on thin white legs, with a wooden drawer, standing on the floor
+      {
+        const oak = (() => {
+          const c = document.createElement('canvas'); c.width = 1024; c.height = 256;
+          const g = c.getContext('2d')!;
+          g.fillStyle = '#e2c79c'; g.fillRect(0, 0, 1024, 256);
+          for (let i = 0; i < 140; i++) {
+            const y = Math.random() * 256, a = 0.04 + Math.random() * 0.08;
+            g.strokeStyle = `rgba(150,105,55,${a})`; g.lineWidth = 0.6 + Math.random() * 1.8;
+            g.beginPath(); g.moveTo(0, y);
+            for (let x = 0; x <= 1024; x += 64) g.lineTo(x, y + Math.sin(x * 0.004 + i) * 6 + (Math.random() - 0.5) * 2);
+            g.stroke();
+          }
+          const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+          return t;
+        })();
+        const DW = 13, DZ0 = Z_BACK, DZ1 = 0.9, TH = 0.08, LEGS = 2.7;
+        const top = new THREE.Mesh(new THREE.RoundedBoxGeometry(DW, TH, DZ1 - DZ0, 3, 0.02), new THREE.MeshStandardMaterial({ map: oak, roughness: 0.55 }));
+        top.position.set(0, fy - TH / 2, (DZ0 + DZ1) / 2);
+        scene.add(shade(top));
+        const white = mat(0xf2f0ec, 0.45, 0.2);
+        for (const [x, z] of [[-DW / 2 + 0.25, DZ1 - 0.2], [DW / 2 - 0.25, DZ1 - 0.2], [-DW / 2 + 0.25, DZ0 + 0.2], [DW / 2 - 0.25, DZ0 + 0.2]]) {
+          const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.045, LEGS, 20), white);
+          leg.position.set(x, fy - TH - LEGS / 2, z);
+          scene.add(shade(leg));
+        }
+        const apron = new THREE.Mesh(new THREE.BoxGeometry(DW - 0.6, 0.16, 0.04), white);
+        apron.position.set(0, fy - TH - 0.08, DZ1 - 0.22);
+        scene.add(shade(apron));
+        const drawer = new THREE.Mesh(new THREE.RoundedBoxGeometry(4.2, 0.62, 2.4, 3, 0.04), new THREE.MeshStandardMaterial({ map: oak, roughness: 0.5 }));
+        drawer.position.set(2.6, fy - TH - 0.31, DZ1 - 1.25);
+        scene.add(shade(drawer));
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 30), mat(0xd8d4cd, 0.85));
+        floor.rotation.x = -Math.PI / 2; floor.position.set(0, fy - TH - LEGS, 0);
+        floor.receiveShadow = true;
+        scene.add(floor);
+      }
       // The wall: a pale, finely textured fabric
       const fabric = (() => {
         const c = document.createElement('canvas'); c.width = c.height = 128;
         const g = c.getContext('2d')!;
-        g.fillStyle = '#e2ddd5'; g.fillRect(0, 0, 128, 128);
+        g.fillStyle = '#d5d2cc'; g.fillRect(0, 0, 128, 128);
         for (let y = 0; y < 128; y += 4) for (let x = 0; x < 128; x += 4) {
           const v = 205 + Math.floor(Math.random() * 30);
           g.fillStyle = `rgb(${v},${v - 2},${v - 6})`; g.fillRect(x + ((y / 4) % 2) * 2, y, 3, 3);
@@ -95,14 +143,10 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(60, 30);
         return t;
       })();
-      // the wall, with the window cut out of it (it casts the sun's shadow everywhere else)
-      const WX0 = 2.3, WX1 = 6.6, WY0 = fy + 0.9, WY1 = fy + 4.9;
+      // the wall
       {
         const sh = new THREE.Shape();
         sh.moveTo(-9, fy); sh.lineTo(9, fy); sh.lineTo(9, fy + 10); sh.lineTo(-9, fy + 10); sh.lineTo(-9, fy);
-        const hole = new THREE.Path();
-        hole.moveTo(WX0, WY0); hole.lineTo(WX0, WY1); hole.lineTo(WX1, WY1); hole.lineTo(WX1, WY0); hole.lineTo(WX0, WY0);
-        sh.holes.push(hole);
         const g = new THREE.ShapeGeometry(sh);
         // world-scaled UVs so the fabric keeps its size
         const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / 18, uv.getY(i) / 10);
@@ -110,30 +154,6 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         wall.position.z = Z_BACK - 0.02;
         wall.receiveShadow = true; wall.castShadow = true;
         scene.add(wall);
-      }
-      // The window on the right: bright daylight behind white blinds
-      {
-        const wx0 = WX0, wx1 = WX1, wy0 = WY0, wy1 = WY1;
-        // the bright day outside, a little way behind the opening
-        const glow = new THREE.Mesh(new THREE.PlaneGeometry(14, 14), new THREE.MeshBasicMaterial({ color: 0xfffdf6, toneMapped: false }));
-        glow.position.set((wx0 + wx1) / 2 + 2, (wy0 + wy1) / 2, Z_BACK - 1.2);
-        scene.add(glow);
-        const slatMat = mat(0xeeeeec, 0.45);
-        const slatGeo = new THREE.BoxGeometry(wx1 - wx0, 0.012, 0.07);
-        for (let y = wy0 + 0.04; y < wy1; y += 0.105) {
-          const sl = new THREE.Mesh(slatGeo, slatMat);
-          sl.position.set((wx0 + wx1) / 2, y, Z_BACK + 0.05);
-          sl.rotation.x = -0.5;   // partly open: bright bands with the slats' thin shadows between them
-          sl.receiveShadow = true; sl.castShadow = true;
-          scene.add(sl);
-        }
-        // the window's frame, its reveal and a sill
-        const frameM = mat(0xf2efea, 0.5);
-        const fr = (w: number, h: number, d: number, x: number, y: number, z: number) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), frameM); m.position.set(x, y, z); scene.add(shade(m)); };
-        fr(0.06, wy1 - wy0, 0.22, wx0 - 0.03, (wy0 + wy1) / 2, Z_BACK - 0.08);
-        fr(0.06, wy1 - wy0, 0.22, wx1 + 0.03, (wy0 + wy1) / 2, Z_BACK - 0.08);
-        fr(wx1 - wx0 + 0.12, 0.06, 0.22, (wx0 + wx1) / 2, wy1 + 0.03, Z_BACK - 0.08);
-        fr(wx1 - wx0 + 0.3, 0.05, 0.3, (wx0 + wx1) / 2, wy0 - 0.025, Z_BACK + 0.06);
       }
       // Things on the desk, after the reference photos
       // (the ones the ball bounces off once it's free — see the docking below)
@@ -165,7 +185,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const felt = canvasTex(128, 128, g2 => { g2.fillStyle = '#d9d2c8'; g2.fillRect(0, 0, 128, 128); for (let i = 0; i < 2500; i++) { const v = 190 + Math.random() * 30; g2.fillStyle = `rgba(${v},${v},${v - 3},0.5)`; g2.fillRect(Math.random() * 128, Math.random() * 128, 1, 1); } });
         felt.wrapS = felt.wrapT = THREE.RepeatWrapping; felt.repeat.set(2, 2);
         const mesh = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0xffffff, map: felt, roughness: 1 }));
-        mesh.position.set(0.3, fy + 0.001, -0.9);
+        mesh.position.set(0.3, fy + 0.001, -1.4);
         mesh.receiveShadow = true;
         scene.add(mesh);
       }
@@ -269,7 +289,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
 
 
         const laptop = new THREE.Mesh(new THREE.RoundedBoxGeometry(2.6, 0.1, 1.8, 4, 0.04), mat(0xc8cacd, 0.3, 0.85));
-        laptop.position.set(-4.6, fy + 0.05, 1.1); laptop.rotation.y = 0.12;
+        laptop.position.set(-4.4, fy + 0.05, -0.9); laptop.rotation.y = 0.12;
         scene.add(shade(laptop)); colliders.push(laptop);
       }
       // An iMac (24", silver) at the back of the desk, «404» on its screen
@@ -737,7 +757,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         }
         // the room: back wall, the desk's ends, a little in front, a ceiling
         if (b.z < Z_BACK + BALL_R) { b.z = Z_BACK + BALL_R; b.vz = Math.abs(b.vz) * 0.8; sound.play('hover', 90); }
-        if (b.z > 3.2) { b.z = 3.2; b.vz = -Math.abs(b.vz) * 0.8; }
+        if (b.z > 0.7) { b.z = 0.7; b.vz = -Math.abs(b.vz) * 0.8; }
         if (Math.abs(b.x) > 6.2) { b.x = Math.sign(b.x) * 6.2; b.vx = -b.vx * 0.8; }
         if (b.y > 3.5) { b.y = 3.5; b.vy = -Math.abs(b.vy); }
         for (const bx of boxes) bounceOff(bx.min.x, bx.min.y, bx.min.z, bx.max.x, bx.max.y, bx.max.z);

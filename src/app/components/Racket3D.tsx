@@ -935,10 +935,11 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           if (vn < -0.015) { sound.play('tap', 70); squash = Math.max(squash, 0.6); }
           if (e) {
             // the thing takes the blow: shoved away from the ball, spun a little
-            const imp = -vn * 1.1 / e.mass, hl = Math.hypot(nx, nz) || 1;
+            // (with the keyboard parked the ball means it: it shoves much harder, and things go off the desk)
+            const imp = -vn * (docked ? 2.6 : 1.1) / e.mass, hl = Math.hypot(nx, nz) || 1;
             e.vx -= (nx / hl) * imp; e.vz -= (nz / hl) * imp; e.w += (Math.random() - 0.5) * imp * 3;
-            // with the keyboard parked, the ball is out to wreck things: whatever it hits breaks
-            if (docked || (e.kind === 'mug' && -vn > 0.06)) shatter(e);
+            // only the mug can break
+            if (e.kind === 'mug' && -vn > 0.05) shatter(e);
           }
         }
       };

@@ -84,6 +84,8 @@ function ProjectCard({ project, onClick, aspect, scrubVideo, shape }: { project:
   const isMobile = useMobile();
   return (
     <CaseCard
+      // two a row on a phone: just the name under each
+      stackMeta={isMobile && !scrubVideo}
       ar={shape === 'vertical' ? V : shape ? H : project.ar}
       aspect={aspect}
       scrubVideo={scrubVideo}
@@ -174,7 +176,8 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: (href?: 
         className={s.grid}
         style={{
           display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : 'var(--cases-cols)',
+          // phones: two cases a row, the flower video across both
+          gridTemplateColumns: isMobile ? '1fr 1fr' : 'var(--cases-cols)',
           columnGap: 'var(--gap)',
           rowGap: 'var(--cases-row-gap)',
           padding: '0 var(--pad)',
@@ -187,7 +190,7 @@ export default function ProjectGallery({ onCaseClick }: { onCaseClick?: (href?: 
             key={slot.project.id}
             data-case-card=""
             style={{
-              gridColumn: isMobile ? 'auto' : slot.col,
+              gridColumn: isMobile ? (slot.scrubVideo ? '1 / -1' : 'auto') : slot.col,
               gridRow: isMobile ? 'auto' : slot.row,
               minWidth: 0,
               // Desktop: the flower video takes half the side padding each way

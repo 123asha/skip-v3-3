@@ -201,14 +201,43 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         g.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh) { m.castShadow = m.material !== glass; m.receiveShadow = true; } });
         scene.add(g);
       }
-      // — an Apple Magic Mouse: a smooth white glossy shell on a thin aluminium base
+      // — an Apple Magic Mouse: a long, low, seamless white shell (a pill-shaped footprint,
+      // a gentle dome highest a little behind the middle, thinning to a fine edge) over a
+      // thin aluminium base that shows as a silver line under it
       {
+        const A = 0.205, B = 0.405, HT = 0.1;                    // half-width, half-length, height
+        const N = 4;                                              // footprint: |x/A|^4 + |z/B|^4 = 1
+        const toFoot = (u: number, v: number) => {
+          // a point of the square [-1,1]² taken onto the footprint, at "radius" m
+          const m = Math.max(Math.abs(u), Math.abs(v));
+          if (m === 0) return { x: 0, z: 0, m };
+          const k = m / Math.pow(Math.abs(u) ** N + Math.abs(v) ** N, 1 / N);
+          return { x: u * k * A, z: v * k * B, m };
+        };
+        const top = new THREE.PlaneGeometry(2, 2, 72, 144);
+        top.rotateX(-Math.PI / 2);
+        const pos = top.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+          const f = toFoot(pos.getX(i), pos.getZ(i));
+          const along = f.z / B;                                  // −1 front … +1 back
+          const h = HT * Math.pow(Math.max(0, 1 - f.m ** 4), 0.42) * (1 - 0.14 * along) ;
+          pos.setXYZ(i, f.x, h, f.z);
+        }
+        top.computeVertexNormals();
+        const shellMat = new THREE.MeshPhysicalMaterial({ color: 0xfcfcfb, roughness: 0.16, clearcoat: 1, clearcoatRoughness: 0.06 });
+        const shell = new THREE.Mesh(top, shellMat);
+        shell.position.y = 0.022;
+        // the aluminium base: the same footprint a touch smaller, a thin plate
+        const foot = new THREE.Shape();
+        for (let i = 0; i <= 96; i++) {
+          const t = (i / 96) * Math.PI * 2, c = Math.cos(t), sn = Math.sin(t);
+          const x = Math.sign(c) * Math.abs(c) ** (2 / N) * A * 0.93, z = Math.sign(sn) * Math.abs(sn) ** (2 / N) * B * 0.95;
+          if (i === 0) foot.moveTo(x, z); else foot.lineTo(x, z);
+        }
+        const baseG = new THREE.ExtrudeGeometry(foot, { depth: 0.022, bevelEnabled: false, curveSegments: 4 });
+        baseG.rotateX(Math.PI / 2); baseG.translate(0, 0.022, 0);
+        const base = new THREE.Mesh(baseG, mat(0xd4d6d9, 0.28, 0.85));
         const mouse = new THREE.Group();
-        const base = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.02, 64), mat(0xd8dadd, 0.3, 0.8));
-        base.scale.set(0.19, 1, 0.385); base.position.y = 0.012;
-        const shell = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 32, 0, Math.PI * 2, 0, Math.PI / 2),
-          new THREE.MeshPhysicalMaterial({ color: 0xfbfbfa, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.08 }));
-        shell.scale.set(0.2, 0.085, 0.395); shell.position.y = 0.02;
         mouse.add(base, shell);
         mouse.position.set(1.75, fy, -1.5); mouse.rotation.y = -0.12;
         scene.add(shade(mouse)); colliders.push(mouse);
@@ -496,8 +525,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       });
       racket.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh && m.material !== legendMat) { m.castShadow = true; m.receiveShadow = true; } });
       // Where the ball lands, the key is knocked clean off (and a neighbour or two
-      // now and then): it flies up, tumbles, lands on the desk, and a few seconds
-      // later flies back into its place
+      // now and then): it flies up, tumbles and lands on the desk, where it stays
       const pressAt = (lx: number, lz: number, power: number) => {
         const hit = keys.filter(q => q.state === 'on' && lx >= q.x0 - U * 0.6 && lx <= q.x1 + U * 0.6 && lz >= q.z0 - U * 0.6 && lz <= q.z1 + U * 0.6);
         hit.sort((a, b) => Math.hypot((a.x0 + a.x1) / 2 - lx, (a.z0 + a.z1) / 2 - lz) - Math.hypot((b.x0 + b.x1) / 2 - lx, (b.z0 + b.z1) / 2 - lz));
@@ -530,7 +558,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
             o.rotation.x += (flat(o.rotation.x) - o.rotation.x) * 0.2;
             o.rotation.z += (flat(o.rotation.z) - o.rotation.z) * 0.2;
             o.position.y = fy + (Math.abs(Math.cos(o.rotation.x) * Math.cos(o.rotation.z)) > 0.5 && Math.cos(o.rotation.x) * Math.cos(o.rotation.z) < 0 ? SKIRT_H + CAP_H : 0.004);
-            if (++q.t > 60 * 5) { q.state = 'back'; q.t = 0; q.from = { p: o.position.clone(), q: o.quaternion.clone() }; }
+            // and stays there — knocked-off keys come back only with a reload
           } else if (q.state === 'back' && q.from) {
             // home: its place on the keyboard, wherever the keyboard is now
             q.t = Math.min(1, q.t + 1 / 40);

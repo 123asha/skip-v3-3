@@ -323,12 +323,11 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
             </p>
           ) : activeTab === 'join' ? (
             <p className={s.contactTitle} data-pin-obstacle="" data-pin-title="" style={{ marginTop: 20, textAlign: 'center' }}>
-              Отправьте CV<br />креативному директору
+              Отправьте CV<br />арт-директору
             </p>
           ) : (
             <p className={s.contactTitle} data-pin-obstacle="" data-pin-title="" style={{ marginTop: 20, textAlign: 'center' }}>
-              Оставьте{' '}
-              <span ref={wordRef}>{word}</span>,<br />мы назначим встречу
+              Оставьте контакт,<br />назначим встречу
             </p>
           )}
           {/* Phone: the studio time lives here (desktop keeps it in the footer

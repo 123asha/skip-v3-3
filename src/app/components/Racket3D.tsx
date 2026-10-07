@@ -472,24 +472,42 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const cam = new THREE.Mesh(new THREE.CircleGeometry(0.008, 16), new THREE.MeshBasicMaterial({ color: 0x222222 }));
         cam.position.set(0, H / 2 - 0.035, D / 2 + 0.0045);
         mac.add(cam);
-        // a round sticker on the chin, our favicon: the black ball with its white glint, on a thin white edge
-        const stickerTex = canvasTex(256, 256, () => {});
-        {
-          const fav = new Image();
-          fav.onload = () => {
-            const c = stickerTex.image as HTMLCanvasElement, g = c.getContext('2d')!;
-            g.clearRect(0, 0, 256, 256);
-            g.fillStyle = '#fbfaf8'; g.beginPath(); g.arc(128, 128, 126, 0, Math.PI * 2); g.fill();
-            g.save(); g.beginPath(); g.arc(128, 128, 116, 0, Math.PI * 2); g.clip();
-            g.drawImage(fav, 128 - 118, 128 - 118, 236, 236);
-            g.restore();
-            stickerTex.needsUpdate = true;
-          };
-          fav.src = asset('/fav-black-nobg.png');
-        }
-        const sticker = new THREE.Mesh(new THREE.CircleGeometry(0.075, 48), new THREE.MeshStandardMaterial({ map: stickerTex, roughness: 0.45, transparent: true }));
-        sticker.position.set(-0.95, -H / 2 + (H - BEZ_H) / 2 - 0.01, D / 2 + 0.003);
-        mac.add(sticker);
+        // Round stickers on the chin: our favicon, and the logo
+        // on white, black, terracotta and sage — different sizes, stuck on a little askew
+        const logoPaths = svgPaths.pb7e9300.match(/M[^M]+/g)!;
+        const drawLogo = (g: CanvasRenderingContext2D, cx: number, cy: number, w: number, color: string) => {
+          const sc = w / 52.5283;
+          g.save(); g.fillStyle = color; g.translate(cx - w / 2, cy - 16 * sc); g.scale(sc, sc);
+          g.fill(new Path2D(logoPaths[1])); g.fill(new Path2D(logoPaths[2])); g.fill(new Path2D(logoPaths[4])); g.fill(new Path2D(logoPaths[0] + logoPaths[3]), 'evenodd');
+          g.restore();
+        };
+        const fav = new Image();
+        const favTexs: import('three').CanvasTexture[] = [];
+        fav.onload = () => favTexs.forEach(t => {
+          const g = (t.image as HTMLCanvasElement).getContext('2d')!;
+          g.save(); g.beginPath(); g.arc(128, 128, 116, 0, Math.PI * 2); g.clip(); g.drawImage(fav, 10, 10, 236, 236); g.restore();
+          t.needsUpdate = true;
+        });
+        fav.src = asset('/fav-black-nobg.png');
+        const stickerTex = (kind: 'fav' | 'white' | 'black' | 'terracotta' | 'sage') => canvasTex(256, 256, g => {
+          g.fillStyle = '#fbfaf8'; g.beginPath(); g.arc(128, 128, 126, 0, Math.PI * 2); g.fill();     // the white die-cut edge
+          const fill = { fav: '#111', white: '#fbfaf8', black: '#151515', terracotta: '#d9784e', sage: '#9fae94' }[kind];
+          g.fillStyle = fill; g.beginPath(); g.arc(128, 128, 116, 0, Math.PI * 2); g.fill();
+          if (kind !== 'fav') drawLogo(g, 128, 128, 150, kind === 'white' || kind === 'sage' ? '#151515' : '#fbfaf8');
+        });
+        const addSticker = (kind: 'fav' | 'white' | 'black' | 'terracotta' | 'sage', x: number, y: number, r: number, rot: number) => {
+          const t = stickerTex(kind);
+          if (kind === 'fav') favTexs.push(t);
+          const m = new THREE.Mesh(new THREE.CircleGeometry(r, 48), new THREE.MeshStandardMaterial({ map: t, roughness: 0.45, transparent: true }));
+          m.position.set(x, y, D / 2 + 0.003 + favTexs.length * 0.0004 + r * 0.001); m.rotation.z = rot;
+          mac.add(m);
+        };
+        const chinY = -H / 2 + (H - BEZ_H) / 2 - 0.01;
+        addSticker('fav', -0.98, chinY + 0.02, 0.075, 0);
+        addSticker('white', -0.8, chinY - 0.04, 0.06, 0.3);
+        addSticker('terracotta', -0.68, chinY + 0.05, 0.045, -0.2);
+        addSticker('black', 0.86, chinY - 0.02, 0.07, 0.15);
+        addSticker('sage', 1.0, chinY + 0.06, 0.045, -0.4);
         // the stand: one bent aluminium plate — a leaning upright and a flat foot
         // from behind the body it leans back down to the desk, then runs forward flat under the screen
         const FOOT_Y = -H / 2 - 0.635 + 0.0125;               // the foot lies on the desktop
@@ -504,8 +522,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         bend.rotation.z = Math.PI / 2; bend.position.set(0, FOOT_Y + 0.012, -0.43);
         mac.add(up, foot, bend);
         colliders.push(shell, bezel, foot);
-        mac.position.set(0, fy + 0.635 + H / 2, -2.55);
-        ao(0, -2.7, 0.45, 0.5, 0.35);
+        mac.position.set(0, fy + 0.635 + H / 2, -2.1);
+        ao(0, -2.25, 0.45, 0.5, 0.35);
         mac.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh && m !== screen && m !== cam) { m.castShadow = true; m.receiveShadow = true; } });
         scene.add(mac);
       }
@@ -772,7 +790,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       const b = { x: 0.3, y: 0.9, z: 0.4, vx: 0, vy: 0, vz: 0 };
       let hitKick = 0, squash = 0;
       // Docking: the keyboard parked in front of the monitor sets the ball free
-      const DOCK_Z = -1.6, DOCK_IN = -1.95, DOCK_OUT = -0.6;
+      const DOCK_Z = -1.15, DOCK_IN = -1.5, DOCK_OUT = -0.2;
       let docked = false, dockT = 0, reel = false, freeKick = false;
       b.x = st.x; b.z = st.z; b.y = PY + 1.6;
 

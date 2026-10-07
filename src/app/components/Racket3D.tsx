@@ -34,8 +34,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 220);
-      camera.position.set(0, 1.45, 6.0);
-      camera.lookAt(0, -0.3, -1.3);
+      camera.position.set(0, 1.6, 6.3);
+      camera.lookAt(0, -0.1, -1.3);
       const resize = () => {
         const w = el.clientWidth, h = el.clientHeight;
         renderer.setSize(w, h, false);
@@ -159,6 +159,16 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       // Things on the desk, after the reference photos
       // (the ones the ball bounces off once it's free — see the docking below)
       const colliders: import('three').Object3D[] = [];
+      // Things the ball can knock about (everything on the desk but the iMac): it shoves them
+      // across the oak, spins them a little, pushes them off the edge — the mug can break
+      type Prop = { root: import('three').Object3D; mass: number; kind?: 'mug'; vx: number; vz: number; w: number; vy: number;
+        pos0?: import('three').Vector3; yaw0: number; aoM?: import('three').Mesh; ao0?: import('three').Vector3; aoRot0: number; fall: boolean; gone: boolean };
+      const propOf = new Map<import('three').Object3D, Prop>();
+      const props: Prop[] = [];
+      const prop = (hits: import('three').Object3D[], root: import('three').Object3D, aoM: import('three').Mesh | undefined, mass: number, kind?: 'mug') => {
+        const e: Prop = { root, mass, kind, vx: 0, vz: 0, w: 0, vy: 0, yaw0: root.rotation.y, aoM, aoRot0: aoM ? aoM.rotation.z : 0, fall: false, gone: false };
+        hits.forEach(h => propOf.set(h, e)); props.push(e);
+      };
       // Contact shadows: a soft darkening on the desk right under each thing, where the
       // light can't reach (ambient occlusion) — it's what makes them sit on the desk
       const aoTex = (() => {
@@ -215,7 +225,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const curve = new THREE.CatmullRomCurve3([V3(0.3, 0.02, 0.1), V3(0.7, 0.015, 0.5), V3(0.4, 0.015, 1.0), V3(-0.3, 0.015, 0.9), V3(-0.6, 0.015, 0.4)]);
         g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 64, 0.012, 8, false), cream));
         g.position.set(2.75, fy, -3.15);
-        ao(2.75, -3.15, 0.6, 0.6, 0.3);
+        prop(g.children.filter(c => colliders.includes(c)), g, ao(2.75, -3.15, 0.6, 0.6, 0.3), 2.2);
         g.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh) { m.castShadow = m.material !== glass; m.receiveShadow = true; } });
         scene.add(g);
       }
@@ -258,8 +268,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const mouse = new THREE.Group();
         mouse.add(base, shell);
         mouse.position.set(1.75, fy, -1.5); mouse.rotation.y = -0.12;
-        ao(1.75, -1.5, 0.3, 0.52, 0.42, -0.12);
         scene.add(shade(mouse)); colliders.push(mouse);
+        prop([mouse], mouse, ao(1.75, -1.5, 0.3, 0.52, 0.42, -0.12), 0.6);
       }
       // The rest of the desk, composed: the iMac in the middle; a snake plant at the
       // back left balancing the lamp at the back right; MUJI things in front of them —
@@ -320,7 +330,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           }
           g.position.set(-2.85, fy, -3.1);
           scene.add(shade(g)); colliders.push(pot);
-          ao(-2.85, -3.1, 0.6, 0.6, 0.45);
+          prop([pot], g, ao(-2.85, -3.1, 0.6, 0.6, 0.45), 3);
         }
         // — a MUJI acrylic pen stand (clear), with MUJI gel pens and a pencil
         {
@@ -335,8 +345,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
             g.add(pen);
           }
           g.position.set(-1.95, fy, -2.35);
-          ao(-1.95, -2.35, 0.36, 0.36, 0.3);
           scene.add(g); box.castShadow = false; colliders.push(box);
+          prop([box], g, ao(-1.95, -2.35, 0.36, 0.36, 0.3), 0.9);
           g.traverse(o => { const m = o as import('three').Mesh; if (m.isMesh && m !== box) m.castShadow = true; });
         }
         // — a MUJI kraft-paper notebook, slightly askew, with a black gel pen on it
@@ -352,8 +362,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           const clip = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.012, 0.12), mat(0x1b1b1b, 0.4)); clip.position.set(0.22, 0.1, -0.08); clip.rotation.y = 0.78;
           g.add(cover, pages, label, pen, clip);
           g.position.set(-2.55, fy, -0.45); g.rotation.y = 0.22;
-          ao(-2.55, -0.45, 0.62, 0.85, 0.22, 0.22);
           scene.add(shade(g)); colliders.push(cover);
+          prop([cover], g, ao(-2.55, -0.45, 0.62, 0.85, 0.22, 0.22), 1.1);
         }
         // — a white porcelain mug (front right)
         {
@@ -364,8 +374,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           handle.position.set(0.18, 0.22, 0); handle.rotation.z = -Math.PI * 0.6;
           mug.add(handle);
           mug.position.set(2.85, fy, -0.35); mug.rotation.y = 0.5;
-          ao(2.85, -0.35, 0.3, 0.3, 0.45);
           scene.add(shade(mug)); colliders.push(mug);
+          prop([mug], mug, ao(2.85, -0.35, 0.3, 0.3, 0.45), 0.8, 'mug');
         }
       }
       // An iMac (24", silver) at the back of the desk, «404» on its screen
@@ -376,8 +386,9 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         // A real 24" iMac (1 unit ≈ 14.5 cm, the scale of the keyboard and the desk): 54.7 cm wide,
         // the body 36.6 cm tall and 11.5 mm thin, lifted 9.5 cm off the desk; a 16:9 screen with an
         // even white border of about 1.3 cm; a 4.6 cm silver chin; a 13 × 14.7 cm bent-plate stand
-        const W = 3.77, H = 2.52, D = 0.08, BORDER = 0.09, LIFT = 0.655;
+        const W = 3.77, D = 0.08, BORDER = 0.09, LIFT = 0.655;
         const BEZ_H = (W - 2 * BORDER) * 9 / 16 + 2 * BORDER;
+        const H = BEZ_H + 0.5;                                  // a generous silver chin below the screen
         // Apple's silver: a light, soft-satin aluminium
         const silver = new THREE.MeshStandardMaterial({ color: 0xe6e7e9, roughness: 0.38, metalness: 0.35 });
         const mac = new THREE.Group();
@@ -489,13 +500,13 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         const favTexs: import('three').CanvasTexture[] = [];
         fav.onload = () => favTexs.forEach(t => {
           const g = (t.image as HTMLCanvasElement).getContext('2d')!;
-          g.save(); g.beginPath(); g.arc(128, 128, 116, 0, Math.PI * 2); g.clip(); g.drawImage(fav, 10, 10, 236, 236); g.restore();
+          g.drawImage(fav, 128 - 84, 128 - 84, 168, 168);   // the favicon on white
           t.needsUpdate = true;
         });
         fav.src = asset('/fav-black-nobg.png');
         const stickerTex = (kind: 'fav' | 'white' | 'black' | 'terracotta' | 'sage') => canvasTex(256, 256, g => {
           g.fillStyle = '#fbfaf8'; g.beginPath(); g.arc(128, 128, 126, 0, Math.PI * 2); g.fill();     // the white die-cut edge
-          const fill = { fav: '#111', white: '#fbfaf8', black: '#151515', terracotta: '#d9784e', sage: '#9fae94' }[kind];
+          const fill = { fav: '#fbfaf8', white: '#fbfaf8', black: '#151515', terracotta: '#d9784e', sage: '#9fae94' }[kind];
           g.fillStyle = fill; g.beginPath(); g.arc(128, 128, 116, 0, Math.PI * 2); g.fill();
           if (kind !== 'fav') drawLogo(g, 128, 128, 150, kind === 'white' || kind === 'sage' ? '#151515' : '#fbfaf8');
         });
@@ -507,10 +518,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
           mac.add(m);
         };
         const chinY = -H / 2 + (H - BEZ_H) / 2 - 0.01;
-        // all of them our favicon, many times over, in a loose cluster at each end of the chin
-        ([[-1.55, 0.02, 0.1, 0], [-1.33, -0.05, 0.075, 0.9], [-1.17, 0.06, 0.06, 2.1], [-1.02, -0.04, 0.05, -0.7],
-          [1.08, 0.03, 0.07, 1.4], [1.27, -0.04, 0.09, -0.4], [1.47, 0.05, 0.06, 2.8], [1.6, -0.06, 0.045, 0.3]] as const)
-          .forEach(([x, y, r, rot]) => addSticker('fav', x, chinY + y, r, rot));
+        // one, our favicon, in the middle of the chin
+        addSticker('fav', 0, chinY, 0.12, 0);
         // the stand: one bent aluminium plate — a leaning upright and a flat foot
         // from behind the body it leans back down to the desk, then runs forward flat under the screen
         const SW_ST = 0.9, FOOT_D = 1.01, FOOT_T = 0.04;
@@ -818,8 +827,8 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       let raf = 0;
       const tick = () => {
         look.x += (look.tx - look.x) * 0.04; look.y += (look.ty - look.y) * 0.04;
-        camera.position.set(look.x * 1.15, 1.45 - look.y * 0.45, 6.0);
-        camera.lookAt(0, -0.3, -1.3);
+        camera.position.set(look.x * 1.15, 1.6 - look.y * 0.45, 6.3);
+        camera.lookAt(0, -0.1, -1.3);
         // Paddle
         const px = st.x, pz = st.z;
         st.x += (st.tx - st.x) * 0.2; st.z += (st.tz - st.z) * 0.2;
@@ -837,6 +846,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         racket.rotation.set(st.vz * 2.5 * (1 - de), 0, -st.vx * 2.5 * (1 - de));
         keys.forEach(q => { if (q.state !== 'on') return; q.press *= 0.82; q.body.position.y = q.y0 - q.press * 0.014; });
         flyKeys();
+        moveProps();
 
         const free = docked && dockT > 0.4;
         if (free) { freeBall(); finishBall(); screenFx?.(performance.now()); renderer.render(scene, camera); raf = requestAnimationFrame(tick); return; }
@@ -873,6 +883,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         if (b.x < -X + BALL_R) { b.x = -X + BALL_R; if (b.vx < -0.02) sound.play('hover', 90); b.vx = Math.abs(b.vx) * 0.8; }
         if (b.z < Z_BACK + BALL_R) { b.z = Z_BACK + BALL_R; b.vz = Math.abs(b.vz) * 0.8; }
         if (b.z > Z_RACKET + 0.4) { b.z = Z_RACKET + 0.4; b.vz = -Math.abs(b.vz) * 0.8; }
+        collideProps();
         // The paddle's face
         const top = PY + st.lift;
         dx = b.x - st.x; dz = b.z - st.z;
@@ -913,7 +924,7 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
       // Free: the ball roams the desk and bounces off the things on it (and the docked keyboard)
       let boxes: import('three').Box3[] | null = null;
       const closest = new THREE.Vector3();
-      const bounceOff = (minX: number, minY: number, minZ: number, maxX: number, maxY: number, maxZ: number) => {
+      const bounceOff = (minX: number, minY: number, minZ: number, maxX: number, maxY: number, maxZ: number, e?: Prop) => {
         closest.set(Math.max(minX, Math.min(b.x, maxX)), Math.max(minY, Math.min(b.y, maxY)), Math.max(minZ, Math.min(b.z, maxZ)));
         let nx = b.x - closest.x, ny = b.y - closest.y, nz = b.z - closest.z;
         const d = Math.hypot(nx, ny, nz);
@@ -924,10 +935,71 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         if (vn < 0) {
           b.vx -= 1.85 * vn * nx; b.vy -= 1.85 * vn * ny; b.vz -= 1.85 * vn * nz;
           if (vn < -0.015) { sound.play('tap', 70); squash = Math.max(squash, 0.6); }
+          if (e) {
+            // the thing takes the blow: shoved away from the ball, spun a little
+            const imp = -vn * 1.1 / e.mass, hl = Math.hypot(nx, nz) || 1;
+            e.vx -= (nx / hl) * imp; e.vz -= (nz / hl) * imp; e.w += (Math.random() - 0.5) * imp * 3;
+            if (e.kind === 'mug' && -vn > 0.06) shatter(e);
+          }
+        }
+      };
+      // Every prop's box follows the prop as it moves
+      const collideProps = () => {
+        if (!boxes) { scene.updateMatrixWorld(true); boxes = colliders.map(o => new THREE.Box3().setFromObject(o)); props.forEach(e => { e.pos0 = e.root.position.clone(); if (e.aoM) e.ao0 = e.aoM.position.clone(); }); }
+        colliders.forEach((o, i) => {
+          const bx = boxes![i], e = propOf.get(o);
+          if (e?.gone || e?.fall) return;
+          const ox = e && e.pos0 ? e.root.position.x - e.pos0.x : 0, oz = e && e.pos0 ? e.root.position.z - e.pos0.z : 0;
+          bounceOff(bx.min.x + ox, bx.min.y, bx.min.z + oz, bx.max.x + ox, bx.max.y, bx.max.z + oz, e);
+        });
+      };
+      // The mug breaks: it's gone, and a few porcelain shards fly and settle on the desk
+      type Shard = { m: import('three').Mesh; v: import('three').Vector3; w: import('three').Vector3; rest: boolean };
+      const shards: Shard[] = [];
+      const shardMat = new THREE.MeshStandardMaterial({ color: 0xf3f1ec, roughness: 0.3, flatShading: true });
+      const shatter = (e: Prop) => {
+        if (e.gone) return;
+        e.gone = true; e.root.visible = false; if (e.aoM) e.aoM.visible = false;
+        playBreak(1);
+        const c = e.root.position;
+        for (let i = 0; i < 9; i++) {
+          const m = new THREE.Mesh(new THREE.TetrahedronGeometry(0.05 + Math.random() * 0.07, 0), shardMat);
+          m.position.set(c.x + (Math.random() - 0.5) * 0.25, fy + 0.1 + Math.random() * 0.3, c.z + (Math.random() - 0.5) * 0.25);
+          m.castShadow = true; scene.add(m);
+          const a = Math.random() * Math.PI * 2, sp = 0.02 + Math.random() * 0.04;
+          shards.push({ m, v: V3(Math.cos(a) * sp, 0.03 + Math.random() * 0.05, Math.sin(a) * sp), w: V3(Math.random() * 0.4, Math.random() * 0.4, Math.random() * 0.4), rest: false });
+        }
+      };
+      // Props sliding (with friction), turning, falling off the desk; shards settling
+      const moveProps = () => {
+        for (const e of props) {
+          if (e.gone) continue;
+          const r = e.root;
+          if (e.fall) {
+            e.vy -= 0.008; r.position.y += e.vy; r.position.x += e.vx; r.position.z += e.vz; r.rotation.x += 0.04;
+            if (e.aoM) e.aoM.visible = false;
+            if (r.position.y < fy - 7) { r.visible = false; e.gone = true; }
+            continue;
+          }
+          if (Math.abs(e.vx) + Math.abs(e.vz) + Math.abs(e.w) < 1e-5) continue;
+          r.position.x += e.vx; r.position.z += e.vz; r.rotation.y += e.w;
+          e.vx *= 0.9; e.vz *= 0.9; e.w *= 0.86;
+          if (r.position.z < Z_BACK + 0.35) { r.position.z = Z_BACK + 0.35; e.vz = Math.abs(e.vz) * 0.3; }
+          if (Math.abs(r.position.x) > 4.2 || r.position.z > 0.9) { e.fall = true; e.vy = 0; sound.play('hover', 160); }
+          if (e.aoM && e.ao0 && e.pos0) {
+            e.aoM.position.set(e.ao0.x + r.position.x - e.pos0.x, e.ao0.y, e.ao0.z + r.position.z - e.pos0.z);
+            e.aoM.rotation.z = e.aoRot0 - (r.rotation.y - e.yaw0);
+          }
+        }
+        for (const sh of shards) {
+          if (sh.rest) continue;
+          sh.v.y -= 0.0034; sh.m.position.add(sh.v);
+          sh.m.rotation.x += sh.w.x; sh.m.rotation.y += sh.w.y; sh.m.rotation.z += sh.w.z;
+          if (sh.m.position.y < fy + 0.03) { sh.m.position.y = fy + 0.03; sh.v.y = Math.abs(sh.v.y) * 0.3; sh.v.x *= 0.6; sh.v.z *= 0.6; sh.w.multiplyScalar(0.5); if (sh.v.y < 0.008) sh.rest = true; }
         }
       };
       const freeBall = () => {
-        if (!boxes) { scene.updateMatrixWorld(true); boxes = colliders.map(o => new THREE.Box3().setFromObject(o)); }
+        collideProps();
         if (freeKick) { freeKick = false; b.vy = Math.max(b.vy, 0.09); b.vx += (Math.random() - 0.5) * 0.06; b.vz -= 0.02; }
         b.vy -= 0.0034;
         b.x += b.vx; b.y += b.vy; b.z += b.vz;
@@ -947,7 +1019,6 @@ export default function Racket3D(_: { onGoHome?: () => void }) {
         if (b.z > 0.7) { b.z = 0.7; b.vz = -Math.abs(b.vz) * 0.8; }
         if (Math.abs(b.x) > 4.0) { b.x = Math.sign(b.x) * 4.0; b.vx = -b.vx * 0.8; }
         if (b.y > 3.5) { b.y = 3.5; b.vy = -Math.abs(b.vy); }
-        for (const bx of boxes) bounceOff(bx.min.x, bx.min.y, bx.min.z, bx.max.x, bx.max.y, bx.max.z);
         // the docked keyboard
         bounceOff(st.x - KW / 2, fy, st.z - KD / 2, st.x + KW / 2, fy + TOP_H, st.z + KD / 2);
       };

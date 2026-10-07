@@ -263,7 +263,7 @@ export default function CaseCard({
         <div className={`${s.cardImage}${stackMeta || tall || scrubVideo ? ` ${s.cardTall}` : ''}`} style={{ aspectRatio: ar, width: '100%', flex: 'none', ...(PLACEHOLDER_PREVIEWS ? { background: 'var(--c-surface)' } : null) }}>
           {!scrubVideo && slides && slides.length > 1 ? (
             // One a row: the case's pictures as a strip swiped sideways, with
-            // «n / N» at the bottom; a tap still opens the case
+            // «n / N» at the top left; a tap still opens the case
             <>
               <div
                 data-slides=""
@@ -273,7 +273,7 @@ export default function CaseCard({
                 {slides.map((src, k) => <img key={src} src={src} alt={k === 0 ? title : ''} loading={k === 0 ? 'lazy' : 'eager'} />)}
               </div>
               <span style={{
-                position: 'absolute', left: '50%', bottom: 10, translate: '-50% 0', zIndex: 2, pointerEvents: 'none',
+                position: 'absolute', left: 10, top: 10, zIndex: 2, pointerEvents: 'none',   // the counter sits top-left
                 padding: '3px 10px 4px', borderRadius: 999, background: 'var(--c-bg)', color: 'var(--c-text)',
                 fontFamily: 'var(--font)', fontSize: 'var(--text-size)', lineHeight: 'var(--text-lh)', whiteSpace: 'nowrap',
               }}>{slide + 1} / {slides.length}</span>

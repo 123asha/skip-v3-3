@@ -15,7 +15,6 @@ import Footer from './components/Footer';
 import CasesPage from './components/CasesPage';
 const InstrumentsPage = loadable(() => import('./components/InstrumentsPage'));
 const ExpertizaPage = loadable(() => import('./components/ExpertizaPage'));
-const ExpertizaPage2 = loadable(() => import('./components/ExpertizaPage2'));
 import MindMapBlock from './components/MindMapBlock';
 const PolicyPage = loadable(() => import('./components/PolicyPage'));
 const Index2Page = loadable(() => import('./components/Index2Page'));
@@ -53,14 +52,13 @@ import { LANG, LANG_PREFIX, stripLang, otherLangHref, t } from './i18n';
 function sectionTitleFor(path: string): string | null {
   const p = path.split(/[?#]/)[0].replace(/\/$/, '');
   if (p === '/cases') return 'Проекты Skip Design';
-  if (p === '/services' || p === '/services-2' || p === '/expertiza') return 'Услуги и решения студии';
+  if (p === '/services' || p === '/expertiza') return 'Услуги и решения студии';
   if (p === '/insights' || p === '/lab') return 'Инсайты команды';
   if (p === '') return 'Skip Design';
   if (p === '/about' || p === '/about-skip-design') return 'Skip Design';
   return null;
 }
 const DesignSystemPage = loadable(() => import('./components/DesignSystemPage'));
-const ServiceDetailPage = loadable(() => import('./components/ServiceDetailPage'));
 import LinkFlip from './components/LinkFlip';
 import PeopleVideoSlot, { type VideoConfig } from './components/PeopleVideoSlot';
 import SoundIcon from './sound/SoundIcon';
@@ -426,12 +424,10 @@ function AppInner() {
   });
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
-  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/services-2', '/policy', '/index2', '/case-template', '/Seniorsbar', ...Object.keys(CASE_PAGES), '/guide', '/lab', '/insights', '/system', '/brand', '/visual', '/digital', '/about-skip-design', '/about'];
+  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/policy', '/index2', '/case-template', '/Seniorsbar', ...Object.keys(CASE_PAGES), '/guide', '/lab', '/insights', '/system', '/about-skip-design', '/about'];
   const page = pathname === '/cases' ? 'cases'
              : pathname === '/instruments' ? 'instruments'
              : (pathname === '/expertiza' || pathname === '/services') ? 'expertiza'
-             // Sandbox copy of the services page for trying ideas out
-             : pathname === '/services-2' ? 'expertiza2'
              : pathname === '/policy' ? 'policy'
              : pathname === '/index2' ? 'index2'
              : pathname === '/case-template' ? 'case-template'
@@ -444,9 +440,6 @@ function AppInner() {
              // An insight's own article page (unknown slugs fall through to 404)
              : pathname.startsWith('/insights/') && insightBySlug(pathname.slice(10)) ? 'insight'
              : pathname === '/system' ? 'system'
-             : pathname === '/brand' ? 'svc-brand'
-             : pathname === '/visual' ? 'svc-visual'
-             : pathname === '/digital' ? 'svc-digital'
              : pathname === '/' ? 'home'
              : pathname === '/404' || !KNOWN_PATHS.includes(pathname) ? 'notfound'
              : 'home';
@@ -935,8 +928,7 @@ function AppInner() {
   // The nav inverts over everything now (white + difference), so the other
   // sections are dimmed with opacity instead of a grey colour.
   // The section the menu marks as current
-  const navSection = page === 'expertiza2' ? 'expertiza'
-    : page === 'case-template' || page === 'seniors' || page === 'binaroom' ? 'cases' : page === 'insight' ? 'lab' : page;
+  const navSection = page === 'case-template' || page === 'seniors' || page === 'binaroom' ? 'cases' : page === 'insight' ? 'lab' : page;
   // Phone: the menu links are chips — the current one spreads the others
   // from it, like the filter chips (utils/chipBounce)
   const navLinksRef = useRef<HTMLSpanElement>(null);
@@ -973,10 +965,8 @@ function AppInner() {
     return () => { window.removeEventListener('scroll', onScroll, { capture: true }); root.removeAttribute('data-nav-hidden'); root.removeAttribute('data-form-view'); };
   }, [isMobile, page]);
   const navLinkStyle = (target: string): React.CSSProperties | undefined => {
-    // The /services-2 sandbox counts as the services section
     // Case pages count as the projects section
-    const section = page === 'expertiza2' ? 'expertiza'
-      : page === 'case-template' || page === 'seniors' || page === 'binaroom' ? 'cases' : page === 'insight' ? 'lab' : page;
+    const section = page === 'case-template' || page === 'seniors' || page === 'binaroom' ? 'cases' : page === 'insight' ? 'lab' : page;
     // Home and other pages with no current section: all three dark
     if (!['cases', 'expertiza', 'lab'].includes(section)) return undefined;
     // The site's standard muted grey. The nav blends by difference (white
@@ -986,7 +976,7 @@ function AppInner() {
   };
   // The menu is the page title on inner pages — heading size
   const navItemStyle = (target: string): React.CSSProperties => {
-    const section = page === 'expertiza2' ? 'expertiza' : page;
+    const section = page;
     const own = navLinkStyle(target) ?? {};
     // Inner pages: all three items at heading size, the current one black
     // and the others grey (navLinkStyle); home keeps the small menu
@@ -1455,10 +1445,6 @@ function AppInner() {
         onNavigatePolicy={() => navigateWithExit('/policy')}
         onGridMode={setGridVisible}
       />}
-      {page === 'expertiza2' && <ExpertizaPage2
-        onNavigatePolicy={() => navigateWithExit('/policy')}
-        onGridMode={setGridVisible}
-      />}
       {page === 'insight' && <InsightPage
         key={pathname}
         slug={pathname.slice(10)}
@@ -1497,9 +1483,6 @@ function AppInner() {
       {page === 'binaroom' && <CaseTemplatePage key={pathname} data={CASE_PAGES[pathname]} onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}
       {page === 'guide' && <GuidePage />}
       {page === 'system' && <DesignSystemPage />}
-      {page === 'svc-brand'   && <ServiceDetailPage serviceIdx={0} onBack={() => navigateWithExit('/services')} />}
-      {page === 'svc-visual'  && <ServiceDetailPage serviceIdx={1} onBack={() => navigateWithExit('/services')} />}
-      {page === 'svc-digital' && <ServiceDetailPage serviceIdx={2} onBack={() => navigateWithExit('/services')} />}
       {page === 'notfound' && <Racket3D onGoHome={() => navigateWithExit('/')} />}
 
       <div

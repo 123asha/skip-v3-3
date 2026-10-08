@@ -433,7 +433,6 @@ export default function DesignSystemPage() {
           { file: 'ScrollHero.tsx',         route: '/',            desc: 'Главный хиро с вращающимся кубом, параллаксом слайдов и видео.' },
           { file: 'CasesPage.tsx',          route: '/cases',       desc: '5-колоночная сетка кейсов, 2 таба-фильтра, алгоритм рядов H+V.' },
           { file: 'ExpertizaPage.tsx',      route: '/services',    desc: 'Страница услуг — раскрывающиеся строки с описанием направлений.' },
-          { file: 'ServiceDetailPage.tsx',  route: '/brand',       desc: 'Детальная страница услуги: hero, что входит, процесс, результат, кейсы.' },
           { file: 'LabPage.tsx',            route: '/lab',         desc: 'Страница студии — карточки команды, видео, intro-текст.' },
           { file: 'InstrumentsPage.tsx',    route: '/instruments', desc: 'Инструменты / фреймворки с hover-картинками.' },
           { file: 'CaseTemplatePage.tsx',   route: '/Seniorsbar',  desc: 'Шаблон кейс-страницы — блоки single/duo/text, MetaRow.' },

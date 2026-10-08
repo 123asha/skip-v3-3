@@ -36,6 +36,9 @@ const SECTIONS: PageMeta[] = [
   { path: '/ae-platform', title: `AE Platform — кейс ${SITE}`, description: 'Кейс студии Skip Design: обновили дизайн B2B-платформы AE Platform для продавцов-участников партнёрской программы AliExpress.' },
   { path: '/aliexpress-landing', title: `AliExpress B2B — кейс ${SITE}`, description: 'Кейс студии Skip Design: дизайн лендинга B2B-платформы AE Platform, который презентует продукт и формирует доверие к бренду.' },
   { path: '/binaroom', title: `Binaroom — кейс ${SITE}`, description: 'Кейс студии Skip Design: дизайн платформы, которая превращает 3D-проекты в сметы и коммерческие предложения и помогает управлять документооборотом.' },
+  // Working pages: they open by address but are kept out of search and the sitemap
+  { path: '/case-template', title: `Шаблон кейса — ${SITE}`, description: 'Рабочая страница студии.', noindex: true },
+  { path: '/guide', title: `Гайд — ${SITE}`, description: 'Рабочая страница студии.', noindex: true },
   { path: '/policy', title: `Политика конфиденциальности — ${SITE}`, description: 'Политика обработки персональных данных на сайте студии Skip Design.' },
 ];
 
@@ -69,9 +72,7 @@ const articleMeta = (i: Insight): PageMeta => ({
 /** Every page with its own address — for the prerender and the sitemap */
 export function allPages(): PageMeta[] {
   const articles = INSIGHTS_LIST.filter(i => i.slug && i.blocks).map(articleMeta);
-  // The draft template article too (it opens by address), kept out of search
-  const draft = insightBySlug('primer');
-  return [...SECTIONS, ...articles, ...(draft && !articles.some(a => a.path.endsWith('/primer')) ? [articleMeta(draft)] : [])];
+  return [...SECTIONS, ...articles];
 }
 
 /** The metadata for an address the app is showing (falls back to the home page's) */

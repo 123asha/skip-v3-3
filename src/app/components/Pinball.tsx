@@ -68,10 +68,12 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
     let flip: { px: number; py: number; len: number; dir: 1 | -1; a: number; up: boolean }[] = [];
     // Sounds only while the table is on screen
     let visible = true;
+    // A form on an inner page has nothing to wait for: its ball simply drops in from the top
+    const onSubpage = !!cv.closest('[class*="_page_"]');
     const io = new IntersectionObserver(([e]) => {
       visible = e.isIntersecting;
-      // Only once the ticker's ball has dropped out (or there is none: phones)
-      if (form && visible && !active && ((homeFallen && !homeInFlight) || !document.querySelector('[data-client-ball]'))) { serve(); active = true; }
+      // Home: only once the ticker's ball has dropped out (or there is none: phones)
+      if (form && visible && !active && (onSubpage || (homeFallen && !homeInFlight) || !document.querySelector('[data-client-ball]'))) { serve(); active = true; }
     }, { threshold: 0.2 });
     io.observe(cv);
     const play = (kind: Parameters<typeof sound.play>[0], throttle?: number) => { if (visible && document.visibilityState === 'visible') sound.play(kind, throttle); };
@@ -394,7 +396,7 @@ export function Pinball({ variant = 'page', dark = false }: { variant?: 'page' |
     const onFallen = () => { homeFallen = true; homeInFlight = true; };
     const onGone = () => { homeInFlight = false; if (form && visible && !active) { serve(); active = true; } };
     const onReturn = () => { active = false; homeFallen = false; homeInFlight = false; };
-    if (form) { window.addEventListener('skip-ball-handoff', onHandoff); window.addEventListener('skip-ball-return', onReturn); window.addEventListener('skip-ball-fallen', onFallen); window.addEventListener('skip-ball-gone', onGone); }
+    if (form && !onSubpage) { window.addEventListener('skip-ball-handoff', onHandoff); window.addEventListener('skip-ball-return', onReturn); window.addEventListener('skip-ball-fallen', onFallen); window.addEventListener('skip-ball-gone', onGone); }
     window.addEventListener('resize', layout);
     // The card around the form can change height after the first layout (fonts, the keyboard): re-fit so the ball never stretches
     const ro = new ResizeObserver(() => layout());

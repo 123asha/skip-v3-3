@@ -356,7 +356,7 @@ const SEN_CAPS = {
 
 export const SENIORS_BAR: CaseData = {
   href: '/Seniorsbar',
-  title: 'Senior*s Bar',
+  title: 'Senior*s bar',
   links: [{ label: 'Behance', href: 'https://www.behance.net/gallery/250692383/Seniors-community-bar' }],
   year: '2025',
   tags: ['Брендинг'],

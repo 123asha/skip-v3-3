@@ -68,14 +68,14 @@ import SocialLinks from './components/SocialLinks';
 // ── People-block: client → video configuration ───────────────────────────────
 // Each client maps to a unique (src, objectPosition) pair for both card slots.
 // With only two video files available, we vary position to differentiate frames.
-const PEOPLE_CLIENTS = ['AliExpress', 'Юрий Мурадян', 'Gate Legal', 'Senior*s Bar'] as const;
+const PEOPLE_CLIENTS = ['AliExpress', 'Юрий Мурадян', 'Gate Legal', 'Senior*s bar'] as const;
 type PeopleClient = typeof PEOPLE_CLIENTS[number];
 
 const CLIENT_VIDEOS: Record<PeopleClient, { left: VideoConfig; right: VideoConfig }> = {
   'AliExpress':   { left: { src: '/video.mp4', pos: '50% 50%'  }, right: { src: '/video.mp4', pos: '50% 0%'   } },
   'Юрий Мурадян': { left: { src: '/video.mp4', pos: '50% 0%'   }, right: { src: '/video.mp4', pos: '50% 100%' } },
   'Gate Legal':   { left: { src: '/video.mp4', pos: '0% 50%'   }, right: { src: '/video.mp4', pos: '100% 50%' } },
-  'Senior*s Bar': { left: { src: '/video.mp4', pos: '50% 100%' }, right: { src: '/video.mp4', pos: '50% 0%'   } },
+  'Senior*s bar': { left: { src: '/video.mp4', pos: '50% 100%' }, right: { src: '/video.mp4', pos: '50% 0%'   } },
 };
 // Picture shown in a circle under the «Нам доверяют» ticker while a client's
 // name is hovered — the preview of that client's case
@@ -83,7 +83,7 @@ const CLIENT_PICTURES: Record<PeopleClient, string> = {
   'AliExpress':   '/preview-ae-platform.webp',
   'Юрий Мурадян': '/preview-case1.webp',
   'Gate Legal':   '/preview-gate-legal.avif',
-  'Senior*s Bar': '/preview-seniors.webp',
+  'Senior*s bar': '/preview-seniors.webp',
 };
 
 const DEFAULT_PEOPLE_VIDEOS = {
@@ -1506,7 +1506,7 @@ function AppInner() {
                 <div className={s.studioClients}>
                   <p ref={clientLabelRef} className={s.studioClientsLabel}>Нам доверяют</p>
                   <div ref={clientNamesRef} className={s.studioClientNames}>
-                    {['AliExpress', 'Юрий Мурадян', 'Gate Legal', 'Senior*s Bar'].map(name => (
+                    {['AliExpress', 'Юрий Мурадян', 'Gate Legal', 'Senior*s bar'].map(name => (
                       <p
                         key={name}
                         style={{ position: 'relative', margin: 0, cursor: 'pointer' }}

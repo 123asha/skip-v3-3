@@ -1379,7 +1379,7 @@ function AppInner() {
         gap: 16,
       }}>
         <a href={otherLangHref(pathname)} style={{ color: 'inherit', textDecoration: 'none', opacity: 0.35 }}>{LANG === 'en' ? '/ru' : '/en'}</a>
-        {(page === 'home' || !isMobile) && <span style={{ pointerEvents: 'none', opacity: 'var(--opacity-muted)' as any }}>{t('Дизайн, как правила игры')}</span>}
+        {(page === 'home' || !isMobile) && <span style={{ pointerEvents: 'none', opacity: 'var(--opacity-muted)' as any }}>{t('Дизайн как правила игры')}</span>}
         {/* Pages put their ⌘ ⊖ ⊕ here (ZoomControl) */}
         <span id={FOOTER_SLOT_ID} style={{ display: 'contents' }} />
       </div>}
@@ -1501,7 +1501,7 @@ function AppInner() {
             <div ref={studioTextRef} className={s.grid5}>
               <p className={s.studioLabel}>Студия</p>
               <div />
-              <p className={s.studioDesc}>Skip Design — бутиковая студия цифрового дизайна. Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться сути.</p>
+              <p className={s.studioDesc}>Skip Design — бутиковая студия цифрового дизайна. Верим, что простота — не про упрощение, а про смелость скипнуть лишнее, что мешает проявиться сути.</p>
               <div className={s.studioPhilosophy}>
                 <div className={s.studioClients}>
                   <p ref={clientLabelRef} className={s.studioClientsLabel}>Нам доверяют</p>

@@ -150,7 +150,7 @@ export const SERVICES: Service[] = [
         heading: 'Интерфейсы',
         paragraphs: [
           'Поможем запустить цифровой продукт. Спроектируем b2b-платформы и админки.',
-          'Возьмём на себя повседневные задачи — структурно и по делу.',
+          'Возьмём на себя и повседневные дизайн-задачи по продукту.',
         ],
         examples: [
           { label: 'b2b-платформа', href: '#' },
@@ -239,7 +239,7 @@ export const SERVICE_IDS = ['brand', 'visual', 'tools'] as const;
 // Sits under the services table, on the site's 5-col grid: two text columns on
 // the right (cols 4–5), the left three left empty. Stacks on mobile.
 
-const CREDO = 'Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться сути.';
+const CREDO = 'Верим, что простота — не про упрощение, а про смелость скипнуть лишнее, что мешает проявиться сути.';
 
 const PRINCIPLES = [
   'Один из наших принципов — привносить в работу лёгкость, юмор и отступать от шаблонов, если так получится лучший результат.',

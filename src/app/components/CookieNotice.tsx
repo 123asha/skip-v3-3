@@ -39,7 +39,7 @@ export default function CookieNotice({ onPolicy }: { onPolicy?: () => void }) {
       }}
     >
       <p style={{ ...ts, margin: 0, flex: 1 }}>
-        {typo('Продолжая использовать сайт, вы даете согласие на обработку данных с вашего устройства на условиях ')}
+        {typo('Продолжая использовать сайт, вы даёте согласие на обработку данных с вашего устройства на условиях ')}
         <a
           href="#"
           onClick={e => { e.preventDefault(); onPolicy?.(); }}

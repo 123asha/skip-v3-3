@@ -18,8 +18,8 @@ export const EN: Record<string, string> = {
   'Проекты Skip Design': 'Skip Design Projects',
   'Услуги и решения студии': 'Studio services and solutions',
   'Инсайты команды': 'Team insights',
-  'Skip Design. Дизайн, как правила игры': 'Skip Design. Design as the rules of the game',
-  'Дизайн, как правила игры': 'Design as the rules of the game',
+  'Skip Design. Дизайн как правила игры': 'Skip Design. Design as the rules of the game',
+  'Дизайн как правила игры': 'Design as the rules of the game',
   'Skip Design: дизайн, как правила игры': 'Skip Design: design as the rules of the game',
   'Skip Design — студия цифрового дизайна': 'Skip Design — digital design studio',
   'скопировано': 'copied',
@@ -46,7 +46,7 @@ export const EN: Record<string, string> = {
   'Архив': 'Archive',
   'Проекты студии': 'Studio projects',
   'Главная': 'Home',
-  'Skip Design — бутиковая студия цифрового дизайна. Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться сути.':
+  'Skip Design — бутиковая студия цифрового дизайна. Верим, что простота — не про упрощение, а про смелость скипнуть лишнее, что мешает проявиться сути.':
     'Skip Design is a boutique digital design studio. We believe simplicity isn’t about dumbing things down — it’s the courage to skip whatever keeps the essence from showing.',
   'Нам доверяют': 'Trusted by',
   'Недавние проекты': 'Recent projects',
@@ -57,12 +57,14 @@ export const EN: Record<string, string> = {
   'Брендинг и конструктор фирменной графики для социального проекта': 'Branding and a brand-graphics builder for a social project',
   'Брендинг для приложения по трекингу целей и медитаций': 'Branding for a goal-tracking and meditation app',
   'Тысячи партнёров AliExpress в одной B2B-платформе AE Platform': 'Thousands of AliExpress partners on one B2B platform AE Platform',
-  'Дизайн как правила игры': 'Design as the rules of the game',
   'Мы осуществляем обработку файлов cookie с использованием Яндекс.Метрика. Оставаясь на сайте, вы соглашаетесь на использование cookie и на обработку персональных данных в соответствии с ':
     'We process cookies using Yandex Metrica. By staying on the site you agree to the use of cookies and to the processing of personal data in accordance with the',
   'Политики конфиденциальности': 'Privacy Policy',
   'Политикой': 'Policy',
-  'Продолжая использовать сайт, вы даете согласие на обработку данных с вашего устройства на условиях ': 'By continuing to use the site you consent to the processing of data from your device under the',
+  'Корпоративный сайт — витрина компании для клиентов, партнёров, инвесторов и будущих сотрудников. Ему нужно рассказать о бизнесе, вызвать доверие и расти вместе с компанией.\n\nПродумаем структуру под все аудитории, соберём систему страниц и подготовим сайт так, чтобы команда сама добавляла новости, вакансии и проекты.':
+    'A corporate site is the company’s shop window for clients, partners, investors and future hires. It has to explain the business, earn trust and grow with the company.\n\nWe’ll work out a structure for every audience, build a system of pages and set the site up so your team can add news, vacancies and projects on its own.',
+  'Собрали критерии, по которым проверяем метафоры, и промпт, чтобы проверять их вместе с ИИ.': 'The criteria we check metaphors against, and a prompt to check them together with AI.',
+  'Продолжая использовать сайт, вы даёте согласие на обработку данных с вашего устройства на условиях ': 'By continuing to use the site you consent to the processing of data from your device under the',
   'Политики обработки персональных данных': 'Personal Data Processing Policy',
   'Хорошо': 'OK',
   'От смысла до фирменного стиля': 'From meaning to brand identity',
@@ -149,7 +151,7 @@ export const EN: Record<string, string> = {
     'Tbilisi has dozens of bars; every season old ones close and new ones open, and the competition for guests is huge. Good drinks and a great atmosphere are the baseline — you can’t stand out with them.\n\nAnother problem was the name. Senior’s reads as a bar for seniors — for pensioners, or only for developers. The bar’s real audience is broader, but the name narrows it and can put off people from the creative industries.',
   'Боль аудитории не в том, что некуда пойти в пятницу вечером. Боль — одиночество, изоляция и потеря старых социальных связей после переезда. Это меняет задачу: искать точку отстройки не через меню и атмосферу, а через отношения.\n\nСуть бренда — бар своей среды. Это коммьюнити-бар, в котором экспаты находят своих. Место, где случайный разговор может стать началом дружбы. Митапы, диджей-сеты, нетворкинг, ивенты — то, из-за чего хочется зайти в бар в любой день.':
     'The audience’s pain isn’t that there’s nowhere to go on a Friday night. It’s loneliness, isolation and losing old social ties after moving. That changes the task: look for the point of difference not in the menu or the atmosphere, but in relationships.\n\nThe essence of the brand is a bar for your own crowd. A community bar where expats find their people. A place where a chance conversation can start a friendship. Meetups, DJ sets, networking, events — reasons to drop in any day.',
-  'Ключевой образ бренда — звезда и её путеводный свет — заметный ориентир, к которому хочется вернуться.':
+  'Ключевой образ бренда — звезда и её путеводный свет: заметный ориентир, к которому хочется вернуться.':
     'The brand’s key image is a star and its guiding light — a visible landmark you want to come back to.',
   'Буква S и лучевая композиция построены на одной оси: лучи задают ритм, а S движется вместе с ними. Так возникает естественная связь между образом света и знаком бренда.':
     'The letter S and the radiating composition share one axis: the rays set the rhythm and the S moves with them. That creates a natural link between the image of light and the brand mark.',
@@ -157,7 +159,7 @@ export const EN: Record<string, string> = {
     'Backgrounds use the same radiating rhythm: both a beacon and a centre of gravity that everything lines up around. The rays of light can be longer or shorter to set the pace and mood.',
   'Айдентика превращает ключевую идею бренда в цельную и современную визуальную систему: в основе каждого элемента — точка света, с которой всё начинается.':
     'The identity turns the brand’s key idea into a coherent, modern visual system: every element is built on a point of light where it all begins.',
-  'Система живая, тёплая и динамичная. С ней Senior*s ещё отчётливее звучит как место своего света, оставаясь визуально понятным и эмоционально близким своему сообществу.':
+  'Система живая, тёплая и динамичная. С ней Senior*s ещё отчётливее звучит как место для своих, оставаясь визуально понятным и эмоционально близким своему сообществу.':
     'The system is alive, warm and dynamic. With it Senior*s speaks even more clearly as a place with a light of its own, while staying visually clear and emotionally close to its community.',
   'скипнуть': 'skip it',
   'скипнуть описание': 'skip the description',
@@ -211,7 +213,7 @@ export const EN: Record<string, string> = {
     'An identity without a system turns into a set of random decisions. Every new design task — a banner, a presentation, packaging — starts from scratch and depends on the taste of whichever designer gets it. Over time the brand loses its integrity and recognisability.\n\nWe’ll develop a strong visual concept grounded in the brand’s strategic idea and build it into a system with clear rules. Your team can make design decisions quickly and confidently, and the brand stays recognisable on any medium.',
   'Для нас логотип не отдельный объект, а часть айдентики. Он должен жить в системе: работать вместе со шрифтами, цветом и графикой и оставаться узнаваемым в любом размере — от иконки приложения до вывески.\n\nСоздадим логотип, который станет органичной частью вашей визуальной системы. Поможем зарегистрировать его как товарный знак: у нас в команде есть юрист, который проверит знак по базам и доведёт регистрацию до получения свидетельства.':
     'To us a logo isn’t a standalone object but part of the identity. It has to live within a system: work together with type, colour and graphics, and stay recognisable at any size — from an app icon to a shop sign.\n\nWe’ll create a logo that becomes a natural part of your visual system, and help register it as a trademark: our team includes a lawyer who will check the mark against the registries and take the registration all the way to its certificate.',
-  'Поможем внедрить систему в повседневные процессы. Сначала изучим среду, в которой живёт ваш маркетинг, а затем подготовим шаблоны презентаций, постов, коммерческих предложений и других документов под те инструменты, в которых работает ваша команда. В работе используем искусственный интеллект, поэтому материалы готовятся быстрее.\n\nВ результате новые материалы создаются быстрее, а качество остаётся стабильным.':
+  'Поможем внедрить систему в повседневные процессы. Сначала изучим среду, в которой живёт ваш маркетинг, а затем подготовим шаблоны презентаций, постов, коммерческих предложений и других документов под те инструменты, в которых работает ваша команда. В работе используем искусственный интеллект — это экономит время.\n\nВ результате новые материалы создаются быстрее, а качество остаётся стабильным.':
     'We’ll help bring the system into everyday work. First we study the environment your marketing lives in, then prepare templates for presentations, posts, proposals and other documents in the tools your team already uses. We work with AI, so the materials get made faster.\n\nNew materials get made faster, and the quality stays consistent.',
   'Когда бренд растёт, дизайн-задач становится больше: рекламные кампании, питч-деки, материалы для маркетинга. Нанимать отдельного специалиста под каждую задачу долго и дорого.\n\nВыделим под ваши задачи команду дизайнеров и менеджера. Вы получаете не одну компетенцию, а сразу несколько: под каждую задачу подключается дизайнер с нужной экспертизой. Результат — за 24–72 часа в зависимости от сложности задачи.\n\nМинимальный пакет — 40 часов в месяц, в них входит работа дизайнеров и менеджера.':
     'As a brand grows, so do its design tasks: ad campaigns, pitch decks, marketing materials. Hiring a separate specialist for each is slow and expensive.\n\nWe’ll assign a team of designers and a manager to your tasks. You get not one skill set but several: each task goes to a designer with the right expertise. Results in 24–72 hours, depending on the task.\n\nThe minimum package is 40 hours a month, covering the designers’ and the manager’s work.',
@@ -236,12 +238,12 @@ export const EN: Record<string, string> = {
     'We help bring the system into everyday work. We design on-brand templates for presentations, posts, proposals and other documents.\n\nNew materials get made faster, and the quality stays consistent.',
   'Разрабатываем нестандартные digital-форматы: промо-сайты, интерактивные истории и игровые механики.\n\nСобираем под каждую задачу отдельную систему визуальных и интерактивных решений, которая помогает выделиться и решить конкретную бизнес-задачу. Особое внимание уделяем нарративу.':
     'We make unconventional digital formats: promo sites, interactive stories and game mechanics.\n\nFor each task we build its own system of visual and interactive solutions that helps it stand out and solve a specific business goal. We pay special attention to the narrative.',
-  'Поможем запустить цифровой продукт. Спроектируем b2b-платформы и админки. Возьмём на себя повседневные задачи — структурно и по делу.':
+  'Поможем запустить цифровой продукт. Спроектируем b2b-платформы и админки. Возьмём на себя и повседневные дизайн-задачи по продукту.':
     'We’ll help launch a digital product. We design b2b platforms and admin panels, and take on the day-to-day tasks — structured and to the point.',
   'Создаём библиотеки в Figma, брендбуки и инструкции, которыми команда действительно пользуется в работе. Документируем принципы так, чтобы их понимали и люди, и ИИ-инструменты.':
     'We create Figma libraries, brand books and guides the team actually uses. We document the principles so that both people and AI tools understand them.',
 
-  'Верим, что простота — не про упрощение, а смелость скипнуть лишнее, что мешает проявиться сути.':
+  'Верим, что простота — не про упрощение, а про смелость скипнуть лишнее, что мешает проявиться сути.':
     'We believe simplicity isn’t about dumbing things down — it’s the courage to skip whatever keeps the essence from showing.',
   'Один из наших принципов — привносить в работу лёгкость, юмор и отступать от шаблонов, если так получится лучший результат.':
     'One of our principles is to bring lightness and humour to the work, and to break from templates when that gets a better result.',
@@ -270,9 +272,9 @@ export const EN: Record<string, string> = {
   'Тип': 'Type',
   'На главную': 'Home',
   "Не всегда нужна разработка с нуля: сайт на конструкторе выходит быстрее и дешевле, а команда дальше правит его сама.\n\nРаботаем почти на всех популярных конструкторах: Tilda, Webflow, Readymag и других. Подбираем платформу под задачу и собираем сайт так, чтобы после нас его было удобно поддерживать: понятная структура, аккуратные блоки, инструкция для команды.": "You don't always need development from scratch: a site built on a platform ships faster and costs less, and the team keeps editing it on its own.\n\nWe work on almost all the popular builders: Tilda, Webflow, Readymag and others. We pick the platform for the task and build the site so it's easy to maintain after us: a clear structure, tidy blocks, a guide for your team.",
-  "Когда нужно показать идею быстро, а не через месяцы согласований, сайт можно навайбкодить.\n\nСоберём лендинг быстрее, чем обычно, и передадим исходники с микро- и макроанимациями. Так же делаем фестивальные проекты: быстро и на крутом уровне, с вниманием к деталям и движению.": "When you need to show an idea fast, not after months of approvals, a site can be vibe-coded.\n\nWe'll put a landing page together faster than usual and hand over the source files with micro- and macro-animations. We make festival projects the same way: fast and at a high level, with attention to detail and motion.",
+  "Когда нужно показать идею быстро, а не через месяцы согласований, сайт можно навайбкодить.\n\nСоберём лендинг быстрее, чем обычно, и передадим исходники с микро- и макроанимациями. Также делаем фестивальные проекты: быстро и на крутом уровне, с вниманием к деталям и движению.": "When you need to show an idea fast, not after months of approvals, a site can be vibe-coded.\n\nWe'll put a landing page together faster than usual and hand over the source files with micro- and macro-animations. We make festival projects the same way: fast and at a high level, with attention to detail and motion.",
   "У сайта должен быть хозяин, который следит, чтобы он не рассыпался. Часто его нет: подрядчик ушёл, а команда боится что-то трогать.\n\nМожем забрать сайт к себе: проведём аудит, составим бэклог доработок и полностью возьмём поддержку на себя.": "A site needs an owner who makes sure it doesn't fall apart. Often there isn't one: the contractor has left and the team is afraid to touch anything.\n\nWe can take the site over: run an audit, draw up a backlog of improvements and take on the support completely.",
-  'Дизайн, как правила игры.': 'Design as the rules of the game.',
+  'Дизайн как правила игры.': 'Design as the rules of the game.',
   'Наши услуги': 'Our services',
   "Философия": "Philosophy",
   "Дизайн здравого смысла — это когда всё подчиняется логике формы. А значит — идее. В древних языках «форма», «слово» и «звук» были связаны между собой. Говорить — значит придавать форму, а форма смысла — дизайн.": "Common-sense design is when everything obeys the logic of form — and so, of the idea. In ancient languages “form”, “word” and “sound” were bound together. To speak is to give form, and the form of meaning is design.",
@@ -349,7 +351,6 @@ export const EN: Record<string, string> = {
   'Оставьте контакт,': 'Leave your contact,',
   'назначим встречу': 'and we’ll set up a call',
   'арт-директору': 'to our art director',
-  'Оставьте контакт,': 'Leave your contact,',
   'Оставьте': 'Leave your',
   'контакт': 'contact',
   'почту': 'email',
@@ -434,8 +435,8 @@ export const EN: Record<string, string> = {
   'ИП Саакян Ашхен Арменовна, ИНН 910700287536, ОГРНИП 319911200010480\nАдрес: Санкт-Петербург, Ленинский 168, 708':
     'Sole proprietor Ashkhen Armenovna Saakian, TIN 910700287536, OGRNIP 319911200010480\nAddress: 168 Leninsky Ave, office 708, Saint Petersburg',
   // ── New case pages ──
-  'Брендинг для приложения по трекингу целей и медитаций (soon)': 'Branding for a goal-tracking and meditation app (soon)',
-  'Трекер целей от Юрия Мурадяна, в котором визуал поддерживает философию продукта (soon)': 'A goal tracker by Yuri Muradyan, where the visuals carry the product’s philosophy (soon)',
+  'Брендинг для приложения по трекингу целей и медитаций (скоро)': 'Branding for a goal-tracking and meditation app (soon)',
+  'Трекер целей от Юрия Мурадяна, в котором визуал поддерживает философию продукта (скоро)': 'A goal tracker by Yuri Muradyan, where the visuals carry the product’s philosophy (soon)',
   'Адаптировали продукт под задачи B2B-аудитории и сохранили визуальную целостность с основным брендом.': 'We adapted the product to the needs of a B2B audience and kept it visually consistent with the main brand.',
   'Алина Калистрина': 'Alina Kalistrina',
   'Анна Головина': 'Anna Golovina',
@@ -487,5 +488,5 @@ export const EN: Record<string, string> = {
   'Брендинг, Продукт': 'Branding, Product',
   'Веб, Продукт': 'Web, Product',
   'Брендинг, Веб, Продукт': 'Branding, Web, Product',
-  'Skip Design. Дизайн, как правила игры.': 'Skip Design. Design as the rules of the game.',
+  'Skip Design. Дизайн как правила игры.': 'Skip Design. Design as the rules of the game.',
 };

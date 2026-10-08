@@ -19,6 +19,9 @@ interface ContactFormProps {
   variant?: 'default' | 'consult';
 }
 
+// «Сотрудничество» (the CV tab) is hidden for now in every form; true brings it back
+const SHOW_JOIN = false;
+
 export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'default', noInvert = false }: ContactFormProps) {
   const isMobile = useMobile();
   const [checked, setChecked]   = useState(false);
@@ -298,7 +301,7 @@ export default function ContactForm({ onNavigatePolicy, onGridMode, variant = 'd
             {([
               { key: 'discuss', label: 'Обсудить проект' },
               { key: 'join',    label: 'Сотрудничество' },
-            ] as const).map(tab => (
+            ] as const).filter(tab => SHOW_JOIN || tab.key !== 'join').map(tab => (
               <button
                 key={tab.key}
                 style={tabStyle(activeTab === tab.key)}

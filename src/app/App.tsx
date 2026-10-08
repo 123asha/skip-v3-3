@@ -13,11 +13,9 @@ import HeroBranches from './components/HeroBranches';
 import ProjectGallery from './components/ProjectGallery';
 import Footer from './components/Footer';
 import CasesPage from './components/CasesPage';
-const InstrumentsPage = loadable(() => import('./components/InstrumentsPage'));
 const ExpertizaPage = loadable(() => import('./components/ExpertizaPage'));
 import MindMapBlock from './components/MindMapBlock';
 const PolicyPage = loadable(() => import('./components/PolicyPage'));
-const Index2Page = loadable(() => import('./components/Index2Page'));
 import CaseTemplatePage, { SENIORS_BAR, BINAROOM, AE_PLUGIN, AE_PLATFORM, AE_LANDING } from './components/CaseTemplatePage';
 
 // Case pages that run on the case template, by address
@@ -58,7 +56,6 @@ function sectionTitleFor(path: string): string | null {
   if (p === '/about' || p === '/about-skip-design') return 'Skip Design';
   return null;
 }
-const DesignSystemPage = loadable(() => import('./components/DesignSystemPage'));
 import LinkFlip from './components/LinkFlip';
 import PeopleVideoSlot, { type VideoConfig } from './components/PeopleVideoSlot';
 import SoundIcon from './sound/SoundIcon';
@@ -424,12 +421,10 @@ function AppInner() {
   });
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
-  const KNOWN_PATHS = ['/', '/cases', '/instruments', '/expertiza', '/services', '/policy', '/index2', '/case-template', '/Seniorsbar', ...Object.keys(CASE_PAGES), '/guide', '/lab', '/insights', '/system', '/about-skip-design', '/about'];
+  const KNOWN_PATHS = ['/', '/cases', '/expertiza', '/services', '/policy', '/case-template', '/Seniorsbar', ...Object.keys(CASE_PAGES), '/guide', '/lab', '/insights', '/about-skip-design', '/about'];
   const page = pathname === '/cases' ? 'cases'
-             : pathname === '/instruments' ? 'instruments'
              : (pathname === '/expertiza' || pathname === '/services') ? 'expertiza'
              : pathname === '/policy' ? 'policy'
-             : pathname === '/index2' ? 'index2'
              : pathname === '/case-template' ? 'case-template'
              : pathname === '/Seniorsbar' ? 'seniors'
              : CASE_PAGES[pathname] ? 'binaroom'
@@ -439,7 +434,6 @@ function AppInner() {
              : pathname === '/insights' || pathname === '/lab' ? 'lab'
              // An insight's own article page (unknown slugs fall through to 404)
              : pathname.startsWith('/insights/') && insightBySlug(pathname.slice(10)) ? 'insight'
-             : pathname === '/system' ? 'system'
              : pathname === '/' ? 'home'
              : pathname === '/404' || !KNOWN_PATHS.includes(pathname) ? 'notfound'
              : 'home';
@@ -457,6 +451,15 @@ function AppInner() {
 
   // Search / share tags for the page on screen (content/seo.ts)
   useEffect(() => { { const m = pageMetaFor(pathname); applyPageMeta({ ...m, title: t(m.title), description: t(m.description) }); } }, [pathname]);
+
+  // Yandex.Metrika (see index.html): the site is one page, so each move between sections is reported as a view
+  const metrikaPrev = useRef<string | null>(null);
+  useEffect(() => {
+    const url = window.location.href;
+    const ym = (window as unknown as { ym?: (...a: unknown[]) => void }).ym;
+    if (metrikaPrev.current !== null && ym) ym(106733915, 'hit', url, { title: document.title, referer: metrikaPrev.current });
+    metrikaPrev.current = url;
+  }, [pathname]);
 
   // Pages live in their own chunks: a switch waits for the code (already here
   // after the background fetch, so normally no wait at all)
@@ -991,12 +994,6 @@ function AppInner() {
     else navigate('/cases');
   };
 
-  const handleInstrumentsClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (toolsLinkRef.current) flyToTitle('Инструменты', toolsLinkRef.current, '/instruments');
-    else navigate('/instruments');
-  };
-
   const handleLabClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (labLinkRef.current) flyToTitle('Skip Design', labLinkRef.current, '/insights');
@@ -1112,10 +1109,6 @@ function AppInner() {
             <a href="/insights" className={s.navLink} data-current={navSection === 'lab' ? '' : undefined} style={navLinkStyle('lab')} onClick={handleLabClick}>
               <LinkFlip flat>Инсайты</LinkFlip>
             </a>
-          </span>
-          <span ref={toolsLinkRef as React.RefObject<HTMLSpanElement>} style={{ display: 'none' }}>
-            <span className={s.navSep}>,</span>
-            <a href="/instruments" className={s.navLink} onClick={handleInstrumentsClick}>Подход</a>
           </span>
         </span>
         {/* «Написать» — the word turns into "telegram" on hover, which is
@@ -1436,11 +1429,6 @@ function AppInner() {
         onGridMode={setGridVisible}
         onGridCols={setOverlayCols}
       />}
-      {page === 'instruments' && <InstrumentsPage
-        onNavigateCases={() => navigateWithExit('/cases')}
-        onNavigatePolicy={() => navigateWithExit('/policy')}
-        onGridMode={setGridVisible}
-      />}
       {page === 'expertiza' && <ExpertizaPage
         onNavigatePolicy={() => navigateWithExit('/policy')}
         onGridMode={setGridVisible}
@@ -1477,12 +1465,10 @@ function AppInner() {
       {page === 'policy' && <PolicyPage />}
       {/* First visit: the cookie notice, until «Хорошо» */}
       <CookieNotice onPolicy={() => navigateWithExit('/policy')} />
-      {page === 'index2' && <Index2Page />}
       {page === 'case-template' && <CaseTemplatePage onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}
       {page === 'seniors' && <CaseTemplatePage data={SENIORS_BAR} onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}
       {page === 'binaroom' && <CaseTemplatePage key={pathname} data={CASE_PAGES[pathname]} onNavigatePolicy={() => navigateWithExit('/policy')} onGridMode={setGridVisible} onNavigateCase={href => navigateWithExit(href)} />}
       {page === 'guide' && <GuidePage />}
-      {page === 'system' && <DesignSystemPage />}
       {page === 'notfound' && <Racket3D onGoHome={() => navigateWithExit('/')} />}
 
       <div

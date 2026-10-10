@@ -49,6 +49,8 @@ export type Insight = {
   href?: string;
   body?: [string, string]; full?: string[];
   slug?: string; blocks?: Block[]; cover?: string; draft?: boolean;
+  /** The slug of the insight this one follows on from — listed under it as 02.1, 02.2… */
+  parent?: string;
 };
 
 // DD.MM.YYYY (or just the year) → sortable number
@@ -76,6 +78,7 @@ const INSIGHTS: Insight[] = [
     date: '06.04.2026',
     source: 'VC',
     slug: 'konstruktor-missii-kak-sformulirovat-celi-dlya-biznesa',
+    parent: 'konstruktor-missii-brenda',
     body: [
       'Потестировали конструктор миссии на двух больших компаниях, одном психотерапевте и одном музыкальном дуэте.',
       'Через любой подход можно прийти к одним и тем же смыслам, но в разной обёртке. Делимся наблюдениями.',
@@ -110,6 +113,7 @@ const INSIGHTS: Insight[] = [
     date: '23.09.2026',
     source: 'Дизайн-кабак',
     slug: 'chto-delaet-metaforu-silnoj',
+    parent: 'kak-ii-generiruet-metafory',
     cover: asset('/flower2.mp4'),
     body: [
       'Когда нет метафоры, любая концепция рассыпается. Поэтому мы уделяем ей особое внимание.',
@@ -134,6 +138,7 @@ const INSIGHTS: Insight[] = [
     date: '16.09.2026',
     source: 'Дизайн-кабак',
     slug: 'chto-dolzhno-izmenitsya-v-zhizni-cheloveka-blagodarya-produktu',
+    parent: 'raznica-mezhdu-product-vision-i-brand-vision',
     body: [
       'На этот вопрос поможет ответить product vision.',
       'Product vision полезен даже маленьким командам: он помогает сверяться с целью, держать фокус и расставлять приоритеты.',
@@ -158,6 +163,7 @@ const INSIGHTS: Insight[] = [
     date: '02.04.2026',
     source: 'Workspace',
     slug: 'prompt-dlya-proverki-metafory',
+    parent: 'kak-ii-generiruet-metafory',
     body: [
       'Собрали критерии, по которым проверяем метафоры, и промпт, чтобы проверять их вместе с ИИ.',
       'В Skip Design мы используем собственную методологию. Каждый критерий — вопрос, который проверяет метафору по шкале от 1 до 5.',
@@ -229,6 +235,16 @@ const textLength = (i: Insight) => (i.blocks ?? []).reduce((n, b: any) => n + (b
   + (i.full ?? []).join('').length + (i.body ?? []).join('').length;
 const kind = (i: Insight) => i.name === 'Статья' && textLength(i) < 1500 ? 'Заметка' : i.name;
 export const INSIGHTS_LIST = SORTED.map(i => ({ ...i, name: kind(i), href: insightPath(i), shown: shownDate(i) }));
+
+/** The list grouped for the lined index: each insight with the ones that
+ *  follow on from it right under it. A group stands where its newest member
+ *  would; inside a group the follow-ups go newest first */
+export const INSIGHTS_GROUPED = (() => {
+  const top = INSIGHTS_LIST.filter(i => !i.parent || !INSIGHTS_LIST.some(p => p.slug === i.parent));
+  const kids = (i: typeof top[number]) => INSIGHTS_LIST.filter(k => k.parent && k.parent === i.slug);
+  const newest = (i: typeof top[number]) => Math.max(dateKey(i), ...kids(i).map(dateKey));
+  return [...top].sort((a, b) => newest(b) - newest(a)).map(i => ({ ...i, children: kids(i) }));
+})();
 
 /** An internal article by its slug (drafts included — they open by address) */
 export const insightBySlug = (slug: string) => INSIGHTS.find(i => i.slug === slug && i.blocks);

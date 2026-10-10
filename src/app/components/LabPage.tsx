@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 import s from './CasesPage.module.css';
-import { MediaSection } from './MediaSection';
 import ContactForm from './ContactForm';
 import { H2_STYLE } from '../utils/typography';
 import { InsightList } from './InsightList';
+import { InsightLines } from './InsightLines';
 import { useMobile } from '../hooks/useMobile';
 
 import { useReveal } from '../hooks/useReveal';
@@ -37,19 +37,10 @@ export default function LabPage({
       <div className={s.body} style={{ paddingTop: 'var(--inner-content-top)', paddingLeft: 'var(--pad)', paddingRight: 'var(--pad)', paddingBottom: 0 }}>
 
 
-        {/* MediaSection (Инсайты) above the contact form — its own h2 is off,
-            the page title already says "Инсайты". */}
-        {/* flushTop — the page body already carries the title → content gap,
-            so the section must not add its own on top of it. */}
-        {/* The insights as a table (Russian); the English site keeps the list */}
+        {/* The English site keeps the list */}
         {LANG === 'en' && <InsightList />}
-        {LANG !== 'en' && <>
-        <div style={{ marginLeft: 'calc(-1 * var(--pad))', marginRight: 'calc(-1 * var(--pad))' }}>
-          {/* showZoom off here — InsightCards above already carries the
-              page's one ⌘ ⊖ ⊕ control */}
-          <MediaSection showHeading={false} flushTop bandHeader />
-        </div>
-        </>}
+        {/* Russian: the lined index — numbers, titles, dates on notebook rules */}
+        {LANG !== 'en' && <InsightLines />}
         <ContactForm onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
       </div>
     </div>

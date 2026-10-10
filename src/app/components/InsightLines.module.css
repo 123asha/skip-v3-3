@@ -6,8 +6,8 @@
    --row, and everything inside keeps to whole rows (line-height and gaps). */
 
 .list {
-  /* The site's heading size (page titles, section headings) */
-  --size: var(--heading-size);
+  /* The article subheading size — a step under the headings */
+  --size: var(--h3-size);
   --row: calc(var(--size) * 1.24);
   margin-left: calc(50% + var(--gap) / 2);
   font-family: var(--font-display);
@@ -67,10 +67,10 @@
 /* Blank lines under the list */
 .tail { height: calc(var(--row) * 3); margin-top: calc(-1 * var(--row)); }
 
-/* Phone: the full width, the article subheading size; number and title side
-   by side, the date on the line under the title */
+/* Phone: the full width, the body text size; number and title side by
+   side, the date on the line under the title */
 @media (max-width: 768px) {
-  .list { --size: var(--h3-size); margin-left: 0; }
+  .list { --size: var(--text-size); margin-left: 0; }
   .line { grid-template-columns: 2.6em minmax(0, 1fr); }
   .name { grid-column: 2; max-width: none; }
   .date { grid-column: 2; justify-self: start; }

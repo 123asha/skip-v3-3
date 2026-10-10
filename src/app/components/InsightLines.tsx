@@ -3,11 +3,12 @@ import { goTo, siteHref } from '../utils/siteNav';
 import { typo } from '../utils/typography';
 import s from './InsightLines.module.css';
 
-// Ruled-notebook index of the insights: the page is lined like a notebook,
-// every line of text sits on its own rule. Grey numbers on the left (01, 02,
-// and 02.1, 02.2 for the pieces that follow on from 02), the titles in the
-// second column — the follow-ups half a column further in — and the date on
-// the right. A blank line between groups; a few more blank lines close the list.
+// Ruled-notebook index of the insights. The page is two columns and the
+// index stands in the second one, lined like a notebook: every line of text
+// sits on its own rule. Grey numbers on the left (01, 02, and 02.1, 02.2 for
+// the pieces that follow on from 02), then the titles — the follow-ups a
+// little further in — and the date on the right. A blank line between groups;
+// a few more blank lines close the list.
 
 const MONTHS = ['янв.', 'февр.', 'марта', 'апр.', 'мая', 'июня', 'июля', 'авг.', 'сент.', 'окт.', 'нояб.', 'дек.'];
 

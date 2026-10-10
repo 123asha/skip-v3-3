@@ -1,16 +1,19 @@
 /* Ruled-notebook index of the insights (InsightLines.tsx). The entry class
    is .line, not .row, and the title is .name, not .title — index.css has
    phone-only rules for any class with «_row_» or «_title_» in it.
+   The page is two columns; the whole index stands in the second one.
    One rule per line of text: the list's background repeats a 1px line every
    --row, and everything inside keeps to whole rows (line-height and gaps). */
 
 .list {
-  --row: calc(var(--h2-size) * 1.24);
-  container-type: inline-size;
+  /* The site's heading size (page titles, section headings) */
+  --size: var(--heading-size);
+  --row: calc(var(--size) * 1.24);
+  margin-left: calc(50% + var(--gap) / 2);
   font-family: var(--font-display);
-  font-size: var(--h2-size);
-  font-weight: var(--h2-weight);
-  letter-spacing: var(--h2-ls);
+  font-size: var(--size);
+  font-weight: var(--heading-weight);
+  letter-spacing: var(--heading-ls);
   line-height: var(--row);
   color: var(--c-text);
   background-image: linear-gradient(var(--c-border) 1px, transparent 1px);
@@ -24,7 +27,8 @@
 
 .line {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  /* Number · title · date: the number and the date take what they need */
+  grid-template-columns: 3em minmax(0, 1fr) auto;
   column-gap: var(--gap);
   align-items: start;
   color: inherit;
@@ -42,17 +46,15 @@
 }
 
 .name {
-  grid-column: 2 / 5;
+  grid-column: 2;
   max-width: 10.5em;
 }
 
-/* A follow-up (02.1…) stands half a column further in */
-.line[data-sub] .name {
-  margin-left: calc((100cqw - 4 * var(--gap)) / 10);
-}
+/* A follow-up (02.1…) stands a little further in */
+.line[data-sub] .name { margin-left: 2.5em; }
 
 .date {
-  grid-column: 5;
+  grid-column: 3;
   justify-self: end;
   white-space: nowrap;
 }
@@ -65,12 +67,11 @@
 /* Blank lines under the list */
 .tail { height: calc(var(--row) * 3); margin-top: calc(-1 * var(--row)); }
 
-/* Phone: number and title side by side, the date on the line under the
-   title; the type a size down so a title keeps a few words to a line */
+/* Phone: the full width, the article subheading size; number and title side
+   by side, the date on the line under the title */
 @media (max-width: 768px) {
-  .list { font-size: calc(var(--h2-size) * 0.7); --row: calc(var(--h2-size) * 0.7 * 1.24); }
-  .line { grid-template-columns: 2.6em minmax(0, 1fr); column-gap: var(--gap); }
-  .num { grid-column: 1; }
+  .list { --size: var(--h3-size); margin-left: 0; }
+  .line { grid-template-columns: 2.6em minmax(0, 1fr); }
   .name { grid-column: 2; max-width: none; }
   .date { grid-column: 2; justify-self: start; }
   .line[data-sub] .name, .line[data-sub] .date { margin-left: 1em; }

@@ -6,14 +6,14 @@
    --row, and everything inside keeps to whole rows (line-height and gaps). */
 
 .list {
-  /* The article subheading size — a step under the headings */
-  --size: var(--h3-size);
-  --row: calc(var(--size) * 1.24);
+  /* Body / Text from the guide (/guide); the rules keep Body Long's
+     line spacing (1.6) */
+  --row: calc(var(--text-size) * 1.6);
   margin-left: calc(50% + var(--gap) / 2);
-  font-family: var(--font-display);
-  font-size: var(--size);
-  font-weight: var(--heading-weight);
-  letter-spacing: var(--heading-ls);
+  font-family: var(--font);
+  font-size: var(--text-size);
+  font-weight: var(--text-weight);
+  letter-spacing: var(--text-ls);
   line-height: var(--row);
   color: var(--c-text);
   background-image: linear-gradient(var(--c-border) 1px, transparent 1px);
@@ -45,10 +45,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.name {
-  grid-column: 2;
-  max-width: 10.5em;
-}
+.name { grid-column: 2; }
 
 /* A follow-up (02.1…) stands a little further in */
 .line[data-sub] .name { margin-left: 2.5em; }
@@ -67,12 +64,11 @@
 /* Blank lines under the list */
 .tail { height: calc(var(--row) * 3); margin-top: calc(-1 * var(--row)); }
 
-/* Phone: the full width, the body text size; number and title side by
-   side, the date on the line under the title */
+/* Phone: the full width; number and title side by side, the date on the
+   line under the title */
 @media (max-width: 768px) {
-  .list { --size: var(--text-size); margin-left: 0; }
-  .line { grid-template-columns: 2.6em minmax(0, 1fr); }
-  .name { grid-column: 2; max-width: none; }
+  .list { margin-left: 0; }
+  .line { grid-template-columns: 3em minmax(0, 1fr); }
   .date { grid-column: 2; justify-self: start; }
   .line[data-sub] .name, .line[data-sub] .date { margin-left: 1em; }
 }

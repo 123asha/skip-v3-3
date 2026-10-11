@@ -1,29 +1,27 @@
-/* Ruled-notebook index of the insights (InsightLines.tsx). The entry class
-   is .line, not .row, and the title is .name, not .title — index.css has
-   phone-only rules for any class with «_row_» or «_title_» in it.
-   The page is two columns; the whole index stands in the first one.
-   One rule per line of text: the list's background repeats a 1px line every
-   --row, and everything inside keeps to whole rows (line-height and gaps). */
+/* Index of the insights (InsightLines.tsx), in the site's ordinary text.
+   The entry class is .line, not .row, and the title is .name, not .title —
+   index.css has phone-only rules for any class with «_row_» or «_title_» in it.
+   The list runs down the left column and on into the right one; a group (an
+   insight with its follow-ups) never splits between them. */
 
 .list {
-  /* The site's ordinary text — Body / Text from the guide (/guide);
-     the rules follow its line spacing */
+  /* Body / Text from the guide (/guide) */
   --row: calc(var(--text-size) * var(--text-lh));
-  width: calc(50% - var(--gap) / 2);
+  columns: 2;
+  column-gap: var(--gap);
   font-family: var(--font);
   font-size: var(--text-size);
   font-weight: var(--text-weight);
   letter-spacing: var(--text-ls);
   line-height: var(--row);
   color: var(--c-text);
-  background-image: linear-gradient(var(--c-border) 1px, transparent 1px);
-  background-size: 100% var(--row);
-  /* The closing rule under the last blank line */
-  border-bottom: 1px solid var(--c-border);
 }
 
 /* A blank line between groups */
-.group { margin-bottom: var(--row); }
+.group {
+  break-inside: avoid;
+  padding-bottom: var(--row);
+}
 
 .line {
   display: grid;
@@ -35,9 +33,6 @@
   text-decoration: none;
   transition: opacity 0.2s ease;
 }
-
-/* Text settles onto its rule rather than floating mid-line */
-.line > span { position: relative; top: 0.08em; }
 
 .num {
   grid-column: 1;
@@ -56,19 +51,33 @@
   white-space: nowrap;
 }
 
+/* The opened one: its opening lines under the title, then «Читать» */
+.lead {
+  grid-column: 2 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--row);
+  margin-top: var(--row);
+}
+.para { display: block; max-width: 36em; }
+.read {
+  align-self: flex-start;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+
 /* Hovering one dims the rest */
 @media (hover: hover) {
   .list:hover .line:not(:hover) { opacity: var(--opacity-muted); }
 }
 
-/* Blank lines under the list */
-.tail { height: calc(var(--row) * 3); margin-top: calc(-1 * var(--row)); }
-
-/* Phone: the full width; number and title side by side, the date on the
-   line under the title */
+/* Phone: one column; number and title side by side, the date on the line
+   under the title */
 @media (max-width: 768px) {
-  .list { width: auto; }
+  .list { columns: 1; }
   .line { grid-template-columns: 3em minmax(0, 1fr); }
   .date { grid-column: 2; justify-self: start; }
   .line[data-sub] .name, .line[data-sub] .date { margin-left: 1em; }
+  .lead { grid-column: 2; }
 }

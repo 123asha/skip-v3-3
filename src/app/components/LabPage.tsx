@@ -39,7 +39,7 @@ export default function LabPage({
 
         {/* The English site keeps the list */}
         {LANG === 'en' && <InsightList />}
-        {/* Russian: the lined index — numbers, titles, dates on notebook rules */}
+        {/* Russian: the index in two columns, the newest insight opened */}
         {LANG !== 'en' && <InsightLines />}
         <ContactForm onNavigatePolicy={onNavigatePolicy} onGridMode={onGridMode} />
       </div>

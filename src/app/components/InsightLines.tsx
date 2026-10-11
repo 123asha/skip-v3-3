@@ -3,12 +3,11 @@ import { goTo, siteHref } from '../utils/siteNav';
 import { typo } from '../utils/typography';
 import s from './InsightLines.module.css';
 
-// Ruled-notebook index of the insights. The page is two columns and the
-// index stands in the first one, lined like a notebook: every line of text
-// sits on its own rule. Grey numbers on the left (01, 02, and 02.1, 02.2 for
-// the pieces that follow on from 02), then the titles — the follow-ups a
-// little further in — and the date on the right. A blank line between groups;
-// a few more blank lines close the list.
+// Index of the insights in two columns: down the left one and on into the
+// right. Grey numbers (01, 02, and 02.1, 02.2 for the pieces that follow on
+// from 02), then the titles — the follow-ups a little further in — and the
+// date on the right. A blank line between groups. The newest insight stands
+// opened, its opening lines under the title.
 
 const MONTHS = ['янв.', 'февр.', 'марта', 'апр.', 'мая', 'июня', 'июля', 'авг.', 'сент.', 'окт.', 'нояб.', 'дек.'];
 
@@ -21,7 +20,8 @@ const shown = (date?: string, year?: string) => {
 
 type Item = (typeof INSIGHTS_GROUPED)[number];
 
-function Row({ it, num, sub }: { it: Omit<Item, 'children'>; num: string; sub?: boolean }) {
+// `open` — shown opened: its opening lines under the title, and «Читать»
+function Row({ it, num, sub, open }: { it: Omit<Item, 'children'>; num: string; sub?: boolean; open?: boolean }) {
   const href = it.href;
   const inner = isInternal(href);
   return (
@@ -36,6 +36,12 @@ function Row({ it, num, sub }: { it: Omit<Item, 'children'>; num: string; sub?: 
       <span className={s.num}>{num}</span>
       <span className={s.name}>{typo(it.desc)}</span>
       <span className={s.date}>{shown(it.date, it.year)}</span>
+      {open && it.body && (
+        <span className={s.lead}>
+          {it.body.map((p, k) => <span key={k} className={s.para}>{typo(p)}</span>)}
+          <span className={s.read}>Читать</span>
+        </span>
+      )}
     </a>
   );
 }
@@ -46,12 +52,11 @@ export function InsightLines() {
     <div className={s.list}>
       {INSIGHTS_GROUPED.map((it, i) => (
         <div key={it.slug ?? it.href ?? i} className={s.group} data-reveal="">
-          <Row it={it} num={pad(i + 1)} />
+          {/* The newest one stands opened */}
+          <Row it={it} num={pad(i + 1)} open={i === 0} />
           {it.children.map((c, k) => <Row key={c.slug ?? k} it={c} num={`${pad(i + 1)}.${k + 1}`} sub />)}
         </div>
       ))}
-      {/* Blank lines under the last one, as on a notebook page */}
-      <div className={s.tail} />
     </div>
   );
 }

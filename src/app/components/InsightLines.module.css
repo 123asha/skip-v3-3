@@ -1,15 +1,15 @@
 /* Ruled-notebook index of the insights (InsightLines.tsx). The entry class
    is .line, not .row, and the title is .name, not .title — index.css has
    phone-only rules for any class with «_row_» or «_title_» in it.
-   The page is two columns; the whole index stands in the second one.
+   The page is two columns; the whole index stands in the first one.
    One rule per line of text: the list's background repeats a 1px line every
    --row, and everything inside keeps to whole rows (line-height and gaps). */
 
 .list {
-  /* Body / Text from the guide (/guide); the rules keep Body Long's
-     line spacing (1.6) */
-  --row: calc(var(--text-size) * 1.6);
-  margin-left: calc(50% + var(--gap) / 2);
+  /* The site's ordinary text — Body / Text from the guide (/guide);
+     the rules follow its line spacing */
+  --row: calc(var(--text-size) * var(--text-lh));
+  width: calc(50% - var(--gap) / 2);
   font-family: var(--font);
   font-size: var(--text-size);
   font-weight: var(--text-weight);
@@ -67,7 +67,7 @@
 /* Phone: the full width; number and title side by side, the date on the
    line under the title */
 @media (max-width: 768px) {
-  .list { margin-left: 0; }
+  .list { width: auto; }
   .line { grid-template-columns: 3em minmax(0, 1fr); }
   .date { grid-column: 2; justify-self: start; }
   .line[data-sub] .name, .line[data-sub] .date { margin-left: 1em; }

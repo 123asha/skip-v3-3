@@ -4,7 +4,7 @@ import { typo } from '../utils/typography';
 import s from './InsightLines.module.css';
 
 // Ruled-notebook index of the insights. The page is two columns and the
-// index stands in the second one, lined like a notebook: every line of text
+// index stands in the first one, lined like a notebook: every line of text
 // sits on its own rule. Grey numbers on the left (01, 02, and 02.1, 02.2 for
 // the pieces that follow on from 02), then the titles — the follow-ups a
 // little further in — and the date on the right. A blank line between groups;
